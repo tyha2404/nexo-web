@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import { reportService, transactionService, categoryService } from '../services/api';
+import { reportService, transactionService } from '../services/api';
 import type { Transaction, SummaryReport, CategoryBreakdownItem } from '../services/api';
 import './Dashboard.css';
 
-// Aliasing as requested to fetch summary data using api.reports.summary(), categoryBreakdown using api.reports.categoryBreakdown(), and api.costs.list()
 const api = {
   reports: reportService,
-  costs: transactionService,
-  categories: categoryService,
+  transactions: transactionService,
 };
 
 export default function Dashboard() {
@@ -30,7 +28,7 @@ export default function Dashboard() {
       const [summaryData, breakdownData, transactionsData] = await Promise.all([
         api.reports.summary(),
         api.reports.categoryBreakdown(),
-        transactionService.list(),
+        api.transactions.list(),
       ]);
 
       setSummary(summaryData);
@@ -56,7 +54,7 @@ export default function Dashboard() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
+    return new Date(dateString).toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
