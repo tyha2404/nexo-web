@@ -110,6 +110,7 @@
 }
 
 .form-group input,
+.form-group select,
 .form-group textarea {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -123,7 +124,13 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.form-group select option {
+  background-color: #1e293b;
+  color: #f8fafc;
+}
+
 .form-group input:focus,
+.form-group select:focus,
 .form-group textarea:focus {
   outline: none;
   border-color: #38bdf8;
@@ -233,14 +240,45 @@
   padding-right: 1rem;
 }
 
+.category-item-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
 .category-item-info h4 {
-  margin: 0 0 0.25rem 0;
+  margin: 0;
   font-size: 1.05rem;
   color: #f8fafc;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.type-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.type-badge.income {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.type-badge.expense {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .category-item-desc {

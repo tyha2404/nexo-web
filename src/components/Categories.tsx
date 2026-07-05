@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { categoryService } from '../services/api';
-import type { Category } from '../services/api';
+import type { Category, TransactionType } from '../services/api';
 import './Categories.css';
 
 export default function Categories() {
@@ -10,9 +10,11 @@ export default function Categories() {
 
   // Form states
   const [name, setName] = useState('');
+  const [type, setType] = useState<TransactionType>('EXPENSE');
   const [description, setDescription] = useState('');
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editName, setEditName] = useState('');
+  const [editType, setEditType] = useState<TransactionType>('EXPENSE');
   const [editDescription, setEditDescription] = useState('');
 
   // Notifications/Feedback messages
@@ -48,9 +50,14 @@ export default function Categories() {
 
     try {
       setError(null);
-      const newCat = await categoryService.create({ name: name.trim(), description: description.trim() || undefined });
+      const newCat = await categoryService.create({
+        name: name.trim(),
+        type,
+        description: description.trim() || undefined
+      });
       setCategories((prev) => [...prev, newCat]);
       setName('');
+      setType('EXPENSE');
       setDescription('');
       showFeedback('Tạo danh mục thành công!', 'success');
     } catch (err: any) {
@@ -66,11 +73,13 @@ export default function Categories() {
       setError(null);
       const updatedCat = await categoryService.update(editingCategory.id, {
         name: editName.trim(),
-        description: editDescription.trim() || undefined,
+        type: editType,
+        description: editDescription.trim() || undefined
       });
       setCategories((prev) => prev.map((cat) => (cat.id === editingCategory.id ? updatedCat : cat)));
       setEditingCategory(null);
       setEditName('');
+      setEditType('EXPENSE');
       setEditDescription('');
       showFeedback('Cập nhật danh mục thành công!', 'success');
     } catch (err: any) {
@@ -95,6 +104,7 @@ export default function Categories() {
   const startEdit = (category: Category) => {
     setEditingCategory(category);
     setEditName(category.name);
+    setEditType(category.type);
     setEditDescription(category.description || '');
   };
 
@@ -136,6 +146,18 @@ export default function Categories() {
                   />
                 </div>
                 <div className="form-group">
+                  <label htmlFor="edit-type">Loại danh mục</label>
+                  <select
+                    id="edit-type"
+                    value={editType}
+                    onChange={(e) => setEditType(e.target.value as TransactionType)}
+                    required
+                  >
+                    <option value="EXPENSE">Khoản chi (Expense)</option>
+                    <option value="INCOME">Khoản thu (Income)</option>
+                  </select>
+                </div>
+                <div className="form-group">
                   <label htmlFor="edit-desc">Mô tả</label>
                   <textarea
                     id="edit-desc"
@@ -153,6 +175,7 @@ export default function Categories() {
                     onClick={() => {
                       setEditingCategory(null);
                       setEditName('');
+                      setEditType('EXPENSE');
                       setEditDescription('');
                     }}
                   >
@@ -175,6 +198,18 @@ export default function Categories() {
                     placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
                     required
                   />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="new-type">Loại danh mục</label>
+                  <select
+                    id="new-type"
+                    value={type}
+                    onChange={(e) => setType(e.target.value as TransactionType)}
+                    required
+                  >
+                    <option value="EXPENSE">Khoản chi (Expense)</option>
+                    <option value="INCOME">Khoản thu (Income)</option>
+                  </select>
                 </div>
                 <div className="form-group">
                   <label htmlFor="new-desc">Mô tả</label>
@@ -211,7 +246,12 @@ export default function Categories() {
                 {categories.map((cat) => (
                   <div key={cat.id} className="category-item-card">
                     <div className="category-item-info">
-                      <h4>{cat.name}</h4>
+                      <div className="category-item-title-row">
+                        <h4>{cat.name}</h4>
+                        <span className={`type-badge ${cat.type.toLowerCase()}`}>
+                          {cat.type === 'INCOME' ? 'Thu nhập' : 'Chi tiêu'}
+                        </span>
+                      </div>
                       {cat.description ? (
                         <p className="category-item-desc">{cat.description}</p>
                       ) : (
