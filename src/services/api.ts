@@ -1,5 +1,7 @@
 const BASE_URL = 'http://localhost:3001/api/v1';
 
+export type TransactionType = 'INCOME' | 'EXPENSE';
+
 export interface User {
   id: string;
   username: string;
@@ -17,7 +19,7 @@ export interface Category {
   id: string;
   userId: string;
   name: string;
-  type: 'INCOME' | 'EXPENSE';
+  type: TransactionType;
   description?: string;
   createdAt: string;
   updatedAt: string;
@@ -30,7 +32,7 @@ export interface Transaction {
   categoryName?: string;
   amount: number;
   description?: string;
-  type: 'INCOME' | 'EXPENSE';
+  type: TransactionType;
   transactionDate: string;
   createdAt: string;
   updatedAt: string;
@@ -145,14 +147,14 @@ export const categoryService = {
     });
   },
 
-  create: async (data: { name: string; type: 'INCOME' | 'EXPENSE'; description?: string }): Promise<Category> => {
+  create: async (data: { name: string; type: TransactionType; description?: string }): Promise<Category> => {
     return request<Category>('/categories', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  update: async (id: string, data: { name?: string; type?: 'INCOME' | 'EXPENSE'; description?: string }): Promise<Category> => {
+  update: async (id: string, data: { name?: string; type?: TransactionType; description?: string }): Promise<Category> => {
     return request<Category>(`/categories/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -167,7 +169,7 @@ export const categoryService = {
 };
 
 export const transactionService = {
-  list: async (filters?: { type?: 'INCOME' | 'EXPENSE'; categoryId?: string; startDate?: string; endDate?: string }): Promise<Transaction[]> => {
+  list: async (filters?: { type?: TransactionType; categoryId?: string; startDate?: string; endDate?: string }): Promise<Transaction[]> => {
     let query = '';
     if (filters) {
       const params = new URLSearchParams();
@@ -185,7 +187,7 @@ export const transactionService = {
   create: async (data: {
     categoryId: string;
     amount: number;
-    type: 'INCOME' | 'EXPENSE';
+    type: TransactionType;
     description?: string;
     transactionDate: string;
   }): Promise<Transaction> => {
@@ -200,7 +202,7 @@ export const transactionService = {
     data: {
       categoryId?: string;
       amount?: number;
-      type?: 'INCOME' | 'EXPENSE';
+      type?: TransactionType;
       description?: string;
       transactionDate?: string;
     }

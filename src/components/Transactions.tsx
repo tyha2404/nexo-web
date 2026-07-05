@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { costService, categoryService } from '../services/api';
-import type { Cost, Category } from '../services/api';
+import { transactionService, categoryService } from '../services/api';
+import type { Transaction, Category, TransactionType } from '../services/api';
 import './Transactions.css';
 
-export default function Transactions() {
-  const [costs, setCosts] = useState<Cost[]>([]);
+export interface TransactionsProps {
+  type?: TransactionType;
+}
+
+export default function Transactions({ type = 'EXPENSE' }: TransactionsProps) {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,31 +19,30 @@ export default function Transactions() {
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCost, setEditingCost] = useState<Cost | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   // Form states
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [incurredAt, setIncurredAt] = useState('');
-  const [currency, setCurrency] = useState('USD');
+  const [transactionDate, setTransactionDate] = useState('');
 
   // Feedback notifications
   const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [type]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const [costsData, categoriesData] = await Promise.all([
-        costService.list(),
+      const [transactionsData, categoriesData] = await Promise.all([
+        transactionService.list({ type }),
         categoryService.list(),
       ]);
-      setCosts(costsData);
+      setTransactions(transactionsData);
       setCategories(categoriesData);
     } catch (err: any) {
       setError(err.message || 'Lấy dữ liệu thất bại');
@@ -55,49 +58,49 @@ export default function Transactions() {
     }, 4000);
   };
 
+  const filteredCategories = categories.filter((cat) => cat.type === type);
+
   const openAddModal = () => {
-    setEditingCost(null);
+    setEditingTransaction(null);
     setTitle('');
     setAmount('');
-    setCategoryId(categories.length > 0 ? categories[0].id : '');
-    setIncurredAt(new Date().toISOString().substring(0, 10));
-    setCurrency('USD');
+    setCategoryId(filteredCategories.length > 0 ? filteredCategories[0].id : '');
+    setTransactionDate(new Date().toISOString().substring(0, 10));
     setIsModalOpen(true);
   };
 
-  const openEditModal = (cost: Cost) => {
-    setEditingCost(cost);
-    setTitle(cost.title);
-    setAmount(cost.amount.toString());
-    setCategoryId(cost.categoryId);
-    setIncurredAt(new Date(cost.incurredAt).toISOString().substring(0, 10));
-    setCurrency(cost.currency || 'USD');
+  const openEditModal = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setTitle(transaction.description || '');
+    setAmount(transaction.amount.toString());
+    setCategoryId(transaction.categoryId);
+    setTransactionDate(new Date(transaction.transactionDate).toISOString().substring(0, 10));
     setIsModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !amount || !categoryId || !incurredAt) {
+    if (!title.trim() || !amount || !categoryId || !transactionDate) {
       showFeedback('Vui lòng điền đầy đủ các trường bắt buộc', 'error');
       return;
     }
 
     const payload = {
-      title: title.trim(),
+      description: title.trim(),
       amount: parseFloat(amount),
       categoryId,
-      incurredAt: new Date(incurredAt).toISOString(),
-      currency,
+      transactionDate: new Date(transactionDate).toISOString(),
+      type,
     };
 
     try {
-      if (editingCost) {
-        const updated = await costService.update(editingCost.id, payload);
-        setCosts((prev) => prev.map((item) => (item.id === editingCost.id ? updated : item)));
+      if (editingTransaction) {
+        const updated = await transactionService.update(editingTransaction.id, payload);
+        setTransactions((prev) => prev.map((item) => (item.id === editingTransaction.id ? updated : item)));
         showFeedback('Cập nhật giao dịch thành công!', 'success');
       } else {
-        const created = await costService.create(payload);
-        setCosts((prev) => [created, ...prev]);
+        const created = await transactionService.create(payload);
+        setTransactions((prev) => [created, ...prev]);
         showFeedback('Thêm giao dịch thành công!', 'success');
       }
       setIsModalOpen(false);
@@ -106,13 +109,13 @@ export default function Transactions() {
     }
   };
 
-  const handleDelete = async (id: string, itemTitle: string) => {
-    const confirmDelete = window.confirm(`Bạn có chắc chắn muốn xóa giao dịch "${itemTitle}" không?`);
+  const handleDelete = async (id: string, itemDescription: string) => {
+    const confirmDelete = window.confirm(`Bạn có chắc chắn muốn xóa giao dịch "${itemDescription}" không?`);
     if (!confirmDelete) return;
 
     try {
-      await costService.delete(id);
-      setCosts((prev) => prev.filter((item) => item.id !== id));
+      await transactionService.delete(id);
+      setTransactions((prev) => prev.filter((item) => item.id !== id));
       showFeedback('Xóa giao dịch thành công!', 'success');
     } catch (err: any) {
       showFeedback(err.message || 'Xóa giao dịch thất bại', 'error');
@@ -124,14 +127,14 @@ export default function Transactions() {
     return cat ? cat.name : 'Chưa phân loại';
   };
 
-  const formatCurrency = (val: number, cur: string) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(val);
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
   };
 
-  // Filter costs client-side
-  const filteredCosts = costs.filter((cost) => {
-    const matchesSearch = cost.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategoryFilter ? cost.categoryId === selectedCategoryFilter : true;
+  // Filter transactions client-side
+  const filteredTransactions = transactions.filter((txn) => {
+    const matchesSearch = (txn.description || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategoryFilter ? txn.categoryId === selectedCategoryFilter : true;
     return matchesSearch && matchesCategory;
   });
 
@@ -139,11 +142,11 @@ export default function Transactions() {
     <div className="transactions-view">
       <header className="transactions-header animate-fade-in">
         <div className="transactions-title">
-          <h2>Sổ giao dịch</h2>
-          <p className="subtitle">Theo dõi và quản lý các khoản chi tiêu và chi phí của bạn</p>
+          <h2>{type === 'INCOME' ? 'Quản lý Thu nhập' : 'Quản lý Chi tiêu'}</h2>
+          <p className="subtitle">Theo dõi và quản lý các khoản {type === 'INCOME' ? 'thu nhập' : 'chi tiêu'} của bạn</p>
         </div>
         <button className="btn btn-primary" onClick={openAddModal}>
-          + Thêm giao dịch
+          + Thêm {type === 'INCOME' ? 'thu nhập' : 'chi tiêu'}
         </button>
       </header>
 
@@ -176,7 +179,7 @@ export default function Transactions() {
             onChange={(e) => setSelectedCategoryFilter(e.target.value)}
           >
             <option value="">Tất cả Danh mục</option>
-            {categories.map((cat) => (
+            {filteredCategories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
@@ -190,7 +193,7 @@ export default function Transactions() {
           <div className="spinner"></div>
           <p>Đang tải giao dịch...</p>
         </div>
-      ) : filteredCosts.length === 0 ? (
+      ) : filteredTransactions.length === 0 ? (
         <div className="empty-state animate-fade-in">
           <p>Không tìm thấy giao dịch nào. Hãy thử điều chỉnh bộ lọc hoặc thêm giao dịch mới!</p>
         </div>
@@ -207,19 +210,19 @@ export default function Transactions() {
               </tr>
             </thead>
             <tbody>
-              {filteredCosts.map((cost) => (
-                <tr key={cost.id}>
-                  <td className="txn-title-cell">{cost.title}</td>
+              {filteredTransactions.map((txn) => (
+                <tr key={txn.id}>
+                  <td className="txn-title-cell">{txn.description}</td>
                   <td className="txn-amount">
-                    {formatCurrency(cost.amount, cost.currency || 'USD')}
+                    {formatCurrency(txn.amount)}
                   </td>
                   <td>
                     <span className="txn-category-badge">
-                      {getCategoryName(cost.categoryId)}
+                      {getCategoryName(txn.categoryId)}
                     </span>
                   </td>
                   <td className="txn-date">
-                    {new Date(cost.incurredAt).toLocaleDateString(undefined, {
+                    {new Date(txn.transactionDate).toLocaleDateString(undefined, {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',
@@ -227,17 +230,17 @@ export default function Transactions() {
                   </td>
                   <td className="txn-actions-cell">
                     <button
-                      onClick={() => openEditModal(cost)}
+                      onClick={() => openEditModal(txn)}
                       className="action-btn edit-btn"
                       style={{ marginRight: '0.5rem' }}
-                      aria-label={`Sửa ${cost.title}`}
+                      aria-label={`Sửa ${txn.description || ''}`}
                     >
                       ✏️
                     </button>
                     <button
-                      onClick={() => handleDelete(cost.id, cost.title)}
+                      onClick={() => handleDelete(txn.id, txn.description || '')}
                       className="action-btn delete-btn"
-                      aria-label={`Xóa ${cost.title}`}
+                      aria-label={`Xóa ${txn.description || ''}`}
                     >
                       🗑️
                     </button>
@@ -254,7 +257,7 @@ export default function Transactions() {
         <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}>
           <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{editingCost ? 'Sửa giao dịch' : 'Thêm giao dịch'}</h3>
+              <h3>{editingTransaction ? 'Sửa giao dịch' : 'Thêm giao dịch'}</h3>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}>
                 &times;
               </button>
@@ -295,7 +298,7 @@ export default function Transactions() {
                   required
                 >
                   <option value="" disabled>Chọn Danh mục</option>
-                  {categories.map((cat) => (
+                  {filteredCategories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
                     </option>
@@ -308,30 +311,15 @@ export default function Transactions() {
                 <input
                   id="txn-incurred"
                   type="date"
-                  value={incurredAt}
-                  onChange={(e) => setIncurredAt(e.target.value)}
+                  value={transactionDate}
+                  onChange={(e) => setTransactionDate(e.target.value)}
                   required
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="txn-currency">Tiền tệ</label>
-                <select
-                  id="txn-currency"
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                >
-                  <option value="USD">USD ($)</option>
-                  <option value="VND">VND (₫)</option>
-                  <option value="EUR">EUR (€)</option>
-                  <option value="GBP">GBP (£)</option>
-                  <option value="JPY">JPY (¥)</option>
-                </select>
-              </div>
-
               <div className="button-group">
                 <button type="submit" className="btn btn-primary">
-                  {editingCost ? 'Cập nhật' : 'Thêm'} giao dịch
+                  {editingTransaction ? 'Cập nhật' : 'Thêm'} giao dịch
                 </button>
                 <button
                   type="button"
