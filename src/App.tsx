@@ -9,7 +9,8 @@ import type { User } from './services/api'
 
 function App() {
   const [isInstalled, setIsInstalled] = useState(false)
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'categories'>('dashboard')
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'income' | 'expenses' | 'categories'>('dashboard')
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
@@ -93,7 +94,23 @@ function App() {
 
   return (
     <div className="app-shell animate-fade-in">
-      <aside className="sidebar">
+      {/* Mobile Header */}
+      <header className="mobile-header">
+        <button className="hamburger-btn" onClick={() => setIsSidebarOpen(!isSidebarOpen)} aria-label="Toggle menu">
+          ☰
+        </button>
+        <div className="mobile-brand">
+          <img src="/favicon.svg" className="mobile-logo" alt="Nexo logo" />
+          <span className="brand-name">Nexo Portal</span>
+        </div>
+      </header>
+
+      {/* Sidebar Backdrop Overlay */}
+      {isSidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />
+      )}
+
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
             <img src="/favicon.svg" className="sidebar-logo" alt="Nexo logo" />
@@ -114,21 +131,40 @@ function App() {
 
         <nav className="nav-menu">
           <button
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => {
+              setActiveTab('dashboard')
+              setIsSidebarOpen(false)
+            }}
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
           >
             <span className="nav-icon">📊</span>
             <span className="nav-text">Bảng điều khiển</span>
           </button>
           <button
-            onClick={() => setActiveTab('transactions')}
-            className={`nav-item ${activeTab === 'transactions' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('income')
+              setIsSidebarOpen(false)
+            }}
+            className={`nav-item ${activeTab === 'income' ? 'active' : ''}`}
           >
-            <span className="nav-icon">💸</span>
-            <span className="nav-text">Sổ giao dịch</span>
+            <span className="nav-icon">📈</span>
+            <span className="nav-text">Thu nhập</span>
           </button>
           <button
-            onClick={() => setActiveTab('categories')}
+            onClick={() => {
+              setActiveTab('expenses')
+              setIsSidebarOpen(false)
+            }}
+            className={`nav-item ${activeTab === 'expenses' ? 'active' : ''}`}
+          >
+            <span className="nav-icon">📉</span>
+            <span className="nav-text">Chi tiêu</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('categories')
+              setIsSidebarOpen(false)
+            }}
             className={`nav-item ${activeTab === 'categories' ? 'active' : ''}`}
           >
             <span className="nav-icon">📁</span>
@@ -137,7 +173,10 @@ function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <button onClick={handleLogout} className="logout-btn">
+          <button onClick={() => {
+            handleLogout()
+            setIsSidebarOpen(false)
+          }} className="logout-btn">
             <span className="nav-icon">🚪</span>
             <span className="nav-text">Đăng xuất</span>
           </button>
@@ -148,7 +187,7 @@ function App() {
         <header className="main-header">
           <div className="header-left">
             <h1 className="view-title">
-              {activeTab === 'dashboard' ? 'Bảng điều khiển' : activeTab === 'transactions' ? 'Sổ giao dịch' : 'Danh mục'}
+              {activeTab === 'dashboard' ? 'Bảng điều khiển' : activeTab === 'income' ? 'Quản lý thu nhập' : activeTab === 'expenses' ? 'Quản lý chi tiêu' : 'Danh mục'}
             </h1>
           </div>
           <div className="header-right">
@@ -171,8 +210,10 @@ function App() {
         <div className="content-view">
           {activeTab === 'dashboard' ? (
             <Dashboard />
-          ) : activeTab === 'transactions' ? (
-            <Transactions />
+          ) : activeTab === 'income' ? (
+            <Transactions type="INCOME" />
+          ) : activeTab === 'expenses' ? (
+            <Transactions type="EXPENSE" />
           ) : (
             <Categories />
           )}

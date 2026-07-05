@@ -325,41 +325,87 @@ body {
   background: #334155;
 }
 
+/* Mobile-only elements hidden by default on desktop */
+.mobile-header {
+  display: none;
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 99;
+}
+
 /* Responsive Styling */
 @media (max-width: 768px) {
   .app-shell {
     flex-direction: column;
   }
 
-  .sidebar {
-    width: 100%;
-    height: auto;
-    border-right: none;
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem;
+    background: #0f172a;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    padding: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 90;
+  }
+
+  .hamburger-btn {
+    background: transparent;
+    border: none;
+    color: #f8fafc;
+    font-size: 1.75rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+  }
+
+  .hamburger-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .mobile-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .mobile-logo {
+    height: 24px;
+    width: 24px;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 280px;
+    height: 100vh;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5);
+    background: #0f172a;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
   }
 
   .user-profile {
-    margin-bottom: 1rem;
-  }
-
-  .nav-menu {
-    flex-direction: row;
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
-  }
-
-  .nav-item {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
-    white-space: nowrap;
-    width: auto;
-  }
-
-  .logout-btn {
-    width: auto;
-    margin-top: 0;
-    padding: 0.5rem 0.75rem;
+    margin-bottom: 1.5rem;
   }
 
   .main-content {
@@ -368,11 +414,18 @@ body {
   }
 
   .main-header {
-    padding: 1rem 1.5rem;
+    padding: 1rem 1.25rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .view-title {
+    font-size: 1.35rem;
   }
 
   .content-view {
-    padding: 1.5rem;
+    padding: 1.25rem;
   }
 }
 
