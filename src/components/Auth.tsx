@@ -29,7 +29,7 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
         // Handle Login
         const response = await authService.login(email, password);
         localStorage.setItem('token', response.token);
-        
+
         setSuccess('Đăng nhập thành công!');
         window.dispatchEvent(new Event('auth-changed'));
         if (onSuccess) {
@@ -40,11 +40,11 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
         // Go backend requires username, email, password.
         // If the user filled 'name', we can use it or log it, but the backend accepts username/email/password.
         await authService.register(username, email, password);
-        
+
         // Auto-login the user after registration to get the token
         const loginResponse = await authService.login(email, password);
         localStorage.setItem('token', loginResponse.token);
-        
+
         setSuccess('Tạo tài khoản và đăng nhập thành công!');
         window.dispatchEvent(new Event('auth-changed'));
         if (onSuccess) {
@@ -70,7 +70,9 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
         <div className="auth-header">
           <h2 className="auth-title">Nexo Portal</h2>
           <p className="auth-subtitle">
-            {isLogin ? 'Truy cập bảng điều khiển tài chính của bạn' : 'Tạo tài khoản bảo mật của bạn'}
+            {isLogin
+              ? 'Truy cập bảng điều khiển tài chính của bạn'
+              : 'Tạo tài khoản bảo mật của bạn'}
           </p>
         </div>
 

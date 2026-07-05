@@ -1,5 +1,5 @@
-import React from 'react'
-import { useRegisterSW } from 'virtual:pwa-register/react'
+import React from 'react';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 const ReloadPrompt: React.FC = () => {
   const {
@@ -8,19 +8,19 @@ const ReloadPrompt: React.FC = () => {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
-      console.log('SW Registered: ' + r)
+      console.log('SW Registered: ' + r);
     },
     onRegisterError(error) {
-      console.log('SW registration error', error)
+      console.log('SW registration error', error);
     },
-  })
+  });
 
   const close = () => {
-    setOfflineReady(false)
-    setNeedRefresh(false)
-  }
+    setOfflineReady(false);
+    setNeedRefresh(false);
+  };
 
-  if (!offlineReady && !needRefresh) return null
+  if (!offlineReady && !needRefresh) return null;
 
   return (
     <div className="pwa-toast" role="alert">
@@ -42,7 +42,7 @@ const ReloadPrompt: React.FC = () => {
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ReloadPrompt
+export default ReloadPrompt;

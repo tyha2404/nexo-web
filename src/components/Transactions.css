@@ -22,13 +22,13 @@
   font-size: 2.2rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
-  background: linear-gradient(135deg, #38bdf8 0%, #a855f7 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .transactions-title .subtitle {
-  color: #94a3b8;
+  color: var(--text-muted);
   margin: 0;
   font-size: 1rem;
 }
@@ -40,10 +40,10 @@
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
   align-items: center;
-  background: rgba(30, 41, 59, 0.3);
+  background: var(--bg-card);
   padding: 1rem;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
   backdrop-filter: blur(12px);
 }
 
@@ -58,7 +58,7 @@
   left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #64748b;
+  color: var(--text-muted);
   pointer-events: none;
 }
 
@@ -66,10 +66,10 @@
 .filter-bar select {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  color: #f8fafc;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
   font-family: inherit;
   font-size: 0.95rem;
   box-sizing: border-box;
@@ -87,18 +87,18 @@
 .filter-bar input:focus,
 .filter-bar select:focus {
   outline: none;
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
 /* Table / List Container */
 .transactions-table-container {
   overflow-x: auto;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(30, 41, 59, 0.45);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
   backdrop-filter: blur(16px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-md);
 }
 
 .transactions-table {
@@ -110,16 +110,16 @@
 
 .transactions-table th {
   padding: 1rem 1.5rem;
-  background: rgba(15, 23, 42, 0.4);
-  color: #94a3b8;
+  background: var(--bg-input);
+  color: var(--text-muted);
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border);
 }
 
 .transactions-table td {
   padding: 1.2rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: #cbd5e1;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
   vertical-align: middle;
 }
 
@@ -128,21 +128,20 @@
 }
 
 .transactions-table tr:hover td {
-  background: rgba(15, 23, 42, 0.25);
-  color: #f8fafc;
+  background: var(--bg-hover);
+  color: var(--text-main);
 }
 
 /* Badges and Values */
 .txn-title-cell {
   font-weight: 500;
-  color: #f8fafc;
+  color: var(--text-main);
   text-align: left;
 }
 
 .txn-amount {
-  font-family: 'JetBrains Mono', Courier, monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
-  color: #34d399; /* Green by default */
 }
 
 .txn-category-badge {
@@ -151,13 +150,13 @@
   border-radius: 9999px;
   font-size: 0.8rem;
   font-weight: 500;
-  background: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  background: var(--primary-glow);
+  color: var(--primary);
+  border: 1px solid var(--primary-glow);
 }
 
 .txn-date {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
@@ -182,13 +181,13 @@
 }
 
 .modal-content {
-  background: rgba(30, 41, 59, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   width: 90%;
   max-width: 500px;
   padding: 2rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg);
   animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-sizing: border-box;
 }
@@ -198,21 +197,21 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border);
   padding-bottom: 0.75rem;
 }
 
 .modal-header h3 {
   margin: 0;
   font-size: 1.4rem;
-  color: #f8fafc;
+  color: var(--text-main);
 }
 
 .close-btn {
   background: none;
   border: none;
   font-size: 1.5rem;
-  color: #94a3b8;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -225,8 +224,8 @@
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #f8fafc;
+  background: var(--bg-hover);
+  color: var(--text-main);
 }
 
 /* Animations */
@@ -236,14 +235,18 @@
     opacity: 0;
   }
   to {
-    transform: scale(1);
+    transform: none;
     opacity: 1;
   }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Responsive view tweaks */
@@ -252,4 +255,30 @@
   .transactions-table td:nth-child(4) {
     display: none; /* Hide date on small screens to fit content */
   }
+}
+
+@media (max-width: 768px) {
+  .transactions-view {
+    padding: 0.75rem;
+  }
+  .transactions-header {
+    margin-bottom: 1.25rem;
+    gap: 0.75rem;
+  }
+  .transactions-title h2 {
+    font-size: 1.75rem;
+  }
+  .filter-bar {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+  .transactions-table th,
+  .transactions-table td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+/* DatePicker Styling Overrides */
+.react-datepicker-wrapper {
+  width: 100%;
 }

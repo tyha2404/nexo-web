@@ -1,7 +1,60 @@
 import React, { useState, useEffect } from 'react';
+import Select from 'react-select';
 import { categoryService } from '../services/api';
-import type { Category, TransactionType } from '../services/api';
+import { TransactionType } from '../commons/constants';
+import type { Category } from '../commons/types';
 import './Categories.css';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const customSelectStyles = {
+  control: (provided: any, state: any) => ({
+    ...provided,
+    background: 'rgba(15, 23, 42, 0.6)',
+    borderColor: state.isFocused ? '#38bdf8' : 'rgba(255, 255, 255, 0.1)',
+    borderRadius: '10px',
+    color: '#f8fafc',
+    minHeight: '42px',
+    boxShadow: state.isFocused ? '0 0 0 3px rgba(56, 189, 248, 0.15)' : 'none',
+    '&:hover': {
+      borderColor: 'rgba(255, 255, 255, 0.2)',
+    },
+  }),
+  menu: (provided: any) => ({
+    ...provided,
+    background: '#1e293b',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '10px',
+    overflow: 'hidden',
+    zIndex: 9999,
+  }),
+  option: (provided: any, state: any) => ({
+    ...provided,
+    background: state.isSelected
+      ? '#38bdf8'
+      : state.isFocused
+        ? 'rgba(255, 255, 255, 0.05)'
+        : 'transparent',
+    color: state.isSelected ? '#0f172a' : '#f8fafc',
+    cursor: 'pointer',
+    '&:active': {
+      background: '#38bdf8',
+      color: '#0f172a',
+    },
+  }),
+  singleValue: (provided: any) => ({
+    ...provided,
+    color: '#f8fafc',
+  }),
+  input: (provided: any) => ({
+    ...provided,
+    color: '#f8fafc',
+  }),
+  placeholder: (provided: any) => ({
+    ...provided,
+    color: '#64748b',
+  }),
+};
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -10,19 +63,19 @@ export default function Categories() {
 
   // Form states
   const [name, setName] = useState('');
-  const [type, setType] = useState<TransactionType>('EXPENSE');
+  const [type, setType] = useState<TransactionType>(TransactionType.EXPENSE);
   const [description, setDescription] = useState('');
+  const [budgetLimit, setBudgetLimit] = useState('');
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editName, setEditName] = useState('');
-  const [editType, setEditType] = useState<TransactionType>('EXPENSE');
+  const [editType, setEditType] = useState<TransactionType>(TransactionType.EXPENSE);
   const [editDescription, setEditDescription] = useState('');
+  const [editBudgetLimit, setEditBudgetLimit] = useState('');
 
   // Notifications/Feedback messages
-  const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(
+    null
+  );
 
   const showFeedback = (message: string, type: 'success' | 'error') => {
     setFeedback({ message, type });
@@ -36,13 +89,17 @@ export default function Categories() {
       setLoading(true);
       setError(null);
       const data = await categoryService.list();
-      setCategories(data);
+      setCategories(data || []);
     } catch (err: any) {
       setError(err.message || 'Lấy danh mục thất bại');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,12 +110,17 @@ export default function Categories() {
       const newCat = await categoryService.create({
         name: name.trim(),
         type,
-        description: description.trim() || undefined
+        description: description.trim() || undefined,
+        budgetLimit:
+          type === TransactionType.EXPENSE && budgetLimit.trim()
+            ? parseFloat(budgetLimit)
+            : undefined,
       });
       setCategories((prev) => [...prev, newCat]);
       setName('');
-      setType('EXPENSE');
+      setType(TransactionType.EXPENSE);
       setDescription('');
+      setBudgetLimit('');
       showFeedback('Tạo danh mục thành công!', 'success');
     } catch (err: any) {
       showFeedback(err.message || 'Tạo danh mục thất bại', 'error');
@@ -74,13 +136,20 @@ export default function Categories() {
       const updatedCat = await categoryService.update(editingCategory.id, {
         name: editName.trim(),
         type: editType,
-        description: editDescription.trim() || undefined
+        description: editDescription.trim() || undefined,
+        budgetLimit:
+          editType === TransactionType.EXPENSE && editBudgetLimit.trim()
+            ? parseFloat(editBudgetLimit)
+            : undefined,
       });
-      setCategories((prev) => prev.map((cat) => (cat.id === editingCategory.id ? updatedCat : cat)));
+      setCategories((prev) =>
+        prev.map((cat) => (cat.id === editingCategory.id ? updatedCat : cat))
+      );
       setEditingCategory(null);
       setEditName('');
-      setEditType('EXPENSE');
+      setEditType(TransactionType.EXPENSE);
       setEditDescription('');
+      setEditBudgetLimit('');
       showFeedback('Cập nhật danh mục thành công!', 'success');
     } catch (err: any) {
       showFeedback(err.message || 'Cập nhật danh mục thất bại', 'error');
@@ -104,8 +173,9 @@ export default function Categories() {
   const startEdit = (category: Category) => {
     setEditingCategory(category);
     setEditName(category.name);
-    setEditType(category.type);
+    setEditType(category.type as TransactionType);
     setEditDescription(category.description || '');
+    setEditBudgetLimit(category.budgetLimit !== undefined ? category.budgetLimit.toString() : '');
   };
 
   return (
@@ -116,9 +186,7 @@ export default function Categories() {
       </header>
 
       {feedback && (
-        <div className={`feedback-alert ${feedback.type} animate-fade-in`}>
-          {feedback.message}
-        </div>
+        <div className={`feedback-alert ${feedback.type} animate-fade-in`}>{feedback.message}</div>
       )}
 
       {error && (
@@ -147,16 +215,41 @@ export default function Categories() {
                 </div>
                 <div className="form-group">
                   <label htmlFor="edit-type">Loại danh mục</label>
-                  <select
+                  <Select
                     id="edit-type"
-                    value={editType}
-                    onChange={(e) => setEditType(e.target.value as TransactionType)}
-                    required
-                  >
-                    <option value="EXPENSE">Khoản chi (Expense)</option>
-                    <option value="INCOME">Khoản thu (Income)</option>
-                  </select>
+                    options={[
+                      { value: TransactionType.INCOME, label: 'Thu nhập (INCOME)' },
+                      { value: TransactionType.EXPENSE, label: 'Chi phí (EXPENSE)' },
+                    ]}
+                    value={
+                      [
+                        { value: TransactionType.INCOME, label: 'Thu nhập (INCOME)' },
+                        { value: TransactionType.EXPENSE, label: 'Chi phí (EXPENSE)' },
+                      ].find((opt) => opt.value === editType) || null
+                    }
+                    onChange={(option) =>
+                      setEditType(
+                        (option ? option.value : TransactionType.EXPENSE) as TransactionType
+                      )
+                    }
+                    styles={customSelectStyles}
+                    placeholder="Chọn Loại danh mục"
+                  />
                 </div>
+                {editType === TransactionType.EXPENSE && (
+                  <div className="form-group">
+                    <label htmlFor="edit-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
+                    <input
+                      id="edit-budget"
+                      type="number"
+                      value={editBudgetLimit}
+                      onChange={(e) => setEditBudgetLimit(e.target.value)}
+                      placeholder="Ví dụ: 5000000"
+                      min="0"
+                      step="any"
+                    />
+                  </div>
+                )}
                 <div className="form-group">
                   <label htmlFor="edit-desc">Mô tả</label>
                   <textarea
@@ -168,15 +261,18 @@ export default function Categories() {
                   />
                 </div>
                 <div className="button-group">
-                  <button type="submit" className="btn btn-primary">Sửa danh mục</button>
+                  <button type="submit" className="btn btn-primary">
+                    Sửa danh mục
+                  </button>
                   <button
                     type="button"
                     className="btn btn-secondary"
                     onClick={() => {
                       setEditingCategory(null);
                       setEditName('');
-                      setEditType('EXPENSE');
+                      setEditType(TransactionType.EXPENSE);
                       setEditDescription('');
+                      setEditBudgetLimit('');
                     }}
                   >
                     Hủy
@@ -201,16 +297,39 @@ export default function Categories() {
                 </div>
                 <div className="form-group">
                   <label htmlFor="new-type">Loại danh mục</label>
-                  <select
+                  <Select
                     id="new-type"
-                    value={type}
-                    onChange={(e) => setType(e.target.value as TransactionType)}
-                    required
-                  >
-                    <option value="EXPENSE">Khoản chi (Expense)</option>
-                    <option value="INCOME">Khoản thu (Income)</option>
-                  </select>
+                    options={[
+                      { value: TransactionType.INCOME, label: 'Thu nhập (INCOME)' },
+                      { value: TransactionType.EXPENSE, label: 'Chi phí (EXPENSE)' },
+                    ]}
+                    value={
+                      [
+                        { value: TransactionType.INCOME, label: 'Thu nhập (INCOME)' },
+                        { value: TransactionType.EXPENSE, label: 'Chi phí (EXPENSE)' },
+                      ].find((opt) => opt.value === type) || null
+                    }
+                    onChange={(option) =>
+                      setType((option ? option.value : TransactionType.EXPENSE) as TransactionType)
+                    }
+                    styles={customSelectStyles}
+                    placeholder="Chọn Loại danh mục"
+                  />
                 </div>
+                {type === TransactionType.EXPENSE && (
+                  <div className="form-group">
+                    <label htmlFor="new-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
+                    <input
+                      id="new-budget"
+                      type="number"
+                      value={budgetLimit}
+                      onChange={(e) => setBudgetLimit(e.target.value)}
+                      placeholder="Ví dụ: 5000000"
+                      min="0"
+                      step="any"
+                    />
+                  </div>
+                )}
                 <div className="form-group">
                   <label htmlFor="new-desc">Mô tả</label>
                   <textarea
@@ -221,7 +340,9 @@ export default function Categories() {
                     rows={3}
                   />
                 </div>
-                <button type="submit" className="btn btn-primary btn-block">Thêm danh mục</button>
+                <button type="submit" className="btn btn-primary btn-block">
+                  Thêm danh mục
+                </button>
               </form>
             </div>
           )}
@@ -231,7 +352,7 @@ export default function Categories() {
         <div className="list-column animate-fade-in">
           <div className="glass-card list-card">
             <h3>Danh mục hiện có</h3>
-            
+
             {loading ? (
               <div className="loading-spinner">
                 <div className="spinner"></div>
@@ -247,9 +368,16 @@ export default function Categories() {
                   <div key={cat.id} className="category-item-card">
                     <div className="category-item-info">
                       <div className="category-item-title-row">
-                        <h4>{cat.name}</h4>
+                        <h4>
+                          {cat.name}{' '}
+                          {cat.budgetLimit !== undefined && (
+                            <span className="text-xs text-slate-400 font-normal ml-1">
+                              (Hạn mức: {cat.budgetLimit.toLocaleString('vi-VN')}đ)
+                            </span>
+                          )}
+                        </h4>
                         <span className={`type-badge ${cat.type.toLowerCase()}`}>
-                          {cat.type === 'INCOME' ? 'Thu nhập' : 'Chi tiêu'}
+                          {cat.type === TransactionType.INCOME ? 'Thu nhập' : 'Chi tiêu'}
                         </span>
                       </div>
                       {cat.description ? (
@@ -264,14 +392,43 @@ export default function Categories() {
                         className="action-btn edit-btn"
                         aria-label={`Sửa danh mục ${cat.name}`}
                       >
-                        ✏️
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                        >
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
                       </button>
                       <button
                         onClick={() => handleDelete(cat.id, cat.name)}
                         className="action-btn delete-btn"
                         aria-label={`Xóa danh mục ${cat.name}`}
                       >
-                        🗑️
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        </svg>
                       </button>
                     </div>
                   </div>

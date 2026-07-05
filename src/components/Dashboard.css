@@ -15,13 +15,13 @@
   font-size: 2.2rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
-  background: linear-gradient(135deg, #38bdf8 0%, #a855f7 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .dashboard-header .subtitle {
-  color: #94a3b8;
+  color: var(--text-muted);
   margin: 0;
   font-size: 1rem;
 }
@@ -42,60 +42,22 @@
 
 .summary-card {
   position: relative;
-  background: rgba(30, 41, 59, 0.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   padding: 1.75rem;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: var(--shadow-md);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .summary-card:hover {
-  transform: translateY(-5px);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-/* Glowing shadow accents for cards */
-.income-card:hover {
-  box-shadow: 0 15px 35px rgba(52, 211, 153, 0.15);
-}
-
-.expense-card:hover {
-  box-shadow: 0 15px 35px rgba(248, 113, 113, 0.15);
-}
-
-.balance-card:hover {
-  box-shadow: 0 15px 35px rgba(56, 189, 248, 0.15);
-}
-
-.card-glow-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.03;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.income-card .card-glow-bg {
-  background: radial-gradient(circle at top right, #34d399 0%, transparent 60%);
-}
-
-.expense-card .card-glow-bg {
-  background: radial-gradient(circle at top right, #f87171 0%, transparent 60%);
-}
-
-.balance-card .card-glow-bg {
-  background: radial-gradient(circle at top right, #38bdf8 0%, transparent 60%);
-}
-
-.summary-card:hover .card-glow-bg {
-  opacity: 0.08;
+  transform: translateY(-4px);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-lg);
 }
 
 .card-content {
@@ -107,7 +69,7 @@
 .card-label {
   display: block;
   font-size: 0.875rem;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-weight: 500;
   margin-bottom: 0.5rem;
   text-transform: uppercase;
@@ -118,8 +80,8 @@
   font-size: 2.25rem;
   font-weight: 700;
   margin: 0 0 1rem 0;
-  color: #f8fafc;
-  font-family: 'JetBrains Mono', Courier, monospace;
+  color: var(--text-main);
+  font-family: var(--font-mono);
 }
 
 .card-trend {
@@ -133,26 +95,26 @@
 }
 
 .card-trend.upward {
-  background: rgba(52, 211, 153, 0.1);
-  color: #34d399;
+  background: var(--income-glow);
+  color: var(--income);
 }
 
 .card-trend.downward {
-  background: rgba(248, 113, 113, 0.1);
-  color: #f87171;
+  background: var(--expense-glow);
+  color: var(--expense);
 }
 
 .card-trend.info {
-  background: rgba(56, 189, 248, 0.1);
-  color: #38bdf8;
+  background: var(--primary-glow);
+  color: var(--primary);
 }
 
 .positive-balance {
-  color: #34d399;
+  color: var(--income);
 }
 
 .negative-balance {
-  color: #f87171;
+  color: var(--expense);
 }
 
 /* Dashboard Grid */
@@ -169,19 +131,19 @@
 }
 
 .glass-card {
-  background: rgba(30, 41, 59, 0.45);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   padding: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: var(--shadow-md);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 15px 35px rgba(124, 58, 237, 0.12);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-lg);
 }
 
 .card-header {
@@ -190,13 +152,13 @@
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--border);
 }
 
 .card-header h3 {
   margin: 0;
   font-size: 1.3rem;
-  color: #f8fafc;
+  color: var(--text-main);
   font-weight: 600;
   text-align: left;
 }
@@ -204,11 +166,11 @@
 .header-badge {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #a855f7;
-  background: rgba(168, 85, 247, 0.12);
+  color: var(--primary);
+  background: var(--primary-glow);
   padding: 0.25rem 0.6rem;
   border-radius: 9999px;
-  border: 1px solid rgba(168, 85, 247, 0.2);
+  border: 1px solid var(--primary-glow);
 }
 
 /* Category Breakdown List */
@@ -231,15 +193,15 @@
 }
 
 .category-name {
-  color: #cbd5e1;
+  color: var(--text-muted);
   font-weight: 500;
   font-size: 0.95rem;
 }
 
 .category-amount {
-  font-family: 'JetBrains Mono', Courier, monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
-  color: #f8fafc;
+  color: var(--text-main);
   font-size: 0.95rem;
 }
 
@@ -277,15 +239,17 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: rgba(15, 23, 42, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  border-radius: 12px;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .activity-item:hover {
-  background: rgba(15, 23, 42, 0.45);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
 }
 
 .activity-details {
@@ -296,7 +260,7 @@
 }
 
 .activity-title {
-  color: #f8fafc;
+  color: var(--text-main);
   font-weight: 500;
   font-size: 0.95rem;
 }
@@ -306,20 +270,20 @@
   align-items: center;
   gap: 0.4rem;
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .activity-category {
-  color: #c084fc;
+  color: var(--primary);
 }
 
 .activity-date {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .activity-dot {
   font-size: 0.6rem;
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--border);
 }
 
 .activity-value {
@@ -327,21 +291,21 @@
 }
 
 .activity-value .txn-amount {
-  font-family: 'JetBrains Mono', Courier, monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
 }
 
 .activity-value .txn-amount.txn-income {
-  color: #34d399;
+  color: var(--income);
 }
 
 .activity-value .txn-amount.txn-expense {
-  color: #f87171;
+  color: var(--expense);
 }
 
 /* No data and Loading States */
 .no-data {
-  color: #64748b;
+  color: var(--text-muted);
   font-style: italic;
   padding: 2rem 0;
   text-align: center;
@@ -354,14 +318,14 @@
   align-items: center;
   justify-content: center;
   padding: 5rem 0;
-  color: #cbd5e1;
+  color: var(--text-muted);
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(56, 189, 248, 0.1);
-  border-top-color: #38bdf8;
+  border: 3px solid var(--primary-glow);
+  border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1.5rem;
@@ -381,4 +345,29 @@
   padding: 0.4rem 1rem;
   font-size: 0.85rem;
   cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 0.75rem;
+  }
+  .dashboard-header {
+    margin-bottom: 1.5rem;
+  }
+  .dashboard-header h2 {
+    font-size: 1.75rem;
+  }
+  .summary-card {
+    padding: 1.25rem;
+  }
+  .card-value {
+    font-size: 1.85rem;
+    margin-bottom: 0.75rem;
+  }
+  .glass-card {
+    padding: 1.25rem;
+  }
+  .card-header {
+    margin-bottom: 1.25rem;
+  }
 }

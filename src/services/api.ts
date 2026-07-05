@@ -1,73 +1,16 @@
-const BASE_URL = 'http://localhost:3001/api/v1';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1';
 
-export type TransactionType = 'INCOME' | 'EXPENSE';
+import { TransactionType } from '../commons/constants';
+export { TransactionType };
 
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  token: string;
-}
-
-export interface Category {
-  id: string;
-  userId: string;
-  name: string;
-  type: TransactionType;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Transaction {
-  id: string;
-  userId: string;
-  categoryId: string;
-  categoryName?: string;
-  amount: number;
-  description?: string;
-  type: TransactionType;
-  transactionDate: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Cost {
-  id: string;
-  userId: string;
-  title: string;
-  amount: number;
-  currency: string;
-  incurredAt: string;
-  categoryId: string;
-  categoryName?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SummaryReport {
-  totalIncome: number;
-  totalExpense: number;
-  netBalance: number;
-}
-
-export interface CategoryBreakdownItem {
-  categoryId: string;
-  categoryName: string;
-  totalAmount: number;
-  percentage: number;
-}
-
-export interface CategoryBreakdownReport {
-  items: CategoryBreakdownItem[];
-  totalExpense: number;
-}
+import type {
+  AuthResponse,
+  Category,
+  CategoryBreakdownReport,
+  SummaryReport,
+  Transaction,
+  User,
+} from '../commons/types';
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('token');
@@ -147,14 +90,22 @@ export const categoryService = {
     });
   },
 
-  create: async (data: { name: string; type: TransactionType; description?: string }): Promise<Category> => {
+  create: async (data: {
+    name: string;
+    type: TransactionType;
+    description?: string;
+    budgetLimit?: number;
+  }): Promise<Category> => {
     return request<Category>('/categories', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  update: async (id: string, data: { name?: string; type?: TransactionType; description?: string }): Promise<Category> => {
+  update: async (
+    id: string,
+    data: { name?: string; type?: TransactionType; description?: string; budgetLimit?: number }
+  ): Promise<Category> => {
     return request<Category>(`/categories/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -169,7 +120,12 @@ export const categoryService = {
 };
 
 export const transactionService = {
-  list: async (filters?: { type?: TransactionType; categoryId?: string; startDate?: string; endDate?: string }): Promise<Transaction[]> => {
+  list: async (filters?: {
+    type?: TransactionType;
+    categoryId?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Transaction[]> => {
     let query = '';
     if (filters) {
       const params = new URLSearchParams();
@@ -215,49 +171,6 @@ export const transactionService = {
 
   delete: async (id: string): Promise<void> => {
     return request<void>(`/transactions/${id}`, {
-      method: 'DELETE',
-    });
-  },
-};
-
-export const costService = {
-  list: async (): Promise<Cost[]> => {
-    return request<Cost[]>('/costs', {
-      method: 'GET',
-    });
-  },
-
-  create: async (data: {
-    title: string;
-    amount: number;
-    currency: string;
-    incurredAt: string;
-    categoryId: string;
-  }): Promise<Cost> => {
-    return request<Cost>('/costs', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  },
-
-  update: async (
-    id: string,
-    data: {
-      title?: string;
-      amount?: number;
-      currency?: string;
-      incurredAt?: string;
-      categoryId?: string;
-    }
-  ): Promise<Cost> => {
-    return request<Cost>(`/costs/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
-  },
-
-  delete: async (id: string): Promise<void> => {
-    return request<void>(`/costs/${id}`, {
       method: 'DELETE',
     });
   },

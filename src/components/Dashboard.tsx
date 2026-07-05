@@ -1,23 +1,28 @@
 import { useState, useEffect } from 'react';
-import { reportService, transactionService } from '../services/api';
-import type { Transaction, SummaryReport, CategoryBreakdownItem } from '../services/api';
+import {
+  reportService,
+  transactionService,
+  categoryService,
+  TransactionType,
+} from '../services/api';
+import type { Transaction, SummaryReport, CategoryBreakdownItem, Category } from '../commons/types';
+import { formatCurrency, formatDate, compareDatesDesc } from '../commons/utils';
+import { DonutChart } from './DonutChart';
 import './Dashboard.css';
 
 const api = {
   reports: reportService,
   transactions: transactionService,
+  categories: categoryService,
 };
 
 export default function Dashboard() {
   const [summary, setSummary] = useState<SummaryReport | null>(null);
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdownItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
 
   const fetchDashboardData = async () => {
     try {
@@ -25,18 +30,20 @@ export default function Dashboard() {
       setError(null);
 
       // Fetch summary and category breakdown using the api wrapper
-      const [summaryData, breakdownData, transactionsData] = await Promise.all([
+      const [summaryData, breakdownData, transactionsData, categoriesData] = await Promise.all([
         api.reports.summary(),
         api.reports.categoryBreakdown(),
         api.transactions.list(),
+        api.categories.list(),
       ]);
 
       setSummary(summaryData);
       setCategoryBreakdown(breakdownData.items || []);
+      setCategories(categoriesData || []);
 
       // Sort transactions by transactionDate descending to get the most recent transactions
-      const sorted = [...transactionsData].sort(
-        (a, b) => new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime()
+      const sorted = [...(transactionsData || [])].sort((a, b) =>
+        compareDatesDesc(a.transactionDate, b.transactionDate)
       );
       setRecentTransactions(sorted.slice(0, 5));
     } catch (err: any) {
@@ -46,20 +53,9 @@ export default function Dashboard() {
     }
   };
 
-  const formatCurrency = (amount: number, currency = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   if (loading) {
     return (
@@ -86,7 +82,7 @@ export default function Dashboard() {
   // Calculate Net Balance dynamically if not loaded or if summary doesn't exist
   const totalIncome = summary?.totalIncome ?? 0;
   const totalExpense = summary?.totalExpense ?? 0;
-  const netBalance = summary?.netBalance ?? (totalIncome - totalExpense);
+  const netBalance = summary?.netBalance ?? totalIncome - totalExpense;
 
   return (
     <div className="dashboard-container animate-fade-in">
@@ -103,7 +99,14 @@ export default function Dashboard() {
             <span className="card-label">Tổng Thu nhập</span>
             <h3 className="card-value">{formatCurrency(totalIncome)}</h3>
             <div className="card-trend upward">
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none">
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+              >
                 <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
                 <polyline points="17 6 23 6 23 12"></polyline>
               </svg>
@@ -118,7 +121,14 @@ export default function Dashboard() {
             <span className="card-label">Tổng Chi tiêu</span>
             <h3 className="card-value">{formatCurrency(totalExpense)}</h3>
             <div className="card-trend downward">
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none">
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+              >
                 <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
                 <polyline points="17 18 23 18 23 12"></polyline>
               </svg>
@@ -131,11 +141,20 @@ export default function Dashboard() {
           <div className="card-glow-bg"></div>
           <div className="card-content">
             <span className="card-label">Số dư Ròng</span>
-            <h3 className={`card-value ${netBalance >= 0 ? 'positive-balance' : 'negative-balance'}`}>
+            <h3
+              className={`card-value ${netBalance >= 0 ? 'positive-balance' : 'negative-balance'}`}
+            >
               {formatCurrency(netBalance)}
             </h3>
             <div className="card-trend info">
-              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none">
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                stroke="currentColor"
+                strokeWidth="2"
+                fill="none"
+              >
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="16" x2="12" y2="12"></line>
                 <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -154,45 +173,65 @@ export default function Dashboard() {
             <h3>Phân tích theo Danh mục</h3>
             <span className="header-badge">Theo Danh mục</span>
           </div>
-          <div className="breakdown-list">
-            {categoryBreakdown.length === 0 ? (
-              <p className="no-data">Chưa có danh mục chi tiêu nào để hiển thị.</p>
-            ) : (
-              categoryBreakdown.map((item, index) => {
-                // Color palette gradient per category row
-                const hue = (index * 45) % 360;
-                const strokeColor = `hsl(${hue}, 85%, 60%)`;
-                const glowColor = `hsl(${hue}, 85%, 60%, 0.3)`;
+          <div className="p-4">
+            <DonutChart items={categoryBreakdown} />
 
-                return (
-                  <div key={item.categoryId || index} className="breakdown-item animate-fade-in">
-                    <div className="breakdown-info">
-                      <span className="category-name">{item.categoryName}</span>
-                      <span className="category-amount">{formatCurrency(item.totalAmount)}</span>
-                    </div>
+            {/* Budget Utilization Section */}
+            {(() => {
+              const budgetItems = categoryBreakdown
+                .map((item) => {
+                  const category = categories.find((c) => c.id === item.categoryId);
+                  if (category && category.type === 'EXPENSE' && category.budgetLimit) {
+                    const utilization = (item.totalAmount / category.budgetLimit) * 100;
+                    return {
+                      ...item,
+                      budgetLimit: category.budgetLimit,
+                      utilization,
+                    };
+                  }
+                  return null;
+                })
+                .filter((item): item is NonNullable<typeof item> => item !== null);
 
-                    {/* Premium SVG Progress Bar with Custom HSL Gradient and Glow */}
-                    <div className="progress-container">
-                      <svg width="100%" height="8" className="svg-progress-bar" style={{ filter: `drop-shadow(0 0 3px ${glowColor})` }}>
-                        <rect x="0" y="0" width="100%" height="8" rx="4" fill="rgba(255, 255, 255, 0.05)" />
-                        <rect
-                          x="0"
-                          y="0"
-                          width={`${Math.min(Math.max(item.percentage, 0), 100)}%`}
-                          height="8"
-                          rx="4"
-                          fill={strokeColor}
-                          className="progress-fill-animate"
-                        />
-                      </svg>
-                      <span className="percentage-badge" style={{ color: strokeColor }}>
-                        {item.percentage.toFixed(1)}%
-                      </span>
-                    </div>
+              if (budgetItems.length === 0) return null;
+
+              return (
+                <div className="mt-6 pt-6 border-t border-slate-700/50">
+                  <h4 className="text-sm font-semibold text-slate-300 mb-4">Hạn mức chi tiêu</h4>
+                  <div className="flex flex-col gap-4">
+                    {budgetItems.map((item) => {
+                      let progressColor = 'bg-emerald-500';
+                      let textColor = 'text-emerald-400';
+                      if (item.utilization >= 80 && item.utilization <= 100) {
+                        progressColor = 'bg-amber-500';
+                        textColor = 'text-amber-400';
+                      } else if (item.utilization > 100) {
+                        progressColor = 'bg-rose-500';
+                        textColor = 'text-rose-400';
+                      }
+
+                      return (
+                        <div key={item.categoryId} className="flex flex-col gap-1.5">
+                          <div className="flex justify-between text-xs font-medium">
+                            <span className="text-slate-300">{item.categoryName}</span>
+                            <span className={textColor}>
+                              Đã dùng {item.utilization.toFixed(1)}% ngân sách (Hạn mức:{' '}
+                              {item.budgetLimit.toLocaleString('vi-VN')}đ)
+                            </span>
+                          </div>
+                          <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full ${progressColor} transition-all duration-500`}
+                              style={{ width: `${Math.min(item.utilization, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })
-            )}
+                </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -207,20 +246,23 @@ export default function Dashboard() {
               <p className="no-data">Không tìm thấy giao dịch gần đây.</p>
             ) : (
               recentTransactions.map((txn) => {
-                const isIncome = txn.type === 'INCOME';
+                const isIncome = txn.type === TransactionType.INCOME;
                 return (
                   <div key={txn.id} className="activity-item animate-fade-in">
                     <div className="activity-details">
                       <span className="activity-title">{txn.description || 'Giao dịch'}</span>
                       <div className="activity-meta">
-                        <span className="activity-category">{txn.categoryName || 'Chưa phân loại'}</span>
+                        <span className="activity-category">
+                          {txn.categoryName || 'Chưa phân loại'}
+                        </span>
                         <span className="activity-dot">•</span>
                         <span className="activity-date">{formatDate(txn.transactionDate)}</span>
                       </div>
                     </div>
                     <div className="activity-value">
                       <span className={`txn-amount ${isIncome ? 'txn-income' : 'txn-expense'}`}>
-                        {isIncome ? '+' : '-'}{formatCurrency(txn.amount)}
+                        {isIncome ? '+' : '-'}
+                        {formatCurrency(txn.amount)}
                       </span>
                     </div>
                   </div>
