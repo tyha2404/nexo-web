@@ -17,7 +17,21 @@ export interface Category {
   id: string;
   userId: string;
   name: string;
+  type: 'INCOME' | 'EXPENSE';
   description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Transaction {
+  id: string;
+  userId: string;
+  categoryId: string;
+  categoryName?: string;
+  amount: number;
+  description?: string;
+  type: 'INCOME' | 'EXPENSE';
+  transactionDate: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -131,14 +145,14 @@ export const categoryService = {
     });
   },
 
-  create: async (data: { name: string; description?: string }): Promise<Category> => {
+  create: async (data: { name: string; type: 'INCOME' | 'EXPENSE'; description?: string }): Promise<Category> => {
     return request<Category>('/categories', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   },
 
-  update: async (id: string, data: { name?: string; description?: string }): Promise<Category> => {
+  update: async (id: string, data: { name?: string; type?: 'INCOME' | 'EXPENSE'; description?: string }): Promise<Category> => {
     return request<Category>(`/categories/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -147,6 +161,58 @@ export const categoryService = {
 
   delete: async (id: string): Promise<void> => {
     return request<void>(`/categories/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+export const transactionService = {
+  list: async (filters?: { type?: 'INCOME' | 'EXPENSE'; categoryId?: string; startDate?: string; endDate?: string }): Promise<Transaction[]> => {
+    let query = '';
+    if (filters) {
+      const params = new URLSearchParams();
+      if (filters.type) params.append('type', filters.type);
+      if (filters.categoryId) params.append('categoryId', filters.categoryId);
+      if (filters.startDate) params.append('startDate', filters.startDate);
+      if (filters.endDate) params.append('endDate', filters.endDate);
+      query = '?' + params.toString();
+    }
+    return request<Transaction[]>(`/transactions${query}`, {
+      method: 'GET',
+    });
+  },
+
+  create: async (data: {
+    categoryId: string;
+    amount: number;
+    type: 'INCOME' | 'EXPENSE';
+    description?: string;
+    transactionDate: string;
+  }): Promise<Transaction> => {
+    return request<Transaction>('/transactions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  update: async (
+    id: string,
+    data: {
+      categoryId?: string;
+      amount?: number;
+      type?: 'INCOME' | 'EXPENSE';
+      description?: string;
+      transactionDate?: string;
+    }
+  ): Promise<Transaction> => {
+    return request<Transaction>(`/transactions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete: async (id: string): Promise<void> => {
+    return request<void>(`/transactions/${id}`, {
       method: 'DELETE',
     });
   },
