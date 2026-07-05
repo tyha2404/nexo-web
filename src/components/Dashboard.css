@@ -329,7 +329,14 @@
 .activity-value .txn-amount {
   font-family: 'JetBrains Mono', Courier, monospace;
   font-weight: 600;
-  color: #f87171; /* Expenses display color */
+}
+
+.activity-value .txn-amount.txn-income {
+  color: #34d399;
+}
+
+.activity-value .txn-amount.txn-expense {
+  color: #f87171;
 }
 
 /* No data and Loading States */

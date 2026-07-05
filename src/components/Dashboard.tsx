@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
-import { reportService, costService, categoryService } from '../services/api';
-import type { Cost, SummaryReport, CategoryBreakdownItem } from '../services/api';
+import { reportService, transactionService, categoryService } from '../services/api';
+import type { Transaction, SummaryReport, CategoryBreakdownItem } from '../services/api';
 import './Dashboard.css';
 
 // Aliasing as requested to fetch summary data using api.reports.summary(), categoryBreakdown using api.reports.categoryBreakdown(), and api.costs.list()
 const api = {
   reports: reportService,
-  costs: costService,
+  costs: transactionService,
   categories: categoryService,
 };
 
 export default function Dashboard() {
   const [summary, setSummary] = useState<SummaryReport | null>(null);
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdownItem[]>([]);
-  const [recentCosts, setRecentCosts] = useState<Cost[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,20 +27,20 @@ export default function Dashboard() {
       setError(null);
 
       // Fetch summary and category breakdown using the api wrapper
-      const [summaryData, breakdownData, costsData] = await Promise.all([
+      const [summaryData, breakdownData, transactionsData] = await Promise.all([
         api.reports.summary(),
         api.reports.categoryBreakdown(),
-        api.costs.list(),
+        transactionService.list(),
       ]);
 
       setSummary(summaryData);
       setCategoryBreakdown(breakdownData.items || []);
 
-      // Sort costs by incurredAt descending to get the most recent transactions
-      const sorted = [...costsData].sort(
-        (a, b) => new Date(b.incurredAt).getTime() - new Date(a.incurredAt).getTime()
+      // Sort transactions by transactionDate descending to get the most recent transactions
+      const sorted = [...transactionsData].sort(
+        (a, b) => new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime()
       );
-      setRecentCosts(sorted.slice(0, 5));
+      setRecentTransactions(sorted.slice(0, 5));
     } catch (err: any) {
       setError(err.message || 'Failed to fetch dashboard analytics');
     } finally {
@@ -205,24 +205,29 @@ export default function Dashboard() {
             <span className="header-badge">5 giao dịch gần nhất</span>
           </div>
           <div className="activity-list">
-            {recentCosts.length === 0 ? (
+            {recentTransactions.length === 0 ? (
               <p className="no-data">Không tìm thấy giao dịch gần đây.</p>
             ) : (
-              recentCosts.map((cost) => (
-                <div key={cost.id} className="activity-item animate-fade-in">
-                  <div className="activity-details">
-                    <span className="activity-title">{cost.title}</span>
-                    <div className="activity-meta">
-                      <span className="activity-category">{cost.categoryName || 'Chưa phân loại'}</span>
-                      <span className="activity-dot">•</span>
-                      <span className="activity-date">{formatDate(cost.incurredAt)}</span>
+              recentTransactions.map((txn) => {
+                const isIncome = txn.type === 'INCOME';
+                return (
+                  <div key={txn.id} className="activity-item animate-fade-in">
+                    <div className="activity-details">
+                      <span className="activity-title">{txn.description || 'Giao dịch'}</span>
+                      <div className="activity-meta">
+                        <span className="activity-category">{txn.categoryName || 'Chưa phân loại'}</span>
+                        <span className="activity-dot">•</span>
+                        <span className="activity-date">{formatDate(txn.transactionDate)}</span>
+                      </div>
+                    </div>
+                    <div className="activity-value">
+                      <span className={`txn-amount ${isIncome ? 'txn-income' : 'txn-expense'}`}>
+                        {isIncome ? '+' : '-'}{formatCurrency(txn.amount)}
+                      </span>
                     </div>
                   </div>
-                  <div className="activity-value">
-                    <span className="txn-amount">{formatCurrency(cost.amount, cost.currency)}</span>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
