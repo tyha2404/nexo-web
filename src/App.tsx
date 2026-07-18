@@ -5,7 +5,10 @@ import Categories from './components/Categories';
 import Dashboard from './components/Dashboard';
 import ReloadPrompt from './components/ReloadPrompt';
 import Transactions from './components/Transactions';
-import { authService, TransactionType } from './services/api';
+import { authService } from './services/api';
+import { TransactionType } from './commons/constants';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'income' | 'expenses' | 'categories'>(
@@ -296,7 +299,45 @@ function App() {
               onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
               aria-label="Toggle Theme"
             >
-              {theme === 'light' ? '☀️' : '🌙'}
+              {theme === 'light' ? (
+                // Sun Icon SVG
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2" />
+                  <path d="M12 20v2" />
+                  <path d="M4.93 4.93l1.41 1.41" />
+                  <path d="M16.24 16.24l1.41 1.41" />
+                  <path d="M2 12h2" />
+                  <path d="M20 12h2" />
+                  <path d="M6.34 17.66l-1.41 1.41" />
+                  <path d="M19.07 4.93l-1.41 1.41" />
+                </svg>
+              ) : (
+                // Moon Icon SVG
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                </svg>
+              )}
             </button>
           </div>
         </header>
@@ -315,6 +356,7 @@ function App() {
       </main>
 
       <ReloadPrompt />
+      <ToastContainer theme="dark" position="bottom-right" autoClose={3000} />
     </div>
   );
 }

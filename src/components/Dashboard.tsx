@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
-import {
-  reportService,
-  transactionService,
-  categoryService,
-  TransactionType,
-} from '../services/api';
+import { reportService, transactionService, categoryService } from '../services/api';
+import { TransactionType } from '../commons/constants';
 import type { Transaction, SummaryReport, CategoryBreakdownItem, Category } from '../commons/types';
 import { formatCurrency, formatDate, compareDatesDesc } from '../commons/utils';
 import { DonutChart } from './DonutChart';
@@ -20,9 +16,13 @@ export default function Dashboard() {
   const [summary, setSummary] = useState<SummaryReport | null>(null);
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdownItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Filter tabs for visualization
+  const [chartTab, setChartTab] = useState<'EXPENSE' | 'INCOME'>('EXPENSE');
+  const [txnFilter, setTxnFilter] = useState<'ALL' | 'INCOME' | 'EXPENSE'>('ALL');
 
   const fetchDashboardData = async () => {
     try {
@@ -40,12 +40,7 @@ export default function Dashboard() {
       setSummary(summaryData);
       setCategoryBreakdown(breakdownData.items || []);
       setCategories(categoriesData || []);
-
-      // Sort transactions by transactionDate descending to get the most recent transactions
-      const sorted = [...(transactionsData || [])].sort((a, b) =>
-        compareDatesDesc(a.transactionDate, b.transactionDate)
-      );
-      setRecentTransactions(sorted.slice(0, 5));
+      setAllTransactions(transactionsData || []);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch dashboard analytics');
     } finally {
@@ -169,67 +164,106 @@ export default function Dashboard() {
       <div className="dashboard-grid animate-fade-in">
         {/* Category Breakdown Card */}
         <div className="glass-card breakdown-card">
-          <div className="card-header">
-            <h3>Phân tích theo Danh mục</h3>
-            <span className="header-badge">Theo Danh mục</span>
+          <div className="card-header flex-col sm:flex-row gap-3">
+            <h3>Phân tích Danh mục</h3>
+            <div className="dashboard-tab-group">
+              <button
+                className={`dashboard-tab-btn ${chartTab === 'EXPENSE' ? 'active' : ''}`}
+                onClick={() => setChartTab('EXPENSE')}
+              >
+                Chi tiêu
+              </button>
+              <button
+                className={`dashboard-tab-btn ${chartTab === 'INCOME' ? 'active' : ''}`}
+                onClick={() => setChartTab('INCOME')}
+              >
+                Thu nhập
+              </button>
+            </div>
           </div>
           <div className="p-4">
-            <DonutChart items={categoryBreakdown} />
-
-            {/* Budget Utilization Section */}
             {(() => {
-              const budgetItems = categoryBreakdown
-                .map((item) => {
-                  const category = categories.find((c) => c.id === item.categoryId);
-                  if (category && category.type === 'EXPENSE' && category.budgetLimit) {
-                    const utilization = (item.totalAmount / category.budgetLimit) * 100;
-                    return {
-                      ...item,
-                      budgetLimit: category.budgetLimit,
-                      utilization,
-                    };
-                  }
-                  return null;
-                })
-                .filter((item): item is NonNullable<typeof item> => item !== null);
+              const filteredBreakdown = categoryBreakdown.filter((item) => {
+                const category = categories.find((c) => c.id === item.categoryId);
+                return category ? category.type === chartTab : false;
+              });
 
-              if (budgetItems.length === 0) return null;
+              // Re-calculate percentages for this specific breakdown tab
+              const tabTotal = filteredBreakdown.reduce((sum, item) => sum + item.totalAmount, 0);
+              const itemsWithAdjustedPercentages = filteredBreakdown.map((item) => ({
+                ...item,
+                percentage: tabTotal > 0 ? (item.totalAmount / tabTotal) * 100 : 0,
+              }));
 
               return (
-                <div className="mt-6 pt-6 border-t border-slate-700/50">
-                  <h4 className="text-sm font-semibold text-slate-300 mb-4">Hạn mức chi tiêu</h4>
-                  <div className="flex flex-col gap-4">
-                    {budgetItems.map((item) => {
-                      let progressColor = 'bg-emerald-500';
-                      let textColor = 'text-emerald-400';
-                      if (item.utilization >= 80 && item.utilization <= 100) {
-                        progressColor = 'bg-amber-500';
-                        textColor = 'text-amber-400';
-                      } else if (item.utilization > 100) {
-                        progressColor = 'bg-rose-500';
-                        textColor = 'text-rose-400';
-                      }
+                <>
+                  <DonutChart
+                    items={itemsWithAdjustedPercentages}
+                    centerLabel={chartTab === 'EXPENSE' ? 'Tổng chi tiêu' : 'Tổng thu nhập'}
+                  />
+
+                  {/* Budget Utilization Section (only for EXPENSE chartTab) */}
+                  {chartTab === 'EXPENSE' &&
+                    (() => {
+                      const budgetItems = itemsWithAdjustedPercentages
+                        .map((item) => {
+                          const category = categories.find((c) => c.id === item.categoryId);
+                          if (category && category.budgetLimit) {
+                            const utilization = (item.totalAmount / category.budgetLimit) * 100;
+                            return {
+                              ...item,
+                              budgetLimit: category.budgetLimit,
+                              utilization,
+                            };
+                          }
+                          return null;
+                        })
+                        .filter((item): item is NonNullable<typeof item> => item !== null);
+
+                      if (budgetItems.length === 0) return null;
 
                       return (
-                        <div key={item.categoryId} className="flex flex-col gap-1.5">
-                          <div className="flex justify-between text-xs font-medium">
-                            <span className="text-slate-300">{item.categoryName}</span>
-                            <span className={textColor}>
-                              Đã dùng {item.utilization.toFixed(1)}% ngân sách (Hạn mức:{' '}
-                              {item.budgetLimit.toLocaleString('vi-VN')}đ)
-                            </span>
-                          </div>
-                          <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full ${progressColor} transition-all duration-500`}
-                              style={{ width: `${Math.min(item.utilization, 100)}%` }}
-                            />
+                        <div className="mt-6 pt-6 border-t border-slate-700/50">
+                          <h4 className="text-sm font-semibold text-[color:var(--text-main)] mb-4">
+                            Hạn mức chi tiêu
+                          </h4>
+                          <div className="flex flex-col gap-4">
+                            {budgetItems.map((item) => {
+                              let progressColor = 'bg-emerald-500';
+                              let textColor = 'text-emerald-400';
+                              if (item.utilization >= 80 && item.utilization <= 100) {
+                                progressColor = 'bg-amber-500';
+                                textColor = 'text-amber-400';
+                              } else if (item.utilization > 100) {
+                                progressColor = 'bg-rose-500';
+                                textColor = 'text-rose-400';
+                              }
+
+                              return (
+                                <div key={item.categoryId} className="flex flex-col gap-1.5">
+                                  <div className="flex justify-between text-xs font-medium">
+                                    <span className="text-[color:var(--text-main)]">
+                                      {item.categoryName}
+                                    </span>
+                                    <span className={textColor}>
+                                      Đã dùng {item.utilization.toFixed(1)}% ngân sách (Hạn mức:{' '}
+                                      {item.budgetLimit.toLocaleString('vi-VN')}đ)
+                                    </span>
+                                  </div>
+                                  <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
+                                    <div
+                                      className={`h-full ${progressColor} transition-all duration-500`}
+                                      style={{ width: `${Math.min(item.utilization, 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       );
-                    })}
-                  </div>
-                </div>
+                    })()}
+                </>
               );
             })()}
           </div>
@@ -237,15 +271,41 @@ export default function Dashboard() {
 
         {/* Recent Transactions Card */}
         <div className="glass-card activities-card">
-          <div className="card-header">
+          <div className="card-header flex-col sm:flex-row gap-3">
             <h3>Hoạt động Gần đây</h3>
-            <span className="header-badge">5 giao dịch gần nhất</span>
+            <div className="dashboard-tab-group">
+              <button
+                className={`dashboard-tab-btn ${txnFilter === 'ALL' ? 'active' : ''}`}
+                onClick={() => setTxnFilter('ALL')}
+              >
+                Tất cả
+              </button>
+              <button
+                className={`dashboard-tab-btn ${txnFilter === 'EXPENSE' ? 'active' : ''}`}
+                onClick={() => setTxnFilter('EXPENSE')}
+              >
+                Chi tiêu
+              </button>
+              <button
+                className={`dashboard-tab-btn ${txnFilter === 'INCOME' ? 'active' : ''}`}
+                onClick={() => setTxnFilter('INCOME')}
+              >
+                Thu nhập
+              </button>
+            </div>
           </div>
           <div className="activity-list">
-            {recentTransactions.length === 0 ? (
-              <p className="no-data">Không tìm thấy giao dịch gần đây.</p>
-            ) : (
-              recentTransactions.map((txn) => {
+            {(() => {
+              const filteredTxns = allTransactions
+                .filter((txn) => txnFilter === 'ALL' || txn.type === txnFilter)
+                .sort((a, b) => compareDatesDesc(a.transactionDate, b.transactionDate))
+                .slice(0, 5);
+
+              if (filteredTxns.length === 0) {
+                return <p className="no-data">Không tìm thấy giao dịch nào.</p>;
+              }
+
+              return filteredTxns.map((txn) => {
                 const isIncome = txn.type === TransactionType.INCOME;
                 return (
                   <div key={txn.id} className="activity-item animate-fade-in">
@@ -267,8 +327,8 @@ export default function Dashboard() {
                     </div>
                   </div>
                 );
-              })
-            )}
+              });
+            })()}
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { transactionService, categoryService } from '../services/api';
 import type { Transaction, Category } from '../commons/types';
 import { TransactionType, DATE_FORMAT_INPUT } from '../commons/constants';
 import { formatCurrency, formatDate, toISODateString } from '../commons/utils';
+import { toast } from 'react-toastify';
 import './Transactions.css';
 
 export interface TransactionsProps {
@@ -17,20 +18,20 @@ export interface TransactionsProps {
 const customSelectStyles = {
   control: (provided: any, state: any) => ({
     ...provided,
-    background: 'rgba(15, 23, 42, 0.6)',
-    borderColor: state.isFocused ? '#38bdf8' : 'rgba(255, 255, 255, 0.1)',
+    background: 'var(--bg-input)',
+    borderColor: state.isFocused ? 'var(--primary)' : 'var(--border)',
     borderRadius: '10px',
-    color: '#f8fafc',
+    color: 'var(--text-main)',
     minHeight: '42px',
-    boxShadow: state.isFocused ? '0 0 0 3px rgba(56, 189, 248, 0.15)' : 'none',
+    boxShadow: state.isFocused ? '0 0 0 3px var(--primary-glow)' : 'none',
     '&:hover': {
-      borderColor: 'rgba(255, 255, 255, 0.2)',
+      borderColor: 'var(--border-hover)',
     },
   }),
   menu: (provided: any) => ({
     ...provided,
-    background: '#1e293b',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border)',
     borderRadius: '10px',
     overflow: 'hidden',
     zIndex: 99999,
@@ -42,28 +43,38 @@ const customSelectStyles = {
   option: (provided: any, state: any) => ({
     ...provided,
     background: state.isSelected
-      ? '#38bdf8'
+      ? 'var(--primary)'
       : state.isFocused
-        ? 'rgba(255, 255, 255, 0.05)'
+        ? 'var(--bg-hover)'
         : 'transparent',
-    color: state.isSelected ? '#0f172a' : '#f8fafc',
+    color: state.isSelected ? 'var(--text-dark)' : 'var(--text-main)',
     cursor: 'pointer',
     '&:active': {
-      background: '#38bdf8',
-      color: '#0f172a',
+      background: 'var(--primary)',
+      color: 'var(--text-dark)',
     },
   }),
   singleValue: (provided: any) => ({
     ...provided,
-    color: '#f8fafc',
+    color: 'var(--text-main)',
   }),
   input: (provided: any) => ({
     ...provided,
-    color: '#f8fafc',
+    color: 'var(--text-main)',
   }),
   placeholder: (provided: any) => ({
     ...provided,
-    color: '#64748b',
+    color: 'var(--text-muted)',
+  }),
+  indicatorSeparator: () => ({
+    display: 'none',
+  }),
+  dropdownIndicator: (provided: any, state: any) => ({
+    ...provided,
+    color: state.isFocused ? 'var(--primary)' : 'var(--text-muted)',
+    '&:hover': {
+      color: 'var(--primary)',
+    },
   }),
 };
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -90,11 +101,6 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   const [categoryId, setCategoryId] = useState('');
   const [transactionDate, setTransactionDate] = useState('');
 
-  // Feedback notifications
-  const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(
-    null
-  );
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -102,7 +108,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         setError(null);
         const [transactionsData, categoriesData] = await Promise.all([
           transactionService.list({ type }),
-          categoryService.list(),
+          categoryService.list({ type }),
         ]);
         setTransactions(transactionsData || []);
         setCategories(categoriesData || []);
@@ -117,13 +123,62 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   }, [type]);
 
   const showFeedback = (message: string, type: 'success' | 'error') => {
-    setFeedback({ message, type });
-    setTimeout(() => {
-      setFeedback(null);
-    }, 4000);
+    if (type === 'success') {
+      toast.success(message);
+    } else {
+      toast.error(message);
+    }
   };
 
-  const filteredCategories = categories.filter((cat) => cat.type === type);
+  const filteredCategories = categories;
+
+  // Predefined quick options for Income/Expense
+  const presetOptions =
+    type === TransactionType.INCOME
+      ? [
+          { label: 'Lương tháng', amount: '15000000', categoryKeyword: 'Lương' },
+          { label: 'Thưởng', amount: '2000000', categoryKeyword: 'Thưởng' },
+          { label: 'Lãi tiết kiệm', amount: '500000', categoryKeyword: 'Đầu tư' },
+          { label: 'Freelance', amount: '3000000', categoryKeyword: 'Thu nhập' },
+        ]
+      : [
+          { label: 'Ăn sáng / Cà phê', amount: '50000', categoryKeyword: 'Ăn uống' },
+          { label: 'Ăn trưa / tối', amount: '80000', categoryKeyword: 'Ăn uống' },
+          { label: 'Đổ xăng', amount: '70000', categoryKeyword: 'Di chuyển' },
+          { label: 'Đi chợ / siêu thị', amount: '200000', categoryKeyword: 'Ăn uống' },
+          { label: 'Tiền điện nước', amount: '1200000', categoryKeyword: 'Tiền nhà' },
+          { label: 'Internet', amount: '250000', categoryKeyword: 'Tiền nhà' },
+        ];
+
+  const handleAmountChange = (val: string) => {
+    // Remove all non-digit characters
+    const cleanNumber = val.replace(/\D/g, '');
+    if (cleanNumber === '') {
+      setAmount('');
+      return;
+    }
+    // Format with dot separators for display
+    const formatted = parseInt(cleanNumber, 10).toLocaleString('vi-VN');
+    setAmount(formatted);
+  };
+
+  const handleApplyPreset = (preset: (typeof presetOptions)[0]) => {
+    setTitle(preset.label);
+
+    // Preset amount is raw number, format it
+    const formattedAmount = parseInt(preset.amount, 10).toLocaleString('vi-VN');
+    setAmount(formattedAmount);
+
+    // Find category that matches keyword
+    const matchedCategory =
+      filteredCategories.find((cat) =>
+        cat.name.toLowerCase().includes(preset.categoryKeyword.toLowerCase())
+      ) || filteredCategories[0];
+
+    if (matchedCategory) {
+      setCategoryId(matchedCategory.id);
+    }
+  };
 
   const openAddModal = () => {
     setEditingTransaction(null);
@@ -137,7 +192,10 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   const openEditModal = (transaction: Transaction) => {
     setEditingTransaction(transaction);
     setTitle(transaction.description || '');
-    setAmount(transaction.amount.toString());
+    // Convert backend float to integer display string with separators
+    const rawVal = Math.round(transaction.amount).toString();
+    const formattedAmount = parseInt(rawVal, 10).toLocaleString('vi-VN');
+    setAmount(formattedAmount);
     setCategoryId(transaction.categoryId);
     setTransactionDate(formatDate(transaction.transactionDate, DATE_FORMAT_INPUT));
     setIsModalOpen(true);
@@ -150,9 +208,12 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
       return;
     }
 
+    // Parse display formatted string back to raw number
+    const rawAmount = parseFloat(amount.replace(/\./g, ''));
+
     const payload = {
       description: title.trim(),
-      amount: parseFloat(amount),
+      amount: rawAmount,
       categoryId,
       transactionDate: toISODateString(transactionDate),
       type,
@@ -215,33 +276,6 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
     return matchesSearch && matchesCategory && matchesDate;
   });
 
-  const exportToCSV = () => {
-    const headers = ['Ngày', 'Mô tả', 'Danh mục', 'Số tiền'];
-    const rows = filteredTransactions.map((txn) => [
-      formatDate(txn.transactionDate),
-      txn.description || '',
-      getCategoryName(txn.categoryId),
-      txn.amount.toString(),
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((val) => `"${val.replace(/"/g, '""')}"`).join(',')),
-    ].join('\n');
-
-    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute(
-      'download',
-      `giao_dich_${type.toLowerCase()}_${moment().format('YYYYMMDD')}.csv`
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div className="transactions-view">
       <header className="transactions-header animate-fade-in">
@@ -253,33 +287,11 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
           </p>
         </div>
         <div className="flex gap-3">
-          <button className="btn btn-secondary flex items-center gap-2" onClick={exportToCSV}>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Xuất CSV
-          </button>
           <button className="btn btn-primary" onClick={openAddModal}>
             + Thêm {type === TransactionType.INCOME ? 'thu nhập' : 'chi tiêu'}
           </button>
         </div>
       </header>
-
-      {feedback && (
-        <div className={`feedback-alert ${feedback.type} animate-fade-in`}>{feedback.message}</div>
-      )}
 
       {error && (
         <div className="error-banner animate-fade-in">
@@ -298,18 +310,6 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="date-range-wrapper">
-          <DatePicker
-            selectsRange={true}
-            startDate={startDate}
-            endDate={endDate}
-            onChange={(update) => setDateRange(update)}
-            isClearable={true}
-            placeholderText="Chọn khoảng ngày"
-            dateFormat="dd/MM/yyyy"
-            className="react-datepicker-input"
-          />
-        </div>
         <div className="category-select-wrapper">
           <Select
             options={[
@@ -326,6 +326,20 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             styles={customSelectStyles}
             placeholder="Tất cả Danh mục"
             isSearchable={true}
+            menuPortalTarget={document.body}
+          />
+        </div>
+        <div className="date-range-wrapper">
+          <DatePicker
+            selectsRange={true}
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(update) => setDateRange(update)}
+            isClearable={true}
+            placeholderText="Chọn khoảng ngày"
+            dateFormat="dd/MM/yyyy"
+            className="react-datepicker-input"
+            portalId="date-picker-portal"
           />
         </div>
       </div>
@@ -424,6 +438,24 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               </button>
             </div>
             <form onSubmit={handleSubmit}>
+              {!editingTransaction && (
+                <div className="form-group">
+                  <label>Chọn nhanh (Mẫu giao dịch)</label>
+                  <div className="presets-container">
+                    {presetOptions.map((opt, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className="preset-tag-btn"
+                        onClick={() => handleApplyPreset(opt)}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="form-group">
                 <label htmlFor="txn-title">Tiêu đề / Nội dung</label>
                 <input
@@ -437,15 +469,13 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               </div>
 
               <div className="form-group">
-                <label htmlFor="txn-amount">Số tiền</label>
+                <label htmlFor="txn-amount">Số tiền (đ)</label>
                 <input
                   id="txn-amount"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
+                  type="text"
+                  placeholder="Ví dụ: 50.000"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => handleAmountChange(e.target.value)}
                   required
                 />
               </div>
@@ -464,6 +494,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                   styles={customSelectStyles}
                   placeholder="Chọn Danh mục"
                   isSearchable={true}
+                  menuPortalTarget={document.body}
                 />
               </div>
 
@@ -476,6 +507,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                     setTransactionDate(date ? moment(date).format('YYYY-MM-DD') : '')
                   }
                   dateFormat="dd/MM/yyyy"
+                  portalId="date-picker-portal"
                 />
               </div>
 

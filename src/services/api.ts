@@ -84,8 +84,9 @@ export const authService = {
 };
 
 export const categoryService = {
-  list: async (): Promise<Category[]> => {
-    return request<Category[]>('/categories', {
+  list: async (params?: { type?: TransactionType }): Promise<Category[]> => {
+    const query = params?.type ? `?type=${params.type}` : '';
+    return request<Category[]>(`/categories${query}`, {
       method: 'GET',
     });
   },

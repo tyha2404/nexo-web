@@ -35,11 +35,10 @@
 
 /* Search and Filter Bar */
 .filter-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 1rem;
   margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  align-items: center;
   background: var(--bg-card);
   padding: 1rem;
   border-radius: var(--radius-lg);
@@ -47,10 +46,21 @@
   backdrop-filter: blur(12px);
 }
 
+@media (min-width: 640px) {
+  .filter-bar {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+@media (min-width: 1024px) {
+  .filter-bar {
+    grid-template-columns: 2fr 1fr 1.2fr;
+  }
+}
+
 .search-input-wrapper {
-  flex: 1;
-  min-width: 200px;
   position: relative;
+  width: 100%;
 }
 
 .search-icon {
@@ -78,10 +88,23 @@
 
 .search-input-wrapper input {
   padding-left: 2.5rem;
+  height: 42px;
 }
 
 .category-select-wrapper {
-  min-width: 180px;
+  width: 100%;
+}
+
+.date-range-wrapper {
+  width: 100%;
+}
+
+.date-range-wrapper .react-datepicker-wrapper {
+  width: 100%;
+}
+
+.date-range-wrapper input {
+  height: 42px;
 }
 
 .filter-bar input:focus,
@@ -99,6 +122,7 @@
   background: var(--bg-card);
   backdrop-filter: blur(16px);
   box-shadow: var(--shadow-md);
+  -webkit-overflow-scrolling: touch;
 }
 
 .transactions-table {
@@ -106,6 +130,7 @@
   border-collapse: collapse;
   text-align: left;
   font-size: 0.95rem;
+  min-width: 600px;
 }
 
 .transactions-table th {
@@ -268,17 +293,134 @@
   .transactions-title h2 {
     font-size: 1.75rem;
   }
-  .filter-bar {
-    padding: 0.75rem;
-    gap: 0.75rem;
-  }
   .transactions-table th,
   .transactions-table td {
-    padding: 0.75rem 0.5rem;
+    padding: 0.75rem 0.75rem;
   }
 }
 
 /* DatePicker Styling Overrides */
 .react-datepicker-wrapper {
   width: 100%;
+}
+
+.react-datepicker-popper {
+  z-index: 999999 !important;
+}
+
+/* Custom Premium Dark Theme for DatePicker Calendar */
+.react-datepicker {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  font-family: var(--font-sans) !important;
+  box-shadow: var(--shadow-lg) !important;
+  color: var(--text-main) !important;
+}
+
+.react-datepicker__header {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-top-left-radius: var(--radius-lg) !important;
+  border-top-right-radius: var(--radius-lg) !important;
+  padding-top: 10px !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker-time__header,
+.react-datepicker-year-header {
+  color: var(--text-main) !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+}
+
+.react-datepicker__day-name {
+  color: var(--text-muted) !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__day {
+  color: var(--text-main) !important;
+  border-radius: var(--radius-sm) !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-datepicker__day:hover,
+.react-datepicker__month-text:hover,
+.react-datepicker__quarter-text:hover,
+.react-datepicker__year-text:hover {
+  background-color: var(--bg-hover) !important;
+  color: var(--primary) !important;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range,
+.react-datepicker__month-text--selected,
+.react-datepicker__month-text--in-selecting-range,
+.react-datepicker__month-text--in-range,
+.react-datepicker__quarter-text--selected,
+.react-datepicker__quarter-text--in-selecting-range,
+.react-datepicker__quarter-text--in-range,
+.react-datepicker__year-text--selected,
+.react-datepicker__year-text--in-selecting-range,
+.react-datepicker__year-text--in-range {
+  background-color: var(--primary) !important;
+  color: var(--text-dark) !important;
+  font-weight: 700 !important;
+}
+
+.react-datepicker__day--in-selecting-range:not(.react-datepicker__day--selecting-range-start):not(
+    .react-datepicker__day--selecting-range-end
+  ),
+.react-datepicker__day--in-range:not(.react-datepicker__day--range-start):not(
+    .react-datepicker__day--range-end
+  ) {
+  background-color: var(--primary-glow) !important;
+  color: var(--text-main) !important;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: var(--bg-hover) !important;
+  color: var(--primary) !important;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: var(--text-muted) !important;
+  border-width: 2px 2px 0 0 !important;
+}
+
+.react-datepicker__navigation:hover *::before {
+  border-color: var(--primary) !important;
+}
+
+.react-datepicker__triangle {
+  display: none !important;
+}
+
+/* Preset Quick Options Styles */
+.presets-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.preset-tag-btn {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-tag-btn:hover {
+  background: var(--primary-glow);
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-1px);
 }

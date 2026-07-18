@@ -8,11 +8,12 @@ interface DonutChartItem {
 
 interface DonutChartProps {
   items: DonutChartItem[];
+  centerLabel?: string;
 }
 
 const COLORS = ['#38bdf8', '#8b5cf6', '#34d399', '#f59e0b', '#ec4899', '#14b8a6'];
 
-export const DonutChart: React.FC<DonutChartProps> = ({ items }) => {
+export const DonutChart: React.FC<DonutChartProps> = ({ items, centerLabel = 'Tổng chi tiêu' }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   // Filter out items with 0 or negative amounts to avoid drawing invalid segments
@@ -56,9 +57,9 @@ export const DonutChart: React.FC<DonutChartProps> = ({ items }) => {
   });
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-around gap-8 p-6 bg-slate-800/40 backdrop-blur-md rounded-2xl border border-slate-700/50">
-      <div className="relative w-48 h-48 flex items-center justify-center">
-        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+    <div className="donut-chart-wrapper">
+      <div className="donut-chart-container">
+        <svg viewBox="0 0 100 100" className="donut-svg">
           {chartSegments.map((segment) => {
             const isHighlighted = activeIndex === null || activeIndex === segment.index;
             return (
@@ -72,7 +73,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({ items }) => {
                 strokeWidth={isHighlighted ? strokeWidth + 2 : strokeWidth}
                 strokeDasharray={segment.strokeDasharray}
                 strokeDashoffset={segment.strokeDashoffset}
-                className="transition-all duration-300 cursor-pointer"
+                className="donut-segment"
                 style={{
                   opacity: isHighlighted ? 1 : 0.4,
                 }}
@@ -82,23 +83,21 @@ export const DonutChart: React.FC<DonutChartProps> = ({ items }) => {
             );
           })}
         </svg>
-        <div className="absolute flex flex-col items-center justify-center text-center pointer-events-none">
+        <div className="donut-center-info">
           {activeIndex !== null ? (
             <>
-              <span className="text-xs text-slate-400 font-medium truncate max-w-[120px]">
-                {chartSegments[activeIndex].categoryName}
-              </span>
-              <span className="text-base font-bold text-white">
+              <span className="donut-center-label">{chartSegments[activeIndex].categoryName}</span>
+              <span className="donut-center-value">
                 {chartSegments[activeIndex].totalAmount.toLocaleString('vi-VN')}đ
               </span>
-              <span className="text-xs text-indigo-400 font-semibold">
+              <span className="donut-center-percentage">
                 {chartSegments[activeIndex].percentage.toFixed(1)}%
               </span>
             </>
           ) : (
             <>
-              <span className="text-xs text-slate-400 font-medium">Tổng chi tiêu</span>
-              <span className="text-lg font-bold text-white">
+              <span className="donut-center-label">{centerLabel}</span>
+              <span className="donut-center-value main-total">
                 {totalAmountSum.toLocaleString('vi-VN')}đ
               </span>
             </>
@@ -106,32 +105,25 @@ export const DonutChart: React.FC<DonutChartProps> = ({ items }) => {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col gap-2 w-full">
+      <div className="donut-legend-list">
         {chartSegments.map((segment) => {
           const isHighlighted = activeIndex === null || activeIndex === segment.index;
           return (
             <div
               key={segment.index}
-              className={`flex items-center justify-between p-2 rounded-lg transition-all duration-200 cursor-pointer ${
-                isHighlighted ? 'bg-slate-700/30' : 'opacity-40'
-              }`}
+              className={`donut-legend-item ${isHighlighted ? 'active' : 'inactive'}`}
               onMouseEnter={() => setActiveIndex(segment.index)}
               onMouseLeave={() => setActiveIndex(null)}
             >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-3.5 h-3.5 rounded-full"
-                  style={{ backgroundColor: segment.color }}
-                />
-                <span className="text-sm text-slate-200 font-medium">{segment.categoryName}</span>
+              <div className="legend-label-group">
+                <div className="legend-color-dot" style={{ backgroundColor: segment.color }} />
+                <span className="legend-name">{segment.categoryName}</span>
               </div>
-              <div className="text-right">
-                <span className="text-sm font-bold text-white">
+              <div className="legend-value-group">
+                <span className="legend-amount">
                   {segment.totalAmount.toLocaleString('vi-VN')}đ
                 </span>
-                <span className="text-xs text-slate-400 ml-2">
-                  ({segment.percentage.toFixed(1)}%)
-                </span>
+                <span className="legend-percent">({segment.percentage.toFixed(1)}%)</span>
               </div>
             </div>
           );

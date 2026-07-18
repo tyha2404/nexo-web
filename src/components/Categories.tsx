@@ -3,26 +3,27 @@ import Select from 'react-select';
 import { categoryService } from '../services/api';
 import { TransactionType } from '../commons/constants';
 import type { Category } from '../commons/types';
+import { toast } from 'react-toastify';
 import './Categories.css';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const customSelectStyles = {
   control: (provided: any, state: any) => ({
     ...provided,
-    background: 'rgba(15, 23, 42, 0.6)',
-    borderColor: state.isFocused ? '#38bdf8' : 'rgba(255, 255, 255, 0.1)',
+    background: 'var(--bg-input)',
+    borderColor: state.isFocused ? 'var(--primary)' : 'var(--border)',
     borderRadius: '10px',
-    color: '#f8fafc',
+    color: 'var(--text-main)',
     minHeight: '42px',
-    boxShadow: state.isFocused ? '0 0 0 3px rgba(56, 189, 248, 0.15)' : 'none',
+    boxShadow: state.isFocused ? '0 0 0 3px var(--primary-glow)' : 'none',
     '&:hover': {
-      borderColor: 'rgba(255, 255, 255, 0.2)',
+      borderColor: 'var(--border-hover)',
     },
   }),
   menu: (provided: any) => ({
     ...provided,
-    background: '#1e293b',
-    border: '1px solid rgba(255, 255, 255, 0.1)',
+    background: 'var(--bg-card)',
+    border: '1px solid var(--border)',
     borderRadius: '10px',
     overflow: 'hidden',
     zIndex: 9999,
@@ -30,28 +31,38 @@ const customSelectStyles = {
   option: (provided: any, state: any) => ({
     ...provided,
     background: state.isSelected
-      ? '#38bdf8'
+      ? 'var(--primary)'
       : state.isFocused
-        ? 'rgba(255, 255, 255, 0.05)'
+        ? 'var(--bg-hover)'
         : 'transparent',
-    color: state.isSelected ? '#0f172a' : '#f8fafc',
+    color: state.isSelected ? 'var(--text-dark)' : 'var(--text-main)',
     cursor: 'pointer',
     '&:active': {
-      background: '#38bdf8',
-      color: '#0f172a',
+      background: 'var(--primary)',
+      color: 'var(--text-dark)',
     },
   }),
   singleValue: (provided: any) => ({
     ...provided,
-    color: '#f8fafc',
+    color: 'var(--text-main)',
   }),
   input: (provided: any) => ({
     ...provided,
-    color: '#f8fafc',
+    color: 'var(--text-main)',
   }),
   placeholder: (provided: any) => ({
     ...provided,
-    color: '#64748b',
+    color: 'var(--text-muted)',
+  }),
+  indicatorSeparator: () => ({
+    display: 'none',
+  }),
+  dropdownIndicator: (provided: any, state: any) => ({
+    ...provided,
+    color: state.isFocused ? 'var(--primary)' : 'var(--text-muted)',
+    '&:hover': {
+      color: 'var(--primary)',
+    },
   }),
 };
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -72,16 +83,12 @@ export default function Categories() {
   const [editDescription, setEditDescription] = useState('');
   const [editBudgetLimit, setEditBudgetLimit] = useState('');
 
-  // Notifications/Feedback messages
-  const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(
-    null
-  );
-
   const showFeedback = (message: string, type: 'success' | 'error') => {
-    setFeedback({ message, type });
-    setTimeout(() => {
-      setFeedback(null);
-    }, 4000);
+    if (type === 'success') {
+      toast.success(message);
+    } else {
+      toast.error(message);
+    }
   };
 
   const fetchCategories = async () => {
@@ -101,9 +108,28 @@ export default function Categories() {
     fetchCategories();
   }, []);
 
+  const formatBudgetVal = (val: string) => {
+    const cleanNumber = val.replace(/\D/g, '');
+    if (cleanNumber === '') return '';
+    return parseInt(cleanNumber, 10).toLocaleString('vi-VN');
+  };
+
+  const handleBudgetChange = (val: string) => {
+    setBudgetLimit(formatBudgetVal(val));
+  };
+
+  const handleEditBudgetChange = (val: string) => {
+    setEditBudgetLimit(formatBudgetVal(val));
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    // Parse dot formatted string back to raw number
+    const parsedBudget = budgetLimit.trim()
+      ? parseFloat(budgetLimit.replace(/\./g, ''))
+      : undefined;
 
     try {
       setError(null);
@@ -111,10 +137,7 @@ export default function Categories() {
         name: name.trim(),
         type,
         description: description.trim() || undefined,
-        budgetLimit:
-          type === TransactionType.EXPENSE && budgetLimit.trim()
-            ? parseFloat(budgetLimit)
-            : undefined,
+        budgetLimit: type === TransactionType.EXPENSE ? parsedBudget : undefined,
       });
       setCategories((prev) => [...prev, newCat]);
       setName('');
@@ -131,16 +154,18 @@ export default function Categories() {
     e.preventDefault();
     if (!editingCategory || !editName.trim()) return;
 
+    // Parse dot formatted string back to raw number
+    const parsedEditBudget = editBudgetLimit.trim()
+      ? parseFloat(editBudgetLimit.replace(/\./g, ''))
+      : undefined;
+
     try {
       setError(null);
       const updatedCat = await categoryService.update(editingCategory.id, {
         name: editName.trim(),
         type: editType,
         description: editDescription.trim() || undefined,
-        budgetLimit:
-          editType === TransactionType.EXPENSE && editBudgetLimit.trim()
-            ? parseFloat(editBudgetLimit)
-            : undefined,
+        budgetLimit: editType === TransactionType.EXPENSE ? parsedEditBudget : undefined,
       });
       setCategories((prev) =>
         prev.map((cat) => (cat.id === editingCategory.id ? updatedCat : cat))
@@ -175,7 +200,11 @@ export default function Categories() {
     setEditName(category.name);
     setEditType(category.type as TransactionType);
     setEditDescription(category.description || '');
-    setEditBudgetLimit(category.budgetLimit !== undefined ? category.budgetLimit.toString() : '');
+    setEditBudgetLimit(
+      category.budgetLimit !== undefined
+        ? Math.round(category.budgetLimit).toLocaleString('vi-VN')
+        : ''
+    );
   };
 
   return (
@@ -184,10 +213,6 @@ export default function Categories() {
         <h2>Quản lý Danh mục</h2>
         <p className="subtitle">Tổ chức và phân loại chi phí của bạn theo danh mục</p>
       </header>
-
-      {feedback && (
-        <div className={`feedback-alert ${feedback.type} animate-fade-in`}>{feedback.message}</div>
-      )}
 
       {error && (
         <div className="error-banner animate-fade-in">
@@ -234,6 +259,7 @@ export default function Categories() {
                     }
                     styles={customSelectStyles}
                     placeholder="Chọn Loại danh mục"
+                    menuPortalTarget={document.body}
                   />
                 </div>
                 {editType === TransactionType.EXPENSE && (
@@ -241,12 +267,10 @@ export default function Categories() {
                     <label htmlFor="edit-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
                     <input
                       id="edit-budget"
-                      type="number"
+                      type="text"
                       value={editBudgetLimit}
-                      onChange={(e) => setEditBudgetLimit(e.target.value)}
-                      placeholder="Ví dụ: 5000000"
-                      min="0"
-                      step="any"
+                      onChange={(e) => handleEditBudgetChange(e.target.value)}
+                      placeholder="Ví dụ: 5.000.000"
                     />
                   </div>
                 )}
@@ -271,7 +295,7 @@ export default function Categories() {
                       setEditingCategory(null);
                       setEditName('');
                       setEditType(TransactionType.EXPENSE);
-                      setEditDescription('');
+                      setDescription('');
                       setEditBudgetLimit('');
                     }}
                   >
@@ -314,6 +338,7 @@ export default function Categories() {
                     }
                     styles={customSelectStyles}
                     placeholder="Chọn Loại danh mục"
+                    menuPortalTarget={document.body}
                   />
                 </div>
                 {type === TransactionType.EXPENSE && (
@@ -321,12 +346,10 @@ export default function Categories() {
                     <label htmlFor="new-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
                     <input
                       id="new-budget"
-                      type="number"
+                      type="text"
                       value={budgetLimit}
-                      onChange={(e) => setBudgetLimit(e.target.value)}
-                      placeholder="Ví dụ: 5000000"
-                      min="0"
-                      step="any"
+                      onChange={(e) => handleBudgetChange(e.target.value)}
+                      placeholder="Ví dụ: 5.000.000"
                     />
                   </div>
                 )}
