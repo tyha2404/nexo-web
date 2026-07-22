@@ -11,9 +11,9 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'income' | 'expenses' | 'categories'>(
-    'dashboard'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'dashboard' | 'income' | 'expenses' | 'investment' | 'categories'
+  >('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -114,6 +114,49 @@ function App() {
           <img src="/favicon.svg" className="mobile-logo" alt="Nexo logo" />
           <span className="brand-name">Nexo Portal</span>
         </div>
+        <button
+          className="theme-toggle-btn"
+          onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+          aria-label="Toggle Theme"
+        >
+          {theme === 'light' ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2" />
+              <path d="M12 20v2" />
+              <path d="M4.93 4.93l1.41 1.41" />
+              <path d="M16.24 16.24l1.41 1.41" />
+              <path d="M2 12h2" />
+              <path d="M20 12h2" />
+              <path d="M6.34 17.66l-1.41 1.41" />
+              <path d="M17.66 6.34l1.41-1.41" />
+            </svg>
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+            </svg>
+          )}
+        </button>
       </header>
 
       {/* Sidebar Backdrop Overlay */}
@@ -224,6 +267,32 @@ function App() {
           </button>
           <button
             onClick={() => {
+              setActiveTab('investment');
+              setIsSidebarOpen(false);
+            }}
+            className={`nav-item ${activeTab === 'investment' ? 'active' : ''}`}
+          >
+            <span className="nav-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ display: 'inline-block', verticalAlign: 'middle' }}
+              >
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <polyline points="19 12 12 19 5 12"></polyline>
+              </svg>
+            </span>
+            <span className="nav-text">Đầu tư</span>
+          </button>
+          <button
+            onClick={() => {
               setActiveTab('categories');
               setIsSidebarOpen(false);
             }}
@@ -250,57 +319,14 @@ function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <button
-            onClick={() => {
-              handleLogout();
-              setIsSidebarOpen(false);
-            }}
-            className="logout-btn"
-          >
-            <span className="nav-icon">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ display: 'inline-block', verticalAlign: 'middle' }}
-              >
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" x2="9" y1="12" y2="12" />
-              </svg>
-            </span>
-            <span className="nav-text">Đăng xuất</span>
-          </button>
-        </div>
-      </aside>
-
-      <main className="main-content">
-        <header className="main-header">
-          <div className="header-left">
-            <h1 className="view-title">
-              {activeTab === 'dashboard'
-                ? 'Bảng điều khiển'
-                : activeTab === 'income'
-                  ? 'Quản lý thu nhập'
-                  : activeTab === 'expenses'
-                    ? 'Quản lý chi tiêu'
-                    : 'Danh mục'}
-            </h1>
-          </div>
-          <div className="header-right">
+          <div className="sidebar-footer-actions">
             <button
               className="theme-toggle-btn"
               onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
               aria-label="Toggle Theme"
+              title="Đổi giao diện"
             >
               {theme === 'light' ? (
-                // Sun Icon SVG
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -323,7 +349,6 @@ function App() {
                   <path d="M19.07 4.93l-1.41 1.41" />
                 </svg>
               ) : (
-                // Moon Icon SVG
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
@@ -339,9 +364,38 @@ function App() {
                 </svg>
               )}
             </button>
+            <button
+              onClick={() => {
+                handleLogout();
+                setIsSidebarOpen(false);
+              }}
+              className="logout-btn"
+            >
+              <span className="nav-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" x2="9" y1="12" y2="12" />
+                </svg>
+              </span>
+              <span className="nav-text">Đăng xuất</span>
+            </button>
           </div>
-        </header>
+        </div>
+      </aside>
 
+      <main className="main-content">
         <div className="content-view">
           {activeTab === 'dashboard' ? (
             <Dashboard />
@@ -349,6 +403,8 @@ function App() {
             <Transactions type={TransactionType.INCOME} />
           ) : activeTab === 'expenses' ? (
             <Transactions type={TransactionType.EXPENSE} />
+          ) : activeTab === 'investment' ? (
+            <Transactions type={TransactionType.INVESTMENT} />
           ) : (
             <Categories />
           )}

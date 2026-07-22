@@ -12,7 +12,9 @@ export const formatDate = (date: string | moment.Moment, format = DATE_FORMAT_DI
  * Format a date or string to standard ISO format for API payloads
  */
 export const toISODateString = (date?: string | moment.Moment): string => {
-  return moment(date).toISOString();
+  if (!date) return '';
+  const dateStr = moment(date).format('YYYY-MM-DD');
+  return moment.utc(dateStr, 'YYYY-MM-DD').toISOString();
 };
 
 /**

@@ -15,7 +15,7 @@ export interface Category {
   id: string;
   userId: string;
   name: string;
-  type: 'INCOME' | 'EXPENSE';
+  type: 'INCOME' | 'EXPENSE' | 'INVESTMENT';
   description?: string;
   budgetLimit?: number;
   createdAt: string;
@@ -29,7 +29,7 @@ export interface Transaction {
   categoryName?: string;
   amount: number;
   description?: string;
-  type: 'INCOME' | 'EXPENSE';
+  type: 'INCOME' | 'EXPENSE' | 'INVESTMENT';
   transactionDate: string;
   createdAt: string;
   updatedAt: string;
@@ -38,6 +38,7 @@ export interface Transaction {
 export interface SummaryReport {
   totalIncome: number;
   totalExpense: number;
+  totalInvestment?: number;
   netBalance: number;
 }
 

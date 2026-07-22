@@ -71,6 +71,8 @@ export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TransactionType>(TransactionType.EXPENSE);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Form states
   const [name, setName] = useState('');
@@ -83,6 +85,12 @@ export default function Categories() {
   const [editDescription, setEditDescription] = useState('');
   const [editBudgetLimit, setEditBudgetLimit] = useState('');
 
+  const typeOptions = [
+    { value: TransactionType.EXPENSE, label: 'Chi tiêu' },
+    { value: TransactionType.INCOME, label: 'Thu nhập' },
+    { value: TransactionType.INVESTMENT, label: 'Đầu tư' },
+  ];
+
   const showFeedback = (message: string, type: 'success' | 'error') => {
     if (type === 'success') {
       toast.success(message);
@@ -91,11 +99,11 @@ export default function Categories() {
     }
   };
 
-  const fetchCategories = async () => {
+  const fetchCategories = async (selectedType: TransactionType) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await categoryService.list();
+      const data = await categoryService.list({ type: selectedType });
       setCategories(data || []);
     } catch (err: any) {
       setError(err.message || 'Lấy danh mục thất bại');
@@ -105,8 +113,8 @@ export default function Categories() {
   };
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    fetchCategories(activeTab);
+  }, [activeTab]);
 
   const formatBudgetVal = (val: string) => {
     const cleanNumber = val.replace(/\D/g, '');
@@ -139,11 +147,14 @@ export default function Categories() {
         description: description.trim() || undefined,
         budgetLimit: type === TransactionType.EXPENSE ? parsedBudget : undefined,
       });
-      setCategories((prev) => [...prev, newCat]);
+      if (type === activeTab) {
+        setCategories((prev) => [...prev, newCat]);
+      }
       setName('');
       setType(TransactionType.EXPENSE);
       setDescription('');
       setBudgetLimit('');
+      setIsModalOpen(false);
       showFeedback('Tạo danh mục thành công!', 'success');
     } catch (err: any) {
       showFeedback(err.message || 'Tạo danh mục thất bại', 'error');
@@ -167,14 +178,19 @@ export default function Categories() {
         description: editDescription.trim() || undefined,
         budgetLimit: editType === TransactionType.EXPENSE ? parsedEditBudget : undefined,
       });
-      setCategories((prev) =>
-        prev.map((cat) => (cat.id === editingCategory.id ? updatedCat : cat))
-      );
+      if (editType === activeTab) {
+        setCategories((prev) =>
+          prev.map((cat) => (cat.id === editingCategory.id ? updatedCat : cat))
+        );
+      } else {
+        setCategories((prev) => prev.filter((cat) => cat.id !== editingCategory.id));
+      }
       setEditingCategory(null);
       setEditName('');
       setEditType(TransactionType.EXPENSE);
       setEditDescription('');
       setEditBudgetLimit('');
+      setIsModalOpen(false);
       showFeedback('Cập nhật danh mục thành công!', 'success');
     } catch (err: any) {
       showFeedback(err.message || 'Cập nhật danh mục thất bại', 'error');
@@ -205,13 +221,56 @@ export default function Categories() {
         ? Math.round(category.budgetLimit).toLocaleString('vi-VN')
         : ''
     );
+    setIsModalOpen(true);
+  };
+
+  const openCreateModal = () => {
+    setEditingCategory(null);
+    setName('');
+    setType(activeTab);
+    setDescription('');
+    setBudgetLimit('');
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingCategory(null);
+  };
+
+  const getTabTypeName = (tab: TransactionType) => {
+    if (tab === TransactionType.INCOME) return 'thu nhập';
+    if (tab === TransactionType.INVESTMENT) return 'đầu tư';
+    return 'chi tiêu';
   };
 
   return (
     <div className="categories-view">
       <header className="categories-header animate-fade-in">
-        <h2>Quản lý Danh mục</h2>
-        <p className="subtitle">Tổ chức và phân loại chi phí của bạn theo danh mục</p>
+        <div className="categories-title-row">
+          <div>
+            <h2>Quản lý Danh mục</h2>
+            <p className="subtitle">Tổ chức và phân loại chi phí, thu nhập & đầu tư của bạn</p>
+          </div>
+          <button className="btn btn-primary create-category-btn" onClick={openCreateModal}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ marginRight: '6px' }}
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Tạo danh mục
+          </button>
+        </div>
       </header>
 
       {error && (
@@ -220,12 +279,132 @@ export default function Categories() {
         </div>
       )}
 
-      <div className="categories-grid">
-        {/* Left Column: Form */}
-        <div className="form-column">
-          {editingCategory ? (
-            <div className="glass-card form-card animate-scale-in">
-              <h3>Sửa danh mục</h3>
+      {/* Main List Section */}
+      <div className="categories-single-column animate-fade-in">
+        <div className="glass-card list-card">
+          <div className="list-header-tabs">
+            <h3>Danh mục hiện có</h3>
+            <div className="category-tabs">
+              <button
+                type="button"
+                className={`category-tab ${activeTab === TransactionType.EXPENSE ? 'active' : ''}`}
+                onClick={() => setActiveTab(TransactionType.EXPENSE)}
+              >
+                Chi tiêu
+              </button>
+              <button
+                type="button"
+                className={`category-tab ${activeTab === TransactionType.INCOME ? 'active' : ''}`}
+                onClick={() => setActiveTab(TransactionType.INCOME)}
+              >
+                Thu nhập
+              </button>
+              <button
+                type="button"
+                className={`category-tab ${activeTab === TransactionType.INVESTMENT ? 'active' : ''}`}
+                onClick={() => setActiveTab(TransactionType.INVESTMENT)}
+              >
+                Đầu tư
+              </button>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <p>Đang tải danh mục...</p>
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="empty-state">
+              <p>
+                Không tìm thấy danh mục {getTabTypeName(activeTab)} nào. Hãy nhấn "Tạo danh mục" ở
+                trên để tạo mới!
+              </p>
+            </div>
+          ) : (
+            <div className="categories-list">
+              {categories.map((cat) => (
+                <div key={cat.id} className="category-item-card">
+                  <div className="category-item-info">
+                    <div className="category-item-title-row">
+                      <h4>
+                        {cat.name}{' '}
+                        {cat.budgetLimit !== undefined && (
+                          <span className="text-xs text-slate-400 font-normal ml-1">
+                            (Hạn mức: {cat.budgetLimit.toLocaleString('vi-VN')}đ)
+                          </span>
+                        )}
+                      </h4>
+                    </div>
+                    {cat.description ? (
+                      <p className="category-item-desc">{cat.description}</p>
+                    ) : (
+                      <p className="category-item-desc no-desc">Không có mô tả</p>
+                    )}
+                  </div>
+                  <div className="category-item-actions">
+                    <button
+                      onClick={() => startEdit(cat)}
+                      className="action-btn edit-btn"
+                      aria-label={`Sửa danh mục ${cat.name}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                      >
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(cat.id, cat.name)}
+                      className="action-btn delete-btn"
+                      aria-label={`Xóa danh mục ${cat.name}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                      >
+                        <path d="M3 6h18" />
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal Popup for Create / Edit Category */}
+      {isModalOpen && (
+        <div className="modal-backdrop" onClick={closeModal}>
+          <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{editingCategory ? 'Sửa danh mục' : 'Thêm danh mục'}</h3>
+              <button type="button" className="close-btn" onClick={closeModal}>
+                &times;
+              </button>
+            </div>
+            {editingCategory ? (
               <form onSubmit={handleUpdate}>
                 <div className="form-group">
                   <label htmlFor="edit-name">Tên danh mục</label>
@@ -242,16 +421,8 @@ export default function Categories() {
                   <label htmlFor="edit-type">Loại danh mục</label>
                   <Select
                     id="edit-type"
-                    options={[
-                      { value: TransactionType.INCOME, label: 'Thu nhập (INCOME)' },
-                      { value: TransactionType.EXPENSE, label: 'Chi phí (EXPENSE)' },
-                    ]}
-                    value={
-                      [
-                        { value: TransactionType.INCOME, label: 'Thu nhập (INCOME)' },
-                        { value: TransactionType.EXPENSE, label: 'Chi phí (EXPENSE)' },
-                      ].find((opt) => opt.value === editType) || null
-                    }
+                    options={typeOptions}
+                    value={typeOptions.find((opt) => opt.value === editType) || null}
                     onChange={(option) =>
                       setEditType(
                         (option ? option.value : TransactionType.EXPENSE) as TransactionType
@@ -286,27 +457,14 @@ export default function Categories() {
                 </div>
                 <div className="button-group">
                   <button type="submit" className="btn btn-primary">
-                    Sửa danh mục
+                    Lưu danh mục
                   </button>
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      setEditingCategory(null);
-                      setEditName('');
-                      setEditType(TransactionType.EXPENSE);
-                      setDescription('');
-                      setEditBudgetLimit('');
-                    }}
-                  >
+                  <button type="button" className="btn btn-secondary" onClick={closeModal}>
                     Hủy
                   </button>
                 </div>
               </form>
-            </div>
-          ) : (
-            <div className="glass-card form-card animate-scale-in">
-              <h3>Thêm danh mục</h3>
+            ) : (
               <form onSubmit={handleCreate}>
                 <div className="form-group">
                   <label htmlFor="new-name">Tên danh mục</label>
@@ -323,16 +481,8 @@ export default function Categories() {
                   <label htmlFor="new-type">Loại danh mục</label>
                   <Select
                     id="new-type"
-                    options={[
-                      { value: TransactionType.INCOME, label: 'Thu nhập (INCOME)' },
-                      { value: TransactionType.EXPENSE, label: 'Chi phí (EXPENSE)' },
-                    ]}
-                    value={
-                      [
-                        { value: TransactionType.INCOME, label: 'Thu nhập (INCOME)' },
-                        { value: TransactionType.EXPENSE, label: 'Chi phí (EXPENSE)' },
-                      ].find((opt) => opt.value === type) || null
-                    }
+                    options={typeOptions}
+                    value={typeOptions.find((opt) => opt.value === type) || null}
                     onChange={(option) =>
                       setType((option ? option.value : TransactionType.EXPENSE) as TransactionType)
                     }
@@ -363,104 +513,19 @@ export default function Categories() {
                     rows={3}
                   />
                 </div>
-                <button type="submit" className="btn btn-primary btn-block">
-                  Thêm danh mục
-                </button>
+                <div className="button-group">
+                  <button type="submit" className="btn btn-primary">
+                    Thêm danh mục
+                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                    Hủy
+                  </button>
+                </div>
               </form>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: List */}
-        <div className="list-column animate-fade-in">
-          <div className="glass-card list-card">
-            <h3>Danh mục hiện có</h3>
-
-            {loading ? (
-              <div className="loading-spinner">
-                <div className="spinner"></div>
-                <p>Đang tải danh mục...</p>
-              </div>
-            ) : categories.length === 0 ? (
-              <div className="empty-state">
-                <p>Không tìm thấy danh mục nào. Hãy tạo danh mục đầu tiên của bạn ở bên trái!</p>
-              </div>
-            ) : (
-              <div className="categories-list">
-                {categories.map((cat) => (
-                  <div key={cat.id} className="category-item-card">
-                    <div className="category-item-info">
-                      <div className="category-item-title-row">
-                        <h4>
-                          {cat.name}{' '}
-                          {cat.budgetLimit !== undefined && (
-                            <span className="text-xs text-slate-400 font-normal ml-1">
-                              (Hạn mức: {cat.budgetLimit.toLocaleString('vi-VN')}đ)
-                            </span>
-                          )}
-                        </h4>
-                        <span className={`type-badge ${cat.type.toLowerCase()}`}>
-                          {cat.type === TransactionType.INCOME ? 'Thu nhập' : 'Chi tiêu'}
-                        </span>
-                      </div>
-                      {cat.description ? (
-                        <p className="category-item-desc">{cat.description}</p>
-                      ) : (
-                        <p className="category-item-desc no-desc">Không có mô tả</p>
-                      )}
-                    </div>
-                    <div className="category-item-actions">
-                      <button
-                        onClick={() => startEdit(cat)}
-                        className="action-btn edit-btn"
-                        aria-label={`Sửa danh mục ${cat.name}`}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
-                        >
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(cat.id, cat.name)}
-                        className="action-btn delete-btn"
-                        aria-label={`Xóa danh mục ${cat.name}`}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
-                        >
-                          <path d="M3 6h18" />
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
             )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

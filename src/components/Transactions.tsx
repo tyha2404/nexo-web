@@ -132,7 +132,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
 
   const filteredCategories = categories;
 
-  // Predefined quick options for Income/Expense
+  // Predefined quick options for Income/Expense/Investment
   const presetOptions =
     type === TransactionType.INCOME
       ? [
@@ -141,14 +141,20 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
           { label: 'Lãi tiết kiệm', amount: '500000', categoryKeyword: 'Đầu tư' },
           { label: 'Freelance', amount: '3000000', categoryKeyword: 'Thu nhập' },
         ]
-      : [
-          { label: 'Ăn sáng / Cà phê', amount: '50000', categoryKeyword: 'Ăn uống' },
-          { label: 'Ăn trưa / tối', amount: '80000', categoryKeyword: 'Ăn uống' },
-          { label: 'Đổ xăng', amount: '70000', categoryKeyword: 'Di chuyển' },
-          { label: 'Đi chợ / siêu thị', amount: '200000', categoryKeyword: 'Ăn uống' },
-          { label: 'Tiền điện nước', amount: '1200000', categoryKeyword: 'Tiền nhà' },
-          { label: 'Internet', amount: '250000', categoryKeyword: 'Tiền nhà' },
-        ];
+      : type === TransactionType.INVESTMENT
+        ? [
+            { label: 'Mua cổ phiếu', amount: '5000000', categoryKeyword: 'Cổ phiếu' },
+            { label: 'Chứng chỉ tiền gửi', amount: '10000000', categoryKeyword: 'chứng chỉ' },
+            { label: 'Gửi tiết kiệm', amount: '20000000', categoryKeyword: 'tiết kiệm' },
+          ]
+        : [
+            { label: 'Ăn sáng / Cà phê', amount: '50000', categoryKeyword: 'Ăn uống' },
+            { label: 'Ăn trưa / tối', amount: '80000', categoryKeyword: 'Ăn uống' },
+            { label: 'Đổ xăng', amount: '70000', categoryKeyword: 'Di chuyển' },
+            { label: 'Đi chợ / siêu thị', amount: '200000', categoryKeyword: 'Ăn uống' },
+            { label: 'Tiền điện nước', amount: '1200000', categoryKeyword: 'Tiền nhà' },
+            { label: 'Internet', amount: '250000', categoryKeyword: 'Tiền nhà' },
+          ];
 
   const handleAmountChange = (val: string) => {
     // Remove all non-digit characters
@@ -280,15 +286,31 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
     <div className="transactions-view">
       <header className="transactions-header animate-fade-in">
         <div className="transactions-title">
-          <h2>{type === TransactionType.INCOME ? 'Quản lý Thu nhập' : 'Quản lý Chi tiêu'}</h2>
+          <h2>
+            {type === TransactionType.INCOME
+              ? 'Quản lý Thu nhập'
+              : type === TransactionType.INVESTMENT
+                ? 'Quản lý Đầu tư'
+                : 'Quản lý Chi tiêu'}
+          </h2>
           <p className="subtitle">
             Theo dõi và quản lý các khoản{' '}
-            {type === TransactionType.INCOME ? 'thu nhập' : 'chi tiêu'} của bạn
+            {type === TransactionType.INCOME
+              ? 'thu nhập'
+              : type === TransactionType.INVESTMENT
+                ? 'đầu tư'
+                : 'chi tiêu'}{' '}
+            của bạn
           </p>
         </div>
         <div className="flex gap-3">
           <button className="btn btn-primary" onClick={openAddModal}>
-            + Thêm {type === TransactionType.INCOME ? 'thu nhập' : 'chi tiêu'}
+            + Thêm{' '}
+            {type === TransactionType.INCOME
+              ? 'thu nhập'
+              : type === TransactionType.INVESTMENT
+                ? 'đầu tư'
+                : 'chi tiêu'}
           </button>
         </div>
       </header>
