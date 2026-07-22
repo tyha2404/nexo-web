@@ -2,19 +2,24 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: 1rem 0.5rem;
   box-sizing: border-box;
 }
 
 .dashboard-header {
   text-align: left;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .dashboard-header h2 {
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.25rem 0;
   background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -23,15 +28,79 @@
 .dashboard-header .subtitle {
   color: var(--text-muted);
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.9rem;
+}
+
+/* Premium Month Filter Pill */
+.month-filter-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  padding: 0.3rem 0.85rem;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.month-filter-wrapper:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 14px var(--primary-glow);
+  transform: translateY(-1px);
+}
+
+.month-filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.month-filter-svg {
+  color: var(--primary);
+}
+
+.month-filter-wrapper .react-datepicker-wrapper {
+  width: auto;
+}
+
+.month-filter-input {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-main) !important;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  width: 90px;
+  padding: 0.15rem 0.3rem;
+  cursor: pointer;
+  outline: none !important;
+  box-shadow: none !important;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.month-filter-input:focus,
+.month-filter-input:active {
+  background: transparent !important;
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Summary Cards Grid */
 .summary-cards {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 @media (min-width: 640px) {
@@ -510,6 +579,10 @@
   color: var(--expense);
 }
 
+.activity-value .txn-amount.txn-investment {
+  color: #a855f7;
+}
+
 /* No data and Loading States */
 .no-data {
   color: var(--text-muted);
@@ -579,6 +652,15 @@
   }
 }
 
+/* Card Header & Tab Group */
+.card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
 /* Dashboard Filter Tabs */
 .dashboard-tab-group {
   display: flex;
@@ -586,18 +668,24 @@
   padding: 4px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .dashboard-tab-btn {
+  flex: 1;
+  text-align: center;
   background: transparent;
   border: none;
   color: var(--text-muted);
-  padding: 0.35rem 0.85rem;
+  padding: 0.4rem 0.6rem;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   border-radius: var(--radius-sm);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
 }
 
 .dashboard-tab-btn.active {

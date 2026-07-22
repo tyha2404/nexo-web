@@ -178,14 +178,25 @@ export const transactionService = {
 };
 
 export const reportService = {
-  summary: async (): Promise<SummaryReport> => {
-    return request<SummaryReport>('/reports/summary', {
+  summary: async (params?: { startDate?: string; endDate?: string }): Promise<SummaryReport> => {
+    const query =
+      params?.startDate && params?.endDate
+        ? `?startDate=${params.startDate}&endDate=${params.endDate}`
+        : '';
+    return request<SummaryReport>(`/reports/summary${query}`, {
       method: 'GET',
     });
   },
 
-  categoryBreakdown: async (): Promise<CategoryBreakdownReport> => {
-    return request<CategoryBreakdownReport>('/reports/category-breakdown', {
+  categoryBreakdown: async (params?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<CategoryBreakdownReport> => {
+    const query =
+      params?.startDate && params?.endDate
+        ? `?startDate=${params.startDate}&endDate=${params.endDate}`
+        : '';
+    return request<CategoryBreakdownReport>(`/reports/category-breakdown${query}`, {
       method: 'GET',
     });
   },

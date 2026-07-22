@@ -24,7 +24,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({ items, centerLabel = 'T�
   if (validItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-slate-800/50 rounded-2xl border border-slate-700/50">
-        <p className="text-slate-400">Không có dữ liệu chi tiêu</p>
+        <p className="text-slate-400">Không có dữ liệu {centerLabel.toLowerCase()}</p>
       </div>
     );
   }

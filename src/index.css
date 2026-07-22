@@ -305,7 +305,7 @@ body {
 }
 
 .content-view {
-  padding: 1.5rem 2.5rem;
+  padding: 1rem 1.5rem;
   flex-grow: 1;
   max-width: 1400px;
   width: 100%;
@@ -498,7 +498,7 @@ body {
   }
 
   .content-view {
-    padding: 0.75rem 0.5rem;
+    padding: 0.5rem 0.35rem;
   }
 }
 
