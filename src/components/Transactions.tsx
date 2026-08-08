@@ -111,6 +111,11 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   const [transactionDate, setTransactionDate] = useState('');
 
   useEffect(() => {
+    // Reset page and filters when transaction type tab changes
+    setCurrentPage(1);
+    setSelectedCategoryFilter('');
+    setSearchQuery('');
+
     const fetchCategoriesData = async () => {
       try {
         const categoriesData = await categoryService.list({ type });
@@ -430,50 +435,51 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                     </td>
                     <td className="txn-date">{formatDate(txn.transactionDate)}</td>
                     <td className="txn-actions-cell">
-                      <button
-                        onClick={() => openEditModal(txn)}
-                        className="action-btn edit-btn"
-                        style={{ marginRight: '0.5rem' }}
-                        aria-label={`Sửa ${txn.description || ''}`}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                      <div className="action-buttons-wrapper">
+                        <button
+                          onClick={() => openEditModal(txn)}
+                          className="action-btn edit-btn"
+                          aria-label={`Sửa ${txn.description || ''}`}
                         >
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(txn.id, txn.description || '')}
-                        className="action-btn delete-btn"
-                        aria-label={`Xóa ${txn.description || ''}`}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                          >
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDelete(txn.id, txn.description || '')}
+                          className="action-btn delete-btn"
+                          aria-label={`Xóa ${txn.description || ''}`}
                         >
-                          <path d="M3 6h18" />
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                        </svg>
-                      </button>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                          </svg>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

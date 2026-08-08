@@ -173,18 +173,6 @@ function App() {
           </div>
         </div>
 
-        <div className="user-profile">
-          <div className="avatar">{user.username ? user.username[0].toUpperCase() : 'U'}</div>
-          <div className="user-details">
-            <span className="username" title={user.username}>
-              {user.username}
-            </span>
-            <span className="user-email" title={user.email}>
-              {user.email}
-            </span>
-          </div>
-        </div>
-
         <nav className="nav-menu">
           <button
             onClick={() => {
@@ -347,78 +335,87 @@ function App() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="sidebar-footer-actions">
-            <button
-              className="theme-toggle-btn"
-              onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-              aria-label="Toggle Theme"
-              title="Đổi giao diện"
-            >
-              {theme === 'light' ? (
+          <div className="user-profile-footer">
+            <div className="avatar">{user.username ? user.username[0].toUpperCase() : 'U'}</div>
+            <div className="user-details">
+              <span className="username" title={user.username}>
+                {user.username}
+              </span>
+              <span className="user-email" title={user.email}>
+                {user.email}
+              </span>
+            </div>
+            <div className="sidebar-footer-actions">
+              <button
+                className="theme-toggle-btn"
+                onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+                aria-label="Toggle Theme"
+                title="Đổi giao diện"
+              >
+                {theme === 'light' ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="M4.93 4.93l1.41 1.41" />
+                    <path d="M16.24 16.24l1.41 1.41" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                    <path d="M6.34 17.66l-1.41 1.41" />
+                    <path d="M19.07 4.93l-1.41 1.41" />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                  </svg>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsSidebarOpen(false);
+                }}
+                className="icon-only-btn logout-btn"
+                title="Đăng xuất"
+                aria-label="Đăng xuất"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2" />
-                  <path d="M12 20v2" />
-                  <path d="M4.93 4.93l1.41 1.41" />
-                  <path d="M16.24 16.24l1.41 1.41" />
-                  <path d="M2 12h2" />
-                  <path d="M20 12h2" />
-                  <path d="M6.34 17.66l-1.41 1.41" />
-                  <path d="M19.07 4.93l-1.41 1.41" />
-                </svg>
-              ) : (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
-                </svg>
-              )}
-            </button>
-            <button
-              onClick={() => {
-                handleLogout();
-                setIsSidebarOpen(false);
-              }}
-              className="logout-btn"
-            >
-              <span className="nav-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
+                  width="16"
+                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  style={{ display: 'inline-block', verticalAlign: 'middle' }}
                 >
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <polyline points="16 17 21 12 16 7" />
                   <line x1="21" x2="9" y1="12" y2="12" />
                 </svg>
-              </span>
-              <span className="nav-text">Đăng xuất</span>
-            </button>
+              </button>
+            </div>
           </div>
         </div>
       </aside>

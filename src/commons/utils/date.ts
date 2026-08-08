@@ -13,8 +13,7 @@ export const formatDate = (date: string | moment.Moment, format = DATE_FORMAT_DI
  */
 export const toISODateString = (date?: string | Date | moment.Moment): string => {
   if (!date) return '';
-  const dateStr = moment(date).format('YYYY-MM-DD');
-  return moment.utc(dateStr, 'YYYY-MM-DD').toISOString();
+  return moment(date).format('YYYY-MM-DD');
 };
 
 /**
