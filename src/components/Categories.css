@@ -38,17 +38,6 @@
 }
 
 /* Modal Backdrop & Popup Card */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(6px);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
 
 .modal-card {
   width: 100%;

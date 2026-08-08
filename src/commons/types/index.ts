@@ -60,3 +60,39 @@ export interface PaginatedResult<T> {
   page: number;
   limit: number;
 }
+
+export type TargetType = 'EXPENSE' | 'INVESTMENT';
+
+export interface UpsertTargetRequest {
+  targetType: TargetType;
+  targetAmount: number;
+  month: number;
+  year: number;
+}
+
+export interface ExpenseSummary {
+  targetAmount: number;
+  spentAmount: number;
+  remainingAmount: number;
+  dailyAllowance: number;
+  isOverBudget: boolean;
+  overspentAmount: number;
+}
+
+export interface InvestmentSummary {
+  targetAmount: number;
+  investedAmount: number;
+  remainingAmount: number;
+  isTargetReached: boolean;
+  surplusAmount: number;
+}
+
+export interface TargetSummaryResponse {
+  month: number;
+  year: number;
+  daysInMonth: number;
+  currentDay: number;
+  daysRemaining: number;
+  expense: ExpenseSummary;
+  investment: InvestmentSummary;
+}

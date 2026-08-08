@@ -1,28 +1,35 @@
-import { useState, useEffect } from 'react';
-import { reportService, transactionService, categoryService } from '../services/api';
-import { TransactionType } from '../commons/constants';
-import type { Transaction, SummaryReport, CategoryBreakdownItem, Category } from '../commons/types';
-import { formatCurrency, formatDate, compareDatesDesc } from '../commons/utils';
-import { DonutChart } from './DonutChart';
 import moment from 'moment';
+import { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
+import { TransactionType } from '../commons/constants';
+import type {
+  Category,
+  CategoryBreakdownItem,
+  SummaryReport,
+  TargetSummaryResponse,
+  Transaction,
+} from '../commons/types';
+import { compareDatesDesc, formatCurrency, formatDate } from '../commons/utils';
+import { categoryService, reportService, targetService, transactionService } from '../services/api';
 import './Dashboard.css';
+import { DonutChart } from './DonutChart';
 
 const api = {
   reports: reportService,
   transactions: transactionService,
   categories: categoryService,
+  targets: targetService,
 };
 
 export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState<string>(() => moment().format('YYYY-MM'));
   const [summary, setSummary] = useState<SummaryReport | null>(null);
+  const [targetSummary, setTargetSummary] = useState<TargetSummaryResponse | null>(null);
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdownItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
   // Filter tabs for visualization
   const [txnFilter, setTxnFilter] = useState<'ALL' | TransactionType>('ALL');
 
@@ -31,22 +38,27 @@ export default function Dashboard() {
       setLoading(true);
       setError(null);
 
-      const startOfMonth = moment(monthStr, 'YYYY-MM').startOf('month').format('YYYY-MM-DD');
-      const endOfMonth = moment(monthStr, 'YYYY-MM').endOf('month').format('YYYY-MM-DD');
+      const m = moment(monthStr, 'YYYY-MM');
+      const startOfMonth = m.startOf('month').format('YYYY-MM-DD');
+      const endOfMonth = m.endOf('month').format('YYYY-MM-DD');
       const dateFilters = { startDate: startOfMonth, endDate: endOfMonth };
+      const targetParams = { month: m.month() + 1, year: m.year() };
 
-      // Fetch summary and category breakdown using the api wrapper
-      const [summaryData, breakdownData, transactionsData, categoriesData] = await Promise.all([
-        api.reports.summary(dateFilters),
-        api.reports.categoryBreakdown(dateFilters),
-        api.transactions.list(dateFilters),
-        api.categories.list(),
-      ]);
+      // Fetch summary, category breakdown, targets using the api wrapper
+      const [summaryData, breakdownData, transactionsData, categoriesData, targetData] =
+        await Promise.all([
+          api.reports.summary(dateFilters),
+          api.reports.categoryBreakdown(dateFilters),
+          api.transactions.list(dateFilters),
+          api.categories.list(),
+          api.targets.getSummary(targetParams).catch(() => null),
+        ]);
 
       setSummary(summaryData);
       setCategoryBreakdown(breakdownData.items || []);
       setCategories(categoriesData.items || []);
       setAllTransactions(transactionsData.items || []);
+      setTargetSummary(targetData);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch dashboard analytics');
     } finally {
@@ -306,6 +318,352 @@ export default function Dashboard() {
               </svg>
               <span>Tình hình Chung</span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Target Analytics Section */}
+      <div
+        className="target-section animate-fade-in"
+        style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1rem',
+          }}
+        >
+          <div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
+              🎯 Mục tiêu Tài chính Tháng
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
+              Theo dõi tiến độ chi tiêu & đầu tư cá nhân
+            </p>
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '1rem',
+          }}
+        >
+          {/* Monthly Expense Target Card */}
+          <div
+            className="glass-panel"
+            style={{
+              padding: '1.25rem',
+              borderRadius: '1rem',
+              position: 'relative',
+              border: targetSummary?.expense?.isOverBudget
+                ? '1px solid #ef4444'
+                : '1px solid var(--border)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '0.75rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.25rem' }}>🛒</span>
+                <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>Hạn mức Chi tiêu Tháng</span>
+              </div>
+              {targetSummary?.expense?.isOverBudget ? (
+                <span
+                  style={{
+                    background: '#ef4444',
+                    color: '#fff',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    padding: '0.2rem 0.6rem',
+                    borderRadius: '9999px',
+                  }}
+                >
+                  🚨 Vượt hạn mức
+                </span>
+              ) : (
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  {targetSummary?.expense?.targetAmount
+                    ? `${Math.min(100, Math.round((targetSummary.expense.spentAmount / targetSummary.expense.targetAmount) * 100))}% đã chi`
+                    : 'Chưa đặt mục tiêu'}
+                </span>
+              )}
+            </div>
+
+            {targetSummary?.expense?.targetAmount ? (
+              <>
+                <div
+                  style={{
+                    height: '8px',
+                    background: 'var(--border)',
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                    marginBottom: '0.85rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${Math.min(100, (targetSummary.expense.spentAmount / targetSummary.expense.targetAmount) * 100)}%`,
+                      background: targetSummary.expense.isOverBudget
+                        ? '#ef4444'
+                        : 'linear-gradient(90deg, #10b981, #f59e0b)',
+                      transition: 'width 0.4s ease',
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: '0.9rem',
+                    marginBottom: '0.85rem',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Hạn mức</div>
+                    <div style={{ fontWeight: 600 }}>
+                      {formatCurrency(targetSummary.expense.targetAmount)}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Đã chi</div>
+                    <div style={{ fontWeight: 600 }}>
+                      {formatCurrency(targetSummary.expense.spentAmount)}
+                    </div>
+                  </div>
+                </div>
+
+                {targetSummary.expense.isOverBudget ? (
+                  <div
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '0.75rem',
+                      padding: '0.75rem',
+                      color: '#ef4444',
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
+                      🚨 Bạn đã chi vượt quá hạn mức!
+                    </div>
+                    <div style={{ fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                      Vượt mức:{' '}
+                      <strong>{formatCurrency(targetSummary.expense.overspentAmount)}</strong>
+                    </div>
+                    <div style={{ fontSize: '0.8rem', marginTop: '0.3rem', fontWeight: 600 }}>
+                      ⚠️ Hạn mức chi tiêu mỗi ngày còn lại: 0 đ
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      background: 'rgba(16, 185, 129, 0.08)',
+                      border: '1px solid rgba(16, 185, 129, 0.2)',
+                      borderRadius: '0.75rem',
+                      padding: '0.75rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '0.3rem',
+                      }}
+                    >
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                        Còn lại có thể chi:
+                      </span>
+                      <span style={{ fontWeight: 700, color: '#10b981', fontSize: '0.95rem' }}>
+                        {formatCurrency(targetSummary.expense.remainingAmount)}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '0.8rem',
+                        color: 'var(--text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.3rem',
+                      }}
+                    >
+                      <span>📅</span>
+                      <span>
+                        Gợi ý chi mỗi ngày ({targetSummary.daysRemaining} ngày còn lại):{' '}
+                        <strong style={{ color: 'var(--primary)' }}>
+                          {formatCurrency(Math.round(targetSummary.expense.dailyAllowance))}/ngày
+                        </strong>
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: '1rem 0',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.9rem',
+                }}
+              >
+                Bấm vào nút bên trên để đặt hạn mức chi tiêu cho tháng này.
+              </div>
+            )}
+          </div>
+
+          {/* Monthly Investment Target Card */}
+          <div
+            className="glass-panel"
+            style={{
+              padding: '1.25rem',
+              borderRadius: '1rem',
+              position: 'relative',
+              border: '1px solid var(--border)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '0.75rem',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.25rem' }}>📈</span>
+                <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>Mục Tiêu Đầu Tư Tháng</span>
+              </div>
+              {targetSummary?.investment?.isTargetReached ? (
+                <span
+                  style={{
+                    background: '#10b981',
+                    color: '#fff',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    padding: '0.2rem 0.6rem',
+                    borderRadius: '9999px',
+                  }}
+                >
+                  🎉 Đã hoàn thành
+                </span>
+              ) : (
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  {targetSummary?.investment?.targetAmount
+                    ? `${Math.min(100, Math.round((targetSummary.investment.investedAmount / targetSummary.investment.targetAmount) * 100))}% hoàn thành`
+                    : 'Chưa đặt mục tiêu'}
+                </span>
+              )}
+            </div>
+
+            {targetSummary?.investment?.targetAmount ? (
+              <>
+                <div
+                  style={{
+                    height: '8px',
+                    background: 'var(--border)',
+                    borderRadius: '4px',
+                    overflow: 'hidden',
+                    marginBottom: '0.85rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${Math.min(100, (targetSummary.investment.investedAmount / targetSummary.investment.targetAmount) * 100)}%`,
+                      background: targetSummary.investment.isTargetReached
+                        ? '#10b981'
+                        : 'linear-gradient(90deg, #3b82f6, #6366f1)',
+                      transition: 'width 0.4s ease',
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: '0.9rem',
+                    marginBottom: '0.85rem',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Mục tiêu</div>
+                    <div style={{ fontWeight: 600 }}>
+                      {formatCurrency(targetSummary.investment.targetAmount)}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Đã đầu tư</div>
+                    <div style={{ fontWeight: 600, color: '#3b82f6' }}>
+                      {formatCurrency(targetSummary.investment.investedAmount)}
+                    </div>
+                  </div>
+                </div>
+
+                {targetSummary.investment.isTargetReached ? (
+                  <div
+                    style={{
+                      background: 'rgba(16, 185, 129, 0.08)',
+                      border: '1px solid rgba(16, 185, 129, 0.2)',
+                      borderRadius: '0.75rem',
+                      padding: '0.75rem',
+                      color: '#10b981',
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
+                      🎉 Đã hoàn thành mục tiêu đầu tư!
+                    </div>
+                    {targetSummary.investment.surplusAmount > 0 && (
+                      <div style={{ fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                        Vượt chỉ tiêu:{' '}
+                        <strong>+{formatCurrency(targetSummary.investment.surplusAmount)}</strong>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      background: 'rgba(59, 130, 246, 0.08)',
+                      border: '1px solid rgba(59, 130, 246, 0.2)',
+                      borderRadius: '0.75rem',
+                      padding: '0.75rem',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      Số tiền còn thiếu:
+                    </span>
+                    <span style={{ fontWeight: 700, color: '#3b82f6', fontSize: '0.95rem' }}>
+                      {formatCurrency(targetSummary.investment.remainingAmount)}
+                    </span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div
+                style={{
+                  textAlign: 'center',
+                  padding: '1rem 0',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.9rem',
+                }}
+              >
+                Vào mục 🎯 Quản lý Mục tiêu trên thanh điều hướng để đặt mục tiêu cho tháng này.
+              </div>
+            )}
           </div>
         </div>
       </div>

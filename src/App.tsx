@@ -4,6 +4,7 @@ import Auth from './components/Auth';
 import Categories from './components/Categories';
 import Dashboard from './components/Dashboard';
 import ReloadPrompt from './components/ReloadPrompt';
+import Targets from './components/Targets';
 import Transactions from './components/Transactions';
 import { authService } from './services/api';
 import { TransactionType } from './commons/constants';
@@ -12,7 +13,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'income' | 'expenses' | 'investment' | 'categories'
+    'dashboard' | 'income' | 'expenses' | 'investment' | 'categories' | 'targets'
   >('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -215,6 +216,33 @@ function App() {
           </button>
           <button
             onClick={() => {
+              setActiveTab('targets');
+              setIsSidebarOpen(false);
+            }}
+            className={`nav-item ${activeTab === 'targets' ? 'active' : ''}`}
+          >
+            <span className="nav-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ display: 'inline-block', verticalAlign: 'middle' }}
+              >
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="6" />
+                <circle cx="12" cy="12" r="2" />
+              </svg>
+            </span>
+            <span className="nav-text">Mục tiêu tài chính</span>
+          </button>
+          <button
+            onClick={() => {
               setActiveTab('income');
               setIsSidebarOpen(false);
             }}
@@ -405,8 +433,10 @@ function App() {
             <Transactions type={TransactionType.EXPENSE} />
           ) : activeTab === 'investment' ? (
             <Transactions type={TransactionType.INVESTMENT} />
-          ) : (
+          ) : activeTab === 'categories' ? (
             <Categories />
+          ) : (
+            <Targets />
           )}
         </div>
       </main>
