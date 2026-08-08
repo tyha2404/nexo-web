@@ -45,8 +45,8 @@ export default function Dashboard() {
 
       setSummary(summaryData);
       setCategoryBreakdown(breakdownData.items || []);
-      setCategories(categoriesData || []);
-      setAllTransactions(transactionsData || []);
+      setCategories(categoriesData.items || []);
+      setAllTransactions(transactionsData.items || []);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch dashboard analytics');
     } finally {

@@ -8,6 +8,7 @@ import type { Transaction, Category } from '../commons/types';
 import { TransactionType, DATE_FORMAT_INPUT } from '../commons/constants';
 import { formatCurrency, formatDate, toISODateString } from '../commons/utils';
 import { toast } from 'react-toastify';
+import Pagination from './Pagination';
 import './Transactions.css';
 
 export interface TransactionsProps {
@@ -88,8 +89,16 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   // Search and Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
+    moment().startOf('month').toDate(),
+    moment().endOf('month').toDate(),
+  ]);
   const [startDate, endDate] = dateRange;
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -102,25 +111,41 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   const [transactionDate, setTransactionDate] = useState('');
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCategoriesData = async () => {
+      try {
+        const categoriesData = await categoryService.list({ type });
+        setCategories(categoriesData.items || []);
+      } catch (err: any) {
+        console.error('Failed to load categories', err);
+      }
+    };
+    fetchCategoriesData();
+  }, [type]);
+
+  useEffect(() => {
+    const fetchTransactionsData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const [transactionsData, categoriesData] = await Promise.all([
-          transactionService.list({ type }),
-          categoryService.list({ type }),
-        ]);
-        setTransactions(transactionsData || []);
-        setCategories(categoriesData || []);
+        const res = await transactionService.list({
+          type,
+          categoryId: selectedCategoryFilter || undefined,
+          startDate: startDate ? toISODateString(startDate) : undefined,
+          endDate: endDate ? toISODateString(endDate) : undefined,
+          page: currentPage,
+          limit: itemsPerPage,
+        });
+        setTransactions(res.items || []);
+        setTotalItems(res.total || 0);
       } catch (err: any) {
-        setError(err.message || 'Lấy dữ liệu thất bại');
+        setError(err.message || 'Lấy danh sách giao dịch thất bại');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [type]);
+    fetchTransactionsData();
+  }, [type, selectedCategoryFilter, startDate, endDate, currentPage, itemsPerPage]);
 
   const showFeedback = (message: string, type: 'success' | 'error') => {
     if (type === 'success') {
@@ -263,24 +288,22 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
     return cat ? cat.name : 'Chưa phân loại';
   };
 
-  // Filter transactions client-side
+  // Filter transactions client-side for search query if needed
   const filteredTransactions = transactions.filter((txn) => {
-    const matchesSearch = (txn.description || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategoryFilter
-      ? txn.categoryId === selectedCategoryFilter
-      : true;
-
-    let matchesDate = true;
-    const txnMoment = moment(txn.transactionDate);
-    if (startDate) {
-      matchesDate = matchesDate && txnMoment.isSameOrAfter(moment(startDate).startOf('day'));
-    }
-    if (endDate) {
-      matchesDate = matchesDate && txnMoment.isSameOrBefore(moment(endDate).endOf('day'));
-    }
-
-    return matchesSearch && matchesCategory && matchesDate;
+    return (txn.description || '').toLowerCase().includes(searchQuery.toLowerCase());
   });
+
+  // Calculate total pages from totalItems from server
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (size: number) => {
+    setItemsPerPage(size);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="transactions-view">
@@ -329,7 +352,10 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             type="text"
             placeholder="Tìm kiếm theo tiêu đề..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
           />
         </div>
         <div className="category-select-wrapper">
@@ -344,7 +370,10 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                 ...filteredCategories.map((cat) => ({ value: cat.id, label: cat.name })),
               ].find((opt) => opt.value === selectedCategoryFilter) || null
             }
-            onChange={(option) => setSelectedCategoryFilter(option ? option.value : '')}
+            onChange={(option) => {
+              setSelectedCategoryFilter(option ? option.value : '');
+              setCurrentPage(1);
+            }}
             styles={customSelectStyles}
             placeholder="Tất cả Danh mục"
             isSearchable={true}
@@ -356,7 +385,10 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             selectsRange={true}
             startDate={startDate}
             endDate={endDate}
-            onChange={(update) => setDateRange(update)}
+            onChange={(update) => {
+              setDateRange(update);
+              setCurrentPage(1);
+            }}
             isClearable={true}
             placeholderText="Chọn khoảng ngày"
             dateFormat="dd/MM/yyyy"
@@ -376,77 +408,88 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
           <p>Không tìm thấy giao dịch nào. Hãy thử điều chỉnh bộ lọc hoặc thêm giao dịch mới!</p>
         </div>
       ) : (
-        <div className="transactions-table-container animate-fade-in">
-          <table className="transactions-table">
-            <thead>
-              <tr>
-                <th>Tiêu đề / Nội dung</th>
-                <th>Số tiền</th>
-                <th>Danh mục</th>
-                <th>Ngày thực hiện</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTransactions.map((txn) => (
-                <tr key={txn.id}>
-                  <td className="txn-title-cell">{txn.description}</td>
-                  <td className="txn-amount">{formatCurrency(txn.amount)}</td>
-                  <td>
-                    <span className="txn-category-badge">{getCategoryName(txn.categoryId)}</span>
-                  </td>
-                  <td className="txn-date">{formatDate(txn.transactionDate)}</td>
-                  <td className="txn-actions-cell">
-                    <button
-                      onClick={() => openEditModal(txn)}
-                      className="action-btn edit-btn"
-                      style={{ marginRight: '0.5rem' }}
-                      aria-label={`Sửa ${txn.description || ''}`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        style={{ display: 'inline-block', verticalAlign: 'middle' }}
-                      >
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(txn.id, txn.description || '')}
-                      className="action-btn delete-btn"
-                      aria-label={`Xóa ${txn.description || ''}`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        style={{ display: 'inline-block', verticalAlign: 'middle' }}
-                      >
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                      </svg>
-                    </button>
-                  </td>
+        <>
+          <div className="transactions-table-container animate-fade-in">
+            <table className="transactions-table">
+              <thead>
+                <tr>
+                  <th>Tiêu đề / Nội dung</th>
+                  <th>Số tiền</th>
+                  <th>Danh mục</th>
+                  <th>Ngày thực hiện</th>
+                  <th>Thao tác</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filteredTransactions.map((txn) => (
+                  <tr key={txn.id}>
+                    <td className="txn-title-cell">{txn.description}</td>
+                    <td className="txn-amount">{formatCurrency(txn.amount)}</td>
+                    <td>
+                      <span className="txn-category-badge">{getCategoryName(txn.categoryId)}</span>
+                    </td>
+                    <td className="txn-date">{formatDate(txn.transactionDate)}</td>
+                    <td className="txn-actions-cell">
+                      <button
+                        onClick={() => openEditModal(txn)}
+                        className="action-btn edit-btn"
+                        style={{ marginRight: '0.5rem' }}
+                        aria-label={`Sửa ${txn.description || ''}`}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                        >
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(txn.id, txn.description || '')}
+                        className="action-btn delete-btn"
+                        aria-label={`Xóa ${txn.description || ''}`}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            itemsPerPage={itemsPerPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            totalItems={totalItems}
+          />
+        </>
       )}
 
       {/* Form / Modal overlay */}

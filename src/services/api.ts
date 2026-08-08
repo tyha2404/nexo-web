@@ -7,6 +7,7 @@ import type {
   AuthResponse,
   Category,
   CategoryBreakdownReport,
+  PaginatedResult,
   SummaryReport,
   Transaction,
   User,
@@ -52,6 +53,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!text) return {} as T;
 
   const parsed = JSON.parse(text);
+  if (parsed.success && parsed.items !== undefined && parsed.total !== undefined) {
+    return {
+      items: parsed.items,
+      total: parsed.total,
+      page: parsed.page || 1,
+      limit: parsed.limit || 10,
+    } as unknown as T;
+  }
   if (parsed.success && parsed.data !== undefined) {
     return parsed.data as T;
   }
@@ -84,11 +93,23 @@ export const authService = {
 };
 
 export const categoryService = {
-  list: async (params?: { type?: TransactionType }): Promise<Category[]> => {
-    const query = params?.type ? `?type=${params.type}` : '';
-    return request<Category[]>(`/categories${query}`, {
+  list: async (params?: {
+    type?: TransactionType;
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedResult<Category>> => {
+    const searchParams = new URLSearchParams();
+    if (params?.type) searchParams.append('type', params.type);
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
+    const res = await request<PaginatedResult<Category> | Category[]>(`/categories${query}`, {
       method: 'GET',
     });
+    if (Array.isArray(res)) {
+      return { items: res, total: res.length, page: 1, limit: res.length || 10 };
+    }
+    return res;
   },
 
   create: async (data: {
@@ -126,7 +147,9 @@ export const transactionService = {
     categoryId?: string;
     startDate?: string;
     endDate?: string;
-  }): Promise<Transaction[]> => {
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedResult<Transaction>> => {
     let query = '';
     if (filters) {
       const params = new URLSearchParams();
@@ -134,11 +157,20 @@ export const transactionService = {
       if (filters.categoryId) params.append('categoryId', filters.categoryId);
       if (filters.startDate) params.append('startDate', filters.startDate);
       if (filters.endDate) params.append('endDate', filters.endDate);
+      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.limit) params.append('limit', filters.limit.toString());
       query = '?' + params.toString();
     }
-    return request<Transaction[]>(`/transactions${query}`, {
-      method: 'GET',
-    });
+    const res = await request<PaginatedResult<Transaction> | Transaction[]>(
+      `/transactions${query}`,
+      {
+        method: 'GET',
+      }
+    );
+    if (Array.isArray(res)) {
+      return { items: res, total: res.length, page: 1, limit: res.length || 10 };
+    }
+    return res;
   },
 
   create: async (data: {

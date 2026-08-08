@@ -4,6 +4,7 @@ import { categoryService } from '../services/api';
 import { TransactionType } from '../commons/constants';
 import type { Category } from '../commons/types';
 import { toast } from 'react-toastify';
+import Pagination from './Pagination';
 import './Categories.css';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -74,6 +75,11 @@ export default function Categories() {
   const [activeTab, setActiveTab] = useState<TransactionType>(TransactionType.EXPENSE);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+
   // Form states
   const [name, setName] = useState('');
   const [type, setType] = useState<TransactionType>(TransactionType.EXPENSE);
@@ -99,12 +105,17 @@ export default function Categories() {
     }
   };
 
-  const fetchCategories = async (selectedType: TransactionType) => {
+  const fetchCategories = async (
+    selectedType: TransactionType,
+    page: number = currentPage,
+    limit: number = itemsPerPage
+  ) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await categoryService.list({ type: selectedType });
-      setCategories(data || []);
+      const res = await categoryService.list({ type: selectedType, page, limit });
+      setCategories(res.items || []);
+      setTotalItems(res.total || 0);
     } catch (err: any) {
       setError(err.message || 'Lấy danh mục thất bại');
     } finally {
@@ -113,8 +124,8 @@ export default function Categories() {
   };
 
   useEffect(() => {
-    fetchCategories(activeTab);
-  }, [activeTab]);
+    fetchCategories(activeTab, currentPage, itemsPerPage);
+  }, [activeTab, currentPage, itemsPerPage]);
 
   const formatBudgetVal = (val: string) => {
     const cleanNumber = val.replace(/\D/g, '');
@@ -322,74 +333,87 @@ export default function Categories() {
               </p>
             </div>
           ) : (
-            <div className="categories-list">
-              {categories.map((cat) => (
-                <div key={cat.id} className="category-item-card">
-                  <div className="category-item-info">
-                    <div className="category-item-title-row">
-                      <h4>
-                        {cat.name}{' '}
-                        {cat.budgetLimit !== undefined && (
-                          <span className="text-xs text-slate-400 font-normal ml-1">
-                            (Hạn mức: {cat.budgetLimit.toLocaleString('vi-VN')}đ)
-                          </span>
-                        )}
-                      </h4>
+            <>
+              <div className="categories-list">
+                {categories.map((cat) => (
+                  <div key={cat.id} className="category-item-card">
+                    <div className="category-item-info">
+                      <div className="category-item-title-row">
+                        <h4>
+                          {cat.name}{' '}
+                          {cat.budgetLimit !== undefined && (
+                            <span className="text-xs text-slate-400 font-normal ml-1">
+                              (Hạn mức: {cat.budgetLimit.toLocaleString('vi-VN')}đ)
+                            </span>
+                          )}
+                        </h4>
+                      </div>
+                      {cat.description ? (
+                        <p className="category-item-desc">{cat.description}</p>
+                      ) : (
+                        <p className="category-item-desc no-desc">Không có mô tả</p>
+                      )}
                     </div>
-                    {cat.description ? (
-                      <p className="category-item-desc">{cat.description}</p>
-                    ) : (
-                      <p className="category-item-desc no-desc">Không có mô tả</p>
-                    )}
-                  </div>
-                  <div className="category-item-actions">
-                    <button
-                      onClick={() => startEdit(cat)}
-                      className="action-btn edit-btn"
-                      aria-label={`Sửa danh mục ${cat.name}`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                    <div className="category-item-actions">
+                      <button
+                        onClick={() => startEdit(cat)}
+                        className="action-btn edit-btn"
+                        aria-label={`Sửa danh mục ${cat.name}`}
                       >
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(cat.id, cat.name)}
-                      className="action-btn delete-btn"
-                      aria-label={`Xóa danh mục ${cat.name}`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                        >
+                          <path d="M12 20h9" />
+                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(cat.id, cat.name)}
+                        className="action-btn delete-btn"
+                        aria-label={`Xóa danh mục ${cat.name}`}
                       >
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                      </svg>
-                    </button>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(totalItems / itemsPerPage)}
+                onPageChange={(page: number) => setCurrentPage(page)}
+                itemsPerPage={itemsPerPage}
+                onItemsPerPageChange={(size: number) => {
+                  setItemsPerPage(size);
+                  setCurrentPage(1);
+                }}
+                totalItems={totalItems}
+              />
+            </>
           )}
         </div>
       </div>
