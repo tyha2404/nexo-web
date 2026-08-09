@@ -24,6 +24,7 @@ const api = {
 export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState<string>(() => moment().format('YYYY-MM'));
   const [summary, setSummary] = useState<SummaryReport | null>(null);
+  const [allTimeSummary, setAllTimeSummary] = useState<SummaryReport | null>(null);
   const [targetSummary, setTargetSummary] = useState<TargetSummaryResponse | null>(null);
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdownItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -45,16 +46,24 @@ export default function Dashboard() {
       const targetParams = { month: m.month() + 1, year: m.year() };
 
       // Fetch summary, category breakdown, targets using the api wrapper
-      const [summaryData, breakdownData, transactionsData, categoriesData, targetData] =
-        await Promise.all([
-          api.reports.summary(dateFilters),
-          api.reports.categoryBreakdown(dateFilters),
-          api.transactions.list(dateFilters),
-          api.categories.list(),
-          api.targets.getSummary(targetParams).catch(() => null),
-        ]);
+      const [
+        summaryData,
+        allTimeData,
+        breakdownData,
+        transactionsData,
+        categoriesData,
+        targetData,
+      ] = await Promise.all([
+        api.reports.summary(dateFilters),
+        api.reports.summary({ allTime: true }),
+        api.reports.categoryBreakdown(dateFilters),
+        api.transactions.list(dateFilters),
+        api.categories.list(),
+        api.targets.getSummary(targetParams).catch(() => null),
+      ]);
 
       setSummary(summaryData);
+      setAllTimeSummary(allTimeData);
       setCategoryBreakdown(breakdownData.items || []);
       setCategories(categoriesData.items || []);
       setAllTransactions(transactionsData.items || []);
@@ -70,7 +79,11 @@ export default function Dashboard() {
     fetchDashboardData(selectedMonth);
   }, [selectedMonth]);
 
-  // Calculate Net Balance dynamically if not loaded or if summary doesn't exist
+  // All-time metrics
+  const allTimeNetAssets = allTimeSummary?.netBalance ?? 0;
+  const allTimeInvestment = allTimeSummary?.totalInvestment ?? 0;
+
+  // Calculate Monthly Net Balance dynamically if not loaded or if summary doesn't exist
   const totalIncome = summary?.totalIncome ?? 0;
   const totalExpense = summary?.totalExpense ?? 0;
   const totalInvestment =
@@ -78,7 +91,7 @@ export default function Dashboard() {
     allTransactions
       .filter((t) => t.type === TransactionType.INVESTMENT)
       .reduce((sum, t) => sum + t.amount, 0);
-  const netBalance = summary?.netBalance ?? totalIncome - totalExpense;
+  const netBalance = summary?.netBalance ?? totalIncome - totalExpense - totalInvestment;
 
   return (
     <div className="dashboard-container animate-fade-in">
@@ -101,25 +114,7 @@ export default function Dashboard() {
                   animation: 'spin 1s linear infinite',
                 }}
               ></div>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="month-filter-svg"
-              >
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
-            )}
+            ) : null}
             <span>Tháng:</span>
           </label>
           <DatePicker
@@ -151,246 +146,133 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Summary Cards Grid */}
-      <div className="summary-cards animate-fade-in">
-        <div className="glass-panel-interactive summary-card income-card">
-          <div className="card-accent-border income-accent"></div>
-          <div className="card-content">
-            <div className="card-header-with-icon">
-              <span className="card-label">Tổng Thu nhập</span>
-              <span className="card-icon-wrapper income-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect width="20" height="12" x="2" y="6" rx="2" />
-                  <circle cx="12" cy="12" r="2" />
-                  <path d="M6 12h.01M18 12h.01" />
-                </svg>
-              </span>
-            </div>
-            <h3 className="card-value">{formatCurrency(totalIncome)}</h3>
-            <div className="card-trend upward">
-              <svg
-                viewBox="0 0 24 24"
-                width="16"
-                height="16"
-                stroke="currentColor"
-                strokeWidth="2"
-                fill="none"
+      {/* All-Time Financial Overview Section */}
+      <div className="glass-card dashboard-section animate-fade-in">
+        <h3 className="dashboard-section-title">
+          <span>Tổng quan Tài sản & Đầu tư (Từ trước đến giờ)</span>
+        </h3>
+        <div className="alltime-cards">
+          <div className="glass-panel-interactive summary-card alltime-assets">
+            <div className="card-accent-border alltime-assets-accent"></div>
+            <div className="card-content">
+              <div className="card-header-with-icon">
+                <span className="card-label">Tổng Tài sản Tích lũy</span>
+              </div>
+              <h3
+                className={`card-value ${allTimeNetAssets >= 0 ? 'positive-balance' : 'negative-balance'}`}
               >
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                <polyline points="17 6 23 6 23 12"></polyline>
-              </svg>
-              <span>Dòng tiền Ổn định</span>
+                {formatCurrency(allTimeNetAssets)}
+              </h3>
+              <div className="card-trend info">
+                <span>Giá trị Ròng Toàn Thời Gian</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="glass-panel-interactive summary-card alltime-investment">
+            <div className="card-accent-border alltime-investment-accent"></div>
+            <div className="card-content">
+              <div className="card-header-with-icon">
+                <span className="card-label">Đầu tư Từ Trước Đến Giờ</span>
+              </div>
+              <h3
+                className={`card-value ${allTimeInvestment >= 0 ? '' : 'negative-balance'}`}
+                style={{ color: allTimeInvestment >= 0 ? '#3b82f6' : undefined }}
+              >
+                {formatCurrency(allTimeInvestment)}
+              </h3>
+              <div
+                className="card-trend info"
+                style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}
+              >
+                <span>Danh mục Tích lũy</span>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="glass-panel-interactive summary-card expense-card">
-          <div className="card-accent-border expense-accent"></div>
-          <div className="card-content">
-            <div className="card-header-with-icon">
-              <span className="card-label">Tổng Chi tiêu</span>
-              <span className="card-icon-wrapper expense-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                  <path d="M3 6h18" />
-                  <path d="M16 10a4 4 0 0 1-8 0" />
-                </svg>
-              </span>
-            </div>
-            <h3 className="card-value">{formatCurrency(totalExpense)}</h3>
-            <div className="card-trend downward">
-              <svg
-                viewBox="0 0 24 24"
-                width="16"
-                height="16"
-                stroke="currentColor"
-                strokeWidth="2"
-                fill="none"
-              >
-                <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
-                <polyline points="17 18 23 18 23 12"></polyline>
-              </svg>
-              <span>Kiểm soát Chi tiêu</span>
+      {/* Monthly Summary Section */}
+      <div className="glass-card dashboard-section animate-fade-in">
+        <h3 className="dashboard-section-title">
+          <span>Kết quả Tài chính Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}</span>
+        </h3>
+
+        {/* Summary Cards Grid */}
+        <div className="summary-cards">
+          <div className="glass-panel-interactive summary-card income-card">
+            <div className="card-accent-border income-accent"></div>
+            <div className="card-content">
+              <div className="card-header-with-icon">
+                <span className="card-label">Tổng Thu nhập</span>
+              </div>
+              <h3 className="card-value">{formatCurrency(totalIncome)}</h3>
+              <div className="card-trend upward">
+                <span>Dòng tiền Ổn định</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="glass-panel-interactive summary-card investment-card">
-          <div className="card-accent-border investment-accent"></div>
-          <div className="card-content">
-            <div className="card-header-with-icon">
-              <span className="card-label">Tổng Đầu tư</span>
-              <span className="card-icon-wrapper investment-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <polyline points="19 12 12 19 5 12"></polyline>
-                </svg>
-              </span>
-            </div>
-            <h3 className="card-value">{formatCurrency(totalInvestment)}</h3>
-            <div className="card-trend info">
-              <svg
-                viewBox="0 0 24 24"
-                width="16"
-                height="16"
-                stroke="currentColor"
-                strokeWidth="2"
-                fill="none"
-              >
-                <path d="m19 9-5 5-4-4-3 3" />
-                <path d="M3 3v18h18" />
-              </svg>
-              <span>Tích lũy Tài sản</span>
+          <div className="glass-panel-interactive summary-card expense-card">
+            <div className="card-accent-border expense-accent"></div>
+            <div className="card-content">
+              <div className="card-header-with-icon">
+                <span className="card-label">Tổng Chi tiêu</span>
+              </div>
+              <h3 className="card-value">{formatCurrency(totalExpense)}</h3>
+              <div className="card-trend downward">
+                <span>Kiểm soát Chi tiêu</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="glass-panel-interactive summary-card balance-card">
-          <div className="card-accent-border balance-accent"></div>
-          <div className="card-content">
-            <div className="card-header-with-icon">
-              <span className="card-label">Số dư Ròng</span>
-              <span className="card-icon-wrapper balance-icon">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="16" x2="12" y2="12" />
-                  <line x1="12" y1="8" x2="12.01" y2="8" />
-                </svg>
-              </span>
+          <div className="glass-panel-interactive summary-card investment-card">
+            <div className="card-accent-border investment-accent"></div>
+            <div className="card-content">
+              <div className="card-header-with-icon">
+                <span className="card-label">Tổng Đầu tư</span>
+              </div>
+              <h3 className="card-value">{formatCurrency(totalInvestment)}</h3>
+              <div className="card-trend info">
+                <span>Tích lũy Tài sản</span>
+              </div>
             </div>
-            <h3
-              className={`card-value ${netBalance >= 0 ? 'positive-balance' : 'negative-balance'}`}
-            >
-              {formatCurrency(netBalance)}
-            </h3>
-            <div className="card-trend info">
-              <svg
-                viewBox="0 0 24 24"
-                width="16"
-                height="16"
-                stroke="currentColor"
-                strokeWidth="2"
-                fill="none"
+          </div>
+
+          <div className="glass-panel-interactive summary-card balance-card">
+            <div className="card-accent-border balance-accent"></div>
+            <div className="card-content">
+              <div className="card-header-with-icon">
+                <span className="card-label">Số dư Ròng</span>
+              </div>
+              <h3
+                className={`card-value ${netBalance >= 0 ? 'positive-balance' : 'negative-balance'}`}
               >
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-              </svg>
-              <span>Tình hình Chung</span>
+                {formatCurrency(netBalance)}
+              </h3>
+              <div className="card-trend info">
+                <span>Tình hình Chung</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Target Analytics Section */}
-      <div
-        className="target-section animate-fade-in"
-        style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '1rem',
-          }}
-        >
-          <div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
-              🎯 Mục tiêu Tài chính Tháng
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-              Theo dõi tiến độ chi tiêu & đầu tư cá nhân
-            </p>
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '1rem',
-          }}
-        >
+      <div className="dashboard-section animate-fade-in">
+        <div className="target-cards-grid">
           {/* Monthly Expense Target Card */}
           <div
-            className="glass-panel"
-            style={{
-              padding: '1.25rem',
-              borderRadius: '1rem',
-              position: 'relative',
-              border: targetSummary?.expense?.isOverBudget
-                ? '1px solid #ef4444'
-                : '1px solid var(--border)',
-            }}
+            className={`glass-card target-card ${targetSummary?.expense?.isOverBudget ? 'over-budget' : ''}`}
           >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '0.75rem',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '1.25rem' }}>🛒</span>
-                <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>Hạn mức Chi tiêu Tháng</span>
+            <div className="target-card-header">
+              <div className="target-card-title">
+                <span className="target-name">Hạn mức Chi tiêu Tháng</span>
               </div>
               {targetSummary?.expense?.isOverBudget ? (
-                <span
-                  style={{
-                    background: '#ef4444',
-                    color: '#fff',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    padding: '0.2rem 0.6rem',
-                    borderRadius: '9999px',
-                  }}
-                >
-                  🚨 Vượt hạn mức
-                </span>
+                <span className="badge badge-danger">Vượt hạn mức</span>
               ) : (
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                <span className="target-status-text">
                   {targetSummary?.expense?.targetAmount
                     ? `${Math.min(100, Math.round((targetSummary.expense.spentAmount / targetSummary.expense.targetAmount) * 100))}% đã chi`
                     : 'Chưa đặt mục tiêu'}
@@ -400,165 +282,75 @@ export default function Dashboard() {
 
             {targetSummary?.expense?.targetAmount ? (
               <>
-                <div
-                  style={{
-                    height: '8px',
-                    background: 'var(--border)',
-                    borderRadius: '4px',
-                    overflow: 'hidden',
-                    marginBottom: '0.85rem',
-                  }}
-                >
+                <div className="progress-track">
                   <div
+                    className={`progress-fill ${targetSummary.expense.isOverBudget ? 'fill-danger' : 'fill-expense'}`}
                     style={{
-                      height: '100%',
                       width: `${Math.min(100, (targetSummary.expense.spentAmount / targetSummary.expense.targetAmount) * 100)}%`,
-                      background: targetSummary.expense.isOverBudget
-                        ? '#ef4444'
-                        : 'linear-gradient(90deg, #10b981, #f59e0b)',
-                      transition: 'width 0.4s ease',
                     }}
                   />
                 </div>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: '0.9rem',
-                    marginBottom: '0.85rem',
-                  }}
-                >
+                <div className="target-metrics-row">
                   <div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Hạn mức</div>
-                    <div style={{ fontWeight: 600 }}>
+                    <div className="metric-label">Hạn mức</div>
+                    <div className="metric-value">
                       {formatCurrency(targetSummary.expense.targetAmount)}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Đã chi</div>
-                    <div style={{ fontWeight: 600 }}>
+                    <div className="metric-label">Đã chi</div>
+                    <div className="metric-value">
                       {formatCurrency(targetSummary.expense.spentAmount)}
                     </div>
                   </div>
                 </div>
 
                 {targetSummary.expense.isOverBudget ? (
-                  <div
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                      borderRadius: '0.75rem',
-                      padding: '0.75rem',
-                      color: '#ef4444',
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
-                      🚨 Bạn đã chi vượt quá hạn mức!
-                    </div>
-                    <div style={{ fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                  <div className="target-alert-box alert-danger">
+                    <div className="alert-title">Bạn đã chi vượt quá hạn mức!</div>
+                    <div className="alert-sub">
                       Vượt mức:{' '}
                       <strong>{formatCurrency(targetSummary.expense.overspentAmount)}</strong>
                     </div>
-                    <div style={{ fontSize: '0.8rem', marginTop: '0.3rem', fontWeight: 600 }}>
-                      ⚠️ Hạn mức chi tiêu mỗi ngày còn lại: 0 đ
+                    <div className="alert-sub highlight">
+                      Hạn mức chi tiêu mỗi ngày còn lại: 0 đ
                     </div>
                   </div>
                 ) : (
-                  <div
-                    style={{
-                      background: 'rgba(16, 185, 129, 0.08)',
-                      border: '1px solid rgba(16, 185, 129, 0.2)',
-                      borderRadius: '0.75rem',
-                      padding: '0.75rem',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: '0.3rem',
-                      }}
-                    >
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                        Còn lại có thể chi:
-                      </span>
-                      <span style={{ fontWeight: 700, color: '#10b981', fontSize: '0.95rem' }}>
+                  <div className="target-alert-box alert-success">
+                    <div className="alert-row">
+                      <span className="alert-sub">Còn lại có thể chi:</span>
+                      <span className="alert-value positive">
                         {formatCurrency(targetSummary.expense.remainingAmount)}
                       </span>
                     </div>
-                    <div
-                      style={{
-                        fontSize: '0.8rem',
-                        color: 'var(--text-muted)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.3rem',
-                      }}
-                    >
-                      <span>📅</span>
-                      <span>
-                        Gợi ý chi mỗi ngày ({targetSummary.daysRemaining} ngày còn lại):{' '}
-                        <strong style={{ color: 'var(--primary)' }}>
-                          {formatCurrency(Math.round(targetSummary.expense.dailyAllowance))}/ngày
-                        </strong>
-                      </span>
+                    <div className="alert-tip">
+                      <span>Gợi ý chi mỗi ngày ({targetSummary.daysRemaining} ngày còn lại): </span>
+                      <strong style={{ color: 'var(--primary)' }}>
+                        {formatCurrency(Math.round(targetSummary.expense.dailyAllowance))}/ngày
+                      </strong>
                     </div>
                   </div>
                 )}
               </>
             ) : (
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '1rem 0',
-                  color: 'var(--text-muted)',
-                  fontSize: '0.9rem',
-                }}
-              >
+              <div className="no-target-msg">
                 Bấm vào nút bên trên để đặt hạn mức chi tiêu cho tháng này.
               </div>
             )}
           </div>
 
           {/* Monthly Investment Target Card */}
-          <div
-            className="glass-panel"
-            style={{
-              padding: '1.25rem',
-              borderRadius: '1rem',
-              position: 'relative',
-              border: '1px solid var(--border)',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '0.75rem',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '1.25rem' }}>📈</span>
-                <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>Mục Tiêu Đầu Tư Tháng</span>
+          <div className="glass-card target-card">
+            <div className="target-card-header">
+              <div className="target-card-title">
+                <span className="target-name">Mục Tiêu Đầu Tư Tháng</span>
               </div>
               {targetSummary?.investment?.isTargetReached ? (
-                <span
-                  style={{
-                    background: '#10b981',
-                    color: '#fff',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    padding: '0.2rem 0.6rem',
-                    borderRadius: '9999px',
-                  }}
-                >
-                  🎉 Đã hoàn thành
-                </span>
+                <span className="badge badge-success">Đã hoàn thành</span>
               ) : (
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                <span className="target-status-text">
                   {targetSummary?.investment?.targetAmount
                     ? `${Math.min(100, Math.round((targetSummary.investment.investedAmount / targetSummary.investment.targetAmount) * 100))}% hoàn thành`
                     : 'Chưa đặt mục tiêu'}
@@ -568,99 +360,53 @@ export default function Dashboard() {
 
             {targetSummary?.investment?.targetAmount ? (
               <>
-                <div
-                  style={{
-                    height: '8px',
-                    background: 'var(--border)',
-                    borderRadius: '4px',
-                    overflow: 'hidden',
-                    marginBottom: '0.85rem',
-                  }}
-                >
+                <div className="progress-track">
                   <div
+                    className={`progress-fill ${targetSummary.investment.isTargetReached ? 'fill-success' : 'fill-investment'}`}
                     style={{
-                      height: '100%',
                       width: `${Math.min(100, (targetSummary.investment.investedAmount / targetSummary.investment.targetAmount) * 100)}%`,
-                      background: targetSummary.investment.isTargetReached
-                        ? '#10b981'
-                        : 'linear-gradient(90deg, #3b82f6, #6366f1)',
-                      transition: 'width 0.4s ease',
                     }}
                   />
                 </div>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    fontSize: '0.9rem',
-                    marginBottom: '0.85rem',
-                  }}
-                >
+                <div className="target-metrics-row">
                   <div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Mục tiêu</div>
-                    <div style={{ fontWeight: 600 }}>
+                    <div className="metric-label">Mục tiêu</div>
+                    <div className="metric-value">
                       {formatCurrency(targetSummary.investment.targetAmount)}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Đã đầu tư</div>
-                    <div style={{ fontWeight: 600, color: '#3b82f6' }}>
+                    <div className="metric-label">Đã đầu tư</div>
+                    <div className="metric-value investment">
                       {formatCurrency(targetSummary.investment.investedAmount)}
                     </div>
                   </div>
                 </div>
 
                 {targetSummary.investment.isTargetReached ? (
-                  <div
-                    style={{
-                      background: 'rgba(16, 185, 129, 0.08)',
-                      border: '1px solid rgba(16, 185, 129, 0.2)',
-                      borderRadius: '0.75rem',
-                      padding: '0.75rem',
-                      color: '#10b981',
-                    }}
-                  >
-                    <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
-                      🎉 Đã hoàn thành mục tiêu đầu tư!
-                    </div>
+                  <div className="target-alert-box alert-success">
+                    <div className="alert-title">Đã hoàn thành mục tiêu đầu tư!</div>
                     {targetSummary.investment.surplusAmount > 0 && (
-                      <div style={{ fontSize: '0.85rem', marginTop: '0.2rem' }}>
+                      <div className="alert-sub">
                         Vượt chỉ tiêu:{' '}
                         <strong>+{formatCurrency(targetSummary.investment.surplusAmount)}</strong>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div
-                    style={{
-                      background: 'rgba(59, 130, 246, 0.08)',
-                      border: '1px solid rgba(59, 130, 246, 0.2)',
-                      borderRadius: '0.75rem',
-                      padding: '0.75rem',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      Số tiền còn thiếu:
-                    </span>
-                    <span style={{ fontWeight: 700, color: '#3b82f6', fontSize: '0.95rem' }}>
-                      {formatCurrency(targetSummary.investment.remainingAmount)}
-                    </span>
+                  <div className="target-alert-box alert-info">
+                    <div className="alert-row">
+                      <span className="alert-sub">Số tiền còn thiếu:</span>
+                      <span className="alert-value investment">
+                        {formatCurrency(targetSummary.investment.remainingAmount)}
+                      </span>
+                    </div>
                   </div>
                 )}
               </>
             ) : (
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '1rem 0',
-                  color: 'var(--text-muted)',
-                  fontSize: '0.9rem',
-                }}
-              >
+              <div className="no-target-msg">
                 Vào mục 🎯 Quản lý Mục tiêu trên thanh điều hướng để đặt mục tiêu cho tháng này.
               </div>
             )}

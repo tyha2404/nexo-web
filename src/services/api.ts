@@ -210,11 +210,16 @@ export const transactionService = {
 };
 
 export const reportService = {
-  summary: async (params?: { startDate?: string; endDate?: string }): Promise<SummaryReport> => {
-    const query =
-      params?.startDate && params?.endDate
-        ? `?startDate=${params.startDate}&endDate=${params.endDate}`
-        : '';
+  summary: async (params?: {
+    startDate?: string;
+    endDate?: string;
+    allTime?: boolean;
+  }): Promise<SummaryReport> => {
+    const searchParams = new URLSearchParams();
+    if (params?.startDate) searchParams.append('startDate', params.startDate);
+    if (params?.endDate) searchParams.append('endDate', params.endDate);
+    if (params?.allTime) searchParams.append('allTime', 'true');
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
     return request<SummaryReport>(`/reports/summary${query}`, {
       method: 'GET',
     });
