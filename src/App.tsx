@@ -1,19 +1,20 @@
 import { useEffect, useState } from 'react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { TransactionType } from './commons/constants';
 import type { User } from './commons/types';
 import Auth from './components/Auth';
 import Categories from './components/Categories';
 import Dashboard from './components/Dashboard';
+import Debts from './components/Debts';
 import ReloadPrompt from './components/ReloadPrompt';
 import Targets from './components/Targets';
 import Transactions from './components/Transactions';
 import { authService } from './services/api';
-import { TransactionType } from './commons/constants';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'income' | 'expenses' | 'investment' | 'categories' | 'targets'
+    'dashboard' | 'income' | 'expenses' | 'investment' | 'categories' | 'targets' | 'debts'
   >('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -231,6 +232,34 @@ function App() {
           </button>
           <button
             onClick={() => {
+              setActiveTab('debts');
+              setIsSidebarOpen(false);
+            }}
+            className={`nav-item ${activeTab === 'debts' ? 'active' : ''}`}
+          >
+            <span className="nav-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ display: 'inline-block', verticalAlign: 'middle' }}
+              >
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </span>
+            <span className="nav-text">Quản lý Vay & Nợ</span>
+          </button>
+          <button
+            onClick={() => {
               setActiveTab('income');
               setIsSidebarOpen(false);
             }}
@@ -423,7 +452,9 @@ function App() {
       <main className="main-content">
         <div className="content-view">
           {activeTab === 'dashboard' ? (
-            <Dashboard />
+            <Dashboard onNavigate={(tab) => setActiveTab(tab as any)} />
+          ) : activeTab === 'debts' ? (
+            <Debts />
           ) : activeTab === 'income' ? (
             <Transactions type={TransactionType.INCOME} />
           ) : activeTab === 'expenses' ? (

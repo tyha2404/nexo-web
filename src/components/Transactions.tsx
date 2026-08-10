@@ -15,71 +15,6 @@ export interface TransactionsProps {
   type?: TransactionType;
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const customSelectStyles = {
-  control: (provided: any, state: any) => ({
-    ...provided,
-    background: 'var(--bg-input)',
-    borderColor: state.isFocused ? 'var(--primary)' : 'var(--border)',
-    borderRadius: '10px',
-    color: 'var(--text-main)',
-    minHeight: '42px',
-    boxShadow: state.isFocused ? '0 0 0 3px var(--primary-glow)' : 'none',
-    '&:hover': {
-      borderColor: 'var(--border-hover)',
-    },
-  }),
-  menu: (provided: any) => ({
-    ...provided,
-    background: 'var(--bg-card)',
-    border: '1px solid var(--border)',
-    borderRadius: '10px',
-    overflow: 'hidden',
-    zIndex: 99999,
-  }),
-  menuPortal: (provided: any) => ({
-    ...provided,
-    zIndex: 99999,
-  }),
-  option: (provided: any, state: any) => ({
-    ...provided,
-    background: state.isSelected
-      ? 'var(--primary)'
-      : state.isFocused
-        ? 'var(--bg-hover)'
-        : 'transparent',
-    color: state.isSelected ? 'var(--text-dark)' : 'var(--text-main)',
-    cursor: 'pointer',
-    '&:active': {
-      background: 'var(--primary)',
-      color: 'var(--text-dark)',
-    },
-  }),
-  singleValue: (provided: any) => ({
-    ...provided,
-    color: 'var(--text-main)',
-  }),
-  input: (provided: any) => ({
-    ...provided,
-    color: 'var(--text-main)',
-  }),
-  placeholder: (provided: any) => ({
-    ...provided,
-    color: 'var(--text-muted)',
-  }),
-  indicatorSeparator: () => ({
-    display: 'none',
-  }),
-  dropdownIndicator: (provided: any, state: any) => ({
-    ...provided,
-    color: state.isFocused ? 'var(--primary)' : 'var(--text-muted)',
-    '&:hover': {
-      color: 'var(--primary)',
-    },
-  }),
-};
-/* eslint-enable @typescript-eslint/no-explicit-any */
-
 export default function Transactions({ type = TransactionType.EXPENSE }: TransactionsProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -349,6 +284,147 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         </div>
       )}
 
+      {/* Summary Cards Grid */}
+      {(() => {
+        const sumAmount = filteredTransactions.reduce((acc, t) => acc + t.amount, 0);
+        const count = totalItems || filteredTransactions.length;
+        const avg = filteredTransactions.length > 0 ? sumAmount / filteredTransactions.length : 0;
+
+        if (type === TransactionType.INCOME) {
+          return (
+            <div className="summary-cards-grid animate-fade-in">
+              <div className="summary-stat-card accent-income">
+                <div className="summary-stat-header">
+                  <span className="summary-stat-title">Tổng Thu Nhập</span>
+                  <div
+                    className="summary-stat-icon"
+                    style={{ background: 'rgba(52, 211, 153, 0.15)', color: '#34d399' }}
+                  >
+                    💵
+                  </div>
+                </div>
+                <div className="summary-stat-value" style={{ color: '#34d399' }}>
+                  {formatCurrency(sumAmount)}
+                </div>
+                <div className="summary-stat-subtitle">Tổng khoản thu nhập trong kỳ</div>
+              </div>
+
+              <div className="summary-stat-card accent-purple">
+                <div className="summary-stat-header">
+                  <span className="summary-stat-title">Số Giao Dịch Thu</span>
+                  <div
+                    className="summary-stat-icon"
+                    style={{ background: 'rgba(168, 85, 247, 0.15)', color: '#a855f7' }}
+                  >
+                    📊
+                  </div>
+                </div>
+                <div className="summary-stat-value" style={{ color: '#a855f7' }}>
+                  {count} khoản
+                </div>
+                <div className="summary-stat-subtitle">Tổng số đợt nhận thu nhập</div>
+              </div>
+
+              <div className="summary-stat-card accent-primary">
+                <div className="summary-stat-header">
+                  <span className="summary-stat-title">Trung Bình / Khoản</span>
+                  <div
+                    className="summary-stat-icon"
+                    style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}
+                  >
+                    ⚖️
+                  </div>
+                </div>
+                <div className="summary-stat-value" style={{ color: '#38bdf8' }}>
+                  {formatCurrency(avg)}
+                </div>
+                <div className="summary-stat-subtitle">Giá trị thu nhập trung bình</div>
+              </div>
+            </div>
+          );
+        }
+
+        if (type === TransactionType.INVESTMENT) {
+          return (
+            <div className="summary-cards-grid animate-fade-in">
+              <div className="summary-stat-card accent-primary">
+                <div className="summary-stat-header">
+                  <span className="summary-stat-title">Tổng Tiền Đầu Tư</span>
+                  <div className="summary-stat-icon icon-primary">💎</div>
+                </div>
+                <div className="summary-stat-value value-primary">{formatCurrency(sumAmount)}</div>
+                <div className="summary-stat-subtitle">Tổng số tiền đã tích lũy / đầu tư</div>
+              </div>
+
+              <div className="summary-stat-card accent-income">
+                <div className="summary-stat-header">
+                  <span className="summary-stat-title">Số Đợt Tích Lũy</span>
+                  <div className="summary-stat-icon icon-income">📈</div>
+                </div>
+                <div className="summary-stat-value value-income">{count} đợt</div>
+                <div className="summary-stat-subtitle">Số lần rót vốn đầu tư</div>
+              </div>
+
+              <div className="summary-stat-card accent-purple">
+                <div className="summary-stat-header">
+                  <span className="summary-stat-title">Trung Bình / Đợt</span>
+                  <div className="summary-stat-icon icon-purple">🎯</div>
+                </div>
+                <div className="summary-stat-value value-purple">{formatCurrency(avg)}</div>
+                <div className="summary-stat-subtitle">Giá trị đầu tư trung bình</div>
+              </div>
+            </div>
+          );
+        }
+
+        // Default: EXPENSE
+        const daysCount =
+          startDate && endDate
+            ? Math.max(1, moment(endDate).diff(moment(startDate), 'days') + 1)
+            : moment().daysInMonth();
+        const dailyAvg = sumAmount / daysCount;
+
+        return (
+          <div className="summary-cards-grid animate-fade-in">
+            <div className="summary-stat-card accent-expense">
+              <div className="summary-stat-header">
+                <span className="summary-stat-title">Tổng Chi Tiêu</span>
+                <div className="summary-stat-icon icon-expense">🛍️</div>
+              </div>
+              <div className="summary-stat-value value-expense">{formatCurrency(sumAmount)}</div>
+              <div className="summary-stat-subtitle">Tổng tiền đã chi trong kỳ</div>
+            </div>
+
+            <div className="summary-stat-card accent-warning">
+              <div className="summary-stat-header">
+                <span className="summary-stat-title">Trung Bình / Ngày</span>
+                <div className="summary-stat-icon icon-warning">📅</div>
+              </div>
+              <div className="summary-stat-value value-warning">{formatCurrency(dailyAvg)}</div>
+              <div className="summary-stat-subtitle">Chi tiêu bình quân trong {daysCount} ngày</div>
+            </div>
+
+            <div className="summary-stat-card accent-primary">
+              <div className="summary-stat-header">
+                <span className="summary-stat-title">Trung Bình / Lần Chi</span>
+                <div className="summary-stat-icon icon-primary">💸</div>
+              </div>
+              <div className="summary-stat-value value-primary">{formatCurrency(avg)}</div>
+              <div className="summary-stat-subtitle">Mức chi trung bình mỗi giao dịch</div>
+            </div>
+
+            <div className="summary-stat-card accent-purple">
+              <div className="summary-stat-header">
+                <span className="summary-stat-title">Số Lần Chi Tiêu</span>
+                <div className="summary-stat-icon icon-purple">🧾</div>
+              </div>
+              <div className="summary-stat-value value-purple">{count} giao dịch</div>
+              <div className="summary-stat-subtitle">Tổng số hóa đơn / giao dịch chi</div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Filter and Search controls */}
       <div className="filter-bar animate-fade-in">
         <div className="search-input-wrapper">
@@ -379,7 +455,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               setSelectedCategoryFilter(option ? option.value : '');
               setCurrentPage(1);
             }}
-            styles={customSelectStyles}
+            classNamePrefix="react-select"
             placeholder="Tất cả Danh mục"
             isSearchable={true}
             menuPortalTarget={document.body}
@@ -562,7 +638,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                       .find((opt) => opt.value === categoryId) || null
                   }
                   onChange={(option) => setCategoryId(option ? option.value : '')}
-                  styles={customSelectStyles}
+                  classNamePrefix="react-select"
                   placeholder="Chọn Danh mục"
                   isSearchable={true}
                   menuPortalTarget={document.body}

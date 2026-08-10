@@ -7,67 +7,6 @@ import { toast } from 'react-toastify';
 import Pagination from './Pagination';
 import './Categories.css';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const customSelectStyles = {
-  control: (provided: any, state: any) => ({
-    ...provided,
-    background: 'var(--bg-input)',
-    borderColor: state.isFocused ? 'var(--primary)' : 'var(--border)',
-    borderRadius: '10px',
-    color: 'var(--text-main)',
-    minHeight: '42px',
-    boxShadow: state.isFocused ? '0 0 0 3px var(--primary-glow)' : 'none',
-    '&:hover': {
-      borderColor: 'var(--border-hover)',
-    },
-  }),
-  menu: (provided: any) => ({
-    ...provided,
-    background: 'var(--bg-card)',
-    border: '1px solid var(--border)',
-    borderRadius: '10px',
-    overflow: 'hidden',
-    zIndex: 9999,
-  }),
-  option: (provided: any, state: any) => ({
-    ...provided,
-    background: state.isSelected
-      ? 'var(--primary)'
-      : state.isFocused
-        ? 'var(--bg-hover)'
-        : 'transparent',
-    color: state.isSelected ? 'var(--text-dark)' : 'var(--text-main)',
-    cursor: 'pointer',
-    '&:active': {
-      background: 'var(--primary)',
-      color: 'var(--text-dark)',
-    },
-  }),
-  singleValue: (provided: any) => ({
-    ...provided,
-    color: 'var(--text-main)',
-  }),
-  input: (provided: any) => ({
-    ...provided,
-    color: 'var(--text-main)',
-  }),
-  placeholder: (provided: any) => ({
-    ...provided,
-    color: 'var(--text-muted)',
-  }),
-  indicatorSeparator: () => ({
-    display: 'none',
-  }),
-  dropdownIndicator: (provided: any, state: any) => ({
-    ...provided,
-    color: state.isFocused ? 'var(--primary)' : 'var(--text-muted)',
-    '&:hover': {
-      color: 'var(--primary)',
-    },
-  }),
-};
-/* eslint-enable @typescript-eslint/no-explicit-any */
-
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -452,7 +391,7 @@ export default function Categories() {
                         (option ? option.value : TransactionType.EXPENSE) as TransactionType
                       )
                     }
-                    styles={customSelectStyles}
+                    classNamePrefix="react-select"
                     placeholder="Chọn Loại danh mục"
                     menuPortalTarget={document.body}
                   />
@@ -510,7 +449,7 @@ export default function Categories() {
                     onChange={(option) =>
                       setType((option ? option.value : TransactionType.EXPENSE) as TransactionType)
                     }
-                    styles={customSelectStyles}
+                    classNamePrefix="react-select"
                     placeholder="Chọn Loại danh mục"
                     menuPortalTarget={document.body}
                   />

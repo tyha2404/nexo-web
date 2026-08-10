@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './DonutChart.css';
 
 interface DonutChartItem {
   categoryName: string;

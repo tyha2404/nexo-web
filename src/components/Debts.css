@@ -1,0 +1,244 @@
+.debts-view {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 0.5rem;
+}
+
+.debts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.debts-title {
+  text-align: left;
+}
+
+.debts-title h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.debts-title .subtitle {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Debts Table & Container */
+.debts-table-container {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-md);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Stat Card Colors */
+.icon-payable {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.value-payable {
+  color: #ef4444;
+}
+
+.icon-receivable {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.value-receivable {
+  color: #10b981;
+}
+
+.icon-overdue {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.value-overdue {
+  color: #f59e0b;
+}
+
+.icon-pending {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+.value-pending {
+  color: #38bdf8;
+}
+
+/* Select Wrappers */
+.select-wrapper-type {
+  min-width: 200px;
+}
+
+.select-wrapper-status {
+  min-width: 190px;
+}
+
+/* Table Text & Badges */
+.debt-title-text {
+  font-weight: 600;
+}
+
+.debt-notes-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.badge-payable {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+.badge-receivable {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.cell-paid {
+  color: #10b981;
+}
+
+.cell-remaining {
+  color: #38bdf8;
+  font-weight: bold;
+}
+
+.badge-completed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.badge-overdue-status {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.badge-pending-status {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.debt-actions-group {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.repay-action-btn {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+/* Repay Modal Info Box */
+.repay-info-box {
+  background: var(--bg-input);
+  padding: 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+}
+
+.repay-info-title {
+  font-weight: bold;
+}
+
+.repay-info-remaining {
+  font-size: 0.85rem;
+  color: #38bdf8;
+  margin-top: 0.2rem;
+}
+
+/* Custom React Select Styling */
+.react-select__control {
+  background: var(--bg-input) !important;
+  border-color: var(--border) !important;
+  border-radius: 10px !important;
+  color: var(--text-main) !important;
+  min-height: 42px !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-select__control:hover {
+  border-color: var(--border-hover) !important;
+}
+
+.react-select__control--is-focused {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-glow) !important;
+}
+
+.react-select__menu {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  z-index: 999999 !important;
+}
+
+.react-select__menu-portal {
+  z-index: 999999 !important;
+}
+
+.react-select__option {
+  background: transparent !important;
+  color: var(--text-main) !important;
+  cursor: pointer !important;
+  font-size: 0.9rem !important;
+}
+
+.react-select__option--is-focused {
+  background: var(--bg-hover) !important;
+  color: var(--text-main) !important;
+}
+
+.react-select__option--is-selected {
+  background: var(--primary) !important;
+  color: var(--text-dark) !important;
+}
+
+.react-select__single-value {
+  color: var(--text-main) !important;
+}
+
+.react-select__input-container {
+  color: var(--text-main) !important;
+}
+
+.react-select__placeholder {
+  color: var(--text-muted) !important;
+}
+
+.react-select__indicator-separator {
+  display: none !important;
+}
+
+.react-select__dropdown-indicator {
+  color: var(--text-muted) !important;
+}
+
+.react-select__dropdown-indicator:hover {
+  color: var(--primary) !important;
+}
+
+@media (max-width: 768px) {
+  .debts-view {
+    padding: 0.75rem;
+  }
+}

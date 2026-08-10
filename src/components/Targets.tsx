@@ -7,72 +7,7 @@ import { targetService } from '../services/api';
 import type { TargetSummaryResponse } from '../commons/types';
 import { formatCurrency } from '../commons/utils';
 import { toast } from 'react-toastify';
-import './Transactions.css';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const customSelectStyles = {
-  control: (provided: any, state: any) => ({
-    ...provided,
-    background: 'var(--bg-input)',
-    borderColor: state.isFocused ? 'var(--primary)' : 'var(--border)',
-    borderRadius: '10px',
-    color: 'var(--text-main)',
-    minHeight: '42px',
-    boxShadow: state.isFocused ? '0 0 0 3px var(--primary-glow)' : 'none',
-    '&:hover': {
-      borderColor: 'var(--border-hover)',
-    },
-  }),
-  menu: (provided: any) => ({
-    ...provided,
-    background: 'var(--bg-card)',
-    border: '1px solid var(--border)',
-    borderRadius: '10px',
-    overflow: 'hidden',
-    zIndex: 99999,
-  }),
-  menuPortal: (provided: any) => ({
-    ...provided,
-    zIndex: 99999,
-  }),
-  option: (provided: any, state: any) => ({
-    ...provided,
-    background: state.isSelected
-      ? 'var(--primary)'
-      : state.isFocused
-        ? 'var(--bg-hover)'
-        : 'transparent',
-    color: state.isSelected ? 'var(--text-dark)' : 'var(--text-main)',
-    cursor: 'pointer',
-    '&:active': {
-      background: 'var(--primary)',
-      color: 'var(--text-dark)',
-    },
-  }),
-  singleValue: (provided: any) => ({
-    ...provided,
-    color: 'var(--text-main)',
-  }),
-  input: (provided: any) => ({
-    ...provided,
-    color: 'var(--text-main)',
-  }),
-  placeholder: (provided: any) => ({
-    ...provided,
-    color: 'var(--text-muted)',
-  }),
-  indicatorSeparator: () => ({
-    display: 'none',
-  }),
-  dropdownIndicator: (provided: any, state: any) => ({
-    ...provided,
-    color: state.isFocused ? 'var(--primary)' : 'var(--text-muted)',
-    '&:hover': {
-      color: 'var(--primary)',
-    },
-  }),
-};
-/* eslint-enable @typescript-eslint/no-explicit-any */
+import './Targets.css';
 
 export default function Targets() {
   const [selectedMonth, setSelectedMonth] = useState<Date>(() => moment().toDate());
@@ -230,6 +165,77 @@ export default function Targets() {
         </div>
       )}
 
+      {/* Summary Cards Grid */}
+      <div className="summary-cards-grid animate-fade-in">
+        <div className="summary-stat-card accent-expense">
+          <div className="summary-stat-header">
+            <span className="summary-stat-title">Hạn Mức Chi Tiêu Tháng</span>
+            <div
+              className="summary-stat-icon"
+              style={{ background: 'rgba(248, 113, 113, 0.15)', color: '#f87171' }}
+            >
+              💳
+            </div>
+          </div>
+          <div className="summary-stat-value" style={{ color: '#f87171' }}>
+            {targetSummary?.expense
+              ? formatCurrency(targetSummary.expense.targetAmount)
+              : 'Chưa đặt'}
+          </div>
+          <div className="summary-stat-subtitle">
+            {targetSummary?.expense
+              ? `Đã chi: ${formatCurrency(targetSummary.expense.spentAmount)} (Còn lại: ${formatCurrency(targetSummary.expense.remainingAmount)})`
+              : 'Hãy đặt hạn mức để kiểm soát thu chi'}
+          </div>
+        </div>
+
+        <div className="summary-stat-card accent-income">
+          <div className="summary-stat-header">
+            <span className="summary-stat-title">Mục Tiêu Đầu Tư Tháng</span>
+            <div
+              className="summary-stat-icon"
+              style={{ background: 'rgba(52, 211, 153, 0.15)', color: '#34d399' }}
+            >
+              📈
+            </div>
+          </div>
+          <div className="summary-stat-value" style={{ color: '#34d399' }}>
+            {targetSummary?.investment
+              ? formatCurrency(targetSummary.investment.targetAmount)
+              : 'Chưa đặt'}
+          </div>
+          <div className="summary-stat-subtitle">
+            {targetSummary?.investment
+              ? `Đã đầu tư: ${formatCurrency(targetSummary.investment.investedAmount)}`
+              : 'Tích lũy tài chính cho tương lai'}
+          </div>
+        </div>
+
+        <div className="summary-stat-card accent-primary">
+          <div className="summary-stat-header">
+            <span className="summary-stat-title">Gợi Ý Chi Tiêu / Ngày</span>
+            <div
+              className="summary-stat-icon"
+              style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}
+            >
+              📅
+            </div>
+          </div>
+          <div className="summary-stat-value" style={{ color: '#38bdf8' }}>
+            {targetSummary?.expense && targetSummary.expense.dailyAllowance > 0
+              ? formatCurrency(targetSummary.expense.dailyAllowance) + '/ngày'
+              : targetSummary?.expense?.isOverBudget
+                ? '🚨 0 đ (Vượt hạn mức)'
+                : '—'}
+          </div>
+          <div className="summary-stat-subtitle">
+            {targetSummary?.daysRemaining
+              ? `Còn ${targetSummary.daysRemaining} ngày trong tháng`
+              : 'Tính toán theo số ngày còn lại'}
+          </div>
+        </div>
+      </div>
+
       {/* Filter bar - cloning Transactions filter layout */}
       <div className="filter-bar animate-fade-in">
         <div className="category-select-wrapper" style={{ minWidth: '220px' }}>
@@ -247,7 +253,7 @@ export default function Targets() {
               ].find((opt) => opt.value === filterType) || null
             }
             onChange={(option) => setFilterType(option ? option.value : '')}
-            styles={customSelectStyles}
+            classNamePrefix="react-select"
             placeholder="Tất cả Mục tiêu"
             menuPortalTarget={document.body}
           />
@@ -405,7 +411,7 @@ export default function Targets() {
                       setAmount(existing ? existing.toLocaleString('vi-VN') : '');
                     }
                   }}
-                  styles={customSelectStyles}
+                  classNamePrefix="react-select"
                   menuPortalTarget={document.body}
                 />
               </div>

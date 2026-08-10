@@ -1,5 +1,6 @@
 import React from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import './ReloadPrompt.css';
 
 const ReloadPrompt: React.FC = () => {
   const {

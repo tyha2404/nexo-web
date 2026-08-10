@@ -660,3 +660,142 @@ tr {
   color: #dc2626 !important;
   background: rgba(239, 68, 68, 0.12) !important;
 }
+
+/* Unified Top Summary Cards Styling */
+.summary-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.summary-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--border-hover);
+}
+
+.summary-stat-card.accent-income {
+  border-left: 4px solid var(--income);
+}
+
+.summary-stat-card.accent-expense {
+  border-left: 4px solid var(--expense);
+}
+
+.summary-stat-card.accent-primary {
+  border-left: 4px solid var(--primary);
+}
+
+.summary-stat-card.accent-warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.summary-stat-card.accent-purple {
+  border-left: 4px solid #a855f7;
+}
+
+.summary-stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.summary-stat-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.summary-stat-value {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.summary-stat-value.value-income,
+.summary-stat-value.value-receivable,
+.positive-balance {
+  color: var(--income) !important;
+}
+
+.summary-stat-value.value-expense,
+.summary-stat-value.value-payable,
+.negative-balance {
+  color: var(--expense) !important;
+}
+
+.summary-stat-value.value-primary,
+.summary-stat-value.value-investment {
+  color: var(--primary) !important;
+}
+
+.summary-stat-value.value-warning {
+  color: #f59e0b !important;
+}
+
+.summary-stat-value.value-purple {
+  color: #a855f7 !important;
+}
+
+/* System Stat Icon Color Themes */
+.summary-stat-icon.icon-income {
+  background: rgba(52, 211, 153, 0.15) !important;
+  color: var(--income) !important;
+}
+
+.summary-stat-icon.icon-expense {
+  background: rgba(248, 113, 113, 0.15) !important;
+  color: var(--expense) !important;
+}
+
+.summary-stat-icon.icon-primary {
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: var(--primary) !important;
+}
+
+.summary-stat-icon.icon-warning {
+  background: rgba(245, 158, 11, 0.15) !important;
+  color: #f59e0b !important;
+}
+
+.summary-stat-icon.icon-purple {
+  background: rgba(168, 85, 247, 0.15) !important;
+  color: #a855f7 !important;
+}
+
+.summary-stat-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+}

@@ -10,7 +10,14 @@ import type {
   Transaction,
 } from '../commons/types';
 import { compareDatesDesc, formatCurrency, formatDate } from '../commons/utils';
-import { categoryService, reportService, targetService, transactionService } from '../services/api';
+import {
+  categoryService,
+  reportService,
+  targetService,
+  transactionService,
+  debtService,
+} from '../services/api';
+import type { DebtSummary } from '../types/debt';
 import './Dashboard.css';
 import { DonutChart } from './DonutChart';
 
@@ -21,11 +28,16 @@ const api = {
   targets: targetService,
 };
 
-export default function Dashboard() {
+export interface DashboardProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export default function Dashboard({ onNavigate }: DashboardProps) {
   const [selectedMonth, setSelectedMonth] = useState<string>(() => moment().format('YYYY-MM'));
   const [summary, setSummary] = useState<SummaryReport | null>(null);
   const [allTimeSummary, setAllTimeSummary] = useState<SummaryReport | null>(null);
   const [targetSummary, setTargetSummary] = useState<TargetSummaryResponse | null>(null);
+  const [debtSummary, setDebtSummary] = useState<DebtSummary | null>(null);
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdownItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
@@ -45,7 +57,7 @@ export default function Dashboard() {
       const dateFilters = { startDate: startOfMonth, endDate: endOfMonth };
       const targetParams = { month: m.month() + 1, year: m.year() };
 
-      // Fetch summary, category breakdown, targets using the api wrapper
+      // Fetch summary, category breakdown, targets, and debt summary
       const [
         summaryData,
         allTimeData,
@@ -53,6 +65,7 @@ export default function Dashboard() {
         transactionsData,
         categoriesData,
         targetData,
+        debtData,
       ] = await Promise.all([
         api.reports.summary(dateFilters),
         api.reports.summary({ allTime: true }),
@@ -60,6 +73,7 @@ export default function Dashboard() {
         api.transactions.list(dateFilters),
         api.categories.list(),
         api.targets.getSummary(targetParams).catch(() => null),
+        debtService.getSummary().catch(() => null),
       ]);
 
       setSummary(summaryData);
@@ -68,6 +82,7 @@ export default function Dashboard() {
       setCategories(categoriesData.items || []);
       setAllTransactions(transactionsData.items || []);
       setTargetSummary(targetData);
+      setDebtSummary(debtData);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch dashboard analytics');
     } finally {
@@ -79,8 +94,11 @@ export default function Dashboard() {
     fetchDashboardData(selectedMonth);
   }, [selectedMonth]);
 
-  // All-time metrics
-  const allTimeNetAssets = allTimeSummary?.netBalance ?? 0;
+  // All-time metrics adjusted by Debt & Loan module (Net Assets = AllTimeNet + Receivables - Payables)
+  const rawAllTimeNetAssets = allTimeSummary?.netBalance ?? 0;
+  const debtPayable = debtSummary?.totalPayable ?? 0;
+  const debtReceivable = debtSummary?.totalReceivable ?? 0;
+  const allTimeNetAssets = rawAllTimeNetAssets + debtReceivable - debtPayable;
   const allTimeInvestment = allTimeSummary?.totalInvestment ?? 0;
 
   // Calculate Monthly Net Balance dynamically if not loaded or if summary doesn't exist
@@ -146,53 +164,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* All-Time Financial Overview Section */}
-      <div className="glass-card dashboard-section animate-fade-in">
-        <h3 className="dashboard-section-title">
-          <span>Tổng quan Tài sản & Đầu tư (Từ trước đến giờ)</span>
-        </h3>
-        <div className="alltime-cards">
-          <div className="glass-panel-interactive summary-card alltime-assets">
-            <div className="card-accent-border alltime-assets-accent"></div>
-            <div className="card-content">
-              <div className="card-header-with-icon">
-                <span className="card-label">Tổng Tài sản Tích lũy</span>
-              </div>
-              <h3
-                className={`card-value ${allTimeNetAssets >= 0 ? 'positive-balance' : 'negative-balance'}`}
-              >
-                {formatCurrency(allTimeNetAssets)}
-              </h3>
-              <div className="card-trend info">
-                <span>Giá trị Ròng Toàn Thời Gian</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="glass-panel-interactive summary-card alltime-investment">
-            <div className="card-accent-border alltime-investment-accent"></div>
-            <div className="card-content">
-              <div className="card-header-with-icon">
-                <span className="card-label">Đầu tư Từ Trước Đến Giờ</span>
-              </div>
-              <h3
-                className={`card-value ${allTimeInvestment >= 0 ? '' : 'negative-balance'}`}
-                style={{ color: allTimeInvestment >= 0 ? '#3b82f6' : undefined }}
-              >
-                {formatCurrency(allTimeInvestment)}
-              </h3>
-              <div
-                className="card-trend info"
-                style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}
-              >
-                <span>Danh mục Tích lũy</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Monthly Summary Section */}
+      {/* Top Priority Section: Monthly Financial Overview & Net Assets */}
       <div className="glass-card dashboard-section animate-fade-in">
         <h3 className="dashboard-section-title">
           <span>Kết quả Tài chính Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}</span>
@@ -200,60 +172,119 @@ export default function Dashboard() {
 
         {/* Summary Cards Grid */}
         <div className="summary-cards">
-          <div className="glass-panel-interactive summary-card income-card">
-            <div className="card-accent-border income-accent"></div>
-            <div className="card-content">
-              <div className="card-header-with-icon">
-                <span className="card-label">Tổng Thu nhập</span>
-              </div>
-              <h3 className="card-value">{formatCurrency(totalIncome)}</h3>
-              <div className="card-trend upward">
-                <span>Dòng tiền Ổn định</span>
-              </div>
+          <div
+            className="summary-stat-card accent-income clickable-card"
+            onClick={() => onNavigate?.('income')}
+            title="Xem quản lý Thu nhập"
+          >
+            <div className="summary-stat-header">
+              <span className="summary-stat-title">Tổng Thu nhập ↗</span>
+              <div className="summary-stat-icon icon-income">💵</div>
+            </div>
+            <div className="summary-stat-value value-income">{formatCurrency(totalIncome)}</div>
+            <div className="summary-stat-subtitle">Dòng tiền thu về trong tháng</div>
+          </div>
+
+          <div
+            className="summary-stat-card accent-expense clickable-card"
+            onClick={() => onNavigate?.('expenses')}
+            title="Xem quản lý Chi tiêu"
+          >
+            <div className="summary-stat-header">
+              <span className="summary-stat-title">Tổng Chi tiêu ↗</span>
+              <div className="summary-stat-icon icon-expense">🛍️</div>
+            </div>
+            <div className="summary-stat-value value-expense">{formatCurrency(totalExpense)}</div>
+            <div className="summary-stat-subtitle">Tổng tiền đã chi tiêu</div>
+          </div>
+
+          <div className="summary-stat-card accent-primary">
+            <div className="summary-stat-header">
+              <span className="summary-stat-title">Số dư Ròng Tháng</span>
+              <div className="summary-stat-icon icon-primary">⚖️</div>
+            </div>
+            <div
+              className={`summary-stat-value ${netBalance >= 0 ? 'positive-balance' : 'negative-balance'}`}
+            >
+              {formatCurrency(netBalance)}
+            </div>
+            <div className="summary-stat-subtitle">Thu nhập - Chi tiêu - Đầu tư</div>
+          </div>
+
+          <div className="summary-stat-card accent-purple">
+            <div className="summary-stat-header">
+              <span className="summary-stat-title">Tổng Tài sản Tích lũy</span>
+              <div className="summary-stat-icon icon-purple">💎</div>
+            </div>
+            <div
+              className={`summary-stat-value ${allTimeNetAssets >= 0 ? 'positive-balance' : 'negative-balance'}`}
+            >
+              {formatCurrency(allTimeNetAssets)}
+            </div>
+            <div className="summary-stat-subtitle">
+              Số dư ròng + Phải thu ({formatCurrency(debtReceivable)}) - Nợ (
+              {formatCurrency(debtPayable)})
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Second Section: Investment & Debt / Loan Overview */}
+      <div className="glass-card dashboard-section animate-fade-in">
+        <h3
+          className="dashboard-section-title clickable-title"
+          onClick={() => onNavigate?.('debts')}
+          title="Bấm để chuyển sang Quản lý Vay & Nợ hoặc Đầu tư"
+        >
+          <span>Tổng quan Đầu tư & Vay Nợ ↗</span>
+        </h3>
+
+        <div className="summary-cards">
+          <div
+            className="summary-stat-card accent-primary clickable-card"
+            onClick={() => onNavigate?.('investment')}
+            title="Xem Quản lý Đầu tư"
+          >
+            <div className="summary-stat-header">
+              <span className="summary-stat-title">Đầu tư Từ Trước Đến Giờ ↗</span>
+              <div className="summary-stat-icon icon-primary">📈</div>
+            </div>
+            <div className="summary-stat-value value-primary">
+              {formatCurrency(allTimeInvestment)}
+            </div>
+            <div className="summary-stat-subtitle">
+              Đầu tư tháng này: {formatCurrency(totalInvestment)}
             </div>
           </div>
 
-          <div className="glass-panel-interactive summary-card expense-card">
-            <div className="card-accent-border expense-accent"></div>
-            <div className="card-content">
-              <div className="card-header-with-icon">
-                <span className="card-label">Tổng Chi tiêu</span>
-              </div>
-              <h3 className="card-value">{formatCurrency(totalExpense)}</h3>
-              <div className="card-trend downward">
-                <span>Kiểm soát Chi tiêu</span>
-              </div>
+          <div
+            className="summary-stat-card accent-expense clickable-card"
+            onClick={() => onNavigate?.('debts')}
+            title="Bấm để xem chi tiết khoản vay/nợ"
+          >
+            <div className="summary-stat-header">
+              <span className="summary-stat-title">Tôi Nợ (Phải Trả) ↗</span>
+              <div className="summary-stat-icon icon-payable">💸</div>
             </div>
+            <div className="summary-stat-value value-payable">
+              {debtSummary ? formatCurrency(debtSummary.totalPayable) : '0 đ'}
+            </div>
+            <div className="summary-stat-subtitle">Tổng tiền đang nợ người khác / ngân hàng</div>
           </div>
 
-          <div className="glass-panel-interactive summary-card investment-card">
-            <div className="card-accent-border investment-accent"></div>
-            <div className="card-content">
-              <div className="card-header-with-icon">
-                <span className="card-label">Tổng Đầu tư</span>
-              </div>
-              <h3 className="card-value">{formatCurrency(totalInvestment)}</h3>
-              <div className="card-trend info">
-                <span>Tích lũy Tài sản</span>
-              </div>
+          <div
+            className="summary-stat-card accent-income clickable-card"
+            onClick={() => onNavigate?.('debts')}
+            title="Bấm để xem chi tiết khoản cho vay"
+          >
+            <div className="summary-stat-header">
+              <span className="summary-stat-title">Người Khác Nợ (Phải Thu) ↗</span>
+              <div className="summary-stat-icon icon-receivable">💰</div>
             </div>
-          </div>
-
-          <div className="glass-panel-interactive summary-card balance-card">
-            <div className="card-accent-border balance-accent"></div>
-            <div className="card-content">
-              <div className="card-header-with-icon">
-                <span className="card-label">Số dư Ròng</span>
-              </div>
-              <h3
-                className={`card-value ${netBalance >= 0 ? 'positive-balance' : 'negative-balance'}`}
-              >
-                {formatCurrency(netBalance)}
-              </h3>
-              <div className="card-trend info">
-                <span>Tình hình Chung</span>
-              </div>
+            <div className="summary-stat-value value-receivable">
+              {debtSummary ? formatCurrency(debtSummary.totalReceivable) : '0 đ'}
             </div>
+            <div className="summary-stat-subtitle">Tổng tiền cho vay / cần thu về</div>
           </div>
         </div>
       </div>
@@ -263,11 +294,13 @@ export default function Dashboard() {
         <div className="target-cards-grid">
           {/* Monthly Expense Target Card */}
           <div
-            className={`glass-card target-card ${targetSummary?.expense?.isOverBudget ? 'over-budget' : ''}`}
+            className={`glass-card target-card clickable-card ${targetSummary?.expense?.isOverBudget ? 'over-budget' : ''}`}
+            onClick={() => onNavigate?.('targets')}
+            title="Xem Quản lý Mục tiêu tài chính"
           >
             <div className="target-card-header">
               <div className="target-card-title">
-                <span className="target-name">Hạn mức Chi tiêu Tháng</span>
+                <span className="target-name">Hạn mức Chi tiêu Tháng ↗</span>
               </div>
               {targetSummary?.expense?.isOverBudget ? (
                 <span className="badge badge-danger">Vượt hạn mức</span>
@@ -342,10 +375,14 @@ export default function Dashboard() {
           </div>
 
           {/* Monthly Investment Target Card */}
-          <div className="glass-card target-card">
+          <div
+            className="glass-card target-card clickable-card"
+            onClick={() => onNavigate?.('targets')}
+            title="Xem Quản lý Mục tiêu tài chính"
+          >
             <div className="target-card-header">
               <div className="target-card-title">
-                <span className="target-name">Mục Tiêu Đầu Tư Tháng</span>
+                <span className="target-name">Mục Tiêu Đầu Tư Tháng ↗</span>
               </div>
               {targetSummary?.investment?.isTargetReached ? (
                 <span className="badge badge-success">Đã hoàn thành</span>
@@ -419,7 +456,13 @@ export default function Dashboard() {
         {/* Category Breakdown Card */}
         <div className="glass-card breakdown-card">
           <div className="card-header flex-col sm:flex-row gap-3">
-            <h3>Phân tích Danh mục</h3>
+            <h3
+              className="clickable-title"
+              onClick={() => onNavigate?.('categories')}
+              title="Xem Quản lý Danh mục"
+            >
+              Phân tích Danh mục ↗
+            </h3>
           </div>
           <div className="p-4">
             {(() => {

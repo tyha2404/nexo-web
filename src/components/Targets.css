@@ -1,0 +1,113 @@
+.targets-view {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 0.5rem;
+}
+
+.targets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.targets-title {
+  text-align: left;
+}
+
+.targets-title h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.targets-title .subtitle {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Custom React Select Styling */
+.react-select__control {
+  background: var(--bg-input) !important;
+  border-color: var(--border) !important;
+  border-radius: 10px !important;
+  color: var(--text-main) !important;
+  min-height: 42px !important;
+  box-shadow: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.react-select__control:hover {
+  border-color: var(--border-hover) !important;
+}
+
+.react-select__control--is-focused {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px var(--primary-glow) !important;
+}
+
+.react-select__menu {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  z-index: 999999 !important;
+}
+
+.react-select__menu-portal {
+  z-index: 999999 !important;
+}
+
+.react-select__option {
+  background: transparent !important;
+  color: var(--text-main) !important;
+  cursor: pointer !important;
+  font-size: 0.9rem !important;
+}
+
+.react-select__option--is-focused {
+  background: var(--bg-hover) !important;
+  color: var(--text-main) !important;
+}
+
+.react-select__option--is-selected {
+  background: var(--primary) !important;
+  color: var(--text-dark) !important;
+}
+
+.react-select__single-value {
+  color: var(--text-main) !important;
+}
+
+.react-select__input-container {
+  color: var(--text-main) !important;
+}
+
+.react-select__placeholder {
+  color: var(--text-muted) !important;
+}
+
+.react-select__indicator-separator {
+  display: none !important;
+}
+
+.react-select__dropdown-indicator {
+  color: var(--text-muted) !important;
+}
+
+.react-select__dropdown-indicator:hover {
+  color: var(--primary) !important;
+}
+
+@media (max-width: 768px) {
+  .targets-view {
+    padding: 0.75rem;
+  }
+}
