@@ -378,10 +378,13 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         }
 
         // Default: EXPENSE
-        const daysCount =
-          startDate && endDate
-            ? Math.max(1, moment(endDate).diff(moment(startDate), 'days') + 1)
-            : moment().daysInMonth();
+        const today = moment().startOf('day');
+        const start = startDate ? moment(startDate).startOf('day') : moment().startOf('month');
+        const end = endDate ? moment(endDate).startOf('day') : moment().endOf('month');
+
+        // Effective end date is capped at today if selected date range extends into the future or is current month
+        const effectiveEnd = end.isAfter(today) ? today : end;
+        const daysCount = Math.max(1, effectiveEnd.diff(start, 'days') + 1);
         const dailyAvg = sumAmount / daysCount;
 
         return (
@@ -401,7 +404,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                 <div className="summary-stat-icon icon-warning">📅</div>
               </div>
               <div className="summary-stat-value value-warning">{formatCurrency(dailyAvg)}</div>
-              <div className="summary-stat-subtitle">Chi tiêu bình quân trong {daysCount} ngày</div>
+              <div className="summary-stat-subtitle">
+                Chi tiêu bình quân trong {daysCount} ngày (tới hôm nay)
+              </div>
             </div>
 
             <div className="summary-stat-card accent-primary">
