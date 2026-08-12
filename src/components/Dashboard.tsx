@@ -9,7 +9,7 @@ import type {
   TargetSummaryResponse,
   Transaction,
 } from '../commons/types';
-import { compareDatesDesc, formatCurrency, formatDate } from '../commons/utils';
+import { formatCurrency } from '../commons/utils';
 import {
   categoryService,
   reportService,
@@ -43,8 +43,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  // Filter tabs for visualization
-  const [txnFilter, setTxnFilter] = useState<'ALL' | TransactionType>('ALL');
 
   const fetchDashboardData = async (monthStr: string) => {
     try {
@@ -451,10 +449,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </div>
       </div>
 
-      {/* Analytics Breakdown & Recent Activities Grid */}
-      <div className="dashboard-grid animate-fade-in">
+      {/* Analytics Breakdown Card */}
+      <div className="animate-fade-in" style={{ width: '100%' }}>
         {/* Category Breakdown Card */}
-        <div className="glass-card breakdown-card">
+        <div className="glass-card breakdown-card" style={{ width: '100%' }}>
           <div className="card-header flex-col sm:flex-row gap-3">
             <h3
               className="clickable-title"
@@ -539,83 +537,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   })()}
                 </>
               );
-            })()}
-          </div>
-        </div>
-
-        {/* Recent Transactions Card */}
-        <div className="glass-card activities-card">
-          <div className="card-header">
-            <h3>Hoạt động Gần đây</h3>
-            <div className="dashboard-tab-group">
-              <button
-                className={`dashboard-tab-btn ${txnFilter === 'ALL' ? 'active' : ''}`}
-                onClick={() => setTxnFilter('ALL')}
-              >
-                Tất cả
-              </button>
-              <button
-                className={`dashboard-tab-btn ${txnFilter === TransactionType.EXPENSE ? 'active' : ''}`}
-                onClick={() => setTxnFilter(TransactionType.EXPENSE)}
-              >
-                Chi tiêu
-              </button>
-              <button
-                className={`dashboard-tab-btn ${txnFilter === TransactionType.INCOME ? 'active' : ''}`}
-                onClick={() => setTxnFilter(TransactionType.INCOME)}
-              >
-                Thu nhập
-              </button>
-              <button
-                className={`dashboard-tab-btn ${txnFilter === TransactionType.INVESTMENT ? 'active' : ''}`}
-                onClick={() => setTxnFilter(TransactionType.INVESTMENT)}
-              >
-                Đầu tư
-              </button>
-            </div>
-          </div>
-          <div className="activity-list">
-            {(() => {
-              const filteredTxns = allTransactions
-                .filter((txn) => txnFilter === 'ALL' || txn.type === txnFilter)
-                .sort((a, b) => compareDatesDesc(a.transactionDate, b.transactionDate))
-                .slice(0, 5);
-
-              if (filteredTxns.length === 0) {
-                return <p className="no-data">Không tìm thấy giao dịch nào.</p>;
-              }
-
-              return filteredTxns.map((txn) => {
-                const isIncome = txn.type === TransactionType.INCOME;
-                const isInvestment = txn.type === TransactionType.INVESTMENT;
-                const amountClass = isIncome
-                  ? 'txn-income'
-                  : isInvestment
-                    ? 'txn-investment'
-                    : 'txn-expense';
-                const prefix = isIncome ? '+' : isInvestment ? '📊 ' : '-';
-
-                return (
-                  <div key={txn.id} className="activity-item animate-fade-in">
-                    <div className="activity-details">
-                      <span className="activity-title">{txn.description || 'Giao dịch'}</span>
-                      <div className="activity-meta">
-                        <span className="activity-category">
-                          {txn.categoryName || 'Chưa phân loại'}
-                        </span>
-                        <span className="activity-dot">•</span>
-                        <span className="activity-date">{formatDate(txn.transactionDate)}</span>
-                      </div>
-                    </div>
-                    <div className="activity-value">
-                      <span className={`txn-amount ${amountClass}`}>
-                        {prefix}
-                        {formatCurrency(txn.amount)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              });
             })()}
           </div>
         </div>

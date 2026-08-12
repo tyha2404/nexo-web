@@ -8,8 +8,8 @@
 
 .donut-chart-container {
   position: relative;
-  width: 220px;
-  height: 220px;
+  width: 320px;
+  height: 320px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,34 +39,35 @@
 }
 
 .donut-center-label {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: var(--text-muted);
   font-weight: 600;
 }
 
 .donut-center-value {
-  font-size: 1rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: var(--text-main);
-  margin: 2px 0;
+  margin: 4px 0;
 }
 
 .donut-center-value.main-total {
   color: var(--primary);
-  font-size: 1.1rem;
+  font-size: 1.5rem;
 }
 
 .donut-center-percentage {
-  font-size: 0.75rem;
+  font-size: 0.95rem;
   color: var(--income);
   font-weight: 700;
 }
 
 .donut-legend-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
   width: 100%;
+  margin-top: 1rem;
 }
 
 .donut-legend-item {
