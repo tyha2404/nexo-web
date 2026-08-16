@@ -1,4 +1,4 @@
-export { TransactionType } from '../commons/constants';
+export { TransactionType, InvestmentStatus } from '../commons/constants';
 export * from './authService';
 export * from './categoryService';
 export * from './client';

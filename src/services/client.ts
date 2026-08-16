@@ -45,6 +45,7 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
       total: parsed.total,
       page: parsed.page || 1,
       limit: parsed.limit || 10,
+      summary: parsed.summary,
     } as unknown as T;
   }
   if (parsed.success && parsed.data !== undefined) {

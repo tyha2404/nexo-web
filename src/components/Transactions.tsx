@@ -4,7 +4,7 @@ import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { transactionService, categoryService } from '../services/api';
-import type { Transaction, Category } from '../commons/types';
+import type { Transaction, Category, InvestmentStatus } from '../commons/types';
 import { TransactionType, DATE_FORMAT_INPUT } from '../commons/constants';
 import { formatCurrency, formatDate, toISODateString } from '../commons/utils';
 import { toast } from 'react-toastify';
@@ -15,6 +15,13 @@ export interface TransactionsProps {
   type?: TransactionType;
 }
 
+const INVESTMENT_STATUS_LABELS: Record<InvestmentStatus, string> = {
+  HOLDING: 'Đang đầu tư',
+  SOLD: 'Đã bán',
+  MATURED: 'Đã đáo hạn',
+  CANCELLED: 'Đã hủy',
+};
+
 export default function Transactions({ type = TransactionType.EXPENSE }: TransactionsProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -24,6 +31,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   // Search and Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('');
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
     moment().startOf('month').toDate(),
     moment().endOf('month').toDate(),
@@ -34,6 +42,13 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
+  const [summary, setSummary] = useState<{
+    sumAmount: number;
+    total: number;
+    holdingAmount?: number;
+    holdingCount?: number;
+    realizedPnL?: number;
+  }>({ sumAmount: 0, total: 0, holdingAmount: 0, holdingCount: 0, realizedPnL: 0 });
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,11 +59,14 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [transactionDate, setTransactionDate] = useState('');
+  const [status, setStatus] = useState<InvestmentStatus>('HOLDING');
+  const [realizedPnl, setRealizedPnl] = useState<string>('0');
 
   useEffect(() => {
     // Reset page and filters when transaction type tab changes
     setCurrentPage(1);
     setSelectedCategoryFilter('');
+    setSelectedStatusFilter('');
     setSearchQuery('');
 
     const fetchCategoriesData = async () => {
@@ -70,6 +88,10 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         const res = await transactionService.list({
           type,
           categoryId: selectedCategoryFilter || undefined,
+          status:
+            type === TransactionType.INVESTMENT && selectedStatusFilter
+              ? (selectedStatusFilter as InvestmentStatus)
+              : undefined,
           startDate: startDate ? toISODateString(startDate) : undefined,
           endDate: endDate ? toISODateString(endDate) : undefined,
           page: currentPage,
@@ -77,6 +99,11 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         });
         setTransactions(res.items || []);
         setTotalItems(res.total || 0);
+        if (res.summary) {
+          setSummary(res.summary);
+        } else {
+          setSummary({ sumAmount: 0, total: 0, holdingAmount: 0, holdingCount: 0, realizedPnL: 0 });
+        }
       } catch (err: any) {
         setError(err.message || 'Lấy danh sách giao dịch thất bại');
       } finally {
@@ -85,7 +112,15 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
     };
 
     fetchTransactionsData();
-  }, [type, selectedCategoryFilter, startDate, endDate, currentPage, itemsPerPage]);
+  }, [
+    type,
+    selectedCategoryFilter,
+    selectedStatusFilter,
+    startDate,
+    endDate,
+    currentPage,
+    itemsPerPage,
+  ]);
 
   const showFeedback = (message: string, type: 'success' | 'error') => {
     if (type === 'success') {
@@ -122,25 +157,32 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
           ];
 
   const handleAmountChange = (val: string) => {
-    // Remove all non-digit characters
     const cleanNumber = val.replace(/\D/g, '');
     if (cleanNumber === '') {
       setAmount('');
       return;
     }
-    // Format with dot separators for display
     const formatted = parseInt(cleanNumber, 10).toLocaleString('vi-VN');
     setAmount(formatted);
+  };
+
+  const handlePnlChange = (val: string) => {
+    const isNegative = val.trim().startsWith('-');
+    const cleanNumber = val.replace(/\D/g, '');
+    if (cleanNumber === '') {
+      setRealizedPnl(isNegative ? '-' : '');
+      return;
+    }
+    const formatted = parseInt(cleanNumber, 10).toLocaleString('vi-VN');
+    setRealizedPnl(isNegative ? `-${formatted}` : formatted);
   };
 
   const handleApplyPreset = (preset: (typeof presetOptions)[0]) => {
     setTitle(preset.label);
 
-    // Preset amount is raw number, format it
     const formattedAmount = parseInt(preset.amount, 10).toLocaleString('vi-VN');
     setAmount(formattedAmount);
 
-    // Find category that matches keyword
     const matchedCategory =
       filteredCategories.find((cat) =>
         cat.name.toLowerCase().includes(preset.categoryKeyword.toLowerCase())
@@ -157,18 +199,28 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
     setAmount('');
     setCategoryId(filteredCategories.length > 0 ? filteredCategories[0].id : '');
     setTransactionDate(formatDate(moment(), DATE_FORMAT_INPUT));
+    setStatus('HOLDING');
+    setRealizedPnl('0');
     setIsModalOpen(true);
   };
 
   const openEditModal = (transaction: Transaction) => {
     setEditingTransaction(transaction);
     setTitle(transaction.description || '');
-    // Convert backend float to integer display string with separators
     const rawVal = Math.round(transaction.amount).toString();
     const formattedAmount = parseInt(rawVal, 10).toLocaleString('vi-VN');
     setAmount(formattedAmount);
     setCategoryId(transaction.categoryId);
     setTransactionDate(formatDate(transaction.transactionDate, DATE_FORMAT_INPUT));
+    setStatus(transaction.status || 'HOLDING');
+    if (transaction.realizedPnl !== undefined && transaction.realizedPnl !== null) {
+      const pnlVal = Math.round(transaction.realizedPnl);
+      const isNeg = pnlVal < 0;
+      const formattedPnl = Math.abs(pnlVal).toLocaleString('vi-VN');
+      setRealizedPnl(isNeg ? `-${formattedPnl}` : formattedPnl);
+    } else {
+      setRealizedPnl('0');
+    }
     setIsModalOpen(true);
   };
 
@@ -179,16 +231,25 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
       return;
     }
 
-    // Parse display formatted string back to raw number
     const rawAmount = parseFloat(amount.replace(/\./g, ''));
+    let rawPnl = 0;
+    if (realizedPnl) {
+      const cleanPnl = realizedPnl.replace(/\./g, '');
+      rawPnl = parseFloat(cleanPnl) || 0;
+    }
 
-    const payload = {
+    const payload: any = {
       description: title.trim(),
       amount: rawAmount,
       categoryId,
       transactionDate: toISODateString(transactionDate),
       type,
     };
+
+    if (type === TransactionType.INVESTMENT) {
+      payload.status = status;
+      payload.realizedPnl = status === 'HOLDING' ? 0 : rawPnl;
+    }
 
     try {
       if (editingTransaction) {
@@ -286,9 +347,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
 
       {/* Summary Cards Grid */}
       {(() => {
-        const sumAmount = filteredTransactions.reduce((acc, t) => acc + t.amount, 0);
-        const count = totalItems || filteredTransactions.length;
-        const avg = filteredTransactions.length > 0 ? sumAmount / filteredTransactions.length : 0;
+        const sumAmount = summary.sumAmount;
+        const count = summary.total;
+        const avg = count > 0 ? sumAmount / count : 0;
 
         if (type === TransactionType.INCOME) {
           return (
@@ -345,33 +406,53 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         }
 
         if (type === TransactionType.INVESTMENT) {
+          const holdingAmount = summary.holdingAmount ?? 0;
+          const totalRealizedPnl = summary.realizedPnL ?? 0;
+          const holdingCount = summary.holdingCount ?? 0;
+
           return (
             <div className="summary-cards-grid animate-fade-in">
               <div className="summary-stat-card accent-primary">
                 <div className="summary-stat-header">
-                  <span className="summary-stat-title">Tổng Tiền Đầu Tư</span>
+                  <span className="summary-stat-title">Tiền Đang Đầu Tư (Holding)</span>
                   <div className="summary-stat-icon icon-primary">💎</div>
                 </div>
-                <div className="summary-stat-value value-primary">{formatCurrency(sumAmount)}</div>
-                <div className="summary-stat-subtitle">Tổng số tiền đã tích lũy / đầu tư</div>
+                <div className="summary-stat-value value-primary">
+                  {formatCurrency(holdingAmount)}
+                </div>
+                <div className="summary-stat-subtitle">
+                  Giá trị các khoản đang giữ vốn ({holdingCount} mục)
+                </div>
               </div>
 
               <div className="summary-stat-card accent-income">
                 <div className="summary-stat-header">
-                  <span className="summary-stat-title">Số Đợt Tích Lũy</span>
-                  <div className="summary-stat-icon icon-income">📈</div>
+                  <span className="summary-stat-title">Lãi / Lỗ Đã Thực Hiện</span>
+                  <div className="summary-stat-icon icon-income">
+                    {totalRealizedPnl >= 0 ? '📈' : '📉'}
+                  </div>
                 </div>
-                <div className="summary-stat-value value-income">{count} đợt</div>
-                <div className="summary-stat-subtitle">Số lần rót vốn đầu tư</div>
+                <div
+                  className="summary-stat-value"
+                  style={{ color: totalRealizedPnl >= 0 ? '#34d399' : '#f87171' }}
+                >
+                  {totalRealizedPnl > 0 ? '+' : ''}
+                  {formatCurrency(totalRealizedPnl)}
+                </div>
+                <div className="summary-stat-subtitle">
+                  Tổng tiền lời / lỗ từ khoản đã bán/đáo hạn
+                </div>
               </div>
 
               <div className="summary-stat-card accent-purple">
                 <div className="summary-stat-header">
-                  <span className="summary-stat-title">Trung Bình / Đợt</span>
+                  <span className="summary-stat-title">Tổng Vốn Tích Lũy</span>
                   <div className="summary-stat-icon icon-purple">🎯</div>
                 </div>
-                <div className="summary-stat-value value-purple">{formatCurrency(avg)}</div>
-                <div className="summary-stat-subtitle">Giá trị đầu tư trung bình</div>
+                <div className="summary-stat-value value-purple">{formatCurrency(sumAmount)}</div>
+                <div className="summary-stat-subtitle">
+                  Tổng {count} đợt rót vốn đầu tư trong kỳ
+                </div>
               </div>
             </div>
           );
@@ -382,7 +463,6 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         const start = startDate ? moment(startDate).startOf('day') : moment().startOf('month');
         const end = endDate ? moment(endDate).startOf('day') : moment().endOf('month');
 
-        // Effective end date is capped at today if selected date range extends into the future or is current month
         const effectiveEnd = end.isAfter(today) ? today : end;
         const daysCount = Math.max(1, effectiveEnd.diff(start, 'days') + 1);
         const dailyAvg = sumAmount / daysCount;
@@ -466,6 +546,36 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             menuPortalTarget={document.body}
           />
         </div>
+        {type === TransactionType.INVESTMENT && (
+          <div className="status-select-wrapper">
+            <Select
+              options={[
+                { value: '', label: 'Tất cả Trạng thái' },
+                { value: 'HOLDING', label: 'Đang đầu tư' },
+                { value: 'SOLD', label: 'Đã bán' },
+                { value: 'MATURED', label: 'Đã đáo hạn' },
+                { value: 'CANCELLED', label: 'Đã hủy' },
+              ]}
+              value={
+                [
+                  { value: '', label: 'Tất cả Trạng thái' },
+                  { value: 'HOLDING', label: 'Đang đầu tư' },
+                  { value: 'SOLD', label: 'Đã bán' },
+                  { value: 'MATURED', label: 'Đã đáo hạn' },
+                  { value: 'CANCELLED', label: 'Đã hủy' },
+                ].find((opt) => opt.value === selectedStatusFilter) || null
+              }
+              onChange={(option) => {
+                setSelectedStatusFilter(option ? option.value : '');
+                setCurrentPage(1);
+              }}
+              classNamePrefix="react-select"
+              placeholder="Trạng thái"
+              isSearchable={false}
+              menuPortalTarget={document.body}
+            />
+          </div>
+        )}
         <div className="date-range-wrapper">
           <DatePicker
             selectsRange={true}
@@ -501,6 +611,8 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                 <tr>
                   <th>Tiêu đề / Nội dung</th>
                   <th>Số tiền</th>
+                  {type === TransactionType.INVESTMENT && <th>Trạng thái</th>}
+                  {type === TransactionType.INVESTMENT && <th>Lãi / Lỗ</th>}
                   <th>Danh mục</th>
                   <th>Ngày thực hiện</th>
                   <th>Thao tác</th>
@@ -511,6 +623,32 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                   <tr key={txn.id}>
                     <td className="txn-title-cell">{txn.description}</td>
                     <td className="txn-amount">{formatCurrency(txn.amount)}</td>
+                    {type === TransactionType.INVESTMENT && (
+                      <td>
+                        <span
+                          className={`txn-status-badge status-${(txn.status || 'HOLDING').toLowerCase()}`}
+                        >
+                          {INVESTMENT_STATUS_LABELS[txn.status || 'HOLDING']}
+                        </span>
+                      </td>
+                    )}
+                    {type === TransactionType.INVESTMENT && (
+                      <td className="txn-pnl-cell">
+                        {txn.status && txn.status !== 'HOLDING' && txn.realizedPnl !== undefined ? (
+                          <span
+                            style={{
+                              color: txn.realizedPnl >= 0 ? '#34d399' : '#f87171',
+                              fontWeight: 600,
+                            }}
+                          >
+                            {txn.realizedPnl > 0 ? '+' : ''}
+                            {formatCurrency(txn.realizedPnl)}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>-</span>
+                        )}
+                      </td>
+                    )}
                     <td>
                       <span className="txn-category-badge">{getCategoryName(txn.categoryId)}</span>
                     </td>
@@ -621,7 +759,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               </div>
 
               <div className="form-group">
-                <label htmlFor="txn-amount">Số tiền (đ)</label>
+                <label htmlFor="txn-amount">Số tiền đầu tư / giao dịch (đ)</label>
                 <input
                   id="txn-amount"
                   type="text"
@@ -631,6 +769,59 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                   required
                 />
               </div>
+
+              {type === TransactionType.INVESTMENT && (
+                <div className="form-group">
+                  <label htmlFor="txn-status">Trạng thái đầu tư</label>
+                  <Select
+                    id="txn-status"
+                    options={[
+                      { value: 'HOLDING', label: 'Đang đầu tư' },
+                      { value: 'SOLD', label: 'Đã bán' },
+                      { value: 'MATURED', label: 'Đã đáo hạn' },
+                      { value: 'CANCELLED', label: 'Đã hủy' },
+                    ]}
+                    value={
+                      [
+                        { value: 'HOLDING', label: 'Đang đầu tư' },
+                        { value: 'SOLD', label: 'Đã bán' },
+                        { value: 'MATURED', label: 'Đã đáo hạn' },
+                        { value: 'CANCELLED', label: 'Đã hủy' },
+                      ].find((opt) => opt.value === status) || null
+                    }
+                    onChange={(option) =>
+                      setStatus((option?.value as InvestmentStatus) || 'HOLDING')
+                    }
+                    classNamePrefix="react-select"
+                    placeholder="Chọn Trạng thái"
+                    isSearchable={false}
+                    menuPortalTarget={document.body}
+                  />
+                </div>
+              )}
+
+              {type === TransactionType.INVESTMENT && status !== 'HOLDING' && (
+                <div className="form-group">
+                  <label htmlFor="txn-pnl">Số tiền Lãi / Lỗ thực tế (đ)</label>
+                  <input
+                    id="txn-pnl"
+                    type="text"
+                    placeholder="Dương cho Lãi (VD: 500.000), Âm cho Lỗ (VD: -200.000)"
+                    value={realizedPnl}
+                    onChange={(e) => handlePnlChange(e.target.value)}
+                  />
+                  <small
+                    style={{
+                      color: 'var(--text-muted)',
+                      fontSize: '0.8rem',
+                      marginTop: '4px',
+                      display: 'block',
+                    }}
+                  >
+                    Nhập số dương nếu có lãi, hoặc dấu trừ (-) ở đầu nếu bị lỗ.
+                  </small>
+                </div>
+              )}
 
               <div className="form-group">
                 <label htmlFor="txn-category">Danh mục</label>

@@ -22,6 +22,8 @@ export interface Category {
   updatedAt: string;
 }
 
+export type InvestmentStatus = 'HOLDING' | 'SOLD' | 'MATURED' | 'CANCELLED';
+
 export interface Transaction {
   id: string;
   userId: string;
@@ -30,6 +32,8 @@ export interface Transaction {
   amount: number;
   description?: string;
   type: 'INCOME' | 'EXPENSE' | 'INVESTMENT';
+  status?: InvestmentStatus;
+  realizedPnl?: number;
   transactionDate: string;
   createdAt: string;
   updatedAt: string;
@@ -54,11 +58,20 @@ export interface CategoryBreakdownReport {
   totalExpense: number;
 }
 
+export interface TransactionSummary {
+  sumAmount: number;
+  total: number;
+  holdingAmount?: number;
+  holdingCount?: number;
+  realizedPnL?: number;
+}
+
 export interface PaginatedResult<T> {
   items: T[];
   total: number;
   page: number;
   limit: number;
+  summary?: TransactionSummary;
 }
 
 export type TargetType = 'EXPENSE' | 'INVESTMENT';
