@@ -1,13 +1,11 @@
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
-import { TransactionType } from '../commons/constants';
 import type {
   Category,
   CategoryBreakdownItem,
   SummaryReport,
   TargetSummaryResponse,
-  Transaction,
 } from '../commons/types';
 import { formatCurrency } from '../commons/utils';
 import {
@@ -40,7 +38,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [debtSummary, setDebtSummary] = useState<DebtSummary | null>(null);
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdownItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,29 +53,20 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       const targetParams = { month: m.month() + 1, year: m.year() };
 
       // Fetch summary, category breakdown, targets, and debt summary
-      const [
-        summaryData,
-        allTimeData,
-        breakdownData,
-        transactionsData,
-        categoriesData,
-        targetData,
-        debtData,
-      ] = await Promise.all([
-        api.reports.summary(dateFilters),
-        api.reports.summary({ allTime: true }),
-        api.reports.categoryBreakdown(dateFilters),
-        api.transactions.list(dateFilters),
-        api.categories.list(),
-        api.targets.getSummary(targetParams).catch(() => null),
-        debtService.getSummary().catch(() => null),
-      ]);
+      const [summaryData, allTimeData, breakdownData, categoriesData, targetData, debtData] =
+        await Promise.all([
+          api.reports.summary(dateFilters),
+          api.reports.summary({ allTime: true }),
+          api.reports.categoryBreakdown(dateFilters),
+          api.categories.list(),
+          api.targets.getSummary(targetParams).catch(() => null),
+          debtService.getSummary().catch(() => null),
+        ]);
 
       setSummary(summaryData);
       setAllTimeSummary(allTimeData);
       setCategoryBreakdown(breakdownData.items || []);
       setCategories(categoriesData.items || []);
-      setAllTransactions(transactionsData.items || []);
       setTargetSummary(targetData);
       setDebtSummary(debtData);
     } catch (err: any) {
@@ -93,21 +81,16 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   }, [selectedMonth]);
 
   // All-time metrics adjusted by Debt & Loan module (Net Assets = AllTimeNet + Receivables - Payables)
-  const rawAllTimeNetAssets = allTimeSummary?.netBalance ?? 0;
+  // All-time metrics: Total Assets = Total Income + Active Investment + Receivables - Total Expense - Payables
+  const allTimeIncome = allTimeSummary?.totalIncome ?? 0;
+  const allTimeExpense = allTimeSummary?.totalExpense ?? 0;
+  const allTimeInvestment = allTimeSummary?.totalInvestment ?? 0;
   const debtPayable = debtSummary?.totalPayable ?? 0;
   const debtReceivable = debtSummary?.totalReceivable ?? 0;
-  const allTimeNetAssets = rawAllTimeNetAssets + debtReceivable - debtPayable;
-  const allTimeInvestment = allTimeSummary?.totalInvestment ?? 0;
-
-  // Calculate Monthly Net Balance dynamically if not loaded or if summary doesn't exist
+  const allTimeNetAssets =
+    allTimeIncome + allTimeInvestment + debtReceivable - allTimeExpense - debtPayable;
   const totalIncome = summary?.totalIncome ?? 0;
   const totalExpense = summary?.totalExpense ?? 0;
-  const totalInvestment =
-    summary?.totalInvestment ??
-    allTransactions
-      .filter((t) => t.type === TransactionType.INVESTMENT)
-      .reduce((sum, t) => sum + t.amount, 0);
-  const netBalance = summary?.netBalance ?? totalIncome - totalExpense - totalInvestment;
 
   return (
     <div className="dashboard-container animate-fade-in">
@@ -162,14 +145,14 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </div>
       )}
 
-      {/* Top Priority Section: Monthly Financial Overview & Net Assets */}
+      {/* Top Priority Section: Monthly Financial Overview & Targets */}
       <div className="glass-card dashboard-section animate-fade-in">
         <h3 className="dashboard-section-title">
           <span>Kết quả Tài chính Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}</span>
         </h3>
 
         {/* Summary Cards Grid */}
-        <div className="summary-cards">
+        <div className="summary-cards" style={{ marginBottom: '1.25rem' }}>
           <div
             className="summary-stat-card accent-income clickable-card"
             onClick={() => onNavigate?.('income')}
@@ -196,19 +179,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <div className="summary-stat-subtitle">Tổng tiền đã chi tiêu</div>
           </div>
 
-          <div className="summary-stat-card accent-primary">
-            <div className="summary-stat-header">
-              <span className="summary-stat-title">Số dư Ròng Tháng</span>
-              <div className="summary-stat-icon icon-primary">⚖️</div>
-            </div>
-            <div
-              className={`summary-stat-value ${netBalance >= 0 ? 'positive-balance' : 'negative-balance'}`}
-            >
-              {formatCurrency(netBalance)}
-            </div>
-            <div className="summary-stat-subtitle">Thu nhập - Chi tiêu - Đầu tư</div>
-          </div>
-
           <div className="summary-stat-card accent-purple">
             <div className="summary-stat-header">
               <span className="summary-stat-title">Tổng Tài sản Tích lũy</span>
@@ -220,75 +190,13 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               {formatCurrency(allTimeNetAssets)}
             </div>
             <div className="summary-stat-subtitle">
-              Số dư ròng + Phải thu ({formatCurrency(debtReceivable)}) - Nợ (
-              {formatCurrency(debtPayable)})
+              Thu nhập + Đầu tư ({formatCurrency(allTimeInvestment)}) + Cho vay (
+              {formatCurrency(debtReceivable)}) - Chi tiêu - Nợ ({formatCurrency(debtPayable)})
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Second Section: Investment & Debt / Loan Overview */}
-      <div className="glass-card dashboard-section animate-fade-in">
-        <h3
-          className="dashboard-section-title clickable-title"
-          onClick={() => onNavigate?.('debts')}
-          title="Bấm để chuyển sang Quản lý Vay & Nợ hoặc Đầu tư"
-        >
-          <span>Tổng quan Đầu tư & Vay Nợ ↗</span>
-        </h3>
-
-        <div className="summary-cards">
-          <div
-            className="summary-stat-card accent-primary clickable-card"
-            onClick={() => onNavigate?.('investment')}
-            title="Xem Quản lý Đầu tư"
-          >
-            <div className="summary-stat-header">
-              <span className="summary-stat-title">Đầu tư Từ Trước Đến Giờ ↗</span>
-              <div className="summary-stat-icon icon-primary">📈</div>
-            </div>
-            <div className="summary-stat-value value-primary">
-              {formatCurrency(allTimeInvestment)}
-            </div>
-            <div className="summary-stat-subtitle">
-              Đầu tư tháng này: {formatCurrency(totalInvestment)}
-            </div>
-          </div>
-
-          <div
-            className="summary-stat-card accent-expense clickable-card"
-            onClick={() => onNavigate?.('debts')}
-            title="Bấm để xem chi tiết khoản vay/nợ"
-          >
-            <div className="summary-stat-header">
-              <span className="summary-stat-title">Tôi Nợ (Phải Trả) ↗</span>
-              <div className="summary-stat-icon icon-payable">💸</div>
-            </div>
-            <div className="summary-stat-value value-payable">
-              {debtSummary ? formatCurrency(debtSummary.totalPayable) : '0 đ'}
-            </div>
-            <div className="summary-stat-subtitle">Tổng tiền đang nợ người khác / ngân hàng</div>
-          </div>
-
-          <div
-            className="summary-stat-card accent-income clickable-card"
-            onClick={() => onNavigate?.('debts')}
-            title="Bấm để xem chi tiết khoản cho vay"
-          >
-            <div className="summary-stat-header">
-              <span className="summary-stat-title">Người Khác Nợ (Phải Thu) ↗</span>
-              <div className="summary-stat-icon icon-receivable">💰</div>
-            </div>
-            <div className="summary-stat-value value-receivable">
-              {debtSummary ? formatCurrency(debtSummary.totalReceivable) : '0 đ'}
-            </div>
-            <div className="summary-stat-subtitle">Tổng tiền cho vay / cần thu về</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Target Analytics Section */}
-      <div className="dashboard-section animate-fade-in">
+        {/* Target Analytics Section inside Monthly Card */}
         <div className="target-cards-grid">
           {/* Monthly Expense Target Card */}
           <div
@@ -445,6 +353,66 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 Vào mục 🎯 Quản lý Mục tiêu trên thanh điều hướng để đặt mục tiêu cho tháng này.
               </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Second Section: Investment & Debt / Loan Overview */}
+      <div className="glass-card dashboard-section animate-fade-in">
+        <h3
+          className="dashboard-section-title clickable-title"
+          onClick={() => onNavigate?.('debts')}
+          title="Bấm để chuyển sang Quản lý Vay & Nợ hoặc Đầu tư"
+        >
+          <span>Tổng quan Đầu tư & Vay Nợ ↗</span>
+        </h3>
+
+        <div className="summary-cards">
+          <div
+            className="summary-stat-card accent-primary clickable-card"
+            onClick={() => onNavigate?.('investment')}
+            title="Xem Quản lý Đầu tư"
+          >
+            <div className="summary-stat-header">
+              <span className="summary-stat-title">Đầu tư Từ Trước Đến Giờ ↗</span>
+              <div className="summary-stat-icon icon-primary">📈</div>
+            </div>
+            <div className="summary-stat-value value-primary">
+              {formatCurrency(allTimeSummary?.totalInvestment ?? 0)}
+            </div>
+            <div className="summary-stat-subtitle">
+              Đầu tư tháng này: {formatCurrency(summary?.totalInvestment ?? 0)}
+            </div>
+          </div>
+
+          <div
+            className="summary-stat-card accent-expense clickable-card"
+            onClick={() => onNavigate?.('debts')}
+            title="Bấm để xem chi tiết khoản vay/nợ"
+          >
+            <div className="summary-stat-header">
+              <span className="summary-stat-title">Tôi Nợ (Phải Trả) ↗</span>
+              <div className="summary-stat-icon icon-payable">💸</div>
+            </div>
+            <div className="summary-stat-value value-payable">
+              {debtSummary ? formatCurrency(debtSummary.totalPayable) : '0 đ'}
+            </div>
+            <div className="summary-stat-subtitle">Tổng tiền đang nợ người khác / ngân hàng</div>
+          </div>
+
+          <div
+            className="summary-stat-card accent-income clickable-card"
+            onClick={() => onNavigate?.('debts')}
+            title="Bấm để xem chi tiết khoản cho vay"
+          >
+            <div className="summary-stat-header">
+              <span className="summary-stat-title">Người Khác Nợ (Phải Thu) ↗</span>
+              <div className="summary-stat-icon icon-receivable">💰</div>
+            </div>
+            <div className="summary-stat-value value-receivable">
+              {debtSummary ? formatCurrency(debtSummary.totalReceivable) : '0 đ'}
+            </div>
+            <div className="summary-stat-subtitle">Tổng tiền cho vay / cần thu về</div>
           </div>
         </div>
       </div>

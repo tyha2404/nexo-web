@@ -43,7 +43,6 @@ export interface SummaryReport {
   totalIncome: number;
   totalExpense: number;
   totalInvestment?: number;
-  netBalance: number;
 }
 
 export interface CategoryBreakdownItem {
