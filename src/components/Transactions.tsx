@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
 import moment from 'moment';
-import Select from 'react-select';
+import React, { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { transactionService, categoryService } from '../services/api';
-import type { Transaction, Category, InvestmentStatus } from '../commons/types';
-import { TransactionType, DATE_FORMAT_INPUT } from '../commons/constants';
-import { formatCurrency, formatDate, toISODateString } from '../commons/utils';
+import Select from 'react-select';
 import { toast } from 'react-toastify';
+import { DATE_FORMAT_INPUT, TransactionType } from '../commons/constants';
+import type { Category, InvestmentStatus, Transaction } from '../commons/types';
+import { formatCurrency, formatDate, toISODateString } from '../commons/utils';
+import { categoryService, transactionService } from '../services/api';
 import Pagination from './Pagination';
 import './Transactions.css';
 
@@ -47,8 +47,8 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
     total: number;
     holdingAmount?: number;
     holdingCount?: number;
-    realizedPnL?: number;
-  }>({ sumAmount: 0, total: 0, holdingAmount: 0, holdingCount: 0, realizedPnL: 0 });
+    realizedPnl?: number;
+  }>({ sumAmount: 0, total: 0, holdingAmount: 0, holdingCount: 0, realizedPnl: 0 });
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -102,7 +102,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         if (res.summary) {
           setSummary(res.summary);
         } else {
-          setSummary({ sumAmount: 0, total: 0, holdingAmount: 0, holdingCount: 0, realizedPnL: 0 });
+          setSummary({ sumAmount: 0, total: 0, holdingAmount: 0, holdingCount: 0, realizedPnl: 0 });
         }
       } catch (err: any) {
         setError(err.message || 'Lấy danh sách giao dịch thất bại');
@@ -407,7 +407,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
 
         if (type === TransactionType.INVESTMENT) {
           const holdingAmount = summary.holdingAmount ?? 0;
-          const totalRealizedPnl = summary.realizedPnL ?? 0;
+          const totalRealizedPnl = summary.realizedPnl ?? 0;
           const holdingCount = summary.holdingCount ?? 0;
 
           return (

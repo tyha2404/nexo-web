@@ -63,7 +63,7 @@ export interface TransactionSummary {
   total: number;
   holdingAmount?: number;
   holdingCount?: number;
-  realizedPnL?: number;
+  realizedPnl?: number;
 }
 
 export interface PaginatedResult<T> {
