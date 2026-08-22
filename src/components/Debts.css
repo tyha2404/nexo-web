@@ -1,6 +1,6 @@
 .debts-view {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 1rem 0.5rem;
 }
@@ -42,6 +42,33 @@
   backdrop-filter: blur(16px);
   box-shadow: var(--shadow-md);
   -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+.debts-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+}
+
+.debts-table th {
+  white-space: nowrap;
+  padding: 0.85rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.debts-table td {
+  padding: 0.85rem 0.85rem;
+  font-size: 0.875rem;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
 }
 
 /* Stat Card Colors */
@@ -83,21 +110,26 @@
 
 /* Select Wrappers */
 .select-wrapper-type {
-  min-width: 200px;
+  min-width: 180px;
+  flex: 1;
 }
 
 .select-wrapper-status {
-  min-width: 190px;
+  min-width: 170px;
+  flex: 1;
 }
 
 /* Table Text & Badges */
 .debt-title-text {
   font-weight: 600;
+  max-width: 220px;
+  word-break: break-word;
 }
 
 .debt-notes-text {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
+  margin-top: 2px;
 }
 
 .badge-payable {
@@ -112,6 +144,7 @@
 
 .cell-paid {
   color: #10b981;
+  font-weight: 500;
 }
 
 .cell-remaining {
@@ -136,13 +169,19 @@
 
 .debt-actions-group {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
   align-items: center;
 }
 
 .repay-action-btn {
-  padding: 0.3rem 0.6rem;
-  font-size: 0.8rem;
+  padding: 0.45rem 0.85rem !important;
+  font-size: 0.85rem !important;
+  min-height: 36px !important;
+  font-weight: 600 !important;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Repay Modal Info Box */

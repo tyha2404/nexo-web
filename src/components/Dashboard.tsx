@@ -16,6 +16,7 @@ import {
   debtService,
 } from '../services/api';
 import type { DebtSummary } from '../types/debt';
+import { QuickInputModal } from './QuickInputModal';
 import './Dashboard.css';
 import { DonutChart } from './DonutChart';
 
@@ -40,6 +41,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isQuickInputOpen, setIsQuickInputOpen] = useState<boolean>(false);
 
   const fetchDashboardData = async (monthStr: string) => {
     try {
@@ -80,6 +82,24 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     fetchDashboardData(selectedMonth);
   }, [selectedMonth]);
 
+  useEffect(() => {
+    const handleDataChanged = () => {
+      fetchDashboardData(selectedMonth);
+    };
+
+    window.addEventListener('transactions-changed', handleDataChanged);
+    window.addEventListener('categories-changed', handleDataChanged);
+    window.addEventListener('targets-changed', handleDataChanged);
+    window.addEventListener('debts-changed', handleDataChanged);
+
+    return () => {
+      window.removeEventListener('transactions-changed', handleDataChanged);
+      window.removeEventListener('categories-changed', handleDataChanged);
+      window.removeEventListener('targets-changed', handleDataChanged);
+      window.removeEventListener('debts-changed', handleDataChanged);
+    };
+  }, [selectedMonth]);
+
   // All-time metrics adjusted by Debt & Loan module (Net Assets = AllTimeNet + Receivables - Payables)
   // All-time metrics: Total Assets = Total Income + Active Investment + Receivables - Total Expense - Payables
   const allTimeIncome = allTimeSummary?.totalIncome ?? 0;
@@ -99,38 +119,52 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <h2>Bảng điều khiển Phân tích</h2>
           <p className="subtitle">Hiệu suất tài chính và phân tích chi tiết thời gian thực</p>
         </div>
-        <div className="month-filter-wrapper">
-          <label htmlFor="month-picker" className="month-filter-label">
-            {loading ? (
-              <div
-                className="spinner-sm"
-                style={{
-                  width: '16px',
-                  height: '16px',
-                  border: '2px solid var(--primary-glow)',
-                  borderLeftColor: 'var(--primary)',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite',
-                }}
-              ></div>
-            ) : null}
-            <span>Tháng:</span>
-          </label>
-          <DatePicker
-            id="month-picker"
-            selected={selectedMonth ? moment(selectedMonth, 'YYYY-MM').toDate() : new Date()}
-            onChange={(date: Date | null) => {
-              if (date) {
-                setSelectedMonth(moment(date).format('YYYY-MM'));
-              }
-            }}
-            dateFormat="MM/yyyy"
-            showMonthYearPicker
-            portalId="date-picker-portal"
-            className="month-filter-input"
-          />
+        <div className="dashboard-header-actions">
+          <button
+            onClick={() => setIsQuickInputOpen(true)}
+            className="btn btn-primary dashboard-nlp-btn"
+          >
+            <span>🤖 Nhập nhanh NLP</span>
+          </button>
+          <div className="month-filter-wrapper">
+            <label htmlFor="month-picker" className="month-filter-label">
+              {loading ? (
+                <div
+                  className="spinner-sm"
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid var(--primary-glow)',
+                    borderLeftColor: 'var(--primary)',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                  }}
+                ></div>
+              ) : null}
+              <span>Tháng:</span>
+            </label>
+            <DatePicker
+              id="month-picker"
+              selected={selectedMonth ? moment(selectedMonth, 'YYYY-MM').toDate() : new Date()}
+              onChange={(date: Date | null) => {
+                if (date) {
+                  setSelectedMonth(moment(date).format('YYYY-MM'));
+                }
+              }}
+              dateFormat="MM/yyyy"
+              showMonthYearPicker
+              portalId="date-picker-portal"
+              className="month-filter-input"
+            />
+          </div>
         </div>
       </div>
+
+      <QuickInputModal
+        isOpen={isQuickInputOpen}
+        onClose={() => setIsQuickInputOpen(false)}
+        onTransactionCreated={() => fetchDashboardData(selectedMonth)}
+      />
 
       {error && (
         <div className="error-banner animate-fade-in" style={{ marginBottom: '1.5rem' }}>
@@ -190,8 +224,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               {formatCurrency(allTimeNetAssets)}
             </div>
             <div className="summary-stat-subtitle">
-              Thu nhập + Đầu tư ({formatCurrency(allTimeInvestment)}) + Cho vay (
-              {formatCurrency(debtReceivable)}) - Chi tiêu - Nợ ({formatCurrency(debtPayable)})
+              {debtPayable > 0
+                ? `Đã trừ nợ phải trả (${formatCurrency(debtPayable)})`
+                : 'Bao gồm thu nhập, đầu tư & các khoản nợ/vay'}
             </div>
           </div>
         </div>

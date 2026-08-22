@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatCurrency } from '../commons/utils';
 import './DonutChart.css';
 
 interface DonutChartItem {
@@ -89,7 +90,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({ items, centerLabel = 'Tá
             <>
               <span className="donut-center-label">{chartSegments[activeIndex].categoryName}</span>
               <span className="donut-center-value">
-                {chartSegments[activeIndex].totalAmount.toLocaleString('vi-VN')}Ä‘
+                {formatCurrency(chartSegments[activeIndex].totalAmount)}
               </span>
               <span className="donut-center-percentage">
                 {chartSegments[activeIndex].percentage.toFixed(1)}%
@@ -99,7 +100,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({ items, centerLabel = 'Tá
             <>
               <span className="donut-center-label">{centerLabel}</span>
               <span className="donut-center-value main-total">
-                {totalAmountSum.toLocaleString('vi-VN')}Ä‘
+                {formatCurrency(totalAmountSum)}
               </span>
             </>
           )}
@@ -121,9 +122,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({ items, centerLabel = 'Tá
                 <span className="legend-name">{segment.categoryName}</span>
               </div>
               <div className="legend-value-group">
-                <span className="legend-amount">
-                  {segment.totalAmount.toLocaleString('vi-VN')}Ä‘
-                </span>
+                <span className="legend-amount">{formatCurrency(segment.totalAmount)}</span>
                 <span className="legend-percent">({segment.percentage.toFixed(1)}%)</span>
               </div>
             </div>

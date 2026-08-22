@@ -1,6 +1,6 @@
 .transactions-view {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 1rem 0.5rem;
 }
@@ -56,6 +56,9 @@
   .filter-bar {
     grid-template-columns: 2fr 1fr 1.2fr;
   }
+  .filter-bar:has(.status-select-wrapper) {
+    grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
+  }
 }
 
 .search-input-wrapper {
@@ -72,8 +75,8 @@
   pointer-events: none;
 }
 
-.filter-bar input,
-.filter-bar select {
+.filter-bar input:not([class*='dummyInput']):not(.react-select__input),
+.filter-bar select:not(.react-select__input) {
   width: 100%;
   padding: 0.75rem 1rem;
   background: var(--bg-input);
@@ -86,13 +89,36 @@
   transition: all 0.2s ease;
 }
 
+/* Reset react-select internal inputs */
+.react-select input,
+.react-select__input,
+.react-select__input-container input,
+.react-select__value-container input,
+input[class*='dummyInput'] {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+}
+
 .search-input-wrapper input {
   padding-left: 2.5rem;
   height: 42px;
 }
 
-.category-select-wrapper {
+.category-select-wrapper,
+.status-select-wrapper {
   width: 100%;
+}
+
+.category-select-wrapper .react-select__control,
+.status-select-wrapper .react-select__control {
+  min-height: 42px !important;
+  height: 42px !important;
 }
 
 .date-range-wrapper {
@@ -112,7 +138,7 @@
   color: var(--text-main);
   font-family: inherit;
   font-size: 0.95rem;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
   width: 100%;
   box-sizing: border-box;
   transition: all 0.2s ease;

@@ -1,6 +1,6 @@
 .targets-view {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 1rem 0.5rem;
 }
@@ -106,8 +106,58 @@
   color: var(--primary) !important;
 }
 
+.targets-view .filter-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.targets-view .date-range-wrapper,
+.targets-view .category-select-wrapper {
+  width: 100%;
+}
+
+.targets-view .date-range-wrapper .react-datepicker-wrapper {
+  width: 100%;
+}
+
+.targets-view .date-range-wrapper input {
+  width: 100%;
+  height: 42px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 0.75rem 1rem;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.targets-view .date-range-wrapper input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.targets-view .txn-actions-cell {
+  text-align: center;
+}
+
+.targets-view .action-btn {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  border-radius: 8px !important;
+}
+
 @media (max-width: 768px) {
   .targets-view {
     padding: 0.75rem;
+  }
+  .targets-view .filter-bar {
+    grid-template-columns: 1fr;
   }
 }

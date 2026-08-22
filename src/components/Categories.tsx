@@ -213,22 +213,7 @@ export default function Categories() {
             <p className="subtitle">Tổ chức và phân loại chi phí, thu nhập & đầu tư của bạn</p>
           </div>
           <button className="btn btn-primary create-category-btn" onClick={openCreateModal}>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ marginRight: '6px' }}
-            >
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Tạo danh mục
+            + Tạo danh mục
           </button>
         </div>
       </header>
@@ -447,11 +432,11 @@ export default function Categories() {
                   />
                 </div>
                 <div className="button-group">
-                  <button type="submit" className="btn btn-primary">
-                    Lưu danh mục
-                  </button>
                   <button type="button" className="btn btn-secondary" onClick={closeModal}>
                     Hủy
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Lưu danh mục
                   </button>
                 </div>
               </form>
@@ -518,11 +503,11 @@ export default function Categories() {
                   />
                 </div>
                 <div className="button-group">
-                  <button type="submit" className="btn btn-primary">
-                    Thêm danh mục
-                  </button>
                   <button type="button" className="btn btn-secondary" onClick={closeModal}>
                     Hủy
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Thêm danh mục
                   </button>
                 </div>
               </form>

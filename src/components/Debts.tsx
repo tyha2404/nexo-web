@@ -320,8 +320,8 @@ export default function Debts() {
           <p>Không tìm thấy khoản vay/nợ nào phù hợp!</p>
         </div>
       ) : (
-        <div className="transactions-table-container animate-fade-in">
-          <table className="transactions-table">
+        <div className="debts-table-container transactions-table-container animate-fade-in">
+          <table className="debts-table transactions-table">
             <thead>
               <tr>
                 <th>Tên khoản nợ / Đối tác</th>
@@ -458,28 +458,6 @@ export default function Debts() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="debt-type-select">Loại nghĩa vụ</label>
-                <Select
-                  id="debt-type-select"
-                  options={[
-                    { value: 'PAYABLE', label: 'Tôi Nợ (Phải Trả)' },
-                    { value: 'RECEIVABLE', label: 'Người Khác Nợ (Phải Thu)' },
-                  ]}
-                  value={
-                    [
-                      { value: 'PAYABLE', label: 'Tôi Nợ (Phải Trả)' },
-                      { value: 'RECEIVABLE', label: 'Người Khác Nợ (Phải Thu)' },
-                    ].find((opt) => opt.value === formType) || null
-                  }
-                  onChange={(option) => {
-                    if (option) setFormType(option.value as DebtType);
-                  }}
-                  classNamePrefix="react-select"
-                  menuPortalTarget={document.body}
-                />
-              </div>
-
-              <div className="form-group">
                 <label htmlFor="debt-title">Tên khoản nợ / Đối tác</label>
                 <input
                   id="debt-title"
@@ -491,41 +469,67 @@ export default function Debts() {
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="debt-amount">Số tiền gốc (đ)</label>
-                <input
-                  id="debt-amount"
-                  type="text"
-                  placeholder="Ví dụ: 5.000.000"
-                  value={formAmount}
-                  onChange={(e) => handleAmountChange(e.target.value, setFormAmount)}
-                  required
-                />
+              <div className="form-row-2col">
+                <div className="form-group">
+                  <label htmlFor="debt-type-select">Loại nghĩa vụ</label>
+                  <Select
+                    id="debt-type-select"
+                    options={[
+                      { value: 'PAYABLE', label: 'Tôi Nợ (Phải Trả)' },
+                      { value: 'RECEIVABLE', label: 'Người Khác Nợ (Phải Thu)' },
+                    ]}
+                    value={
+                      [
+                        { value: 'PAYABLE', label: 'Tôi Nợ (Phải Trả)' },
+                        { value: 'RECEIVABLE', label: 'Người Khác Nợ (Phải Thu)' },
+                      ].find((opt) => opt.value === formType) || null
+                    }
+                    onChange={(option) => {
+                      if (option) setFormType(option.value as DebtType);
+                    }}
+                    classNamePrefix="react-select"
+                    menuPortalTarget={document.body}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="debt-amount">Số tiền gốc (đ)</label>
+                  <input
+                    id="debt-amount"
+                    type="text"
+                    placeholder="Ví dụ: 5.000.000"
+                    value={formAmount}
+                    onChange={(e) => handleAmountChange(e.target.value, setFormAmount)}
+                    required
+                  />
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="debt-startdate">Ngày bắt đầu vay / cho vay</label>
-                <DatePicker
-                  id="debt-startdate"
-                  selected={formStartDate}
-                  onChange={(date: Date | null) => setFormStartDate(date)}
-                  dateFormat="dd/MM/yyyy"
-                  portalId="date-picker-portal"
-                  placeholderText="Chọn ngày bắt đầu"
-                />
-              </div>
+              <div className="form-row-2col">
+                <div className="form-group">
+                  <label htmlFor="debt-startdate">Ngày bắt đầu vay / cho vay</label>
+                  <DatePicker
+                    id="debt-startdate"
+                    selected={formStartDate}
+                    onChange={(date: Date | null) => setFormStartDate(date)}
+                    dateFormat="dd/MM/yyyy"
+                    portalId="date-picker-portal"
+                    placeholderText="Chọn ngày bắt đầu"
+                  />
+                </div>
 
-              <div className="form-group">
-                <label htmlFor="debt-duedate">Hạn thanh toán (Ngày phải trả/thu hết)</label>
-                <DatePicker
-                  id="debt-duedate"
-                  selected={formDueDate}
-                  onChange={(date: Date | null) => setFormDueDate(date)}
-                  dateFormat="dd/MM/yyyy"
-                  portalId="date-picker-portal"
-                  isClearable={true}
-                  placeholderText="Chọn ngày hạn chót (nếu có)"
-                />
+                <div className="form-group">
+                  <label htmlFor="debt-duedate">Hạn thanh toán</label>
+                  <DatePicker
+                    id="debt-duedate"
+                    selected={formDueDate}
+                    onChange={(date: Date | null) => setFormDueDate(date)}
+                    dateFormat="dd/MM/yyyy"
+                    portalId="date-picker-portal"
+                    isClearable={true}
+                    placeholderText="Chọn ngày hạn chót (nếu có)"
+                  />
+                </div>
               </div>
 
               <div className="form-group">
@@ -540,15 +544,15 @@ export default function Debts() {
               </div>
 
               <div className="button-group">
-                <button type="submit" className="btn btn-primary">
-                  Tạo khoản nợ
-                </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setIsCreateModalOpen(false)}
                 >
                   Hủy
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Tạo khoản nợ
                 </button>
               </div>
             </form>
@@ -598,15 +602,15 @@ export default function Debts() {
               </div>
 
               <div className="button-group">
-                <button type="submit" className="btn btn-primary">
-                  Xác nhận thanh toán
-                </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setIsRepayModalOpen(false)}
                 >
                   Hủy
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Xác nhận thanh toán
                 </button>
               </div>
             </form>

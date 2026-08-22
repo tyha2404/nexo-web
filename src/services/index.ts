@@ -6,3 +6,5 @@ export * from './debtService';
 export * from './reportService';
 export * from './targetService';
 export * from './transactionService';
+export * from './presetService';
+export * from './nlpService';

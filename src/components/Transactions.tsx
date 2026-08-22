@@ -54,6 +54,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Form states
   const [title, setTitle] = useState('');
@@ -121,6 +122,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
     endDate,
     currentPage,
     itemsPerPage,
+    refreshKey,
   ]);
 
   const showFeedback = (message: string, type: 'success' | 'error') => {
@@ -254,16 +256,14 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
 
     try {
       if (editingTransaction) {
-        const updated = await transactionService.update(editingTransaction.id, payload);
-        setTransactions((prev) =>
-          prev.map((item) => (item.id === editingTransaction.id ? updated : item))
-        );
+        await transactionService.update(editingTransaction.id, payload);
         showFeedback('Cập nhật giao dịch thành công!', 'success');
       } else {
-        const created = await transactionService.create(payload);
-        setTransactions((prev) => [created, ...prev]);
+        await transactionService.create(payload);
         showFeedback('Thêm giao dịch thành công!', 'success');
       }
+      setRefreshKey((prev) => prev + 1);
+      window.dispatchEvent(new Event('transactions-changed'));
       setIsModalOpen(false);
     } catch (err: any) {
       showFeedback(err.message || 'Lưu giao dịch thất bại', 'error');
@@ -278,7 +278,8 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
 
     try {
       await transactionService.delete(id);
-      setTransactions((prev) => prev.filter((item) => item.id !== id));
+      setRefreshKey((prev) => prev + 1);
+      window.dispatchEvent(new Event('transactions-changed'));
       showFeedback('Xóa giao dịch thành công!', 'success');
     } catch (err: any) {
       showFeedback(err.message || 'Xóa giao dịch thất bại', 'error');
@@ -604,8 +605,51 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
           <p>Đang tải giao dịch...</p>
         </div>
       ) : filteredTransactions.length === 0 ? (
-        <div className="empty-state animate-fade-in">
-          <p>Không tìm thấy giao dịch nào. Hãy thử điều chỉnh bộ lọc hoặc thêm giao dịch mới!</p>
+        <div
+          className="empty-state animate-fade-in"
+          style={{ padding: '3rem 1.5rem', textAlign: 'center' }}
+        >
+          <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>
+            {type === TransactionType.INVESTMENT
+              ? '📈'
+              : type === TransactionType.INCOME
+                ? '💵'
+                : '🛍️'}
+          </div>
+          <h4
+            style={{
+              fontSize: '1.15rem',
+              fontWeight: 600,
+              margin: '0 0 0.5rem 0',
+              color: 'var(--text-main)',
+            }}
+          >
+            Không tìm thấy giao dịch nào
+          </h4>
+          <p
+            style={{
+              color: 'var(--text-muted)',
+              fontSize: '0.9rem',
+              maxWidth: '400px',
+              margin: '0 auto 1.25rem auto',
+            }}
+          >
+            Hãy thử điều chỉnh bộ lọc tìm kiếm hoặc thêm giao dịch mới để theo dõi tài chính chính
+            xác hơn!
+          </p>
+          <button
+            onClick={openAddModal}
+            className="btn btn-primary"
+            style={{ padding: '0.65rem 1.5rem', minHeight: '42px', fontWeight: 600 }}
+          >
+            + Thêm{' '}
+            {type === TransactionType.INVESTMENT
+              ? 'đầu tư'
+              : type === TransactionType.INCOME
+                ? 'thu nhập'
+                : 'chi tiêu'}{' '}
+            ngay
+          </button>
         </div>
       ) : (
         <>
@@ -755,7 +799,13 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                 <input
                   id="txn-title"
                   type="text"
-                  placeholder="Ví dụ: Mua sắm tạp hóa"
+                  placeholder={
+                    type === TransactionType.INCOME
+                      ? 'Ví dụ: Lương tháng 8, Thưởng dự án...'
+                      : type === TransactionType.INVESTMENT
+                        ? 'Ví dụ: Mua cổ phiếu Vinamilk, Gửi tiết kiệm...'
+                        : 'Ví dụ: Mua sắm tạp hóa, Ăn uống...'
+                  }
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
@@ -763,11 +813,23 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               </div>
 
               <div className="form-group">
-                <label htmlFor="txn-amount">Số tiền đầu tư / giao dịch (đ)</label>
+                <label htmlFor="txn-amount">
+                  {type === TransactionType.INCOME
+                    ? 'Số tiền thu nhập (đ)'
+                    : type === TransactionType.INVESTMENT
+                      ? 'Số tiền đầu tư (đ)'
+                      : 'Số tiền chi tiêu (đ)'}
+                </label>
                 <input
                   id="txn-amount"
                   type="text"
-                  placeholder="Ví dụ: 50.000"
+                  placeholder={
+                    type === TransactionType.INCOME
+                      ? 'Ví dụ: 15.000.000'
+                      : type === TransactionType.INVESTMENT
+                        ? 'Ví dụ: 10.000.000'
+                        : 'Ví dụ: 50.000'
+                  }
                   value={amount}
                   onChange={(e) => handleAmountChange(e.target.value)}
                   required
@@ -859,15 +921,15 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               </div>
 
               <div className="button-group">
-                <button type="submit" className="btn btn-primary">
-                  {editingTransaction ? 'Cập nhật' : 'Thêm'} giao dịch
-                </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setIsModalOpen(false)}
                 >
                   Hủy
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  {editingTransaction ? 'Cập nhật' : 'Thêm'} giao dịch
                 </button>
               </div>
             </form>

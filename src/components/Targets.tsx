@@ -443,15 +443,15 @@ export default function Targets() {
               </div>
 
               <div className="button-group">
-                <button type="submit" className="btn btn-primary">
-                  Lưu mục tiêu
-                </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setIsModalOpen(false)}
                 >
                   Hủy
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Lưu mục tiêu
                 </button>
               </div>
             </form>
