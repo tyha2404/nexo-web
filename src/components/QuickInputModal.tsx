@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import Select from 'react-select';
+import DatePicker from 'react-datepicker';
 import moment from 'moment';
 import type { Category } from '../commons/types';
 import { TransactionType } from '../commons/constants';
@@ -21,9 +23,95 @@ interface QuickInputModalProps {
 const SAMPLE_PROMPTS = [
   { label: '☕ Ăn sáng 35k', text: 'Ăn sáng 35k' },
   { label: '💵 Lương 15tr', text: 'Lương 15tr' },
-  { label: '⛽ Đổ xăng 50k', text: 'Đổ xăng 50k' },
-  { label: '🏠 Tiền nhà 3.5tr', text: 'Tiền nhà 3.5tr' },
+  { label: '⛽ Đổ xăng 50k hôm qua', text: 'Đổ xăng 50k hôm qua' },
+  { label: '🏠 Tiền nhà 3.5tr ngày 15', text: 'Tiền nhà 3.5tr ngày 15' },
 ];
+
+const TYPE_OPTIONS = [
+  { value: TransactionType.EXPENSE, label: '🛍️ Chi tiêu' },
+  { value: TransactionType.INCOME, label: '💵 Thu nhập' },
+  { value: TransactionType.INVESTMENT, label: '📈 Đầu tư' },
+];
+
+export function extractDateFromText(inputText: string): { date: Date | null; cleanText: string } {
+  let clean = inputText;
+
+  // 1. Relative day terms
+  const relativeMap: { [key: string]: number } = {
+    'hôm kia': -2,
+    'hom kia': -2,
+    'hôm qua': -1,
+    'hom qua': -1,
+    'hôm nay': 0,
+    'hom nay': 0,
+    'ngày mai': 1,
+    'ngay mai': 1,
+    'ngày mốt': 2,
+    'ngay mot': 2,
+  };
+
+  for (const [kw, offset] of Object.entries(relativeMap)) {
+    const regex = new RegExp(`\\b${kw}\\b`, 'i');
+    if (regex.test(clean)) {
+      clean = clean.replace(regex, ' ').replace(/\s+/g, ' ').trim();
+      const targetDate = moment().add(offset, 'days').toDate();
+      return { date: targetDate, cleanText: clean };
+    }
+  }
+
+  // 2. "X ngày trước" / "X ngay truoc"
+  const daysAgoRegex = /(\d+)\s*(?:ngày|ngay)\s*trước/i;
+  const daysAgoMatch = clean.match(daysAgoRegex);
+  if (daysAgoMatch) {
+    const days = parseInt(daysAgoMatch[1], 10);
+    clean = clean.replace(daysAgoRegex, ' ').replace(/\s+/g, ' ').trim();
+    return { date: moment().subtract(days, 'days').toDate(), cleanText: clean };
+  }
+
+  // 3. Full Date DD/MM/YYYY or DD-MM-YYYY
+  const fullDateRegex = /\b(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})\b/;
+  const fullDateMatch = clean.match(fullDateRegex);
+  if (fullDateMatch) {
+    const d = parseInt(fullDateMatch[1], 10);
+    const m = parseInt(fullDateMatch[2], 10);
+    const y = parseInt(fullDateMatch[3], 10);
+    const parsed = moment(`${y}-${m}-${d}`, 'YYYY-M-D', true);
+    if (parsed.isValid()) {
+      clean = clean.replace(fullDateRegex, ' ').replace(/\s+/g, ' ').trim();
+      return { date: parsed.toDate(), cleanText: clean };
+    }
+  }
+
+  // 4. Short Date DD/MM or DD-MM
+  const shortDateRegex = /\b(\d{1,2})[/.-](\d{1,2})\b/;
+  const shortDateMatch = clean.match(shortDateRegex);
+  if (shortDateMatch) {
+    const d = parseInt(shortDateMatch[1], 10);
+    const m = parseInt(shortDateMatch[2], 10);
+    const currentYear = moment().year();
+    const parsed = moment(`${currentYear}-${m}-${d}`, 'YYYY-M-D', true);
+    if (parsed.isValid()) {
+      clean = clean.replace(shortDateRegex, ' ').replace(/\s+/g, ' ').trim();
+      return { date: parsed.toDate(), cleanText: clean };
+    }
+  }
+
+  // 5. Day only: "ngày 15" or "ngay 15"
+  const dayOnlyRegex = /(?:ngày|ngay)\s+(\d{1,2})\b/i;
+  const dayOnlyMatch = clean.match(dayOnlyRegex);
+  if (dayOnlyMatch) {
+    const d = parseInt(dayOnlyMatch[1], 10);
+    const currentMonth = moment().month() + 1;
+    const currentYear = moment().year();
+    const parsed = moment(`${currentYear}-${currentMonth}-${d}`, 'YYYY-M-D', true);
+    if (parsed.isValid()) {
+      clean = clean.replace(dayOnlyRegex, ' ').replace(/\s+/g, ' ').trim();
+      return { date: parsed.toDate(), cleanText: clean };
+    }
+  }
+
+  return { date: null, cleanText: clean };
+}
 
 export const QuickInputModal: React.FC<QuickInputModalProps> = ({
   isOpen,
@@ -38,6 +126,7 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
   const [customAmount, setCustomAmount] = useState<string>('');
   const [customDescription, setCustomDescription] = useState<string>('');
   const [customType, setCustomType] = useState<TransactionType>(TransactionType.EXPENSE);
+  const [customDate, setCustomDate] = useState<Date>(new Date());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,6 +143,7 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
       setSelectedCategoryId('');
       setCustomAmount('');
       setCustomDescription('');
+      setCustomDate(new Date());
       setError(null);
     }
   }, [isOpen]);
@@ -63,11 +153,29 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
     try {
       setParsing(true);
       setError(null);
+
+      // Extract date and clean description client-side
+      const { date: clientExtractedDate, cleanText } = extractDateFromText(inputText.trim());
+
       const res = await nlpService.parseNLP(inputText.trim());
       setParsedResult(res);
       setCustomAmount(res.amount ? String(res.amount) : '');
-      setCustomDescription(res.description || inputText);
+
+      // Set cleaned description without date artifacts
+      const rawDesc = res.description || cleanText || inputText;
+      const { cleanText: cleanedDesc } = extractDateFromText(rawDesc);
+      setCustomDescription(cleanedDesc || rawDesc);
+
       setCustomType((res.type as TransactionType) || TransactionType.EXPENSE);
+
+      // Prioritize client extracted date or backend response date
+      if (clientExtractedDate) {
+        setCustomDate(clientExtractedDate);
+      } else if (res.transactionDate) {
+        setCustomDate(moment(res.transactionDate).toDate());
+      } else {
+        setCustomDate(new Date());
+      }
 
       if (res.categoryId) {
         setSelectedCategoryId(res.categoryId);
@@ -122,7 +230,7 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
       setSubmitting(true);
       setError(null);
       const finalCatId = selectedCategoryId || parsedResult?.categoryId || '';
-      const finalDate = parsedResult?.transactionDate || moment().format('YYYY-MM-DD');
+      const finalDate = moment(customDate).format('YYYY-MM-DD');
 
       await transactionService.create({
         categoryId: finalCatId,
@@ -147,6 +255,16 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
   if (!isOpen) return null;
 
   const filteredCategories = categories.filter((c) => c.type === customType);
+  const categoryOptions = filteredCategories.map((cat) => ({
+    value: cat.id,
+    label: cat.name,
+  }));
+
+  const selectedCategoryOption =
+    categoryOptions.find((opt) => opt.value === selectedCategoryId) || null;
+
+  const selectedTypeOption =
+    TYPE_OPTIONS.find((opt) => opt.value === customType) || TYPE_OPTIONS[0];
 
   return ReactDOM.createPortal(
     <div className="modal-backdrop" onClick={onClose}>
@@ -171,21 +289,24 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
         </div>
 
         <p className="text-xs mb-3" style={{ color: 'var(--text-muted)', lineHeight: 1.5 }}>
-          Gõ 1 câu ngắn, hệ thống sẽ tự động trích xuất số tiền & danh mục:
+          Gõ 1 câu ngắn, hệ thống sẽ tự động trích xuất số tiền, danh mục & ngày thực hiện:
         </p>
 
-        {/* Quick Sample Chips */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {SAMPLE_PROMPTS.map((sample, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => handleSampleClick(sample.text)}
-              className="nlp-example-chip"
-            >
-              {sample.label}
-            </button>
-          ))}
+        {/* Quick Sample Chips with Clear Separation */}
+        <div className="nlp-samples-wrapper">
+          <span className="nlp-samples-label">Gợi ý mẫu câu:</span>
+          <div className="nlp-samples-list">
+            {SAMPLE_PROMPTS.map((sample, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleSampleClick(sample.text)}
+                className="nlp-example-chip"
+              >
+                {sample.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {error && (
@@ -207,7 +328,7 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
           <input
             type="text"
             className="nlp-input-field"
-            placeholder="VD: Ăn sáng 35k..."
+            placeholder="VD: Ăn sáng 35k hôm qua, Tiền nhà 3.5tr..."
             value={text}
             onChange={(e) => {
               setText(e.target.value);
@@ -261,47 +382,63 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
                 </span>
               </div>
 
-              {/* Type Selector Pill */}
-              <select
-                value={customType}
-                onChange={(e) => {
-                  const newType = e.target.value as TransactionType;
-                  setCustomType(newType);
-                  setSelectedCategoryId('');
-                }}
-                className={`nlp-type-pill ${
-                  customType === TransactionType.INCOME
-                    ? 'income'
-                    : customType === TransactionType.INVESTMENT
-                      ? 'investment'
-                      : 'expense'
-                }`}
-                style={{ outline: 'none', cursor: 'pointer' }}
-              >
-                <option value={TransactionType.EXPENSE}>🛍️ Chi tiêu</option>
-                <option value={TransactionType.INCOME}>💵 Thu nhập</option>
-                <option value={TransactionType.INVESTMENT}>📈 Đầu tư</option>
-              </select>
+              {/* Type Selector Dropdown using unified React-Select */}
+              <div className="nlp-type-dropdown-wrapper">
+                <Select
+                  options={TYPE_OPTIONS}
+                  value={selectedTypeOption}
+                  onChange={(opt) => {
+                    if (opt) {
+                      setCustomType(opt.value);
+                      setSelectedCategoryId('');
+                    }
+                  }}
+                  classNamePrefix="react-select"
+                  isSearchable={false}
+                  menuPortalTarget={document.body}
+                />
+              </div>
             </div>
 
-            {/* Category Field */}
-            <div className="nlp-field-group">
-              <label className="nlp-field-label">
-                <span>📁</span>
-                <span>Danh mục phân loại:</span>
-              </label>
-              <select
-                value={selectedCategoryId}
-                onChange={(e) => setSelectedCategoryId(e.target.value)}
-                className="nlp-select-input"
-              >
-                <option value="">-- Chọn danh mục --</option>
-                {filteredCategories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+            {/* Grid 2-col for Category and Date */}
+            <div className="nlp-form-grid">
+              {/* Category Field */}
+              <div className="nlp-field-group">
+                <label className="nlp-field-label">
+                  <span>📁</span>
+                  <span>Danh mục:</span>
+                </label>
+                <Select
+                  options={categoryOptions}
+                  value={selectedCategoryOption}
+                  onChange={(opt) => setSelectedCategoryId(opt ? opt.value : '')}
+                  classNamePrefix="react-select"
+                  placeholder="-- Chọn danh mục --"
+                  isSearchable={true}
+                  menuPortalTarget={document.body}
+                  noOptionsMessage={() => 'Không có danh mục phù hợp'}
+                />
+              </div>
+
+              {/* Date Field */}
+              <div className="nlp-field-group">
+                <label className="nlp-field-label">
+                  <span>📅</span>
+                  <span>Ngày thực hiện:</span>
+                </label>
+                <div className="nlp-datepicker-wrapper">
+                  <DatePicker
+                    selected={customDate}
+                    onChange={(date: Date | null) => {
+                      if (date) setCustomDate(date);
+                    }}
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="Chọn ngày"
+                    className="nlp-datepicker-input"
+                    portalId="date-picker-portal"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Note / Description Field */}

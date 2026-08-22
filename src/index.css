@@ -751,7 +751,8 @@ tr {
   box-sizing: border-box !important;
 }
 
-.modal-content {
+.modal-content,
+.modal-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -762,6 +763,16 @@ tr {
   padding: 2rem;
   box-shadow: var(--shadow-lg);
   box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .modal-content,
+  .modal-card {
+    padding: 1.25rem;
+    width: 95vw;
+    max-height: 94vh;
+    border-radius: var(--radius-md);
+  }
 }
 
 .form-row-2col {
