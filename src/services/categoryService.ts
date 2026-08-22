@@ -7,6 +7,7 @@ export interface CreateCategoryDTO {
   type: TransactionType;
   description?: string;
   budgetLimit?: number;
+  excludeFromAverageDaily?: boolean;
 }
 
 export interface UpdateCategoryDTO {
@@ -14,6 +15,7 @@ export interface UpdateCategoryDTO {
   type?: TransactionType;
   description?: string;
   budgetLimit?: number;
+  excludeFromAverageDaily?: boolean;
 }
 
 class CategoryService extends CRUDService<Category, CreateCategoryDTO, UpdateCategoryDTO> {

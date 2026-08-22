@@ -18,6 +18,7 @@ export interface Category {
   type: 'INCOME' | 'EXPENSE' | 'INVESTMENT';
   description?: string;
   budgetLimit?: number;
+  excludeFromAverageDaily?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -59,6 +60,7 @@ export interface CategoryBreakdownReport {
 
 export interface TransactionSummary {
   sumAmount: number;
+  sumAmountForAverage?: number;
   total: number;
   holdingAmount?: number;
   holdingCount?: number;

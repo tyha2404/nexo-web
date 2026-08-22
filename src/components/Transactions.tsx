@@ -44,6 +44,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   const [totalItems, setTotalItems] = useState(0);
   const [summary, setSummary] = useState<{
     sumAmount: number;
+    sumAmountForAverage?: number;
     total: number;
     holdingAmount?: number;
     holdingCount?: number;
@@ -465,7 +466,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
 
         const effectiveEnd = end.isAfter(today) ? today : end;
         const daysCount = Math.max(1, effectiveEnd.diff(start, 'days') + 1);
-        const dailyAvg = sumAmount / daysCount;
+        const dailyAvg = (summary.sumAmountForAverage ?? summary.sumAmount) / daysCount;
 
         return (
           <div className="summary-cards-grid animate-fade-in">
@@ -486,6 +487,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               <div className="summary-stat-value value-warning">{formatCurrency(dailyAvg)}</div>
               <div className="summary-stat-subtitle">
                 Chi tiêu bình quân trong {daysCount} ngày (tới hôm nay)
+                {summary.sumAmountForAverage !== undefined &&
+                  summary.sumAmountForAverage !== summary.sumAmount &&
+                  ' - không tính danh mục đã loại trừ'}
               </div>
             </div>
 

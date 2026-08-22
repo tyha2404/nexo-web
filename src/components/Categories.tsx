@@ -24,11 +24,13 @@ export default function Categories() {
   const [type, setType] = useState<TransactionType>(TransactionType.EXPENSE);
   const [description, setDescription] = useState('');
   const [budgetLimit, setBudgetLimit] = useState('');
+  const [excludeFromAverageDaily, setExcludeFromAverageDaily] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editName, setEditName] = useState('');
   const [editType, setEditType] = useState<TransactionType>(TransactionType.EXPENSE);
   const [editDescription, setEditDescription] = useState('');
   const [editBudgetLimit, setEditBudgetLimit] = useState('');
+  const [editExcludeFromAverageDaily, setEditExcludeFromAverageDaily] = useState(false);
 
   const typeOptions = [
     { value: TransactionType.EXPENSE, label: 'Chi tiêu' },
@@ -96,6 +98,8 @@ export default function Categories() {
         type,
         description: description.trim() || undefined,
         budgetLimit: type === TransactionType.EXPENSE ? parsedBudget : undefined,
+        excludeFromAverageDaily:
+          type === TransactionType.EXPENSE ? excludeFromAverageDaily : undefined,
       });
       if (type === activeTab) {
         setCategories((prev) => [...prev, newCat]);
@@ -104,6 +108,7 @@ export default function Categories() {
       setType(TransactionType.EXPENSE);
       setDescription('');
       setBudgetLimit('');
+      setExcludeFromAverageDaily(false);
       setIsModalOpen(false);
       showFeedback('Tạo danh mục thành công!', 'success');
     } catch (err: any) {
@@ -127,6 +132,8 @@ export default function Categories() {
         type: editType,
         description: editDescription.trim() || undefined,
         budgetLimit: editType === TransactionType.EXPENSE ? parsedEditBudget : undefined,
+        excludeFromAverageDaily:
+          editType === TransactionType.EXPENSE ? editExcludeFromAverageDaily : undefined,
       });
       if (editType === activeTab) {
         setCategories((prev) =>
@@ -140,6 +147,7 @@ export default function Categories() {
       setEditType(TransactionType.EXPENSE);
       setEditDescription('');
       setEditBudgetLimit('');
+      setEditExcludeFromAverageDaily(false);
       setIsModalOpen(false);
       showFeedback('Cập nhật danh mục thành công!', 'success');
     } catch (err: any) {
@@ -166,6 +174,7 @@ export default function Categories() {
     setEditName(category.name);
     setEditType(category.type as TransactionType);
     setEditDescription(category.description || '');
+    setEditExcludeFromAverageDaily(category.excludeFromAverageDaily ?? false);
     setEditBudgetLimit(
       category.budgetLimit !== undefined
         ? Math.round(category.budgetLimit).toLocaleString('vi-VN')
@@ -180,6 +189,7 @@ export default function Categories() {
     setType(activeTab);
     setDescription('');
     setBudgetLimit('');
+    setExcludeFromAverageDaily(false);
     setIsModalOpen(true);
   };
 
@@ -283,6 +293,11 @@ export default function Categories() {
                           {cat.budgetLimit !== undefined && (
                             <span className="text-xs text-slate-400 font-normal ml-1">
                               (Hạn mức: {cat.budgetLimit.toLocaleString('vi-VN')}đ)
+                            </span>
+                          )}
+                          {cat.excludeFromAverageDaily && (
+                            <span className="exclude-avg-badge">
+                              Không tính vào trung bình ngày
                             </span>
                           )}
                         </h4>
@@ -397,16 +412,29 @@ export default function Categories() {
                   />
                 </div>
                 {editType === TransactionType.EXPENSE && (
-                  <div className="form-group">
-                    <label htmlFor="edit-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
-                    <input
-                      id="edit-budget"
-                      type="text"
-                      value={editBudgetLimit}
-                      onChange={(e) => handleEditBudgetChange(e.target.value)}
-                      placeholder="Ví dụ: 5.000.000"
-                    />
-                  </div>
+                  <>
+                    <div className="form-group">
+                      <label htmlFor="edit-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
+                      <input
+                        id="edit-budget"
+                        type="text"
+                        value={editBudgetLimit}
+                        onChange={(e) => handleEditBudgetChange(e.target.value)}
+                        placeholder="Ví dụ: 5.000.000"
+                      />
+                    </div>
+                    <div className="form-group form-check">
+                      <label className="checkbox-label">
+                        <input
+                          id="edit-exclude-avg"
+                          type="checkbox"
+                          checked={editExcludeFromAverageDaily}
+                          onChange={(e) => setEditExcludeFromAverageDaily(e.target.checked)}
+                        />
+                        Không tính vào chi tiêu trung bình ngày
+                      </label>
+                    </div>
+                  </>
                 )}
                 <div className="form-group">
                   <label htmlFor="edit-desc">Mô tả</label>
@@ -455,16 +483,29 @@ export default function Categories() {
                   />
                 </div>
                 {type === TransactionType.EXPENSE && (
-                  <div className="form-group">
-                    <label htmlFor="new-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
-                    <input
-                      id="new-budget"
-                      type="text"
-                      value={budgetLimit}
-                      onChange={(e) => handleBudgetChange(e.target.value)}
-                      placeholder="Ví dụ: 5.000.000"
-                    />
-                  </div>
+                  <>
+                    <div className="form-group">
+                      <label htmlFor="new-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
+                      <input
+                        id="new-budget"
+                        type="text"
+                        value={budgetLimit}
+                        onChange={(e) => handleBudgetChange(e.target.value)}
+                        placeholder="Ví dụ: 5.000.000"
+                      />
+                    </div>
+                    <div className="form-group form-check">
+                      <label className="checkbox-label">
+                        <input
+                          id="new-exclude-avg"
+                          type="checkbox"
+                          checked={excludeFromAverageDaily}
+                          onChange={(e) => setExcludeFromAverageDaily(e.target.checked)}
+                        />
+                        Không tính vào chi tiêu trung bình ngày
+                      </label>
+                    </div>
+                  </>
                 )}
                 <div className="form-group">
                   <label htmlFor="new-desc">Mô tả</label>
