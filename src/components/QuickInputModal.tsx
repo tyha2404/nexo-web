@@ -3,6 +3,21 @@ import ReactDOM from 'react-dom';
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import moment from 'moment';
+import {
+  Sparkles,
+  X,
+  UtensilsCrossed,
+  Banknote,
+  Fuel,
+  Home,
+  Folder,
+  Calendar,
+  ShoppingBag,
+  Wallet,
+  TrendingUp,
+  ReceiptText,
+  AlertCircle,
+} from 'lucide-react';
 import type { Category } from '../commons/types';
 import { TransactionType } from '../commons/constants';
 import { formatCurrency } from '../commons/utils';
@@ -21,16 +36,16 @@ interface QuickInputModalProps {
 }
 
 const SAMPLE_PROMPTS = [
-  { label: '☕ Ăn sáng 35k', text: 'Ăn sáng 35k' },
-  { label: '💵 Lương 15tr', text: 'Lương 15tr' },
-  { label: '⛽ Đổ xăng 50k hôm qua', text: 'Đổ xăng 50k hôm qua' },
-  { label: '🏠 Tiền nhà 3.5tr ngày 15', text: 'Tiền nhà 3.5tr ngày 15' },
+  { icon: UtensilsCrossed, text: 'Ăn sáng 35k' },
+  { icon: Banknote, text: 'Lương 15tr' },
+  { icon: Fuel, text: 'Đổ xăng 50k hôm qua' },
+  { icon: Home, text: 'Tiền nhà 3.5tr ngày 15' },
 ];
 
 const TYPE_OPTIONS = [
-  { value: TransactionType.EXPENSE, label: '🛍️ Chi tiêu' },
-  { value: TransactionType.INCOME, label: '💵 Thu nhập' },
-  { value: TransactionType.INVESTMENT, label: '📈 Đầu tư' },
+  { value: TransactionType.EXPENSE, label: 'Chi tiêu', icon: ShoppingBag },
+  { value: TransactionType.INCOME, label: 'Thu nhập', icon: Wallet },
+  { value: TransactionType.INVESTMENT, label: 'Đầu tư', icon: TrendingUp },
 ];
 
 export function extractDateFromText(inputText: string): { date: Date | null; cleanText: string } {
@@ -279,12 +294,16 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
               className="p-1.5 rounded-lg flex items-center justify-center"
               style={{ backgroundColor: 'var(--primary-glow)', color: 'var(--primary)' }}
             >
-              🤖
+              <Sparkles size={20} className="text-cyan-400" />
             </span>
             <span>Nhập nhanh thông minh (NLP)</span>
           </h3>
-          <button type="button" onClick={onClose} className="close-btn">
-            &times;
+          <button
+            type="button"
+            onClick={onClose}
+            className="close-btn flex items-center justify-center"
+          >
+            <X size={18} />
           </button>
         </div>
 
@@ -296,16 +315,20 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
         <div className="nlp-samples-wrapper">
           <span className="nlp-samples-label">Gợi ý mẫu câu:</span>
           <div className="nlp-samples-list">
-            {SAMPLE_PROMPTS.map((sample, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handleSampleClick(sample.text)}
-                className="nlp-example-chip"
-              >
-                {sample.label}
-              </button>
-            ))}
+            {SAMPLE_PROMPTS.map((sample, idx) => {
+              const IconComp = sample.icon;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSampleClick(sample.text)}
+                  className="nlp-example-chip"
+                >
+                  <IconComp size={14} />
+                  <span>{sample.text}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -318,7 +341,7 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
               border: '1px solid var(--expense)',
             }}
           >
-            <span>⚠️</span>
+            <AlertCircle size={16} />
             <span>{error}</span>
           </div>
         )}
@@ -352,7 +375,7 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
           <div className="nlp-result-card">
             <div className="nlp-result-header">
               <span className="nlp-result-title">
-                <span>✨</span>
+                <Sparkles size={15} />
                 <span>Kết quả nhận diện:</span>
               </span>
               <span
@@ -393,6 +416,15 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
                       setSelectedCategoryId('');
                     }
                   }}
+                  formatOptionLabel={(option) => {
+                    const Icon = option.icon;
+                    return (
+                      <div className="flex items-center gap-1.5">
+                        {Icon && <Icon size={14} />}
+                        <span>{option.label}</span>
+                      </div>
+                    );
+                  }}
                   classNamePrefix="react-select"
                   isSearchable={false}
                   menuPortalTarget={document.body}
@@ -405,7 +437,7 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
               {/* Category Field */}
               <div className="nlp-field-group">
                 <label className="nlp-field-label">
-                  <span>📁</span>
+                  <Folder size={15} />
                   <span>Danh mục:</span>
                 </label>
                 <Select
@@ -423,7 +455,7 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
               {/* Date Field */}
               <div className="nlp-field-group">
                 <label className="nlp-field-label">
-                  <span>📅</span>
+                  <Calendar size={15} />
                   <span>Ngày thực hiện:</span>
                 </label>
                 <div className="nlp-datepicker-wrapper">
@@ -444,7 +476,7 @@ export const QuickInputModal: React.FC<QuickInputModalProps> = ({
             {/* Note / Description Field */}
             <div className="nlp-field-group">
               <label className="nlp-field-label">
-                <span>📝</span>
+                <ReceiptText size={15} />
                 <span>Ghi chú giao dịch:</span>
               </label>
               <input

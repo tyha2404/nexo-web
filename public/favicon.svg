@@ -1,10 +1,122 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
-  <rect width="100" height="100" rx="20" fill="#0f172a"/>
-  <path d="M30 30 L50 50 L70 30 L70 70 L50 50 L30 70 Z" fill="url(#grad)" stroke="#38bdf8" stroke-width="6" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#3b82f6" />
+    <!-- Background Gradient (Deep Space Obsidian) -->
+    <linearGradient id="bg-obsidian" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16" />
+      <stop offset="50%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#181e36" />
+    </linearGradient>
+
+    <!-- Facet 1: Left Pillar (Quantum Cyan Flow - Nền tảng tài chính) -->
+    <linearGradient id="facet-left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0369a1" />
+    </linearGradient>
+
+    <!-- Facet 2: Left Highlight Bevel -->
+    <linearGradient id="facet-left-highlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.1" />
+    </linearGradient>
+
+    <!-- Facet 3: Central Origami Diagonal (Prism AI Nexus - Trí tuệ AI chuyển đổi) -->
+    <linearGradient id="facet-diagonal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="35%" stop-color="#6366f1" />
+      <stop offset="70%" stop-color="#a855f7" />
       <stop offset="100%" stop-color="#ec4899" />
     </linearGradient>
+
+    <!-- Facet 4: Diagonal Underside Shadow (Chiều sâu không gian 3D) -->
+    <linearGradient id="facet-diag-shade" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4338ca" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#1e1b4b" stop-opacity="0.95" />
+    </linearGradient>
+
+    <!-- Facet 5: Right Pillar (Ascending Prosperity - Thịnh vượng vươn cao) -->
+    <linearGradient id="facet-right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c084fc" />
+      <stop offset="50%" stop-color="#9333ea" />
+      <stop offset="100%" stop-color="#701a75" />
+    </linearGradient>
+
+    <!-- Outer Neon Border Gradient -->
+    <linearGradient id="border-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#818cf8" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#c084fc" stop-opacity="0.7" />
+    </linearGradient>
+
+    <!-- Soft Core Radial Glow -->
+    <radialGradient id="core-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.35" />
+      <stop offset="60%" stop-color="#c084fc" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#090d16" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Drop Shadow Filter for 3D Float -->
+    <filter id="crystal-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#6366f1" flood-opacity="0.4" />
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#38bdf8" flood-opacity="0.5" />
+    </filter>
+
+    <!-- Sparkle Glow -->
+    <filter id="star-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
   </defs>
+
+  <!-- Container Base with Soft Rounded Geometry -->
+  <rect x="6" y="6" width="108" height="108" rx="28" fill="url(#bg-obsidian)" stroke="url(#border-glow)" stroke-width="1.8" />
+
+  <!-- Ambient Light Reflection Behind Crystal -->
+  <circle cx="60" cy="60" r="38" fill="url(#core-glow)" filter="blur(6px)" />
+
+  <!-- The Quantum Crystal "N" Body -->
+  <g filter="url(#crystal-shadow)">
+
+    <!-- BACK / SHADOW LAYER: Diagonal Under-Facet (Tạo góc gấp Origami lập thể) -->
+    <path d="M34 32 L86 88 L72 94 L22 38 Z" fill="url(#facet-diag-shade)" />
+
+    <!-- LEFT FACET: Vertical Foundation Pillar (Căn cơ tài chính) -->
+    <path d="M26 24 C26 20.69 28.69 18 32 18 L42 18 C45.31 18 48 20.69 48 24 L48 96 C48 99.31 45.31 102 42 102 L32 102 C28.69 102 26 99.31 26 96 Z" fill="url(#facet-left)" />
+    <!-- Left Pillar Highlight Edge (Ánh sáng bề mặt) -->
+    <path d="M28 24 L34 24 L34 96 L28 96 Z" fill="url(#facet-left-highlight)" />
+
+    <!-- RIGHT FACET: Vertical Prosperity Pillar (Đỉnh cao thịnh vượng) -->
+    <path d="M72 24 C72 20.69 74.69 18 78 18 L88 18 C91.31 18 94 20.69 94 24 L94 96 C94 99.31 91.31 102 88 102 L78 102 C74.69 102 72 99.31 72 96 Z" fill="url(#facet-right)" />
+    <!-- Right Pillar Highlight Edge -->
+    <path d="M74 24 L78 24 L78 96 L74 96 Z" fill="#fdf4ff" opacity="0.4" />
+
+    <!-- FOREGROUND FACET: Origami Crystal Ribbon (Dải gấp lăng kính AI cắt qua tâm) -->
+    <path d="M28 23 C30 20.5 34 20.5 37 23 L93 87 C96 90.5 94.5 96 89.5 97 L81 97 C78 97 75 95 73 92.5 L17 28 C14 24.5 15.5 19 20.5 18 L29 18 Z" fill="url(#facet-diagonal)" />
+
+    <!-- Prismatic Reflection Streak across Diagonal (Đường khúc xạ lấp lánh) -->
+    <path d="M32 23 L87 87 L81 87 L26 23 Z" fill="#ffffff" opacity="0.35" />
+    <path d="M37 23 L45 32 L39 32 Z" fill="#ffffff" opacity="0.6" />
+
+    <!-- STAR NODES: Điểm chạm lượng tử phát sáng (Quantum Star Nodes) -->
+    <!-- Top-Left Star Node -->
+    <g transform="translate(30, 21)" filter="url(#star-glow)">
+      <circle cx="0" cy="0" r="3.5" fill="#ffffff" />
+      <path d="M-6 0 L6 0 M0 -6 L0 6" stroke="#e0f2fe" stroke-width="1.2" stroke-linecap="round" />
+    </g>
+
+    <!-- Bottom-Right Star Node -->
+    <g transform="translate(90, 94)" filter="url(#star-glow)">
+      <circle cx="0" cy="0" r="3.5" fill="#ffffff" />
+      <path d="M-6 0 L6 0 M0 -6 L0 6" stroke="#fdf4ff" stroke-width="1.2" stroke-linecap="round" />
+    </g>
+
+    <!-- Center Convergence Star Node (Điểm giao thoa thông minh) -->
+    <g transform="translate(60, 58)" filter="url(#star-glow)">
+      <circle cx="0" cy="0" r="2.5" fill="#ffffff" />
+      <circle cx="0" cy="0" r="5" fill="#a855f7" opacity="0.4" />
+    </g>
+  </g>
 </svg>

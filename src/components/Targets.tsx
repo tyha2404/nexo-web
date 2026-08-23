@@ -3,6 +3,16 @@ import moment from 'moment';
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import {
+  Plus,
+  Pencil,
+  X,
+  CreditCard,
+  TrendingUp,
+  Calendar,
+  AlertTriangle,
+  Target as TargetIcon,
+} from 'lucide-react';
 import { targetService } from '../services/api';
 import type { TargetSummaryResponse } from '../commons/types';
 import { formatCurrency } from '../commons/utils';
@@ -154,14 +164,14 @@ export default function Targets() {
         </div>
         <div className="flex gap-3">
           <button className="btn btn-primary" onClick={() => openAddModal('EXPENSE')}>
-            + Thêm mục tiêu
+            <Plus size={16} /> Thêm mục tiêu
           </button>
         </div>
       </header>
 
       {error && (
         <div className="error-banner animate-fade-in">
-          <span className="error-icon">⚠️</span> {error}
+          <AlertTriangle size={18} className="error-icon" /> {error}
         </div>
       )}
 
@@ -170,11 +180,8 @@ export default function Targets() {
         <div className="summary-stat-card accent-expense">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Hạn Mức Chi Tiêu Tháng</span>
-            <div
-              className="summary-stat-icon"
-              style={{ background: 'rgba(248, 113, 113, 0.15)', color: '#f87171' }}
-            >
-              💳
+            <div className="kpi-icon-badge kpi-badge-rose">
+              <CreditCard size={20} />
             </div>
           </div>
           <div className="summary-stat-value" style={{ color: '#f87171' }}>
@@ -192,11 +199,8 @@ export default function Targets() {
         <div className="summary-stat-card accent-income">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Mục Tiêu Đầu Tư Tháng</span>
-            <div
-              className="summary-stat-icon"
-              style={{ background: 'rgba(52, 211, 153, 0.15)', color: '#34d399' }}
-            >
-              📈
+            <div className="kpi-icon-badge kpi-badge-sky">
+              <TrendingUp size={20} />
             </div>
           </div>
           <div className="summary-stat-value" style={{ color: '#34d399' }}>
@@ -214,11 +218,8 @@ export default function Targets() {
         <div className="summary-stat-card accent-primary">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Gợi Ý Chi Tiêu / Ngày</span>
-            <div
-              className="summary-stat-icon"
-              style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}
-            >
-              📅
+            <div className="kpi-icon-badge kpi-badge-indigo">
+              <Calendar size={20} />
             </div>
           </div>
           <div className="summary-stat-value" style={{ color: '#38bdf8' }}>
@@ -279,8 +280,47 @@ export default function Targets() {
           <p>Đang tải mục tiêu tài chính...</p>
         </div>
       ) : filteredRows.length === 0 ? (
-        <div className="empty-state animate-fade-in">
-          <p>Chưa có mục tiêu nào được thiết lập cho tháng này!</p>
+        <div
+          className="empty-state animate-fade-in"
+          style={{ padding: '3rem 1.5rem', textAlign: 'center' }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginBottom: '0.75rem',
+              color: 'var(--text-muted)',
+            }}
+          >
+            <TargetIcon size={44} className="empty-icon" />
+          </div>
+          <h4
+            style={{
+              fontSize: '1.15rem',
+              fontWeight: 600,
+              margin: '0 0 0.5rem 0',
+              color: 'var(--text-main)',
+            }}
+          >
+            Chưa có mục tiêu nào được thiết lập cho tháng này!
+          </h4>
+          <p
+            style={{
+              color: 'var(--text-muted)',
+              fontSize: '0.9rem',
+              maxWidth: '400px',
+              margin: '0 auto 1.25rem auto',
+            }}
+          >
+            Đặt hạn mức chi tiêu hoặc mục tiêu tích lũy để quản lý ngân sách tháng hiệu quả.
+          </p>
+          <button
+            onClick={() => openAddModal('EXPENSE')}
+            className="btn btn-primary"
+            style={{ padding: '0.65rem 1.5rem', minHeight: '42px', fontWeight: 600 }}
+          >
+            <Plus size={16} /> Thêm mục tiêu
+          </button>
         </div>
       ) : (
         <div className="transactions-table-container animate-fade-in">
@@ -351,21 +391,7 @@ export default function Targets() {
                         aria-label={`Chỉnh sửa ${row.title}`}
                         title={`Chỉnh sửa ${row.title}`}
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
-                        >
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                        </svg>
+                        <Pencil size={15} />
                       </button>
                     </td>
                   </tr>
@@ -382,8 +408,8 @@ export default function Targets() {
           <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Thêm mục tiêu</h3>
-              <button className="close-btn" onClick={() => setIsModalOpen(false)}>
-                &times;
+              <button className="close-btn" onClick={() => setIsModalOpen(false)} aria-label="Đóng">
+                <X size={18} />
               </button>
             </div>
             <form onSubmit={handleSubmit}>

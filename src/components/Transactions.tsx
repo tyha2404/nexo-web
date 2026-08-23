@@ -4,6 +4,23 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
+import {
+  Search,
+  Plus,
+  Pencil,
+  Trash2,
+  Receipt,
+  X,
+  Wallet,
+  ShoppingBag,
+  TrendingUp,
+  Scale,
+  Calendar,
+  Gem,
+  Target,
+  BarChart3,
+  AlertTriangle,
+} from 'lucide-react';
 import { DATE_FORMAT_INPUT, TransactionType } from '../commons/constants';
 import type { Category, InvestmentStatus, Transaction } from '../commons/types';
 import { formatCurrency, formatDate, toISODateString } from '../commons/utils';
@@ -331,7 +348,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         </div>
         <div className="flex gap-3">
           <button className="btn btn-primary" onClick={openAddModal}>
-            + Thêm{' '}
+            <Plus size={16} /> Thêm{' '}
             {type === TransactionType.INCOME
               ? 'thu nhập'
               : type === TransactionType.INVESTMENT
@@ -343,7 +360,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
 
       {error && (
         <div className="error-banner animate-fade-in">
-          <span className="error-icon">⚠️</span> {error}
+          <AlertTriangle size={18} className="error-icon" /> {error}
         </div>
       )}
 
@@ -359,11 +376,8 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               <div className="summary-stat-card accent-income">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Tổng Thu Nhập</span>
-                  <div
-                    className="summary-stat-icon"
-                    style={{ background: 'rgba(52, 211, 153, 0.15)', color: '#34d399' }}
-                  >
-                    💵
+                  <div className="kpi-icon-badge kpi-badge-emerald">
+                    <Wallet size={20} />
                   </div>
                 </div>
                 <div className="summary-stat-value" style={{ color: '#34d399' }}>
@@ -375,11 +389,8 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               <div className="summary-stat-card accent-purple">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Số Giao Dịch Thu</span>
-                  <div
-                    className="summary-stat-icon"
-                    style={{ background: 'rgba(168, 85, 247, 0.15)', color: '#a855f7' }}
-                  >
-                    📊
+                  <div className="kpi-icon-badge kpi-badge-indigo">
+                    <BarChart3 size={20} />
                   </div>
                 </div>
                 <div className="summary-stat-value" style={{ color: '#a855f7' }}>
@@ -391,11 +402,8 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               <div className="summary-stat-card accent-primary">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Trung Bình / Khoản</span>
-                  <div
-                    className="summary-stat-icon"
-                    style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8' }}
-                  >
-                    ⚖️
+                  <div className="kpi-icon-badge kpi-badge-sky">
+                    <Scale size={20} />
                   </div>
                 </div>
                 <div className="summary-stat-value" style={{ color: '#38bdf8' }}>
@@ -417,7 +425,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               <div className="summary-stat-card accent-primary">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Tiền Đang Đầu Tư (Holding)</span>
-                  <div className="summary-stat-icon icon-primary">💎</div>
+                  <div className="kpi-icon-badge kpi-badge-sky">
+                    <Gem size={20} />
+                  </div>
                 </div>
                 <div className="summary-stat-value value-primary">
                   {formatCurrency(holdingAmount)}
@@ -430,8 +440,10 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               <div className="summary-stat-card accent-income">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Lãi / Lỗ Đã Thực Hiện</span>
-                  <div className="summary-stat-icon icon-income">
-                    {totalRealizedPnl >= 0 ? '📈' : '📉'}
+                  <div
+                    className={`kpi-icon-badge ${totalRealizedPnl >= 0 ? 'kpi-badge-emerald' : 'kpi-badge-rose'}`}
+                  >
+                    <TrendingUp size={20} />
                   </div>
                 </div>
                 <div
@@ -449,7 +461,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               <div className="summary-stat-card accent-purple">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Tổng Vốn Tích Lũy</span>
-                  <div className="summary-stat-icon icon-purple">🎯</div>
+                  <div className="kpi-icon-badge kpi-badge-indigo">
+                    <Target size={20} />
+                  </div>
                 </div>
                 <div className="summary-stat-value value-purple">{formatCurrency(sumAmount)}</div>
                 <div className="summary-stat-subtitle">
@@ -474,7 +488,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             <div className="summary-stat-card accent-expense">
               <div className="summary-stat-header">
                 <span className="summary-stat-title">Tổng Chi Tiêu</span>
-                <div className="summary-stat-icon icon-expense">🛍️</div>
+                <div className="kpi-icon-badge kpi-badge-rose">
+                  <ShoppingBag size={20} />
+                </div>
               </div>
               <div className="summary-stat-value value-expense">{formatCurrency(sumAmount)}</div>
               <div className="summary-stat-subtitle">Tổng tiền đã chi trong kỳ</div>
@@ -483,7 +499,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             <div className="summary-stat-card accent-warning">
               <div className="summary-stat-header">
                 <span className="summary-stat-title">Trung Bình / Ngày</span>
-                <div className="summary-stat-icon icon-warning">📅</div>
+                <div className="kpi-icon-badge kpi-badge-amber">
+                  <Calendar size={20} />
+                </div>
               </div>
               <div className="summary-stat-value value-warning">{formatCurrency(dailyAvg)}</div>
               <div className="summary-stat-subtitle">
@@ -497,7 +515,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             <div className="summary-stat-card accent-primary">
               <div className="summary-stat-header">
                 <span className="summary-stat-title">Trung Bình / Lần Chi</span>
-                <div className="summary-stat-icon icon-primary">💸</div>
+                <div className="kpi-icon-badge kpi-badge-sky">
+                  <Wallet size={20} />
+                </div>
               </div>
               <div className="summary-stat-value value-primary">{formatCurrency(avg)}</div>
               <div className="summary-stat-subtitle">Mức chi trung bình mỗi giao dịch</div>
@@ -506,7 +526,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             <div className="summary-stat-card accent-purple">
               <div className="summary-stat-header">
                 <span className="summary-stat-title">Số Lần Chi Tiêu</span>
-                <div className="summary-stat-icon icon-purple">🧾</div>
+                <div className="kpi-icon-badge kpi-badge-indigo">
+                  <Receipt size={20} />
+                </div>
               </div>
               <div className="summary-stat-value value-purple">{count} giao dịch</div>
               <div className="summary-stat-subtitle">Tổng số hóa đơn / giao dịch chi</div>
@@ -518,7 +540,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
       {/* Filter and Search controls */}
       <div className="filter-bar animate-fade-in">
         <div className="search-input-wrapper">
-          <span className="search-icon">🔍</span>
+          <Search size={16} className="search-icon" />
           <input
             type="text"
             placeholder="Tìm kiếm theo tiêu đề..."
@@ -609,12 +631,15 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
           className="empty-state animate-fade-in"
           style={{ padding: '3rem 1.5rem', textAlign: 'center' }}
         >
-          <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>
-            {type === TransactionType.INVESTMENT
-              ? '📈'
-              : type === TransactionType.INCOME
-                ? '💵'
-                : '🛍️'}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginBottom: '0.75rem',
+              color: 'var(--text-muted)',
+            }}
+          >
+            <Receipt size={44} className="empty-icon" />
           </div>
           <h4
             style={{
@@ -642,7 +667,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             className="btn btn-primary"
             style={{ padding: '0.65rem 1.5rem', minHeight: '42px', fontWeight: 600 }}
           >
-            + Thêm{' '}
+            <Plus size={16} /> Thêm{' '}
             {type === TransactionType.INVESTMENT
               ? 'đầu tư'
               : type === TransactionType.INCOME
@@ -709,21 +734,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                           aria-label={`Chỉnh sửa ${txn.description || 'giao dịch'}`}
                           title={`Chỉnh sửa ${txn.description || 'giao dịch'}`}
                         >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            style={{ display: 'inline-block', verticalAlign: 'middle' }}
-                          >
-                            <path d="M12 20h9" />
-                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                          </svg>
+                          <Pencil size={15} />
                         </button>
                         <button
                           onClick={() => handleDelete(txn.id, txn.description || '')}
@@ -731,22 +742,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                           aria-label={`Xóa ${txn.description || 'giao dịch'}`}
                           title={`Xóa ${txn.description || 'giao dịch'}`}
                         >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            style={{ display: 'inline-block', verticalAlign: 'middle' }}
-                          >
-                            <path d="M3 6h18" />
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                          </svg>
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>
@@ -773,8 +769,8 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
           <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editingTransaction ? 'Sửa giao dịch' : 'Thêm giao dịch'}</h3>
-              <button className="close-btn" onClick={() => setIsModalOpen(false)}>
-                &times;
+              <button className="close-btn" onClick={() => setIsModalOpen(false)} aria-label="Đóng">
+                <X size={18} />
               </button>
             </div>
             <form onSubmit={handleSubmit}>

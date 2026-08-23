@@ -82,6 +82,7 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
     <div className="auth-wrapper">
       <div className="auth-container animate-fade-in">
         <div className="auth-header">
+          <img src="/favicon.svg" alt="Nexo logo" className="auth-logo" />
           <h2 className="auth-title">Nexo Portal</h2>
           <p className="auth-subtitle">
             {isLogin

@@ -1,6 +1,15 @@
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
+import {
+  Wallet,
+  ShoppingBag,
+  Sparkles,
+  LineChart,
+  ReceiptText,
+  Coins,
+  AlertCircle,
+} from 'lucide-react';
 import type {
   Category,
   CategoryBreakdownItem,
@@ -124,7 +133,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             onClick={() => setIsQuickInputOpen(true)}
             className="btn btn-primary dashboard-nlp-btn"
           >
-            <span>🤖 Nhập nhanh NLP</span>
+            <Sparkles size={16} className="text-cyan-400" />
+            <span>Nhập nhanh NLP</span>
           </button>
           <div className="month-filter-wrapper">
             <label htmlFor="month-picker" className="month-filter-label">
@@ -168,7 +178,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
       {error && (
         <div className="error-banner animate-fade-in" style={{ marginBottom: '1.5rem' }}>
-          <span>⚠️ {error}</span>
+          <div className="flex items-center gap-2">
+            <AlertCircle size={18} />
+            <span>{error}</span>
+          </div>
           <button
             onClick={() => fetchDashboardData(selectedMonth)}
             className="btn btn-secondary btn-retry"
@@ -194,7 +207,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           >
             <div className="summary-stat-header">
               <span className="summary-stat-title">Tổng Thu nhập ↗</span>
-              <div className="summary-stat-icon icon-income">💵</div>
+              <div className="kpi-icon-badge kpi-badge-emerald">
+                <Wallet size={20} />
+              </div>
             </div>
             <div className="summary-stat-value value-income">{formatCurrency(totalIncome)}</div>
             <div className="summary-stat-subtitle">Dòng tiền thu về trong tháng</div>
@@ -207,7 +222,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           >
             <div className="summary-stat-header">
               <span className="summary-stat-title">Tổng Chi tiêu ↗</span>
-              <div className="summary-stat-icon icon-expense">🛍️</div>
+              <div className="kpi-icon-badge kpi-badge-rose">
+                <ShoppingBag size={20} />
+              </div>
             </div>
             <div className="summary-stat-value value-expense">{formatCurrency(totalExpense)}</div>
             <div className="summary-stat-subtitle">Tổng tiền đã chi tiêu</div>
@@ -216,7 +233,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <div className="summary-stat-card accent-purple">
             <div className="summary-stat-header">
               <span className="summary-stat-title">Tổng Tài sản Tích lũy</span>
-              <div className="summary-stat-icon icon-purple">💎</div>
+              <div className="kpi-icon-badge kpi-badge-indigo">
+                <Sparkles size={20} />
+              </div>
             </div>
             <div
               className={`summary-stat-value ${allTimeNetAssets >= 0 ? 'positive-balance' : 'negative-balance'}`}
@@ -410,7 +429,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           >
             <div className="summary-stat-header">
               <span className="summary-stat-title">Đầu tư Từ Trước Đến Giờ ↗</span>
-              <div className="summary-stat-icon icon-primary">📈</div>
+              <div className="kpi-icon-badge kpi-badge-sky">
+                <LineChart size={20} />
+              </div>
             </div>
             <div className="summary-stat-value value-primary">
               {formatCurrency(allTimeSummary?.totalInvestment ?? 0)}
@@ -427,7 +448,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           >
             <div className="summary-stat-header">
               <span className="summary-stat-title">Tôi Nợ (Phải Trả) ↗</span>
-              <div className="summary-stat-icon icon-payable">💸</div>
+              <div className="kpi-icon-badge kpi-badge-amber">
+                <ReceiptText size={20} />
+              </div>
             </div>
             <div className="summary-stat-value value-payable">
               {debtSummary ? formatCurrency(debtSummary.totalPayable) : '0 đ'}
@@ -442,7 +465,9 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           >
             <div className="summary-stat-header">
               <span className="summary-stat-title">Người Khác Nợ (Phải Thu) ↗</span>
-              <div className="summary-stat-icon icon-receivable">💰</div>
+              <div className="kpi-icon-badge kpi-badge-teal">
+                <Coins size={20} />
+              </div>
             </div>
             <div className="summary-stat-value value-receivable">
               {debtSummary ? formatCurrency(debtSummary.totalReceivable) : '0 đ'}

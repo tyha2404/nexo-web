@@ -51,7 +51,7 @@
   transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.55rem;
 }
 
 .nlp-example-chip:hover {
@@ -133,7 +133,7 @@
   color: var(--primary);
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.55rem;
 }
 
 .nlp-hero-amount-box {
@@ -186,7 +186,7 @@
   color: var(--text-main);
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.55rem;
 }
 
 .nlp-datepicker-wrapper {

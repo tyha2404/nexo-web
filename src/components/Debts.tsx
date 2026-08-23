@@ -4,6 +4,17 @@ import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
+import {
+  Search,
+  Plus,
+  Trash2,
+  Handshake,
+  X,
+  CreditCard,
+  Wallet,
+  AlertTriangle,
+  ArrowRightLeft,
+} from 'lucide-react';
 import { formatCurrency } from '../commons/utils';
 import { debtService } from '../services/api';
 import type { Debt, DebtSummary, DebtType } from '../types/debt';
@@ -220,14 +231,14 @@ export default function Debts() {
         </div>
         <div className="flex gap-3">
           <button className="btn btn-primary" onClick={() => openCreateModal('PAYABLE')}>
-            + Tạo khoản nợ mới
+            <Plus size={16} /> Tạo khoản nợ mới
           </button>
         </div>
       </header>
 
       {error && (
         <div className="error-banner animate-fade-in">
-          <span className="error-icon">⚠️</span> {error}
+          <AlertTriangle size={18} className="error-icon" /> {error}
         </div>
       )}
 
@@ -236,7 +247,9 @@ export default function Debts() {
         <div className="summary-stat-card accent-expense">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Tôi Nợ (Payable)</span>
-            <div className="summary-stat-icon icon-payable">💸</div>
+            <div className="kpi-icon-badge kpi-badge-amber">
+              <CreditCard size={20} />
+            </div>
           </div>
           <div className="summary-stat-value value-payable">{formatCurrency(displayPayable)}</div>
           <div className="summary-stat-subtitle">
@@ -249,7 +262,9 @@ export default function Debts() {
         <div className="summary-stat-card accent-income">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Người Khác Nợ (Receivable)</span>
-            <div className="summary-stat-icon icon-receivable">💰</div>
+            <div className="kpi-icon-badge kpi-badge-teal">
+              <Wallet size={20} />
+            </div>
           </div>
           <div className="summary-stat-value value-receivable">
             {formatCurrency(displayReceivable)}
@@ -265,7 +280,7 @@ export default function Debts() {
       {/* Filter and Search Bar - 100% Matching Transactions.tsx */}
       <div className="filter-bar animate-fade-in">
         <div className="search-input-wrapper">
-          <span className="search-icon">🔍</span>
+          <Search size={16} className="search-icon" />
           <input
             type="text"
             placeholder="Tìm kiếm tiêu đề hoặc ghi chú..."
@@ -316,8 +331,47 @@ export default function Debts() {
           <p>Đang tải danh sách khoản vay...</p>
         </div>
       ) : filteredDebts.length === 0 ? (
-        <div className="empty-state animate-fade-in">
-          <p>Không tìm thấy khoản vay/nợ nào phù hợp!</p>
+        <div
+          className="empty-state animate-fade-in"
+          style={{ padding: '3rem 1.5rem', textAlign: 'center' }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginBottom: '0.75rem',
+              color: 'var(--text-muted)',
+            }}
+          >
+            <Handshake size={44} className="empty-icon" />
+          </div>
+          <h4
+            style={{
+              fontSize: '1.15rem',
+              fontWeight: 600,
+              margin: '0 0 0.5rem 0',
+              color: 'var(--text-main)',
+            }}
+          >
+            Không tìm thấy khoản vay/nợ nào phù hợp!
+          </h4>
+          <p
+            style={{
+              color: 'var(--text-muted)',
+              fontSize: '0.9rem',
+              maxWidth: '400px',
+              margin: '0 auto 1.25rem auto',
+            }}
+          >
+            Tạo khoản nợ mới hoặc điều chỉnh bộ lọc để theo dõi các khoản nợ cần trả và cần thu.
+          </p>
+          <button
+            onClick={() => openCreateModal('PAYABLE')}
+            className="btn btn-primary"
+            style={{ padding: '0.65rem 1.5rem', minHeight: '42px', fontWeight: 600 }}
+          >
+            <Plus size={16} /> Tạo khoản nợ mới
+          </button>
         </div>
       ) : (
         <div className="debts-table-container transactions-table-container animate-fade-in">
@@ -395,7 +449,7 @@ export default function Debts() {
                             className="btn btn-secondary repay-action-btn"
                             title="Ghi nhận trả/thu tiền"
                           >
-                            Trả tiền
+                            <ArrowRightLeft size={14} /> Trả tiền
                           </button>
                         )}
                         <button
@@ -404,20 +458,7 @@ export default function Debts() {
                           aria-label="Xóa khoản vay"
                           title="Xóa"
                         >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          </svg>
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>
@@ -435,8 +476,12 @@ export default function Debts() {
           <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Tạo khoản nợ mới</h3>
-              <button className="close-btn" onClick={() => setIsCreateModalOpen(false)}>
-                &times;
+              <button
+                className="close-btn"
+                onClick={() => setIsCreateModalOpen(false)}
+                aria-label="Đóng"
+              >
+                <X size={18} />
               </button>
             </div>
             <form onSubmit={handleCreateSubmit}>
@@ -566,8 +611,12 @@ export default function Debts() {
           <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Ghi nhận trả / thu tiền</h3>
-              <button className="close-btn" onClick={() => setIsRepayModalOpen(false)}>
-                &times;
+              <button
+                className="close-btn"
+                onClick={() => setIsRepayModalOpen(false)}
+                aria-label="Đóng"
+              >
+                <X size={18} />
               </button>
             </div>
             <form onSubmit={handleRepaySubmit}>

@@ -23,6 +23,21 @@
 .auth-header {
   text-align: center;
   margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.auth-logo {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 0.75rem;
+  filter: drop-shadow(0 4px 12px var(--primary-glow));
+  transition: transform 0.3s ease;
+}
+
+.auth-logo:hover {
+  transform: scale(1.05) rotate(2deg);
 }
 
 .auth-title {

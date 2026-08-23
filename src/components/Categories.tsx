@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  FolderPlus,
+  X,
+  ShoppingBag,
+  Wallet,
+  TrendingUp,
+  AlertTriangle,
+} from 'lucide-react';
 import { categoryService } from '../services/api';
 import { TransactionType } from '../commons/constants';
 import type { Category } from '../commons/types';
@@ -213,14 +224,14 @@ export default function Categories() {
             <p className="subtitle">Tổ chức và phân loại chi phí, thu nhập & đầu tư của bạn</p>
           </div>
           <button className="btn btn-primary create-category-btn" onClick={openCreateModal}>
-            + Tạo danh mục
+            <Plus size={16} /> Tạo danh mục
           </button>
         </div>
       </header>
 
       {error && (
         <div className="error-banner animate-fade-in">
-          <span className="error-icon">⚠️</span> {error}
+          <AlertTriangle size={18} className="error-icon" /> {error}
         </div>
       )}
 
@@ -232,24 +243,27 @@ export default function Categories() {
             <div className="category-tabs">
               <button
                 type="button"
-                className={`category-tab ${activeTab === TransactionType.EXPENSE ? 'active' : ''}`}
+                className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.EXPENSE ? 'active' : ''}`}
                 onClick={() => setActiveTab(TransactionType.EXPENSE)}
               >
-                Chi tiêu
+                <ShoppingBag size={15} />
+                <span>Chi tiêu</span>
               </button>
               <button
                 type="button"
-                className={`category-tab ${activeTab === TransactionType.INCOME ? 'active' : ''}`}
+                className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.INCOME ? 'active' : ''}`}
                 onClick={() => setActiveTab(TransactionType.INCOME)}
               >
-                Thu nhập
+                <Wallet size={15} />
+                <span>Thu nhập</span>
               </button>
               <button
                 type="button"
-                className={`category-tab ${activeTab === TransactionType.INVESTMENT ? 'active' : ''}`}
+                className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.INVESTMENT ? 'active' : ''}`}
                 onClick={() => setActiveTab(TransactionType.INVESTMENT)}
               >
-                Đầu tư
+                <TrendingUp size={15} />
+                <span>Đầu tư</span>
               </button>
             </div>
           </div>
@@ -277,8 +291,6 @@ export default function Categories() {
             >
               <div
                 style={{
-                  fontSize: '2.5rem',
-                  lineHeight: 1,
                   background: 'var(--primary-glow)',
                   width: '64px',
                   height: '64px',
@@ -286,9 +298,10 @@ export default function Categories() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  color: 'var(--primary)',
                 }}
               >
-                📁
+                <FolderPlus size={32} className="empty-icon" />
               </div>
               <div>
                 <h4 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.35rem' }}>
@@ -304,7 +317,7 @@ export default function Categories() {
                 onClick={openCreateModal}
                 style={{ marginTop: '0.5rem' }}
               >
-                + Tạo danh mục {getTabTypeName(activeTab)}
+                <Plus size={16} /> Tạo danh mục {getTabTypeName(activeTab)}
               </button>
             </div>
           ) : (
@@ -341,21 +354,7 @@ export default function Categories() {
                         aria-label={`Chỉnh sửa danh mục ${cat.name}`}
                         title={`Chỉnh sửa danh mục ${cat.name}`}
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
-                        >
-                          <path d="M12 20h9" />
-                          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                        </svg>
+                        <Pencil size={14} />
                       </button>
                       <button
                         onClick={() => handleDelete(cat.id, cat.name)}
@@ -363,22 +362,7 @@ export default function Categories() {
                         aria-label={`Xóa danh mục ${cat.name}`}
                         title={`Xóa danh mục ${cat.name}`}
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          style={{ display: 'inline-block', verticalAlign: 'middle' }}
-                        >
-                          <path d="M3 6h18" />
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                        </svg>
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
@@ -406,8 +390,8 @@ export default function Categories() {
           <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editingCategory ? 'Sửa danh mục' : 'Thêm danh mục'}</h3>
-              <button type="button" className="close-btn" onClick={closeModal}>
-                &times;
+              <button type="button" className="close-btn" onClick={closeModal} aria-label="Đóng">
+                <X size={18} />
               </button>
             </div>
             {editingCategory ? (
