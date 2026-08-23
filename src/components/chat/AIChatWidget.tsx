@@ -16,24 +16,107 @@ interface AIChatWidgetProps {
   user?: User | null;
 }
 
+// Ordered tool categories used for grouping the catalog and rendering filter tabs.
+export const AI_TOOL_CATEGORIES = [
+  { id: 'Giao dịch', icon: '💸', label: 'Giao dịch' },
+  { id: 'Ví & Tiền tệ', icon: '💳', label: 'Ví & Tiền tệ' },
+  { id: 'Ngân sách & Mục tiêu', icon: '🎯', label: 'Ngân sách & Mục tiêu' },
+  { id: 'Vay & Nợ', icon: '🤝', label: 'Vay & Nợ' },
+  { id: 'Báo cáo & Phân tích', icon: '📊', label: 'Báo cáo & Phân tích' },
+] as const;
+
+export type AIToolCategory = (typeof AI_TOOL_CATEGORIES)[number]['id'];
+
+const ALL_CATEGORY = 'ALL';
+
 export interface AIToolItem {
   id: string;
   name: string;
-  category:
-    'Ví & Tiền tệ' | 'Giao dịch' | 'Ngân sách & Mục tiêu' | 'Vay & Nợ' | 'Báo cáo & Phân tích';
+  category: AIToolCategory;
   icon: string;
   description: string;
   promptExample: string;
 }
 
 export const AI_TOOLS_CATALOG: AIToolItem[] = [
+  // ─── Giao dịch ───────────────────────────────────────────────
   {
-    id: 'get_financial_overview',
-    name: 'Tổng quan tài chính',
-    category: 'Báo cáo & Phân tích',
-    icon: '📊',
-    description: 'Xem tổng số dư ví, tổng thu nhập, tổng chi tiêu và tỷ lệ tiết kiệm theo tháng.',
-    promptExample: 'Tổng quan tài chính tháng này của tôi như thế nào?',
+    id: 'create_transaction',
+    name: 'Ghi chép thu / chi tự động',
+    category: 'Giao dịch',
+    icon: '💸',
+    description: 'Tự động phân loại danh mục, ví tiền và tạo giao dịch thu/chi nhanh chóng.',
+    promptExample: 'Tôi vừa chi 45k ăn sáng bánh mì',
+  },
+  {
+    id: 'list_recent_transactions',
+    name: 'Lịch sử giao dịch gần đây',
+    category: 'Giao dịch',
+    icon: '📝',
+    description: 'Tra cứu danh sách 5–20 giao dịch phát sinh gần nhất.',
+    promptExample: 'Lịch sử 5 giao dịch gần đây nhất của tôi',
+  },
+  {
+    id: 'search_transactions',
+    name: 'Tìm kiếm giao dịch nâng cao',
+    category: 'Giao dịch',
+    icon: '🔎',
+    description:
+      'Lọc giao dịch theo danh mục, ví, khoảng thời gian, khoảng tiền hoặc từ khóa trong ghi chú.',
+    promptExample: 'Tìm các giao dịch ăn uống trên ví MoMo tháng này trên 100 nghìn',
+  },
+  {
+    id: 'list_categories',
+    name: 'Danh mục thu chi của tôi',
+    category: 'Giao dịch',
+    icon: '🏷️',
+    description:
+      'Liệt kê toàn bộ danh mục kèm tổng tiền đã chi tháng này và hạn mức ngân sách nếu có.',
+    promptExample: 'Cho tôi xem tất cả danh mục chi tiêu và mức đã chi tháng này',
+  },
+
+  // ─── Ví & Tiền tệ ────────────────────────────────────────────
+  {
+    id: 'list_wallets',
+    name: 'Xem danh sách & số dư ví',
+    category: 'Ví & Tiền tệ',
+    icon: '💳',
+    description: 'Tra cứu số dư chi tiết và danh sách tất cả các ví tài khoản của bạn.',
+    promptExample: 'Xem danh sách và số dư các ví tài khoản của tôi',
+  },
+  {
+    id: 'get_wallet_detail',
+    name: 'Chi tiết một ví cụ thể',
+    category: 'Ví & Tiền tệ',
+    icon: '🏦',
+    description: 'Xem số dư và các giao dịch phát sinh gần nhất trên một ví/tài khoản cụ thể.',
+    promptExample: 'Xem chi tiết ví Techcombank và giao dịch gần nhất',
+  },
+  {
+    id: 'transfer_between_wallets',
+    name: 'Chuyển tiền giữa các ví',
+    category: 'Ví & Tiền tệ',
+    icon: '🔄',
+    description: 'Chuyển tiền nội bộ giữa các tài khoản ngân hàng, ví điện tử, tiền mặt.',
+    promptExample: 'Rút 1 triệu từ Techcombank về ví Tiền mặt',
+  },
+
+  // ─── Ngân sách & Mục tiêu ────────────────────────────────────
+  {
+    id: 'get_budget_status',
+    name: 'Kiểm tra hạn mức ngân sách',
+    category: 'Ngân sách & Mục tiêu',
+    icon: '🛡️',
+    description: 'Theo dõi tiến độ, số tiền còn lại và cảnh báo vượt hạn mức từng ngân sách.',
+    promptExample: 'Kiểm tra tình hình hạn mức các ngân sách chi tiêu',
+  },
+  {
+    id: 'set_budget',
+    name: 'Thiết lập ngân sách danh mục',
+    category: 'Ngân sách & Mục tiêu',
+    icon: '🏷️',
+    description: 'Tạo hoặc điều chỉnh hạn mức chi tiêu hàng tháng cho danh mục cụ thể.',
+    promptExample: 'Đặt ngân sách cho danh mục Ăn uống là 3.5 triệu',
   },
   {
     id: 'get_financial_targets',
@@ -51,45 +134,15 @@ export const AI_TOOLS_CATALOG: AIToolItem[] = [
     description: 'Đặt mục tiêu tiết kiệm tích lũy hoặc hạn mức chi tiêu tối đa trong tháng.',
     promptExample: 'Đặt mục tiêu chi tiêu tối đa tháng này là 8 triệu',
   },
+
+  // ─── Vay & Nợ ────────────────────────────────────────────────
   {
-    id: 'create_transaction',
-    name: 'Ghi chép thu / chi tự động',
-    category: 'Giao dịch',
-    icon: '💸',
-    description: 'Tự động phân loại danh mục, ví tiền và tạo giao dịch thu/chi nhanh chóng.',
-    promptExample: 'Tôi vừa chi 45k ăn sáng bánh mì',
-  },
-  {
-    id: 'transfer_between_wallets',
-    name: 'Chuyển tiền giữa các ví',
-    category: 'Ví & Tiền tệ',
-    icon: '🔄',
-    description: 'Chuyển tiền nội bộ giữa các tài khoản ngân hàng, ví điện tử, tiền mặt.',
-    promptExample: 'Rút 1 triệu từ Techcombank về ví Tiền mặt',
-  },
-  {
-    id: 'list_wallets',
-    name: 'Xem danh sách & số dư ví',
-    category: 'Ví & Tiền tệ',
-    icon: '💳',
-    description: 'Tra cứu số dư chi tiết và danh sách tất cả các ví tài khoản của bạn.',
-    promptExample: 'Xem danh sách và số dư các ví tài khoản của tôi',
-  },
-  {
-    id: 'get_budget_status',
-    name: 'Kiểm tra hạn mức ngân sách',
-    category: 'Ngân sách & Mục tiêu',
-    icon: '🛡️',
-    description: 'Theo dõi tiến độ, số tiền còn lại và cảnh báo vượt hạn mức từng ngân sách.',
-    promptExample: 'Kiểm tra tình hình hạn mức các ngân sách chi tiêu',
-  },
-  {
-    id: 'set_budget',
-    name: 'Thiết lập ngân sách danh mục',
-    category: 'Ngân sách & Mục tiêu',
-    icon: '🏷️',
-    description: 'Tạo hoặc điều chỉnh hạn mức chi tiêu hàng tháng cho danh mục cụ thể.',
-    promptExample: 'Đặt ngân sách cho danh mục Ăn uống là 3.5 triệu',
+    id: 'get_debt_summary',
+    name: 'Tổng hợp nợ & khoản phải thu',
+    category: 'Vay & Nợ',
+    icon: '📋',
+    description: 'Xem tổng số nợ cần trả và tổng số tiền người khác đang nợ bạn.',
+    promptExample: 'Báo cáo tổng quan các khoản nợ và cho vay của tôi',
   },
   {
     id: 'create_debt',
@@ -108,12 +161,22 @@ export const AI_TOOLS_CATALOG: AIToolItem[] = [
     promptExample: 'Nam vừa trả tôi 1 triệu tiền nợ',
   },
   {
-    id: 'get_debt_summary',
-    name: 'Tổng hợp nợ & khoản phải thu',
+    id: 'get_debt_detail',
+    name: 'Chi tiết khoản nợ & lịch trả',
     category: 'Vay & Nợ',
-    icon: '📋',
-    description: 'Xem tổng số nợ cần trả và tổng số tiền người khác đang nợ bạn.',
-    promptExample: 'Báo cáo tổng quan các khoản nợ và cho vay của tôi',
+    icon: '🧾',
+    description: 'Xem tiến độ trả nợ, hạn trả và toàn bộ lịch sử thanh toán của một khoản nợ.',
+    promptExample: 'Khoản nợ cho Nam mượn đã trả được bao nhiêu rồi?',
+  },
+
+  // ─── Báo cáo & Phân tích ─────────────────────────────────────
+  {
+    id: 'get_financial_overview',
+    name: 'Tổng quan tài chính',
+    category: 'Báo cáo & Phân tích',
+    icon: '📊',
+    description: 'Xem tổng số dư ví, tổng thu nhập, tổng chi tiêu và tỷ lệ tiết kiệm theo tháng.',
+    promptExample: 'Tổng quan tài chính tháng này của tôi như thế nào?',
   },
   {
     id: 'get_spending_by_category',
@@ -132,12 +195,31 @@ export const AI_TOOLS_CATALOG: AIToolItem[] = [
     promptExample: 'So sánh chi tiêu tháng này so với tháng trước',
   },
   {
-    id: 'list_recent_transactions',
-    name: 'Lịch sử giao dịch gần đây',
-    category: 'Giao dịch',
-    icon: '📝',
-    description: 'Tra cứu danh sách 5–20 giao dịch phát sinh gần nhất.',
-    promptExample: 'Lịch sử 5 giao dịch gần đây nhất của tôi',
+    id: 'get_monthly_trend',
+    name: 'Xu hướng thu chi nhiều tháng',
+    category: 'Báo cáo & Phân tích',
+    icon: '📉',
+    description:
+      'Phân tích biến động thu nhập, chi tiêu, tiết kiệm qua các tháng gần đây kèm trung bình mỗi tháng.',
+    promptExample: 'Phân tích xu hướng chi tiêu 6 tháng gần đây của tôi',
+  },
+  {
+    id: 'get_investment_summary',
+    name: 'Danh mục đầu tư đang giữ',
+    category: 'Báo cáo & Phân tích',
+    icon: '💼',
+    description:
+      'Tổng hợp số tiền đang nắm giữ, số vị trí holding, lãi/lỗ đã chốt và giao dịch đầu tư gần nhất.',
+    promptExample: 'Danh mục đầu tư của tôi hiện tại thế nào rồi?',
+  },
+  {
+    id: 'search_financial_knowledge',
+    name: 'Tra cứu kiến thức tài chính',
+    category: 'Báo cáo & Phân tích',
+    icon: '📚',
+    description:
+      'Tra cứu nguyên tắc quản lý tiền, chiến lược tiết kiệm và đầu tư an toàn từ kho tri thức nội bộ.',
+    promptExample: 'Giải thích quy tắc 50/30/20 trong quản lý chi tiêu',
   },
 ];
 
@@ -152,10 +234,18 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
   const [activeToolTitle, setActiveToolTitle] = useState<string | null>(null);
   const [showSessionsList, setShowSessionsList] = useState(false);
   const [showToolsDrawer, setShowToolsDrawer] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const [selectedCategory, setSelectedCategory] = useState<string>(ALL_CATEGORY);
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<Record<string, string>>({});
+
+  // Catalog grouped by category, following AI_TOOL_CATEGORIES order.
+  const groupedTools = useMemo(() => {
+    return AI_TOOL_CATEGORIES.map((cat) => ({
+      ...cat,
+      tools: AI_TOOLS_CATALOG.filter((t) => t.category === cat.id),
+    })).filter((group) => selectedCategory === ALL_CATEGORY || group.id === selectedCategory);
+  }, [selectedCategory]);
 
   const speechRecognitionRef = useRef<any>(null);
 
@@ -1277,50 +1367,49 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
 
                 {/* Categories Filter Tabs */}
                 <div className="tools-categories-filter">
-                  {[
-                    'ALL',
-                    'Ngân sách & Mục tiêu',
-                    'Giao dịch',
-                    'Ví & Tiền tệ',
-                    'Vay & Nợ',
-                    'Báo cáo & Phân tích',
-                  ].map((cat) => (
+                  {[ALL_CATEGORY, ...AI_TOOL_CATEGORIES.map((c) => c.id)].map((cat) => (
                     <button
                       key={cat}
                       className={`tool-category-tab ${selectedCategory === cat ? 'active' : ''}`}
                       onClick={() => setSelectedCategory(cat)}
                     >
-                      {cat === 'ALL' ? 'Tất cả' : cat}
+                      {cat === ALL_CATEGORY ? 'Tất cả' : cat}
                     </button>
                   ))}
                 </div>
 
-                {/* Tools List */}
+                {/* Tools List grouped by category */}
                 <div className="tools-catalog-list">
-                  {AI_TOOLS_CATALOG.filter(
-                    (t) => selectedCategory === 'ALL' || t.category === selectedCategory
-                  ).map((tool) => (
-                    <div
-                      key={tool.id}
-                      className="tool-card-item"
-                      onClick={() => {
-                        setShowToolsDrawer(false);
-                        handleSendMessage(tool.promptExample);
-                      }}
-                      title={`Chạy lệnh mẫu: "${tool.promptExample}"`}
-                    >
-                      <div className="tool-card-top">
-                        <span className="tool-card-icon">{tool.icon}</span>
-                        <div className="tool-card-info">
-                          <h5>{tool.name}</h5>
-                          <span className="tool-card-tag">{tool.category}</span>
+                  {groupedTools.map((group) => (
+                    <div key={group.id} className="tool-group">
+                      <div className="tool-group-header">
+                        <span className="tool-group-icon">{group.icon}</span>
+                        <span className="tool-group-label">{group.label}</span>
+                        <span className="tool-group-count">{group.tools.length}</span>
+                      </div>
+                      {group.tools.map((tool) => (
+                        <div
+                          key={tool.id}
+                          className="tool-card-item"
+                          onClick={() => {
+                            setShowToolsDrawer(false);
+                            handleSendMessage(tool.promptExample);
+                          }}
+                          title={`Chạy lệnh mẫu: "${tool.promptExample}"`}
+                        >
+                          <div className="tool-card-top">
+                            <span className="tool-card-icon">{tool.icon}</span>
+                            <div className="tool-card-info">
+                              <h5>{tool.name}</h5>
+                            </div>
+                          </div>
+                          <p className="tool-card-desc">{tool.description}</p>
+                          <div className="tool-card-prompt-hint">
+                            <span>💬 Thử ngay: </span>
+                            <em>"{tool.promptExample}"</em>
+                          </div>
                         </div>
-                      </div>
-                      <p className="tool-card-desc">{tool.description}</p>
-                      <div className="tool-card-prompt-hint">
-                        <span>💬 Thử ngay: </span>
-                        <em>"{tool.promptExample}"</em>
-                      </div>
+                      ))}
                     </div>
                   ))}
                 </div>
