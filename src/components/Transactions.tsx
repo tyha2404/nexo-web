@@ -706,7 +706,8 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                         <button
                           onClick={() => openEditModal(txn)}
                           className="action-btn edit-btn"
-                          aria-label={`Sửa ${txn.description || ''}`}
+                          aria-label={`Chỉnh sửa ${txn.description || 'giao dịch'}`}
+                          title={`Chỉnh sửa ${txn.description || 'giao dịch'}`}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -727,7 +728,8 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                         <button
                           onClick={() => handleDelete(txn.id, txn.description || '')}
                           className="action-btn delete-btn"
-                          aria-label={`Xóa ${txn.description || ''}`}
+                          aria-label={`Xóa ${txn.description || 'giao dịch'}`}
+                          title={`Xóa ${txn.description || 'giao dịch'}`}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"

@@ -260,11 +260,52 @@ export default function Categories() {
               <p>Đang tải danh mục...</p>
             </div>
           ) : categories.length === 0 ? (
-            <div className="empty-state">
-              <p>
-                Không tìm thấy danh mục {getTabTypeName(activeTab)} nào. Hãy nhấn "Tạo danh mục" ở
-                trên để tạo mới!
-              </p>
+            <div
+              className="empty-state"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '3rem 1.5rem',
+                textAlign: 'center',
+                background: 'var(--bg-card)',
+                borderRadius: 'var(--radius-lg)',
+                border: '1px dashed var(--border)',
+                gap: '1rem',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '2.5rem',
+                  lineHeight: 1,
+                  background: 'var(--primary-glow)',
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                📁
+              </div>
+              <div>
+                <h4 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.35rem' }}>
+                  Chưa có danh mục {getTabTypeName(activeTab)}
+                </h4>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '380px' }}>
+                  Hãy tạo danh mục đầu tiên để dễ dàng phân loại và theo dõi ngân sách tài chính của
+                  bạn.
+                </p>
+              </div>
+              <button
+                className="btn btn-primary"
+                onClick={openCreateModal}
+                style={{ marginTop: '0.5rem' }}
+              >
+                + Tạo danh mục {getTabTypeName(activeTab)}
+              </button>
             </div>
           ) : (
             <>
@@ -297,7 +338,8 @@ export default function Categories() {
                       <button
                         onClick={() => startEdit(cat)}
                         className="action-btn edit-btn"
-                        aria-label={`Sửa danh mục ${cat.name}`}
+                        aria-label={`Chỉnh sửa danh mục ${cat.name}`}
+                        title={`Chỉnh sửa danh mục ${cat.name}`}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -319,6 +361,7 @@ export default function Categories() {
                         onClick={() => handleDelete(cat.id, cat.name)}
                         className="action-btn delete-btn"
                         aria-label={`Xóa danh mục ${cat.name}`}
+                        title={`Xóa danh mục ${cat.name}`}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"

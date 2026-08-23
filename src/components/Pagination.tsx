@@ -52,41 +52,45 @@ export default function Pagination({
         </div>
       )}
 
-      <div className="pagination-controls">
-        <button
-          className="pagination-btn"
-          disabled={currentPage === 1}
-          onClick={() => onPageChange(currentPage - 1)}
-          aria-label="Trang trước"
-        >
-          &lsaquo;
-        </button>
+      {totalPages > 1 && (
+        <div className="pagination-controls">
+          <button
+            className="pagination-btn"
+            disabled={currentPage === 1}
+            onClick={() => onPageChange(currentPage - 1)}
+            aria-label="Trang trước"
+            title="Trang trước"
+          >
+            &lsaquo;
+          </button>
 
-        {getPageNumbers().map((page, idx) =>
-          typeof page === 'number' ? (
-            <button
-              key={idx}
-              className={`pagination-btn ${page === currentPage ? 'active' : ''}`}
-              onClick={() => onPageChange(page)}
-            >
-              {page}
-            </button>
-          ) : (
-            <span key={idx} className="pagination-ellipsis">
-              {page}
-            </span>
-          )
-        )}
+          {getPageNumbers().map((page, idx) =>
+            typeof page === 'number' ? (
+              <button
+                key={idx}
+                className={`pagination-btn ${page === currentPage ? 'active' : ''}`}
+                onClick={() => onPageChange(page)}
+              >
+                {page}
+              </button>
+            ) : (
+              <span key={idx} className="pagination-ellipsis">
+                {page}
+              </span>
+            )
+          )}
 
-        <button
-          className="pagination-btn"
-          disabled={currentPage === totalPages || totalPages === 0}
-          onClick={() => onPageChange(currentPage + 1)}
-          aria-label="Trang sau"
-        >
-          &rsaquo;
-        </button>
-      </div>
+          <button
+            className="pagination-btn"
+            disabled={currentPage === totalPages || totalPages === 0}
+            onClick={() => onPageChange(currentPage + 1)}
+            aria-label="Trang sau"
+            title="Trang sau"
+          >
+            &rsaquo;
+          </button>
+        </div>
+      )}
 
       {onItemsPerPageChange && itemsPerPage && (
         <div className="pagination-size-selector">

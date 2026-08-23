@@ -788,6 +788,44 @@ tr {
   }
 }
 
+/* Standardize All Modal & Form Inputs to exactly 42px height */
+.form-group
+  input:not([type='checkbox']):not([type='radio']):not([class*='dummyInput']):not(
+    .react-select__input
+  ),
+.form-group select,
+.modal-content
+  input:not([type='checkbox']):not([type='radio']):not([class*='dummyInput']):not(
+    .react-select__input
+  ),
+.modal-card
+  input:not([type='checkbox']):not([type='radio']):not([class*='dummyInput']):not(
+    .react-select__input
+  ),
+.form-row-2col
+  input:not([type='checkbox']):not([type='radio']):not([class*='dummyInput']):not(
+    .react-select__input
+  ) {
+  height: 42px !important;
+  min-height: 42px !important;
+  box-sizing: border-box !important;
+  padding: 0.65rem 1rem !important;
+  font-size: 0.95rem !important;
+}
+
+/* React DatePicker Global Standards */
+.react-datepicker-wrapper,
+.react-datepicker__input-container {
+  width: 100% !important;
+  display: block !important;
+}
+
+.react-datepicker__input-container input {
+  width: 100% !important;
+  height: 42px !important;
+  box-sizing: border-box !important;
+}
+
 .modal-header .close-btn {
   display: inline-flex !important;
   align-items: center !important;

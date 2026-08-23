@@ -348,7 +348,8 @@ export default function Targets() {
                       <button
                         onClick={() => openAddModal(row.type as 'EXPENSE' | 'INVESTMENT')}
                         className="action-btn edit-btn"
-                        aria-label={`Sửa ${row.title}`}
+                        aria-label={`Chỉnh sửa ${row.title}`}
+                        title={`Chỉnh sửa ${row.title}`}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -430,16 +431,19 @@ export default function Targets() {
 
               <div className="form-group">
                 <label htmlFor="target-month">Áp dụng cho tháng</label>
-                <DatePicker
-                  id="target-month"
-                  selected={selectedMonth}
-                  onChange={(date: Date | null) => {
-                    if (date) setSelectedMonth(date);
-                  }}
-                  dateFormat="MM/yyyy"
-                  showMonthYearPicker
-                  portalId="date-picker-portal"
-                />
+                <div className="target-datepicker-wrapper">
+                  <DatePicker
+                    id="target-month"
+                    selected={selectedMonth}
+                    onChange={(date: Date | null) => {
+                      if (date) setSelectedMonth(date);
+                    }}
+                    dateFormat="MM/yyyy"
+                    showMonthYearPicker
+                    portalId="date-picker-portal"
+                    className="react-datepicker-input"
+                  />
+                </div>
               </div>
 
               <div className="button-group">
