@@ -1,12 +1,11 @@
-export { TransactionType, InvestmentStatus } from '../commons/constants';
+export { InvestmentStatus, TransactionType } from '../commons/constants';
 export * from './authService';
 export * from './categoryService';
+export * from './chatService';
 export * from './client';
 export * from './crudService';
-export * from './transactionService';
-export * from './presetService';
 export * from './debtService';
+export * from './presetService';
 export * from './reportService';
 export * from './targetService';
-export * from './nlpService';
-export * from './chatService';
+export * from './transactionService';

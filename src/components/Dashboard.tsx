@@ -1,16 +1,16 @@
+import {
+  AlertCircle,
+  Coins,
+  LineChart,
+  ReceiptText,
+  ShoppingBag,
+  Sparkles,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
-import {
-  Wallet,
-  ShoppingBag,
-  Sparkles,
-  LineChart,
-  ReceiptText,
-  Coins,
-  AlertCircle,
-  TrendingUp,
-} from 'lucide-react';
 import type {
   Category,
   CategoryBreakdownItem,
@@ -20,13 +20,12 @@ import type {
 import { formatCurrency } from '../commons/utils';
 import {
   categoryService,
+  debtService,
   reportService,
   targetService,
   transactionService,
-  debtService,
 } from '../services/api';
 import type { DebtSummary } from '../types/debt';
-import { QuickInputModal } from './QuickInputModal';
 import './Dashboard.css';
 import { DonutChart } from './DonutChart';
 
@@ -51,7 +50,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isQuickInputOpen, setIsQuickInputOpen] = useState<boolean>(false);
 
   const fetchDashboardData = async (monthStr: string) => {
     try {
@@ -130,13 +128,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <p className="subtitle">Hiệu suất tài chính và phân tích chi tiết thời gian thực</p>
         </div>
         <div className="dashboard-header-actions">
-          <button
-            onClick={() => setIsQuickInputOpen(true)}
-            className="btn btn-primary dashboard-nlp-btn"
-          >
-            <Sparkles size={16} className="text-cyan-400" />
-            <span>Nhập nhanh NLP</span>
-          </button>
           <div className="month-filter-wrapper">
             <label htmlFor="month-picker" className="month-filter-label">
               {loading ? (
@@ -170,12 +161,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           </div>
         </div>
       </div>
-
-      <QuickInputModal
-        isOpen={isQuickInputOpen}
-        onClose={() => setIsQuickInputOpen(false)}
-        onTransactionCreated={() => fetchDashboardData(selectedMonth)}
-      />
 
       {error && (
         <div className="error-banner animate-fade-in" style={{ marginBottom: '1.5rem' }}>
