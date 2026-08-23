@@ -9,6 +9,7 @@ import {
   ReceiptText,
   Coins,
   AlertCircle,
+  TrendingUp,
 } from 'lucide-react';
 import type {
   Category,
@@ -228,6 +229,39 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </div>
             <div className="summary-stat-value value-expense">{formatCurrency(totalExpense)}</div>
             <div className="summary-stat-subtitle">Tổng tiền đã chi tiêu</div>
+          </div>
+
+          {/* Dòng tiền Ròng Tháng Card (Đồng bộ chuẩn style với các card khác) */}
+          <div
+            className={`summary-stat-card ${totalIncome - totalExpense >= 0 ? 'accent-income' : 'accent-expense'}`}
+          >
+            <div className="summary-stat-header">
+              <span className="summary-stat-title">Dòng tiền Ròng Tháng</span>
+              <div
+                className={`kpi-icon-badge ${
+                  totalIncome - totalExpense >= 0 ? 'kpi-badge-emerald' : 'kpi-badge-rose'
+                }`}
+              >
+                {totalIncome - totalExpense >= 0 ? (
+                  <TrendingUp size={20} />
+                ) : (
+                  <AlertCircle size={20} />
+                )}
+              </div>
+            </div>
+            <div
+              className={`summary-stat-value ${
+                totalIncome - totalExpense >= 0 ? 'value-income' : 'value-expense'
+              }`}
+            >
+              {totalIncome - totalExpense >= 0 ? '+' : ''}
+              {formatCurrency(totalIncome - totalExpense)}
+            </div>
+            <div className="summary-stat-subtitle">
+              {totalIncome - totalExpense >= 0
+                ? 'Thặng dư dòng tiền trong tháng'
+                : 'Thâm hụt chi tiêu trong tháng'}
+            </div>
           </div>
 
           <div className="summary-stat-card accent-purple">

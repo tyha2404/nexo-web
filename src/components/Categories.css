@@ -324,19 +324,23 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.1rem 1.25rem;
-  background: var(--bg-input);
+  padding: 1.15rem 1.35rem;
+  background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  transition: all 0.2s ease;
+  border-radius: var(--radius-lg);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: left;
 }
 
 .category-item-card:hover {
-  background: var(--bg-hover);
+  background: var(--bg-card-hover);
   border-color: var(--border-hover);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  box-shadow:
+    0 8px 24px -4px rgba(0, 0, 0, 0.25),
+    0 0 0 1px var(--primary-glow);
 }
 
 .category-item-info {
