@@ -176,7 +176,7 @@ export default function Targets() {
       )}
 
       {/* Summary Cards Grid */}
-      <div className="summary-cards-grid animate-fade-in">
+      <div className="summary-cards-grid animate-fade-in" style={{ marginBottom: '1.25rem' }}>
         <div className="summary-stat-card accent-expense">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Hạn Mức Chi Tiêu Tháng</span>
@@ -184,26 +184,26 @@ export default function Targets() {
               <CreditCard size={20} />
             </div>
           </div>
-          <div className="summary-stat-value" style={{ color: '#f87171' }}>
+          <div className="summary-stat-value value-expense">
             {targetSummary?.expense
               ? formatCurrency(targetSummary.expense.targetAmount)
               : 'Chưa đặt'}
           </div>
           <div className="summary-stat-subtitle">
             {targetSummary?.expense
-              ? `Đã chi: ${formatCurrency(targetSummary.expense.spentAmount)} (Còn lại: ${formatCurrency(targetSummary.expense.remainingAmount)})`
+              ? `Đã chi: ${formatCurrency(Math.abs(targetSummary.expense.spentAmount))} (Còn lại: ${formatCurrency(Math.abs(targetSummary.expense.remainingAmount))})`
               : 'Hãy đặt hạn mức để kiểm soát thu chi'}
           </div>
         </div>
 
-        <div className="summary-stat-card accent-income">
+        <div className="summary-stat-card accent-primary">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Mục Tiêu Đầu Tư Tháng</span>
             <div className="kpi-icon-badge kpi-badge-sky">
               <TrendingUp size={20} />
             </div>
           </div>
-          <div className="summary-stat-value" style={{ color: '#34d399' }}>
+          <div className="summary-stat-value value-primary">
             {targetSummary?.investment
               ? formatCurrency(targetSummary.investment.targetAmount)
               : 'Chưa đặt'}
@@ -215,18 +215,20 @@ export default function Targets() {
           </div>
         </div>
 
-        <div className="summary-stat-card accent-primary">
+        <div className="summary-stat-card accent-purple">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Gợi Ý Chi Tiêu / Ngày</span>
             <div className="kpi-icon-badge kpi-badge-indigo">
               <Calendar size={20} />
             </div>
           </div>
-          <div className="summary-stat-value" style={{ color: '#38bdf8' }}>
+          <div
+            className={`summary-stat-value ${targetSummary?.expense?.isOverBudget ? 'value-expense' : 'value-primary'}`}
+          >
             {targetSummary?.expense && targetSummary.expense.dailyAllowance > 0
-              ? formatCurrency(targetSummary.expense.dailyAllowance) + '/ngày'
+              ? `${formatCurrency(Math.round(targetSummary.expense.dailyAllowance))}/ngày`
               : targetSummary?.expense?.isOverBudget
-                ? '🚨 0 đ (Vượt hạn mức)'
+                ? `🚨 ${formatCurrency(Math.abs(targetSummary.expense.overspentAmount))} (Vượt)`
                 : '—'}
           </div>
           <div className="summary-stat-subtitle">
@@ -359,16 +361,22 @@ export default function Targets() {
                               alignSelf: 'flex-start',
                               background:
                                 row.status === 'OVER_BUDGET'
-                                  ? 'rgba(239, 68, 68, 0.15)'
+                                  ? 'rgba(244, 63, 94, 0.15)'
                                   : row.status === 'COMPLETED'
                                     ? 'rgba(16, 185, 129, 0.15)'
-                                    : 'var(--primary-glow)',
+                                    : 'rgba(14, 165, 233, 0.15)',
                               color:
                                 row.status === 'OVER_BUDGET'
-                                  ? '#ef4444'
+                                  ? '#f43f5e'
                                   : row.status === 'COMPLETED'
                                     ? '#10b981'
-                                    : 'var(--primary)',
+                                    : '#38bdf8',
+                              border:
+                                row.status === 'OVER_BUDGET'
+                                  ? '1px solid rgba(244, 63, 94, 0.3)'
+                                  : row.status === 'COMPLETED'
+                                    ? '1px solid rgba(16, 185, 129, 0.3)'
+                                    : '1px solid rgba(14, 165, 233, 0.3)',
                             }}
                           >
                             {row.status === 'OVER_BUDGET'

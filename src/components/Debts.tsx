@@ -243,15 +243,17 @@ export default function Debts() {
       )}
 
       {/* Summary Cards Grid */}
-      <div className="alltime-cards animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+      <div className="summary-cards-grid animate-fade-in" style={{ marginBottom: '1.25rem' }}>
         <div className="summary-stat-card accent-expense">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Tôi Nợ (Payable)</span>
-            <div className="kpi-icon-badge kpi-badge-amber">
+            <div className="kpi-icon-badge kpi-badge-rose">
               <CreditCard size={20} />
             </div>
           </div>
-          <div className="summary-stat-value value-payable">{formatCurrency(displayPayable)}</div>
+          <div className="summary-stat-value value-payable">
+            {formatCurrency(Math.abs(displayPayable))}
+          </div>
           <div className="summary-stat-subtitle">
             {startDate
               ? `Khoảng: ${moment(startDate).format('DD/MM/YYYY')} ${endDate ? '- ' + moment(endDate).format('DD/MM/YYYY') : ''}`
@@ -267,7 +269,7 @@ export default function Debts() {
             </div>
           </div>
           <div className="summary-stat-value value-receivable">
-            {formatCurrency(displayReceivable)}
+            {formatCurrency(Math.abs(displayReceivable))}
           </div>
           <div className="summary-stat-subtitle">
             {startDate
@@ -412,8 +414,18 @@ export default function Debts() {
                       </span>
                     </td>
                     <td className="txn-amount">{formatCurrency(debt.totalAmount)}</td>
-                    <td className="cell-paid">{formatCurrency(debt.paidAmount)}</td>
-                    <td className="cell-remaining">{formatCurrency(debt.remaining)}</td>
+                    <td className="cell-paid" style={{ color: 'var(--income)' }}>
+                      {formatCurrency(debt.paidAmount)}
+                    </td>
+                    <td
+                      className="cell-remaining"
+                      style={{
+                        color: debt.type === 'PAYABLE' ? 'var(--expense)' : 'var(--income)',
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {formatCurrency(Math.abs(debt.remaining))}
+                    </td>
                     <td className="txn-date">
                       {debt.startDate ? moment(debt.startDate).format('DD/MM/YYYY') : '—'}
                     </td>
@@ -622,8 +634,14 @@ export default function Debts() {
             <form onSubmit={handleRepaySubmit}>
               <div className="repay-info-box">
                 <div className="repay-info-title">{selectedDebt.title}</div>
-                <div className="repay-info-remaining">
-                  Còn lại: {formatCurrency(selectedDebt.remaining)}
+                <div
+                  className="repay-info-remaining"
+                  style={{
+                    color: selectedDebt.type === 'PAYABLE' ? 'var(--expense)' : 'var(--income)',
+                    fontWeight: 600,
+                  }}
+                >
+                  Còn lại: {formatCurrency(Math.abs(selectedDebt.remaining))}
                 </div>
               </div>
 

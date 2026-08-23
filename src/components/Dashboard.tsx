@@ -178,98 +178,108 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </div>
       )}
 
-      {/* Top Priority Section: Monthly Financial Overview & Targets */}
-      <div className="glass-card dashboard-section animate-fade-in">
-        <h3 className="dashboard-section-title">
-          <span>Kết quả Tài chính Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}</span>
-        </h3>
-
-        {/* Summary Cards Grid */}
-        <div className="summary-cards" style={{ marginBottom: '1.25rem' }}>
-          <div
-            className="summary-stat-card accent-income clickable-card"
-            onClick={() => onNavigate?.('income')}
-            title="Xem quản lý Thu nhập"
-          >
-            <div className="summary-stat-header">
-              <span className="summary-stat-title">Tổng Thu nhập ↗</span>
-              <div className="kpi-icon-badge kpi-badge-emerald">
-                <Wallet size={20} />
-              </div>
+      {/* Top Priority Section: Monthly Financial Overview */}
+      <div className="summary-cards-grid animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+        <div
+          className="summary-stat-card accent-income clickable-card"
+          onClick={() => onNavigate?.('income')}
+          title="Xem quản lý Thu nhập"
+        >
+          <div className="summary-stat-header">
+            <span className="summary-stat-title">Tổng Thu nhập ↗</span>
+            <div className="kpi-icon-badge kpi-badge-emerald">
+              <Wallet size={20} />
             </div>
-            <div className="summary-stat-value value-income">{formatCurrency(totalIncome)}</div>
-            <div className="summary-stat-subtitle">Dòng tiền thu về trong tháng</div>
           </div>
-
-          <div
-            className="summary-stat-card accent-expense clickable-card"
-            onClick={() => onNavigate?.('expenses')}
-            title="Xem quản lý Chi tiêu"
-          >
-            <div className="summary-stat-header">
-              <span className="summary-stat-title">Tổng Chi tiêu ↗</span>
-              <div className="kpi-icon-badge kpi-badge-rose">
-                <ShoppingBag size={20} />
-              </div>
-            </div>
-            <div className="summary-stat-value value-expense">{formatCurrency(totalExpense)}</div>
-            <div className="summary-stat-subtitle">Tổng tiền đã chi tiêu</div>
+          <div className="summary-stat-value value-income">
+            {formatCurrency(Math.abs(totalIncome))}
           </div>
+          <div className="summary-stat-subtitle">Dòng tiền thu về trong tháng</div>
+        </div>
 
-          {/* Dòng tiền Ròng Tháng Card (Đồng bộ chuẩn style với các card khác) */}
-          <div
-            className={`summary-stat-card ${totalIncome - totalExpense >= 0 ? 'accent-income' : 'accent-expense'}`}
-          >
-            <div className="summary-stat-header">
-              <span className="summary-stat-title">Dòng tiền Ròng Tháng</span>
-              <div
-                className={`kpi-icon-badge ${
-                  totalIncome - totalExpense >= 0 ? 'kpi-badge-emerald' : 'kpi-badge-rose'
-                }`}
-              >
-                {totalIncome - totalExpense >= 0 ? (
-                  <TrendingUp size={20} />
-                ) : (
-                  <AlertCircle size={20} />
-                )}
-              </div>
+        <div
+          className="summary-stat-card accent-expense clickable-card"
+          onClick={() => onNavigate?.('expenses')}
+          title="Xem quản lý Chi tiêu"
+        >
+          <div className="summary-stat-header">
+            <span className="summary-stat-title">Tổng Chi tiêu ↗</span>
+            <div className="kpi-icon-badge kpi-badge-rose">
+              <ShoppingBag size={20} />
             </div>
+          </div>
+          <div className="summary-stat-value value-expense">
+            {formatCurrency(Math.abs(totalExpense))}
+          </div>
+          <div className="summary-stat-subtitle">Tổng tiền đã chi tiêu</div>
+        </div>
+
+        {/* Dòng tiền Ròng Tháng Card */}
+        <div
+          className={`summary-stat-card ${totalIncome - totalExpense >= 0 ? 'accent-income' : 'accent-expense'}`}
+        >
+          <div className="summary-stat-header">
+            <span className="summary-stat-title">Dòng tiền Ròng Tháng</span>
             <div
-              className={`summary-stat-value ${
-                totalIncome - totalExpense >= 0 ? 'value-income' : 'value-expense'
+              className={`kpi-icon-badge ${
+                totalIncome - totalExpense >= 0 ? 'kpi-badge-emerald' : 'kpi-badge-rose'
               }`}
             >
-              {totalIncome - totalExpense >= 0 ? '+' : ''}
-              {formatCurrency(totalIncome - totalExpense)}
-            </div>
-            <div className="summary-stat-subtitle">
-              {totalIncome - totalExpense >= 0
-                ? 'Thặng dư dòng tiền trong tháng'
-                : 'Thâm hụt chi tiêu trong tháng'}
+              {totalIncome - totalExpense >= 0 ? (
+                <TrendingUp size={20} />
+              ) : (
+                <AlertCircle size={20} />
+              )}
             </div>
           </div>
-
-          <div className="summary-stat-card accent-purple">
-            <div className="summary-stat-header">
-              <span className="summary-stat-title">Tổng Tài sản Tích lũy</span>
-              <div className="kpi-icon-badge kpi-badge-indigo">
-                <Sparkles size={20} />
-              </div>
-            </div>
-            <div
-              className={`summary-stat-value ${allTimeNetAssets >= 0 ? 'positive-balance' : 'negative-balance'}`}
-            >
-              {formatCurrency(allTimeNetAssets)}
-            </div>
-            <div className="summary-stat-subtitle">
-              {debtPayable > 0
-                ? `Đã trừ nợ phải trả (${formatCurrency(debtPayable)})`
-                : 'Bao gồm thu nhập, đầu tư & các khoản nợ/vay'}
-            </div>
+          <div
+            className={`summary-stat-value ${
+              totalIncome - totalExpense >= 0 ? 'value-income' : 'value-expense'
+            }`}
+          >
+            {formatCurrency(Math.abs(totalIncome - totalExpense))}
+          </div>
+          <div className="summary-stat-subtitle">
+            {totalIncome - totalExpense >= 0
+              ? 'Thặng dư dòng tiền trong tháng'
+              : 'Thâm hụt chi tiêu trong tháng'}
           </div>
         </div>
 
-        {/* Target Analytics Section inside Monthly Card */}
+        <div
+          className={`summary-stat-card ${allTimeNetAssets >= 0 ? 'accent-purple' : 'accent-expense'}`}
+        >
+          <div className="summary-stat-header">
+            <span className="summary-stat-title">Tổng Tài sản Tích lũy</span>
+            <div
+              className={`kpi-icon-badge ${allTimeNetAssets >= 0 ? 'kpi-badge-indigo' : 'kpi-badge-rose'}`}
+            >
+              <Sparkles size={20} />
+            </div>
+          </div>
+          <div
+            className={`summary-stat-value ${allTimeNetAssets >= 0 ? 'positive-balance' : 'negative-balance'}`}
+          >
+            {formatCurrency(Math.abs(allTimeNetAssets))}
+          </div>
+          <div className="summary-stat-subtitle">
+            {debtPayable > 0
+              ? `Đã trừ nợ phải trả (${formatCurrency(Math.abs(debtPayable))})`
+              : 'Bao gồm thu nhập, đầu tư & các khoản nợ/vay'}
+          </div>
+        </div>
+      </div>
+
+      {/* Target Analytics Section */}
+      <div
+        className="glass-card dashboard-section animate-fade-in"
+        style={{ marginBottom: '1.25rem' }}
+      >
+        <h3 className="dashboard-section-title">
+          <span>
+            Kế hoạch & Mục tiêu Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}
+          </span>
+        </h3>
         <div className="target-cards-grid">
           {/* Monthly Expense Target Card */}
           <div
@@ -406,7 +416,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     {targetSummary.investment.surplusAmount > 0 && (
                       <div className="alert-sub">
                         Vượt chỉ tiêu:{' '}
-                        <strong>+{formatCurrency(targetSummary.investment.surplusAmount)}</strong>
+                        <strong>{formatCurrency(targetSummary.investment.surplusAmount)}</strong>
                       </div>
                     )}
                   </div>
@@ -431,16 +441,17 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       {/* Second Section: Investment & Debt / Loan Overview */}
-      <div className="glass-card dashboard-section animate-fade-in">
+      <div className="animate-fade-in" style={{ marginBottom: '1.25rem' }}>
         <h3
           className="dashboard-section-title clickable-title"
           onClick={() => onNavigate?.('debts')}
           title="Bấm để chuyển sang Quản lý Vay & Nợ hoặc Đầu tư"
+          style={{ marginBottom: '0.75rem' }}
         >
           <span>Tổng quan Đầu tư & Vay Nợ ↗</span>
         </h3>
 
-        <div className="summary-cards">
+        <div className="summary-cards-grid">
           <div
             className="summary-stat-card accent-primary clickable-card"
             onClick={() => onNavigate?.('investment')}
@@ -467,12 +478,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           >
             <div className="summary-stat-header">
               <span className="summary-stat-title">Tôi Nợ (Phải Trả) ↗</span>
-              <div className="kpi-icon-badge kpi-badge-amber">
+              <div className="kpi-icon-badge kpi-badge-rose">
                 <ReceiptText size={20} />
               </div>
             </div>
             <div className="summary-stat-value value-payable">
-              {debtSummary ? formatCurrency(debtSummary.totalPayable) : '0 đ'}
+              {formatCurrency(Math.abs(debtSummary?.totalPayable ?? 0))}
             </div>
             <div className="summary-stat-subtitle">Tổng tiền đang nợ người khác / ngân hàng</div>
           </div>
@@ -489,7 +500,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               </div>
             </div>
             <div className="summary-stat-value value-receivable">
-              {debtSummary ? formatCurrency(debtSummary.totalReceivable) : '0 đ'}
+              {formatCurrency(Math.abs(debtSummary?.totalReceivable ?? 0))}
             </div>
             <div className="summary-stat-subtitle">Tổng tiền cho vay / cần thu về</div>
           </div>

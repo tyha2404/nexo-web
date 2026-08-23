@@ -22,7 +22,7 @@
   font-size: 1.8rem;
   font-weight: 700;
   margin: 0 0 0.25rem 0;
-  background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -233,27 +233,27 @@ input[class*='dummyInput'] {
 }
 
 .txn-status-badge.status-holding {
-  background: rgba(56, 189, 248, 0.15);
+  background: rgba(14, 165, 233, 0.15);
   color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  border: 1px solid rgba(14, 165, 233, 0.3);
 }
 
 .txn-status-badge.status-sold {
-  background: rgba(52, 211, 153, 0.15);
+  background: rgba(16, 185, 129, 0.15);
   color: #34d399;
-  border: 1px solid rgba(52, 211, 153, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .txn-status-badge.status-matured {
   background: rgba(168, 85, 247, 0.15);
-  color: #a855f7;
+  color: #c084fc;
   border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
 .txn-status-badge.status-cancelled {
-  background: rgba(248, 113, 113, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(248, 113, 113, 0.3);
+  background: rgba(244, 63, 94, 0.15);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.3);
 }
 
 .txn-date {

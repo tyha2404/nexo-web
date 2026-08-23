@@ -380,8 +380,8 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                     <Wallet size={20} />
                   </div>
                 </div>
-                <div className="summary-stat-value" style={{ color: '#34d399' }}>
-                  {formatCurrency(sumAmount)}
+                <div className="summary-stat-value value-income">
+                  {formatCurrency(Math.abs(sumAmount))}
                 </div>
                 <div className="summary-stat-subtitle">Tổng khoản thu nhập trong kỳ</div>
               </div>
@@ -393,9 +393,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                     <BarChart3 size={20} />
                   </div>
                 </div>
-                <div className="summary-stat-value" style={{ color: '#a855f7' }}>
-                  {count} khoản
-                </div>
+                <div className="summary-stat-value value-purple">{count} khoản</div>
                 <div className="summary-stat-subtitle">Tổng số đợt nhận thu nhập</div>
               </div>
 
@@ -406,8 +404,8 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                     <Scale size={20} />
                   </div>
                 </div>
-                <div className="summary-stat-value" style={{ color: '#38bdf8' }}>
-                  {formatCurrency(avg)}
+                <div className="summary-stat-value value-primary">
+                  {formatCurrency(Math.abs(avg))}
                 </div>
                 <div className="summary-stat-subtitle">Giá trị thu nhập trung bình</div>
               </div>
@@ -437,7 +435,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                 </div>
               </div>
 
-              <div className="summary-stat-card accent-income">
+              <div
+                className={`summary-stat-card ${totalRealizedPnl >= 0 ? 'accent-income' : 'accent-expense'}`}
+              >
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Lãi / Lỗ Đã Thực Hiện</span>
                   <div
@@ -447,11 +447,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                   </div>
                 </div>
                 <div
-                  className="summary-stat-value"
-                  style={{ color: totalRealizedPnl >= 0 ? '#34d399' : '#f87171' }}
+                  className={`summary-stat-value ${totalRealizedPnl >= 0 ? 'value-income' : 'value-expense'}`}
                 >
-                  {totalRealizedPnl > 0 ? '+' : ''}
-                  {formatCurrency(totalRealizedPnl)}
+                  {formatCurrency(Math.abs(totalRealizedPnl))}
                 </div>
                 <div className="summary-stat-subtitle">
                   Tổng tiền lời / lỗ từ khoản đã bán/đáo hạn
@@ -461,7 +459,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               <div className="summary-stat-card accent-purple">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Tổng Vốn Tích Lũy</span>
-                  <div className="kpi-icon-badge kpi-badge-indigo">
+                  <div className="kpi-icon-badge kpi-badge-purple">
                     <Target size={20} />
                   </div>
                 </div>
@@ -492,7 +490,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                   <ShoppingBag size={20} />
                 </div>
               </div>
-              <div className="summary-stat-value value-expense">{formatCurrency(sumAmount)}</div>
+              <div className="summary-stat-value value-expense">
+                {formatCurrency(Math.abs(sumAmount))}
+              </div>
               <div className="summary-stat-subtitle">Tổng tiền đã chi trong kỳ</div>
             </div>
 
@@ -503,7 +503,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                   <Calendar size={20} />
                 </div>
               </div>
-              <div className="summary-stat-value value-warning">{formatCurrency(dailyAvg)}</div>
+              <div className="summary-stat-value value-warning">
+                {formatCurrency(Math.abs(dailyAvg))}
+              </div>
               <div className="summary-stat-subtitle">
                 Chi tiêu bình quân trong {daysCount} ngày (tới hôm nay)
                 {summary.sumAmountForAverage !== undefined &&
@@ -519,7 +521,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                   <Wallet size={20} />
                 </div>
               </div>
-              <div className="summary-stat-value value-primary">{formatCurrency(avg)}</div>
+              <div className="summary-stat-value value-primary">
+                {formatCurrency(Math.abs(avg))}
+              </div>
               <div className="summary-stat-subtitle">Mức chi trung bình mỗi giao dịch</div>
             </div>
 
@@ -695,7 +699,20 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                 {filteredTransactions.map((txn) => (
                   <tr key={txn.id}>
                     <td className="txn-title-cell">{txn.description}</td>
-                    <td className="txn-amount">{formatCurrency(txn.amount)}</td>
+                    <td
+                      className="txn-amount"
+                      style={{
+                        color:
+                          type === TransactionType.INCOME
+                            ? 'var(--income)'
+                            : type === TransactionType.EXPENSE
+                              ? 'var(--expense)'
+                              : 'var(--text-main)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {formatCurrency(Math.abs(txn.amount))}
+                    </td>
                     {type === TransactionType.INVESTMENT && (
                       <td>
                         <span
@@ -710,15 +727,14 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                         {txn.status && txn.status !== 'HOLDING' && txn.realizedPnl !== undefined ? (
                           <span
                             style={{
-                              color: txn.realizedPnl >= 0 ? '#34d399' : '#f87171',
+                              color: txn.realizedPnl >= 0 ? 'var(--income)' : 'var(--expense)',
                               fontWeight: 600,
                             }}
                           >
-                            {txn.realizedPnl > 0 ? '+' : ''}
-                            {formatCurrency(txn.realizedPnl)}
+                            {formatCurrency(Math.abs(txn.realizedPnl))}
                           </span>
                         ) : (
-                          <span style={{ color: 'var(--text-muted)' }}>-</span>
+                          <span style={{ color: 'var(--text-muted)' }}>—</span>
                         )}
                       </td>
                     )}

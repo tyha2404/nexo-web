@@ -83,7 +83,6 @@
 
 .donut-legend-item.active {
   background: var(--bg-hover);
-  border-left: 3px solid var(--primary);
 }
 
 .donut-legend-item.inactive {

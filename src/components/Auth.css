@@ -77,7 +77,7 @@
 }
 
 .auth-toggle-btn.active {
-  background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+  background: var(--primary-gradient);
   color: #ffffff;
   box-shadow: 0 4px 12px var(--primary-glow);
 }
@@ -126,7 +126,7 @@
 
 .submit-btn {
   margin-top: 1rem;
-  background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
+  background: var(--primary-gradient);
   color: #ffffff;
   border: none;
   padding: 14px;

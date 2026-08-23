@@ -22,7 +22,7 @@
   font-size: 1.8rem;
   font-weight: 700;
   margin: 0 0 0.25rem 0;
-  background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -74,33 +74,33 @@
 /* Stat Card Colors */
 .icon-payable {
   background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  color: var(--expense);
 }
 
 .value-payable {
-  color: #ef4444;
+  color: var(--expense);
 }
 
 .icon-receivable {
   background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  color: var(--income);
 }
 
 .value-receivable {
-  color: #10b981;
+  color: var(--income);
 }
 
 .icon-overdue {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--expense);
 }
 
 .value-overdue {
-  color: #f59e0b;
+  color: var(--expense);
 }
 
 .icon-pending {
-  background: rgba(56, 189, 248, 0.15);
+  background: rgba(14, 165, 233, 0.15);
   color: #38bdf8;
 }
 
@@ -134,37 +134,37 @@
 
 .badge-payable {
   background: rgba(239, 68, 68, 0.12);
-  color: #ef4444;
+  color: var(--expense);
 }
 
 .badge-receivable {
   background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
+  color: var(--income);
 }
 
 .cell-paid {
-  color: #10b981;
+  color: var(--income);
   font-weight: 500;
 }
 
 .cell-remaining {
-  color: #38bdf8;
   font-weight: bold;
 }
 
 .badge-completed {
   background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  color: var(--income);
 }
 
 .badge-overdue-status {
   background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  color: var(--expense);
 }
 
 .badge-pending-status {
-  background: rgba(59, 130, 246, 0.15);
-  color: #3b82f6;
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
 }
 
 .debt-actions-group {

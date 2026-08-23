@@ -20,7 +20,7 @@
   font-size: 1.6rem;
   font-weight: 700;
   margin: 0 0 0.15rem 0;
-  background: linear-gradient(135deg, var(--primary) 0%, #a855f7 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #8b5cf6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -377,7 +377,7 @@
 }
 
 .fill-investment {
-  background: linear-gradient(90deg, #3b82f6, #6366f1);
+  background: linear-gradient(90deg, #0ea5e9, #8b5cf6);
 }
 
 .target-metrics-row {
@@ -398,7 +398,7 @@
 }
 
 .metric-value.investment {
-  color: #3b82f6;
+  color: #38bdf8;
 }
 
 .target-alert-box {
@@ -412,17 +412,19 @@
 .alert-danger {
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  color: var(--expense);
 }
 
 .alert-success {
   background: rgba(16, 185, 129, 0.08);
   border: 1px solid rgba(16, 185, 129, 0.2);
+  color: var(--income);
 }
 
 .alert-info {
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  color: #38bdf8;
 }
 
 .alert-title {
