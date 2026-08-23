@@ -11,11 +11,12 @@ import type { User } from '../../commons/types';
 import './AIChatWidget.css';
 
 const QUICK_PROMPTS = [
-  { text: 'Tư vấn phân bổ thu nhập theo quy tắc 50/30/20', icon: '📊' },
-  { text: 'Phương pháp quản lý tiền 6 Chiếc Lọ (JARS System)', icon: '🏺' },
-  { text: 'Cách xây dựng Quỹ Khẩn Cấp (Emergency Fund) chuẩn', icon: '🛡️' },
-  { text: 'Chiến lược trả nợ tối ưu: Snowball hay Avalanche?', icon: '🎯' },
-  { text: 'Mẹo kiểm soát lỗ rò tài chính (Latte Factor & Subscriptions)', icon: '💡' },
+  { text: 'Tổng quan tài chính tháng này của tôi', icon: '📊' },
+  { text: 'Tôi vừa chi 45k ăn sáng bánh mì', icon: '💸' },
+  { text: 'Kiểm tra tình hình hạn mức các ngân sách', icon: '🎯' },
+  { text: 'Xem danh sách và số dư các ví tài khoản', icon: '💳' },
+  { text: 'Phân tích cơ cấu chi tiêu tháng này', icon: '📈' },
+  { text: 'Lịch sử 5 giao dịch gần đây nhất', icon: '📋' },
 ];
 
 interface AIChatWidgetProps {
@@ -182,6 +183,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
           // Notify other components if transaction was created
           if (event.actionCard.actionType === 'TRANSACTION_CREATED') {
             window.dispatchEvent(new CustomEvent('transaction-created'));
+            window.dispatchEvent(new CustomEvent('transactions-changed'));
           }
         } else if (event.type === 'text_delta' && event.delta) {
           accumulatedContent += event.delta;
@@ -278,8 +280,16 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
 
     const lines = text.split('\n');
     return lines.map((line, lineIdx) => {
+      let trimmedLine = line;
+      let isBullet = false;
+
+      if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+        isBullet = true;
+        trimmedLine = trimmedLine.slice(2);
+      }
+
       // Process bold **text**
-      const parts = line.split(/(\*\*.*?\*\*)/g);
+      const parts = trimmedLine.split(/(\*\*.*?\*\*)/g);
       const formattedParts = parts.map((part, partIdx) => {
         if (part.startsWith('**') && part.endsWith('**')) {
           return <strong key={partIdx}>{part.slice(2, -2)}</strong>;
@@ -288,22 +298,40 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
       });
 
       if (line.startsWith('# ')) {
+        const titleParts = line
+          .slice(2)
+          .split(/(\*\*.*?\*\*)/g)
+          .map((part, partIdx) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return <strong key={partIdx}>{part.slice(2, -2)}</strong>;
+            }
+            return part;
+          });
         return (
           <h3 key={lineIdx} style={{ margin: '8px 0 4px 0', fontSize: '15px' }}>
-            {formattedParts}
+            {titleParts}
           </h3>
         );
       }
       if (line.startsWith('## ') || line.startsWith('### ')) {
+        const hParts = line
+          .replace(/^#{2,3}\s+/, '')
+          .split(/(\*\*.*?\*\*)/g)
+          .map((part, partIdx) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+              return <strong key={partIdx}>{part.slice(2, -2)}</strong>;
+            }
+            return part;
+          });
         return (
           <h4 key={lineIdx} style={{ margin: '6px 0 3px 0', fontSize: '13px' }}>
-            {formattedParts}
+            {hParts}
           </h4>
         );
       }
-      if (line.startsWith('- ') || line.startsWith('* ')) {
+      if (isBullet) {
         return (
-          <li key={lineIdx} style={{ marginLeft: '16px' }}>
+          <li key={lineIdx} style={{ marginLeft: '16px', listStyleType: 'disc' }}>
             {formattedParts}
           </li>
         );
@@ -393,9 +421,9 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
               </div>
               <div className="chat-header-text">
                 <h3>
-                  Nexo AI Advisor <span className="rag-tag">RAG Knowledge</span>
+                  Nexo Copilot <span className="copilot-tag">Smart Tools</span>
                 </h3>
-                <p>Cố vấn Tri thức Quản lý Tài chính Thông minh</p>
+                <p>Trợ lý Quản lý & Tự động hóa Tài chính</p>
               </div>
             </div>
 
@@ -542,10 +570,10 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
                     <path d="M12 6v6l4 2" />
                   </svg>
                 </div>
-                <h4>Xin chào! Tôi là Nexo AI Advisor</h4>
+                <h4>Xin chào! Tôi là Nexo AI Copilot</h4>
                 <p>
-                  Tôi có thể tư vấn các phương pháp quản lý tài chính khoa học như 50/30/20, 6 Chiếc
-                  Lọ, Quỹ Khẩn Cấp và Chiến lược trả nợ tối ưu.
+                  Tôi có thể giúp bạn tự động ghi nhận thu chi, tra cứu tổng quan tài chính, kiểm
+                  tra ngân sách, ví tiền và phân tích chi tiêu ngay tức thì.
                 </p>
 
                 <div className="quick-prompts-grid">
@@ -670,9 +698,14 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
             <textarea
               ref={textareaRef}
               className="chat-input-textarea"
-              placeholder="Hỏi Nexo Copilot bất kỳ điều gì... (Enter để gửi)"
+              placeholder="Nhập yêu cầu (ví dụ: Vừa chi 50k ăn trưa, Tổng quan tài chính tháng này...)"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value);
+                // Auto-resize height
+                e.target.style.height = 'auto';
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+              }}
               onKeyDown={handleKeyDown}
               rows={1}
             />
