@@ -9,3 +9,4 @@ export * from './debtService';
 export * from './reportService';
 export * from './targetService';
 export * from './nlpService';
+export * from './chatService';

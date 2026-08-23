@@ -10,6 +10,7 @@ import Debts from './components/Debts';
 import ReloadPrompt from './components/ReloadPrompt';
 import Targets from './components/Targets';
 import Transactions from './components/Transactions';
+import { AIChatWidget } from './components/chat';
 import { authService } from './services/api';
 
 function App() {
@@ -470,6 +471,7 @@ function App() {
       </main>
 
       <ReloadPrompt />
+      <AIChatWidget user={user} />
       <ToastContainer theme="dark" position="bottom-right" autoClose={3000} />
     </div>
   );
