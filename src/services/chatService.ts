@@ -1,6 +1,4 @@
-import { request } from './api';
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+import { request, BASE_URL } from './client';
 
 export interface ActionCard {
   actionType: string;
