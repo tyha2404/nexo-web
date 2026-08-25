@@ -968,6 +968,10 @@
   border-left-color: #10b981;
 }
 
+.chat-action-card.CATEGORY_CREATED {
+  border-left-color: #8b5cf6;
+}
+
 .chat-action-card.WALLET_TRANSFER {
   border-left-color: #38bdf8;
 }
@@ -1387,6 +1391,10 @@ body.light-theme .chat-action-card {
 
 body.light-theme .chat-action-card.TRANSACTION_CREATED {
   background: #f0fdf4;
+}
+
+body.light-theme .chat-action-card.CATEGORY_CREATED {
+  background: #faf5ff;
 }
 
 body.light-theme .chat-action-card.BUDGET_ALERT {

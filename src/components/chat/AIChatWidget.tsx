@@ -49,6 +49,14 @@ export const AI_TOOLS_CATALOG: AIToolItem[] = [
     promptExample: 'Tôi vừa chi 45k ăn sáng bánh mì',
   },
   {
+    id: 'create_category',
+    name: 'Tạo danh mục mới',
+    category: 'Giao dịch',
+    icon: '🏷️',
+    description: 'Tạo một danh mục thu/chi mới theo nhu cầu thực tế của bạn.',
+    promptExample: 'Tạo danh mục Học tập loại chi tiêu',
+  },
+  {
     id: 'list_recent_transactions',
     name: 'Lịch sử giao dịch gần đây',
     category: 'Giao dịch',
@@ -556,6 +564,11 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
           if (event.actionCard.actionType === 'TRANSACTION_CREATED') {
             window.dispatchEvent(new CustomEvent('transaction-created'));
             window.dispatchEvent(new CustomEvent('transactions-changed'));
+            if ((event.actionCard.data as any)?.isNewCategoryCreated) {
+              window.dispatchEvent(new CustomEvent('categories-changed'));
+            }
+          } else if (event.actionCard.actionType === 'CATEGORY_CREATED') {
+            window.dispatchEvent(new CustomEvent('categories-changed'));
           }
         } else if (event.type === 'text_delta' && event.delta) {
           accumulatedContent += event.delta;
@@ -1139,6 +1152,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
                               <div className="action-card-header">
                                 <span>
                                   {msg.actionCard.actionType === 'TRANSACTION_CREATED' && '✅ '}
+                                  {msg.actionCard.actionType === 'CATEGORY_CREATED' && '🏷️ '}
                                   {msg.actionCard.actionType === 'WALLET_TRANSFER' && '🔄 '}
                                   {msg.actionCard.actionType === 'DEBT_CREATED' && '🤝 '}
                                   {msg.actionCard.actionType === 'DEBT_REPAID' && '💳 '}
