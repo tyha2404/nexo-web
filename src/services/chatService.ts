@@ -75,7 +75,7 @@ export const chatService = {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
-    }, 90000); // 90 seconds client timeout
+    }, 180000); // 180 seconds client timeout (3 minutes)
 
     try {
       const response = await fetch(`${BASE_URL}/chat/stream`, {
