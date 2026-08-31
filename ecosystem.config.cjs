@@ -10,6 +10,7 @@ module.exports = {
       env: {
         NODE_ENV: "production",
         PORT: 5173,
+        BACKEND_API_URL: "http://127.0.0.1:3001",
       },
     },
   ],
