@@ -78,7 +78,7 @@ export default function Debts() {
         debtService.getDebts(filterType ? (filterType as DebtType) : undefined),
       ]);
       setSummary(sumData);
-      setDebts(debtList);
+      setDebts(Array.isArray(debtList) ? debtList : (debtList as any)?.data || []);
     } catch (err: any) {
       setError(err.message || 'Không thể tải dữ liệu khoản vay/nợ');
     } finally {
@@ -187,9 +187,11 @@ export default function Debts() {
     }
   };
 
-  const filteredDebts = debts.filter((d) => {
+  const filteredDebts = (Array.isArray(debts) ? debts : []).filter((d) => {
+    if (!d) return false;
+    const debtTitle = d.title || (d as any).personName || '';
     const matchSearch =
-      d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      debtTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (d.notes || '').toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchDateRange = (() => {
@@ -215,11 +217,21 @@ export default function Debts() {
   });
 
   const displayPayable = startDate
-    ? filteredDebts.filter((d) => d.type === 'PAYABLE').reduce((sum, d) => sum + d.remaining, 0)
+    ? filteredDebts
+        .filter((d) => d.type === 'PAYABLE')
+        .reduce(
+          (sum, d) => sum + (d.remaining ?? (d as any).remainingAmount ?? d.totalAmount ?? 0),
+          0
+        )
     : (summary?.totalPayable ?? 0);
 
   const displayReceivable = startDate
-    ? filteredDebts.filter((d) => d.type === 'RECEIVABLE').reduce((sum, d) => sum + d.remaining, 0)
+    ? filteredDebts
+        .filter((d) => d.type === 'RECEIVABLE')
+        .reduce(
+          (sum, d) => sum + (d.remaining ?? (d as any).remainingAmount ?? d.totalAmount ?? 0),
+          0
+        )
     : (summary?.totalReceivable ?? 0);
 
   return (

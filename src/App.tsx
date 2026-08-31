@@ -78,9 +78,25 @@ function App() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isSidebarOpen]);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     setUser(null);
+  };
+
+  const handleGoHome = () => {
+    setActiveTab('dashboard');
+    setIsSidebarOpen(false);
   };
 
   if (authLoading) {
@@ -101,7 +117,7 @@ function App() {
   }
 
   return (
-    <div className="app-shell animate-fade-in">
+    <div className="app-shell">
       {/* Mobile Header */}
       <header className="mobile-header">
         <button
@@ -111,7 +127,18 @@ function App() {
         >
           <Menu size={22} />
         </button>
-        <div className="mobile-brand">
+        <div
+          className="mobile-brand brand-clickable"
+          onClick={handleGoHome}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              handleGoHome();
+            }
+          }}
+          aria-label="Trang chủ Nexo"
+        >
           <img src="/favicon.svg" className="mobile-logo" alt="Nexo logo" />
           <span className="brand-name">Nexo Portal</span>
         </div>
@@ -131,7 +158,18 @@ function App() {
 
       <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <div className="sidebar-brand">
+          <div
+            className="sidebar-brand brand-clickable"
+            onClick={handleGoHome}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleGoHome();
+              }
+            }}
+            aria-label="Trang chủ Nexo"
+          >
             <img src="/favicon.svg" className="sidebar-logo" alt="Nexo logo" />
             <span className="brand-name">Nexo Portal</span>
           </div>
@@ -261,7 +299,7 @@ function App() {
       </aside>
 
       <main className="main-content">
-        <div className="content-view">
+        <div className="content-view animate-fade-in" key={activeTab}>
           {activeTab === 'dashboard' ? (
             <Dashboard onNavigate={(tab) => setActiveTab(tab as any)} />
           ) : activeTab === 'debts' ? (

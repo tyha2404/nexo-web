@@ -11,6 +11,11 @@ if (typeof window !== 'undefined') {
     const rawHref = link.href.split('?')[0];
     link.href = `${rawHref}?v=${Date.now()}`;
   });
+
+  // Prevent pinch-to-zoom gesture on iOS Safari
+  document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+  document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+  document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
 }
 
 createRoot(document.getElementById('root')!).render(

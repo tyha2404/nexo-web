@@ -102,14 +102,38 @@
   padding: 0;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--bg-app);
   color: var(--text-main);
-  overflow-x: hidden;
+  touch-action: manipulation;
+  overscroll-behavior-y: none;
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+.brand-clickable {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.brand-clickable:hover {
+  opacity: 0.9;
+}
+
+.brand-clickable:active {
+  transform: scale(0.97);
 }
 
 body.light-theme {
@@ -564,10 +588,11 @@ input[class*='dummyInput'] {
   z-index: 99;
 }
 
-/* Responsive Styling */
 @media (max-width: 768px) {
   .app-shell {
     flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .mobile-header {
@@ -575,11 +600,17 @@ input[class*='dummyInput'] {
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem 1rem;
-    min-height: 60px;
+    padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+    height: calc(60px + env(safe-area-inset-top, 0px));
+    min-height: calc(60px + env(safe-area-inset-top, 0px));
     background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border-bottom: 1px solid var(--border);
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 90;
     box-sizing: border-box;
   }
@@ -598,6 +629,7 @@ input[class*='dummyInput'] {
     justify-content: center;
     border-radius: 8px;
     padding: 0;
+    touch-action: manipulation;
   }
 
   .hamburger-btn:hover {
@@ -623,12 +655,21 @@ input[class*='dummyInput'] {
     bottom: 0;
     width: 280px;
     height: 100vh;
+    height: 100dvh;
     z-index: 100;
+    padding-top: max(1.25rem, env(safe-area-inset-top, 0px));
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    padding-left: max(0.9rem, env(safe-area-inset-left, 0px));
     transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     border-right: 1px solid var(--border);
     box-shadow: var(--shadow-lg);
     background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
   }
 
   .sidebar.open {
@@ -640,8 +681,13 @@ input[class*='dummyInput'] {
   }
 
   .main-content {
+    padding-top: calc(60px + env(safe-area-inset-top, 0px));
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+    min-height: 100vh;
+    min-height: 100dvh;
     height: auto;
     overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
   }
 
   .main-header {
@@ -744,14 +790,23 @@ input[class*='dummyInput'] {
 }
 
 /* Animation Keyframes */
-@keyframes fadeInUp {
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -780,7 +835,7 @@ input[class*='dummyInput'] {
 
 /* Animation Utility Classes */
 .animate-fade-in {
-  animation: fadeInUp 0.5s ease forwards;
+  animation: fadeIn 0.25s ease-out forwards;
 }
 
 .animate-scale-in {
@@ -881,6 +936,24 @@ tr {
   box-sizing: border-box !important;
   padding: 0.65rem 1rem !important;
   font-size: 0.95rem !important;
+}
+
+/* iOS Safari focus auto-zoom prevention (Inputs under 16px trigger auto-zoom) */
+@media screen and (max-width: 1024px) {
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea,
+  .react-select__input input,
+  .react-select__input,
+  .react-datepicker__input-container input,
+  .form-group input,
+  .form-group select,
+  .modal-content input,
+  .modal-card input,
+  .filter-bar input,
+  .filter-bar select {
+    font-size: 16px !important;
+  }
 }
 
 /* React DatePicker Global Standards */

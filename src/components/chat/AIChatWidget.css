@@ -4,10 +4,10 @@
 
 .nexo-chat-widget-fab {
   position: fixed !important;
-  bottom: 24px !important;
-  right: 24px !important;
-  width: 46px;
-  height: 46px;
+  bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 20px)) !important;
+  right: max(24px, calc(env(safe-area-inset-right, 0px) + 20px)) !important;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
   color: #ffffff;
@@ -18,6 +18,7 @@
   justify-content: center;
   cursor: pointer;
   z-index: 99999 !important;
+  touch-action: manipulation;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
@@ -1499,4 +1500,38 @@ body.light-theme .message-bubble.thinking-bubble {
   background: rgba(99, 102, 241, 0.2);
   color: #a5b4fc;
   border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+/* =========================================================
+   Responsive Mobile Styles for Nexo AI Copilot
+   ========================================================= */
+@media (max-width: 768px) {
+  .nexo-chat-widget-fab {
+    bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 16px)) !important;
+    right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px)) !important;
+    width: 46px;
+    height: 46px;
+  }
+
+  .nexo-chat-window {
+    bottom: max(76px, calc(env(safe-area-inset-bottom, 0px) + 72px)) !important;
+    right: 10px !important;
+    left: 10px !important;
+    width: auto !important;
+    min-width: unset !important;
+    max-width: calc(100vw - 20px) !important;
+    height: calc(
+      100dvh - 90px - env(safe-area-inset-bottom, 0px) - env(safe-area-inset-top, 0px)
+    ) !important;
+    max-height: calc(100dvh - 85px) !important;
+    border-radius: 16px;
+  }
+
+  .chat-resize-handle-nw {
+    display: none !important;
+  }
+
+  .chat-input-textarea {
+    font-size: 16px !important;
+  }
 }
