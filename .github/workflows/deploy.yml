@@ -14,14 +14,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Check Environment (Node & PM2)
+      - name: Check Environment
         shell: bash
         run: |
-          echo "=== Deploy Environment Info ==="
-          echo "Runner User: $(whoami)"
-          echo "Node Version: $(node -v)"
-          echo "NPM Version: $(npm -v)"
-          echo "PM2 Version: $(pm2 -v)"
+          echo "=== Deploy Info ==="
+          echo "User: $(whoami)"
+          echo "Node: $(node -v)"
+          echo "PM2: $(pm2 -v)"
 
       - name: Install Dependencies
         shell: bash
