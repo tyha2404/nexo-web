@@ -1,0 +1,40 @@
+name: Deploy Nexo Web
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy-web:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check Environment (Node & PM2)
+        shell: bash
+        run: |
+          echo "=== Deploy Environment Info ==="
+          echo "Runner User: $(whoami)"
+          echo "Node Version: $(node -v)"
+          echo "NPM Version: $(npm -v)"
+          echo "PM2 Version: $(pm2 -v)"
+
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          npm ci
+
+      - name: Build Web App (Vite)
+        shell: bash
+        run: |
+          npm run build
+
+      - name: Deploy / Reload PM2
+        shell: bash
+        run: |
+          pm2 reload ecosystem.config.cjs --update-env || pm2 start ecosystem.config.cjs
+          pm2 save
