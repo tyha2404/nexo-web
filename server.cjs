@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5173;
 const DIST_DIR = path.join(__dirname, 'dist');
 
 const MIME_TYPES = {
@@ -48,7 +48,6 @@ const server = http.createServer((req, res) => {
         return res.end('Server Error');
       }
 
-      // Cache headers: immutable cache for assets, no-cache for index.html
       const headers = { 'Content-Type': contentType };
       if (reqPath.startsWith('/assets/')) {
         headers['Cache-Control'] = 'public, max-age=31536000, immutable';
