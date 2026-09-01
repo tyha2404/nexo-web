@@ -151,6 +151,7 @@ body.light-theme {
   gap: 1.5rem;
 }
 
+.loading-screen .spinner,
 .spinner {
   width: 48px;
   height: 48px;
@@ -158,6 +159,24 @@ body.light-theme {
   border-left-color: var(--text-main);
   border-radius: 50%;
   animation: spin 1s linear infinite;
+}
+
+/* Button Spinners & Indicators */
+button .spinner,
+.btn .spinner,
+.submit-btn .spinner,
+.spinner-sm {
+  width: 16px !important;
+  height: 16px !important;
+  border-width: 2px !important;
+  border-color: currentColor !important;
+  border-left-color: transparent !important;
+  border-radius: 50% !important;
+  margin: 0 !important;
+  margin-bottom: 0 !important;
+  display: inline-block !important;
+  flex-shrink: 0 !important;
+  vertical-align: middle !important;
 }
 
 @keyframes spin {
@@ -258,7 +277,8 @@ button.btn,
 
 /* Global Button Icon & Text Spacing */
 .btn,
-button.btn {
+button.btn,
+.submit-btn {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
