@@ -110,4 +110,30 @@ export interface TargetSummaryResponse {
   expense: ExpenseSummary;
   investment: InvestmentSummary;
 }
+export type WalletType = 'CASH' | 'BANK' | 'E_WALLET' | 'SAVINGS' | 'CREDIT' | 'JAR';
+
+export interface Wallet {
+  id: string;
+  userId: string;
+  name: string;
+  type: WalletType;
+  balance: number;
+  currency: string;
+  icon?: string;
+  jarCategory?: string;
+  allocationPercent?: number;
+  isIncludedInTotal: boolean;
+  creditLimit?: number;
+  statementDay?: number;
+  dueDay?: number;
+  statementBalance?: number;
+  minimumPayment?: number;
+  previousBalance?: number;
+  availableCredit?: number;
+  outstandingDebt?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export * from './preset';
+export * from './statement';

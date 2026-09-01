@@ -7,3 +7,4 @@ export * from './presetService';
 export * from './reportService';
 export * from './targetService';
 export * from './transactionService';
+export * from './walletService';

@@ -1340,3 +1340,78 @@ body.light-theme .kpi-badge-neutral,
   color: var(--text-main);
   border-color: var(--border);
 }
+
+/* ==========================================================================
+   Universal Non-Wrapping for All Tags, Badges, Chips & Pills (All Modules)
+   ========================================================================== */
+.badge,
+.tag,
+.chip,
+.txn-category-badge,
+.badge-payable,
+.badge-receivable,
+.badge-completed,
+.badge-overdue-status,
+.badge-pending-status,
+.exclude-avg-badge,
+.category-tab,
+.preset-tag-btn,
+.allocation-tag,
+.wallet-type-tag,
+.kpi-icon-badge,
+.card-date-badge,
+.card-due-badge,
+.status-badge,
+.txn-status-badge,
+.pwa-badge,
+.category-badge,
+.date-badge,
+.category-chip,
+.badge-dot,
+.table-progress-text,
+.btn,
+.btn-repay-mini,
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.action-btn,
+[class*='badge'],
+[class*='tag-btn'],
+[class*='chip'] {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  word-break: keep-all !important;
+}
+
+/* Common Flex & Header Actions utilities */
+.flex {
+  display: flex !important;
+}
+.inline-flex {
+  display: inline-flex !important;
+}
+.items-center {
+  align-items: center !important;
+}
+.justify-between {
+  justify-content: space-between !important;
+}
+.gap-1 {
+  gap: 0.25rem !important;
+}
+.gap-2 {
+  gap: 0.5rem !important;
+}
+.gap-3 {
+  gap: 0.75rem !important;
+}
+.gap-4 {
+  gap: 1rem !important;
+}
+
+.header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  flex-wrap: wrap !important;
+}

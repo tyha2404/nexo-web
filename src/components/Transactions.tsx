@@ -346,7 +346,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             của bạn
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="header-actions">
           <button className="btn btn-primary" onClick={openAddModal}>
             <Plus size={16} /> Thêm{' '}
             {type === TransactionType.INCOME

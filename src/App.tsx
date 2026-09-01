@@ -1,19 +1,20 @@
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  CreditCard,
+  FolderTree,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Moon,
+  Scale,
+  Sun,
+  Target,
+  TrendingUp,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import {
-  LayoutDashboard,
-  Target,
-  Scale,
-  ArrowDownLeft,
-  ArrowUpRight,
-  TrendingUp,
-  FolderTree,
-  Sun,
-  Moon,
-  LogOut,
-  Menu,
-} from 'lucide-react';
 import { TransactionType } from './commons/constants';
 import type { User } from './commons/types';
 import Auth from './components/Auth';
@@ -23,12 +24,20 @@ import Debts from './components/Debts';
 import ReloadPrompt from './components/ReloadPrompt';
 import Targets from './components/Targets';
 import Transactions from './components/Transactions';
+import Wallets from './components/Wallets';
 import { AIChatWidget } from './components/chat';
 import { authService } from './services/api';
 
 function App() {
   const [activeTab, setActiveTab] = useState<
-    'dashboard' | 'income' | 'expenses' | 'investment' | 'categories' | 'targets' | 'debts'
+    | 'dashboard'
+    | 'wallets'
+    | 'income'
+    | 'expenses'
+    | 'investment'
+    | 'categories'
+    | 'targets'
+    | 'debts'
   >('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -190,6 +199,18 @@ function App() {
           </button>
           <button
             onClick={() => {
+              setActiveTab('wallets');
+              setIsSidebarOpen(false);
+            }}
+            className={`nav-item ${activeTab === 'wallets' ? 'active' : ''}`}
+          >
+            <span className="nav-icon">
+              <CreditCard size={18} />
+            </span>
+            <span className="nav-text">Tài khoản & Thẻ</span>
+          </button>
+          <button
+            onClick={() => {
               setActiveTab('targets');
               setIsSidebarOpen(false);
             }}
@@ -302,6 +323,8 @@ function App() {
         <div className="content-view animate-fade-in" key={activeTab}>
           {activeTab === 'dashboard' ? (
             <Dashboard onNavigate={(tab) => setActiveTab(tab as any)} />
+          ) : activeTab === 'wallets' ? (
+            <Wallets />
           ) : activeTab === 'debts' ? (
             <Debts />
           ) : activeTab === 'income' ? (

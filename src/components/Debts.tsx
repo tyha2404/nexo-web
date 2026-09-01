@@ -241,7 +241,7 @@ export default function Debts() {
           <h2>Quản lý Vay & Nợ</h2>
           <p className="subtitle">Theo dõi khoản vay phải trả và khoản nợ phải thu của bạn</p>
         </div>
-        <div className="flex gap-3">
+        <div className="header-actions">
           <button className="btn btn-primary" onClick={() => openCreateModal('PAYABLE')}>
             <Plus size={16} /> Tạo khoản nợ mới
           </button>

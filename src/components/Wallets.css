@@ -1,0 +1,224 @@
+/* Wallets View Styles - 100% Unified with Debts / Categories / Transactions */
+.wallet-row-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.wallet-row-icon {
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statement-cycle-text {
+  font-size: 0.8125rem;
+  color: var(--text-main);
+  line-height: 1.35;
+}
+
+.due-day-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.badge-due-warning {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.12);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  margin-top: 0.2rem;
+  white-space: nowrap !important;
+}
+
+.badge-minpay-sub {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  margin-top: 0.2rem;
+  white-space: nowrap !important;
+}
+
+.table-progress-wrap {
+  width: 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.table-progress-bg {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-hover, rgba(255, 255, 255, 0.1));
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.table-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.table-progress-fill.safe {
+  background: var(--income, #10b981);
+}
+
+.table-progress-fill.warning {
+  background: #eab308;
+}
+
+.table-progress-fill.danger {
+  background: var(--expense, #ef4444);
+}
+
+.table-progress-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.table-actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.btn-history-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap !important;
+}
+
+.btn-history-mini:hover {
+  background: #0ea5e9;
+  color: #ffffff;
+}
+
+.btn-repay-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap !important;
+}
+
+.btn-repay-mini:hover {
+  background: var(--primary, #6366f1);
+  color: #ffffff;
+}
+
+/* Modal Content Large for History Table */
+.modal-content-large {
+  max-width: 850px !important;
+  width: 95% !important;
+}
+
+/* Quick Pay Chips in Transfer Modal */
+.repay-quick-options {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.04));
+  padding: 0.75rem;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.quick-pay-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.quick-pay-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap !important;
+}
+
+.quick-pay-chip.full-statement {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.quick-pay-chip.full-statement:hover {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.quick-pay-chip.min-payment {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.quick-pay-chip.min-payment:hover {
+  background: #f59e0b;
+  color: #ffffff;
+}
+
+.quick-pay-chip.total-debt {
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.quick-pay-chip.total-debt:hover {
+  background: #6366f1;
+  color: #ffffff;
+}
+
+.form-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.form-checkbox-row input {
+  margin-top: 0.25rem;
+  cursor: pointer;
+}
+
+.form-checkbox-row label {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1.4;
+}
