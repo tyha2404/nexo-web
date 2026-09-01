@@ -160,16 +160,6 @@
   overflow: hidden;
 }
 
-.hero-cashflow-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--primary);
-}
-
 .hero-top-row {
   display: flex;
   justify-content: space-between;

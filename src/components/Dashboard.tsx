@@ -405,11 +405,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           <p className="subtitle">Dòng tiền & phân tích thông minh thời gian thực</p>
         </div>
 
-        <MonthFilter
-          value={selectedMonth}
-          onChange={(newMonth) => setSelectedMonth(newMonth)}
-          showQuickButtons={true}
-        />
+        <MonthFilter value={selectedMonth} onChange={(newMonth) => setSelectedMonth(newMonth)} />
       </div>
 
       {error && (

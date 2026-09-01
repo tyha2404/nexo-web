@@ -1,42 +1,6 @@
 .month-filter-container {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.month-filter-container .quick-period-buttons {
-  display: inline-flex;
-  align-items: center;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 3px;
-  gap: 2px;
-}
-
-.month-filter-container .period-pill-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.4rem 0.75rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-}
-
-.month-filter-container .period-pill-btn:hover {
-  color: var(--text-main);
-  background: var(--bg-hover);
-}
-
-.month-filter-container .period-pill-btn.active {
-  background: var(--primary);
-  color: #ffffff;
-  box-shadow: 0 1px 4px var(--primary-glow);
 }
 
 .month-filter-container .month-picker-pill {
@@ -47,11 +11,13 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 0 0.35rem;
-  height: 38px;
+  height: 42px;
   box-sizing: border-box;
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(12px);
   transition: all 0.2s ease;
+  width: 100%;
+  justify-content: space-between;
 }
 
 .month-filter-container .month-picker-pill:hover {
@@ -63,8 +29,8 @@
   background: transparent;
   border: none;
   color: var(--text-muted);
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -82,6 +48,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
+  flex: 1;
+  justify-content: center;
 }
 
 .month-filter-container .month-datepicker-input {
@@ -89,10 +57,10 @@
   border: none !important;
   color: var(--text-main) !important;
   font-family: var(--font-mono);
-  font-size: 0.875rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  width: 82px;
-  height: 34px;
+  width: 86px;
+  height: 36px;
   padding: 0;
   cursor: pointer;
   outline: none !important;
@@ -103,16 +71,9 @@
 @media (max-width: 768px) {
   .month-filter-container {
     width: 100%;
-    justify-content: space-between;
   }
 
-  .month-filter-container .quick-period-buttons {
-    flex: 1;
-  }
-
-  .month-filter-container .period-pill-btn {
-    flex: 1;
-    text-align: center;
-    padding: 0.4rem 0.5rem;
+  .month-filter-container .month-picker-pill {
+    width: 100%;
   }
 }

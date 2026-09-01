@@ -35,86 +35,6 @@ const WALLET_TYPE_OPTIONS = [
   { value: 'JAR', label: '🏺 Hũ chi tiêu (Jar)' },
 ];
 
-const PRESETS = [
-  {
-    label: '💳 Thẻ ACB (30tr)',
-    type: 'CREDIT' as WalletType,
-    name: 'Thẻ tín dụng ACB',
-    icon: '💳',
-    limit: '30.000.000',
-    statement: '20',
-    due: '5',
-    statementBalance: '0',
-    minPayment: '0',
-  },
-  {
-    label: '💳 Thẻ Techcombank (50tr)',
-    type: 'CREDIT' as WalletType,
-    name: 'Thẻ Techcombank Visa',
-    icon: '💳',
-    limit: '50.000.000',
-    statement: '25',
-    due: '10',
-    statementBalance: '0',
-    minPayment: '0',
-  },
-  {
-    label: '💳 Thẻ VPBank (20tr)',
-    type: 'CREDIT' as WalletType,
-    name: 'Thẻ VPBank StepUp',
-    icon: '💳',
-    limit: '20.000.000',
-    statement: '15',
-    due: '30',
-    statementBalance: '0',
-    minPayment: '0',
-  },
-  {
-    label: '🏦 Tài khoản Techcombank',
-    type: 'BANK' as WalletType,
-    name: 'Tài khoản Techcombank',
-    icon: '🏦',
-    limit: '0',
-    statement: '',
-    due: '',
-    statementBalance: '0',
-    minPayment: '0',
-  },
-  {
-    label: '🏦 Tài khoản Vietcombank',
-    type: 'BANK' as WalletType,
-    name: 'Tài khoản Vietcombank (Lương)',
-    icon: '🏦',
-    limit: '0',
-    statement: '',
-    due: '',
-    statementBalance: '0',
-    minPayment: '0',
-  },
-  {
-    label: '📱 Ví MoMo',
-    type: 'E_WALLET' as WalletType,
-    name: 'Ví MoMo',
-    icon: '📱',
-    limit: '0',
-    statement: '',
-    due: '',
-    statementBalance: '0',
-    minPayment: '0',
-  },
-  {
-    label: '💵 Tiền mặt',
-    type: 'CASH' as WalletType,
-    name: 'Tiền mặt',
-    icon: '💵',
-    limit: '0',
-    statement: '',
-    due: '',
-    statementBalance: '0',
-    minPayment: '0',
-  },
-];
-
 export default function Wallets() {
   const [wallets, setWallets] = useState<WalletTypeModel[]>([]);
   const [totalBalance, setTotalBalance] = useState<number>(0);
@@ -245,19 +165,6 @@ export default function Wallets() {
     setFormPreviousBalance(w.previousBalance ? formatDotNumber(w.previousBalance.toString()) : '0');
     setFormIsIncludedInTotal(w.isIncludedInTotal);
     setIsWalletModalOpen(true);
-  };
-
-  const handleApplyPreset = (p: (typeof PRESETS)[0]) => {
-    setFormName(p.name);
-    setFormType(p.type);
-    setFormIcon(p.icon);
-    setFormCreditLimit(p.limit);
-    setFormStatementDay(p.statement);
-    setFormDueDay(p.due);
-    setFormStatementBalance(p.statementBalance);
-    setFormMinimumPayment(p.minPayment);
-    setFormPreviousBalance('0');
-    setFormIsIncludedInTotal(p.type !== 'CREDIT');
   };
 
   const handleSaveWallet = async (e: React.FormEvent) => {
@@ -496,9 +403,65 @@ export default function Wallets() {
     0
   );
   const totalAvailableCredit = creditCards.reduce(
-    (sum, w) => sum + (w.availableCredit || Math.max(0, (w.creditLimit || 0) + w.balance)),
+    (sum, w) =>
+      sum +
+      (w.availableCredit ||
+        Math.max(0, (w.creditLimit || 0) - (w.outstandingDebt || Math.abs(w.balance)))),
     0
   );
+
+  // Credit Health & Utilization Calculations (CIC Standards)
+  const creditUtilizationPercent =
+    totalCreditLimit > 0
+      ? Math.min(100, Math.round((totalOutstandingDebt / totalCreditLimit) * 100))
+      : 0;
+
+  const getCreditHealthStatus = (percent: number) => {
+    if (percent <= 30) {
+      return {
+        label: 'Tối ưu cho Điểm CIC (Rất Tốt)',
+        badgeClass: 'badge-safe',
+        tip: 'Dư nợ dưới 30% tổng hạn mức giúp bạn duy trì xếp hạng tín dụng CIC Nhóm 1 và dễ nâng hạn mức vay sau này.',
+        color: '#10b981',
+      };
+    }
+    if (percent <= 50) {
+      return {
+        label: 'Mức Cảnh Báo Trung Bình (Nên Giảm)',
+        badgeClass: 'badge-warning',
+        tip: 'Dư nợ đang ở mức 30-50%. Hãy ưu tiên thanh toán sớm trước ngày sao kê để đưa tỷ lệ về dưới 30%.',
+        color: '#f59e0b',
+      };
+    }
+    return {
+      label: 'Nguy Cơ Ảnh Hưởng Điểm Tín Dụng',
+      badgeClass: 'badge-danger',
+      tip: 'Dư nợ vượt quá 50% hạn mức có thể bị hệ thống ngân hàng đánh giá là căng thẳng tài chính. Hãy trả bớt dư nợ ngay!',
+      color: '#ef4444',
+    };
+  };
+
+  const creditHealth = getCreditHealthStatus(creditUtilizationPercent);
+
+  // Find the next upcoming statement date & due date
+  const todayDate = moment().date();
+  const nextStatementCard = creditCards
+    .filter((c) => c.statementDay)
+    .sort((a, b) => {
+      const dayA =
+        (a.statementDay! >= todayDate ? a.statementDay! : a.statementDay! + 31) - todayDate;
+      const dayB =
+        (b.statementDay! >= todayDate ? b.statementDay! : b.statementDay! + 31) - todayDate;
+      return dayA - dayB;
+    })[0];
+
+  const nextDueCard = creditCards
+    .filter((c) => c.dueDay && (c.statementBalance || c.outstandingDebt || c.balance < 0))
+    .sort((a, b) => {
+      const dayA = (a.dueDay! >= todayDate ? a.dueDay! : a.dueDay! + 31) - todayDate;
+      const dayB = (b.dueDay! >= todayDate ? b.dueDay! : b.dueDay! + 31) - todayDate;
+      return dayA - dayB;
+    })[0];
 
   const displayedWallets =
     activeTab === 'CREDIT' ? creditCards : activeTab === 'NORMAL' ? normalWallets : wallets;
@@ -590,7 +553,7 @@ export default function Wallets() {
       </div>
 
       {/* 3. Category Tabs Filter */}
-      <div className="list-header-tabs animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+      <div className="list-header-tabs animate-fade-in" style={{ marginBottom: '1rem' }}>
         <div className="category-tabs">
           <button
             type="button"
@@ -624,6 +587,83 @@ export default function Wallets() {
           </button>
         </div>
       </div>
+
+      {/* Credit Health & CIC Utilization Widget (Active on CREDIT tab) */}
+      {activeTab === 'CREDIT' && creditCards.length > 0 && (
+        <div className="credit-health-widget animate-fade-in">
+          <div className="credit-health-main">
+            <div className="credit-health-header">
+              <div className="credit-health-title-wrap">
+                <span className="credit-health-badge">
+                  <ShieldAlert size={15} /> Đánh giá sức khỏe tín dụng CIC
+                </span>
+                <span className={`credit-health-status-tag ${creditHealth.badgeClass}`}>
+                  {creditHealth.label} ({creditUtilizationPercent}%)
+                </span>
+              </div>
+              <div className="credit-health-utilization-text">
+                Tỷ lệ sử dụng: <strong>{creditUtilizationPercent}%</strong> / Ngưỡng tối ưu:{' '}
+                <strong>&lt;30%</strong>
+              </div>
+            </div>
+
+            {/* Gauge Progress Bar */}
+            <div className="credit-gauge-bar-bg">
+              <div
+                className="credit-gauge-bar-fill"
+                style={{
+                  width: `${Math.min(100, Math.max(3, creditUtilizationPercent))}%`,
+                  backgroundColor: creditHealth.color,
+                }}
+              />
+              <div className="credit-gauge-marker safe-marker" title="Ngưỡng 30% CIC an toàn">
+                <span>30%</span>
+              </div>
+              <div className="credit-gauge-marker warn-marker" title="Ngưỡng 50% cảnh báo">
+                <span>50%</span>
+              </div>
+            </div>
+
+            <p className="credit-health-tip">{creditHealth.tip}</p>
+          </div>
+
+          <div className="credit-health-sidebar">
+            <div className="credit-health-quickstat">
+              <div className="quickstat-label">
+                <CheckCircle2 size={14} className="text-emerald" /> Sao kê tiếp theo
+              </div>
+              <div className="quickstat-value">
+                {nextStatementCard ? (
+                  <>
+                    <strong>Ngày {nextStatementCard.statementDay}</strong>
+                    <span className="quickstat-card-name">({nextStatementCard.name})</span>
+                  </>
+                ) : (
+                  'Chưa cấu hình'
+                )}
+              </div>
+              <div className="quickstat-sub">Quẹt sau ngày này để miễn lãi 45-55 ngày</div>
+            </div>
+
+            <div className="credit-health-quickstat">
+              <div className="quickstat-label">
+                <AlertTriangle size={14} className="text-rose" /> Hạn thanh toán tới
+              </div>
+              <div className="quickstat-value">
+                {nextDueCard ? (
+                  <>
+                    <strong style={{ color: 'var(--expense)' }}>Ngày {nextDueCard.dueDay}</strong>
+                    <span className="quickstat-card-name">({nextDueCard.name})</span>
+                  </>
+                ) : (
+                  'Không có nợ đến hạn'
+                )}
+              </div>
+              <div className="quickstat-sub">Thanh toán đủ 100% để tránh lãi 25-45%/năm</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 4. Unified Data Table View */}
       {loading ? (
@@ -1008,25 +1048,6 @@ export default function Wallets() {
               </button>
             </div>
             <form onSubmit={handleSaveWallet}>
-              {/* Presets */}
-              {!editingWallet && (
-                <div className="form-group">
-                  <label>Chọn mẫu có sẵn</label>
-                  <div className="presets-container">
-                    {PRESETS.map((p, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        className="preset-tag-btn"
-                        onClick={() => handleApplyPreset(p)}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               <div className="form-group">
                 <label>Loại ví / thẻ tài chính</label>
                 <Select

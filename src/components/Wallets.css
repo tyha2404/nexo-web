@@ -313,3 +313,223 @@
   cursor: pointer;
   line-height: 1.4;
 }
+
+/* ==========================================================================
+   Credit Health & CIC Utilization Widget Styles
+   ========================================================================== */
+.credit-health-widget {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem 1.35rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+  align-items: center;
+}
+
+@media (max-width: 1024px) {
+  .credit-health-widget {
+    grid-template-columns: 1fr;
+  }
+}
+
+.credit-health-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.credit-health-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.credit-health-title-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.credit-health-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.credit-health-status-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  white-space: nowrap !important;
+}
+
+.credit-health-status-tag.badge-safe {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.credit-health-status-tag.badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.credit-health-status-tag.badge-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.credit-health-utilization-text {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.credit-health-utilization-text strong {
+  color: var(--text-main);
+  font-family: var(--font-mono);
+}
+
+/* Gauge Bar with Markers */
+.credit-gauge-bar-bg {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background: var(--bg-hover, rgba(255, 255, 255, 0.08));
+  border-radius: 4px;
+  overflow: visible;
+  margin: 0.35rem 0 0.85rem 0;
+}
+
+.credit-gauge-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.credit-gauge-marker {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--text-muted);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.credit-gauge-marker span {
+  position: absolute;
+  top: 10px;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.safe-marker {
+  left: 30%;
+}
+
+.warn-marker {
+  left: 50%;
+}
+
+.credit-health-tip {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Sidebar with Quick Advice */
+.credit-health-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-left: 1px solid var(--border);
+  padding-left: 1rem;
+}
+
+@media (max-width: 1024px) {
+  .credit-health-sidebar {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding-left: 0;
+    padding-top: 0.75rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .credit-health-sidebar {
+    grid-template-columns: 1fr;
+  }
+}
+
+.credit-health-quickstat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  background: var(--bg-input);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--border);
+}
+
+.quickstat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.text-emerald {
+  color: #10b981;
+}
+
+.text-rose {
+  color: #ef4444;
+}
+
+.quickstat-value {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--text-main);
+}
+
+.quickstat-card-name {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quickstat-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  line-height: 1.25;
+}

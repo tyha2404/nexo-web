@@ -29,7 +29,7 @@ import { formatCurrency, formatDate, toISODateString } from '../commons/utils';
 import { categoryService, transactionService, walletService } from '../services/api';
 import type { CreateTransactionDTO } from '../services/transactionService';
 import AddTransactionModal from './AddTransactionModal';
-import { DateRangeFilter } from './common';
+import { MonthFilter } from './common';
 import Pagination from './Pagination';
 import './Transactions.css';
 
@@ -62,11 +62,7 @@ export default function Transactions({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>('');
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
-    moment().startOf('month').toDate(),
-    moment().endOf('month').toDate(),
-  ]);
-  const [startDate, endDate] = dateRange;
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => moment().format('YYYY-MM'));
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -126,6 +122,9 @@ export default function Transactions({
       try {
         setLoading(true);
         setError(null);
+        const startOfMonth = moment(selectedMonth, 'YYYY-MM').startOf('month').toDate();
+        const endOfMonth = moment(selectedMonth, 'YYYY-MM').endOf('month').toDate();
+
         const res = await transactionService.list({
           type: activeType,
           categoryId: selectedCategoryFilter || undefined,
@@ -133,8 +132,8 @@ export default function Transactions({
             activeType === TransactionType.INVESTMENT && selectedStatusFilter
               ? (selectedStatusFilter as InvestmentStatus)
               : undefined,
-          startDate: startDate ? toISODateString(startDate) : undefined,
-          endDate: endDate ? toISODateString(endDate) : undefined,
+          startDate: toISODateString(startOfMonth),
+          endDate: toISODateString(endOfMonth),
           page: currentPage,
           limit: itemsPerPage,
         });
@@ -157,8 +156,7 @@ export default function Transactions({
     activeType,
     selectedCategoryFilter,
     selectedStatusFilter,
-    startDate,
-    endDate,
+    selectedMonth,
     currentPage,
     itemsPerPage,
     refreshKey,
@@ -496,8 +494,8 @@ export default function Transactions({
 
         // Default: EXPENSE
         const today = moment().startOf('day');
-        const start = startDate ? moment(startDate).startOf('day') : moment().startOf('month');
-        const end = endDate ? moment(endDate).startOf('day') : moment().endOf('month');
+        const start = moment(selectedMonth, 'YYYY-MM').startOf('month');
+        const end = moment(selectedMonth, 'YYYY-MM').endOf('month');
 
         const effectiveEnd = end.isAfter(today) ? today : end;
         const daysCount = Math.max(1, effectiveEnd.diff(start, 'days') + 1);
@@ -630,13 +628,12 @@ export default function Transactions({
           </div>
         )}
         <div className="date-range-filter-col">
-          <DateRangeFilter
-            value={dateRange}
-            onChange={(update) => {
-              setDateRange(update);
+          <MonthFilter
+            value={selectedMonth}
+            onChange={(mStr) => {
+              setSelectedMonth(mStr);
               setCurrentPage(1);
             }}
-            placeholderText="Chọn khoảng ngày"
           />
         </div>
       </div>

@@ -7,20 +7,9 @@ export interface MonthFilterProps {
   /** Month in 'YYYY-MM' format (e.g. '2026-09') */
   value: string;
   onChange: (monthStr: string) => void;
-  showQuickButtons?: boolean;
 }
 
-export default function MonthFilter({
-  value,
-  onChange,
-  showQuickButtons = true,
-}: MonthFilterProps) {
-  const currentMonthStr = moment().format('YYYY-MM');
-  const lastMonthStr = moment().subtract(1, 'month').format('YYYY-MM');
-
-  const isCurrentMonthActive = value === currentMonthStr;
-  const isLastMonthActive = value === lastMonthStr;
-
+export default function MonthFilter({ value, onChange }: MonthFilterProps) {
   const handlePrevMonth = () => {
     const prev = moment(value, 'YYYY-MM').subtract(1, 'month').format('YYYY-MM');
     onChange(prev);
@@ -33,25 +22,6 @@ export default function MonthFilter({
 
   return (
     <div className="month-filter-container">
-      {showQuickButtons && (
-        <div className="quick-period-buttons" role="group" aria-label="Chọn kỳ nhanh">
-          <button
-            type="button"
-            className={`period-pill-btn ${isCurrentMonthActive ? 'active' : ''}`}
-            onClick={() => onChange(currentMonthStr)}
-          >
-            Tháng này
-          </button>
-          <button
-            type="button"
-            className={`period-pill-btn ${isLastMonthActive ? 'active' : ''}`}
-            onClick={() => onChange(lastMonthStr)}
-          >
-            Tháng trước
-          </button>
-        </div>
-      )}
-
       <div className="month-picker-pill">
         <button
           type="button"

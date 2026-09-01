@@ -8,7 +8,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       injectRegister: 'script',
-      includeAssets: ['favicon.svg', 'robots.txt', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg', 'logo-transparent.svg', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         name: 'Nexo Web App',
         short_name: 'Nexo Web',

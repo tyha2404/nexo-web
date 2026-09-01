@@ -570,23 +570,17 @@ input[class*='dummyInput'] {
   box-shadow: 0 6px 16px var(--primary-glow);
 }
 
-/* Custom Scrollbars */
+/* Hide scrollbars (horizontal & vertical) */
+*::-webkit-scrollbar,
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--bg-app);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--border-hover);
+* {
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
 }
 
 /* Theme Toggle & Icon-Only Action Buttons Style */
@@ -1486,6 +1480,29 @@ body.light-theme .kpi-badge-neutral,
   background: rgba(15, 23, 42, 0.05);
   color: var(--text-main);
   border-color: var(--border);
+}
+
+/* ==========================================================================
+   Universal Search Input Wrapper (Avoid icon overlapping placeholder/text)
+   ========================================================================== */
+.search-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-wrapper .search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.search-input-wrapper input {
+  padding-left: 2.65rem !important;
+  height: 42px !important;
 }
 
 /* ==========================================================================

@@ -266,7 +266,6 @@ export default function Targets() {
           <MonthFilter
             value={moment(selectedMonth).format('YYYY-MM')}
             onChange={(monthStr) => setSelectedMonth(moment(monthStr, 'YYYY-MM').toDate())}
-            showQuickButtons={true}
           />
         </div>
       </div>

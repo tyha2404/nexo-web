@@ -1,5 +1,6 @@
 import {
   ArrowLeftRight,
+  Handshake,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -18,6 +19,7 @@ import { TransactionType } from './commons/constants';
 import type { User } from './commons/types';
 import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
+import Debts from './components/Debts';
 import Planning, { type PlanningSubTab } from './components/Planning';
 import ReloadPrompt from './components/ReloadPrompt';
 import Transactions from './components/Transactions';
@@ -25,7 +27,7 @@ import Wallets from './components/Wallets';
 import { AIChatWidget } from './components/chat';
 import { authService } from './services/api';
 
-export type ActiveTab = 'dashboard' | 'transactions' | 'wallets' | 'planning';
+export type ActiveTab = 'dashboard' | 'transactions' | 'wallets' | 'debts' | 'planning';
 
 function App() {
   const navigate = useNavigate();
@@ -114,6 +116,8 @@ function App() {
           : '/transactions';
       case 'wallets':
         return '/wallets';
+      case 'debts':
+        return '/debts';
       case 'planning':
         return opts?.planningSubTab ? `/planning/${opts.planningSubTab}` : '/planning';
       case 'dashboard':
@@ -127,7 +131,9 @@ function App() {
     const segments = pathname.split('/').filter(Boolean); // e.g. ["transactions","income"]
     const tab = segments[0] as ActiveTab | undefined;
     setActiveTab(
-      tab === 'transactions' || tab === 'wallets' || tab === 'planning' ? tab : 'dashboard'
+      tab === 'transactions' || tab === 'wallets' || tab === 'debts' || tab === 'planning'
+        ? tab
+        : 'dashboard'
     );
 
     if (tab === 'transactions') {
@@ -142,7 +148,7 @@ function App() {
     } else if (tab === 'planning') {
       const sub = segments[1];
       if (sub === 'categories' || sub === 'targets') {
-        setPlanningSubTab(sub);
+        setPlanningSubTab(sub as PlanningSubTab);
       }
     }
   };
@@ -172,8 +178,10 @@ function App() {
     } else if (tab === 'transactions') {
       targetTab = 'transactions';
       opts = { transactionType };
-    } else if (tab === 'debts' || tab === 'wallets') {
+    } else if (tab === 'wallets') {
       targetTab = 'wallets';
+    } else if (tab === 'debts') {
+      targetTab = 'debts';
     } else if (tab === 'categories') {
       targetTab = 'planning';
       opts = { planningSubTab: 'categories' };
@@ -250,16 +258,26 @@ function App() {
           }}
           aria-label="Trang chủ Nexo"
         >
-          <img src="/favicon.svg" className="mobile-logo" alt="Nexo logo" />
+          <img src="/logo-transparent.svg" className="mobile-logo" alt="Nexo logo" />
           <span className="brand-name">Nexo Portal</span>
         </div>
-        <button
-          className="theme-toggle-btn"
-          onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-          aria-label="Toggle Theme"
-        >
-          {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <button
+            className="theme-toggle-btn"
+            onClick={handleOpenAIChat}
+            aria-label="Trợ lý AI"
+            title="Trợ lý Nexo AI"
+          >
+            <Sparkles size={18} color="var(--primary)" />
+          </button>
+          <button
+            className="theme-toggle-btn"
+            onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+            aria-label="Toggle Theme"
+          >
+            {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+        </div>
       </header>
 
       {/* Sidebar Backdrop Overlay */}
@@ -282,7 +300,7 @@ function App() {
             }}
             aria-label="Trang chủ Nexo"
           >
-            <img src="/favicon.svg" className="sidebar-logo" alt="Nexo logo" />
+            <img src="/logo-transparent.svg" className="sidebar-logo" alt="Nexo logo" />
             <span className="brand-name">Nexo Portal</span>
           </div>
         </div>
@@ -317,6 +335,16 @@ function App() {
               <Wallet size={18} />
             </span>
             <span className="nav-text">Tài sản & Ví</span>
+          </button>
+
+          <button
+            onClick={() => handleNavigate('debts')}
+            className={`nav-item ${activeTab === 'debts' ? 'active' : ''}`}
+          >
+            <span className="nav-icon">
+              <Handshake size={18} />
+            </span>
+            <span className="nav-text">Sổ Vay & Nợ</span>
           </button>
 
           <button
@@ -376,6 +404,7 @@ function App() {
               {activeTab === 'dashboard' && 'Tổng quan'}
               {activeTab === 'transactions' && 'Sổ giao dịch'}
               {activeTab === 'wallets' && 'Tài sản & Ví'}
+              {activeTab === 'debts' && 'Sổ Vay & Nợ'}
               {activeTab === 'planning' && 'Kế hoạch & Mục tiêu'}
             </h1>
           </div>
@@ -426,6 +455,12 @@ function App() {
         </div>
         <div
           className="content-view animate-fade-in"
+          style={{ display: activeTab === 'debts' ? 'block' : 'none' }}
+        >
+          <Debts />
+        </div>
+        <div
+          className="content-view animate-fade-in"
           style={{ display: activeTab === 'planning' ? 'block' : 'none' }}
         >
           <Planning
@@ -472,6 +507,18 @@ function App() {
             <Wallet size={20} />
           </div>
           <span className="bottom-nav-label">Tài sản</span>
+        </button>
+
+        <button
+          type="button"
+          className={`bottom-nav-item ${activeTab === 'debts' ? 'active' : ''}`}
+          onClick={() => handleNavigate('debts')}
+          aria-label="Sổ Vay & Nợ"
+        >
+          <div className="bottom-nav-icon">
+            <Handshake size={20} />
+          </div>
+          <span className="bottom-nav-label">Vay & Nợ</span>
         </button>
 
         <button

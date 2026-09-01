@@ -17,23 +17,18 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '../commons/utils';
 import { debtService } from '../services/api';
-import type { Debt, DebtSummary, DebtType } from '../types/debt';
-import { DateRangeFilter } from './common';
+import type { Debt, DebtType } from '../types/debt';
+import { MonthFilter } from './common';
 import './Debts.css';
 
 export default function Debts() {
   const [debts, setDebts] = useState<Debt[]>([]);
-  const [summary, setSummary] = useState<DebtSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Search, Date Range & Filters
+  // Search, Month & Filters
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
-    moment().startOf('month').toDate(),
-    moment().endOf('month').toDate(),
-  ]);
-  const [startDate, endDate] = dateRange;
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => moment().format('YYYY-MM'));
   const [filterType, setFilterType] = useState<string>(''); // '' | 'PAYABLE' | 'RECEIVABLE'
 
   // Modals
@@ -74,11 +69,9 @@ export default function Debts() {
     try {
       setLoading(true);
       setError(null);
-      const [sumData, debtList] = await Promise.all([
-        debtService.getSummary(),
-        debtService.getDebts(filterType ? (filterType as DebtType) : undefined),
-      ]);
-      setSummary(sumData);
+      const debtList = await debtService.getDebts(
+        filterType ? (filterType as DebtType) : undefined
+      );
       setDebts(Array.isArray(debtList) ? debtList : (debtList as any)?.data || []);
     } catch (err: any) {
       setError(err.message || 'Không thể tải dữ liệu khoản vay/nợ');
@@ -188,6 +181,9 @@ export default function Debts() {
     }
   };
 
+  const startOfMonth = moment(selectedMonth, 'YYYY-MM').startOf('month');
+  const endOfMonth = moment(selectedMonth, 'YYYY-MM').endOf('month');
+
   const filteredDebts = (Array.isArray(debts) ? debts : []).filter((d) => {
     if (!d) return false;
     const debtTitle = d.title || (d as any).personName || '';
@@ -195,45 +191,21 @@ export default function Debts() {
       debtTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (d.notes || '').toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchDateRange = (() => {
-      if (!startDate) return true;
-      const debtDate = d.startDate || (d as any).createdAt;
-      if (!debtDate) return true;
-      const m = moment(debtDate);
-      if (startDate && !endDate) {
-        return m.isSameOrAfter(moment(startDate).startOf('day'));
-      }
-      if (startDate && endDate) {
-        return m.isBetween(
-          moment(startDate).startOf('day'),
-          moment(endDate).endOf('day'),
-          undefined,
-          '[]'
-        );
-      }
-      return true;
-    })();
+    const debtDate = d.startDate || (d as any).createdAt;
+    if (!debtDate) return matchSearch;
+    const m = moment(debtDate);
+    const matchMonth = m.isBetween(startOfMonth, endOfMonth, undefined, '[]');
 
-    return matchSearch && matchDateRange;
+    return matchSearch && matchMonth;
   });
 
-  const displayPayable = startDate
-    ? filteredDebts
-        .filter((d) => d.type === 'PAYABLE')
-        .reduce(
-          (sum, d) => sum + (d.remaining ?? (d as any).remainingAmount ?? d.totalAmount ?? 0),
-          0
-        )
-    : (summary?.totalPayable ?? 0);
+  const displayPayable = filteredDebts
+    .filter((d) => d.type === 'PAYABLE')
+    .reduce((sum, d) => sum + (d.remaining ?? (d as any).remainingAmount ?? d.totalAmount ?? 0), 0);
 
-  const displayReceivable = startDate
-    ? filteredDebts
-        .filter((d) => d.type === 'RECEIVABLE')
-        .reduce(
-          (sum, d) => sum + (d.remaining ?? (d as any).remainingAmount ?? d.totalAmount ?? 0),
-          0
-        )
-    : (summary?.totalReceivable ?? 0);
+  const displayReceivable = filteredDebts
+    .filter((d) => d.type === 'RECEIVABLE')
+    .reduce((sum, d) => sum + (d.remaining ?? (d as any).remainingAmount ?? d.totalAmount ?? 0), 0);
 
   return (
     <div className="transactions-view">
@@ -268,9 +240,7 @@ export default function Debts() {
             {formatCurrency(Math.abs(displayPayable))}
           </div>
           <div className="summary-stat-subtitle">
-            {startDate
-              ? `Khoảng: ${moment(startDate).format('DD/MM/YYYY')} ${endDate ? '- ' + moment(endDate).format('DD/MM/YYYY') : ''}`
-              : 'Tổng tất cả khoản nợ'}
+            Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}
           </div>
         </div>
 
@@ -285,9 +255,7 @@ export default function Debts() {
             {formatCurrency(Math.abs(displayReceivable))}
           </div>
           <div className="summary-stat-subtitle">
-            {startDate
-              ? `Khoảng: ${moment(startDate).format('DD/MM/YYYY')} ${endDate ? '- ' + moment(endDate).format('DD/MM/YYYY') : ''}`
-              : 'Tổng tất cả khoản cho vay'}
+            Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}
           </div>
         </div>
       </div>
@@ -326,11 +294,7 @@ export default function Debts() {
         </div>
 
         <div className="date-range-filter-col">
-          <DateRangeFilter
-            value={dateRange}
-            onChange={setDateRange}
-            placeholderText="Chọn khoảng ngày"
-          />
+          <MonthFilter value={selectedMonth} onChange={setSelectedMonth} />
         </div>
       </div>
 

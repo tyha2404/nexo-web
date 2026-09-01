@@ -251,13 +251,20 @@
   width: 100%;
 }
 
-.search-icon {
+.search-input-wrapper .search-icon {
   position: absolute;
-  left: 1rem;
+  left: 0.85rem;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
   pointer-events: none;
+  z-index: 2;
+}
+
+.search-input-wrapper input,
+.filter-bar .search-input-wrapper input {
+  padding-left: 2.65rem !important;
+  height: 42px !important;
 }
 
 .filter-bar input:not([class*='dummyInput']):not(.react-select__input):not(.react-datepicker-input),
@@ -288,11 +295,6 @@ input[class*='dummyInput'] {
   height: auto !important;
   min-height: 0 !important;
   margin: 0 !important;
-}
-
-.search-input-wrapper input {
-  padding-left: 2.5rem;
-  height: 42px;
 }
 
 .category-select-wrapper,

@@ -483,7 +483,6 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
-  const fabRef = useRef<HTMLButtonElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -491,14 +490,14 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
 
   const handleSendMessageRef = useRef<(textToSend?: string) => Promise<void>>(async () => {});
 
-  // Listen to open-ai-chat custom event triggered by omni-bar or external action
+  // Listen to open-ai-chat custom event triggered by header button or external action
   useEffect(() => {
     const handleOpenAIChat = (e?: any) => {
-      setIsOpen(true);
       const prompt = e?.detail?.prompt;
       const autoSend = e?.detail?.autoSend;
 
       if (prompt) {
+        setIsOpen(true);
         if (autoSend) {
           handleSendMessageRef.current(prompt);
         } else {
@@ -512,6 +511,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
           }, 100);
         }
       } else {
+        setIsOpen((prev) => !prev);
         setTimeout(() => {
           textareaRef.current?.focus();
         }, 100);
@@ -533,11 +533,12 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
       if (
         window.innerWidth > 768 &&
         chatWindowRef.current &&
-        !chatWindowRef.current.contains(target) &&
-        fabRef.current &&
-        !fabRef.current.contains(target)
+        !chatWindowRef.current.contains(target)
       ) {
-        setIsOpen(false);
+        const isHeaderAiBtn = (target as HTMLElement).closest?.('.header-ai-btn');
+        if (!isHeaderAiBtn) {
+          setIsOpen(false);
+        }
       }
     };
 
@@ -1118,49 +1119,6 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
 
   return createPortal(
     <>
-      {/* Floating Action Button */}
-      <button
-        ref={fabRef}
-        className={`nexo-chat-widget-fab ${isOpen ? 'active' : ''}`}
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Toggle Nexo AI"
-        title="Trợ lý Nexo AI"
-      >
-        {isOpen ? (
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        ) : (
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 8V4H8" />
-            <rect width="16" height="12" x="4" y="8" rx="2" />
-            <path d="M2 14h2" />
-            <path d="M20 14h2" />
-            <path d="M15 13v2" />
-            <path d="M9 13v2" />
-          </svg>
-        )}
-      </button>
-
       {/* Backdrop Overlay with Blur Effect */}
       {isOpen && (
         <div
@@ -1264,25 +1222,20 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
             </div>
 
             <div className="chat-header-actions">
-              <button
-                className="chat-header-new-btn"
-                onClick={handleNewChat}
-                title="Tạo hội thoại mới"
-              >
+              <button className="chat-icon-btn" onClick={handleNewChat} title="Tạo hội thoại mới">
                 <svg
-                  width="13"
-                  height="13"
+                  width="17"
+                  height="17"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2.5"
+                  strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                <span className="new-chat-label">+ Hội thoại mới</span>
               </button>
 
               <button
