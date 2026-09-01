@@ -1,8 +1,9 @@
 import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
 import 'react-datepicker/dist/react-datepicker.css';
-import './index.css';
+import { createRoot } from 'react-dom/client';
+import { HashRouter } from 'react-router-dom';
 import App from './App.tsx';
+import './index.css';
 
 // Force browser to bust favicon cache
 if (typeof window !== 'undefined') {
@@ -20,6 +21,8 @@ if (typeof window !== 'undefined') {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <HashRouter>
+      <App />
+    </HashRouter>
   </StrictMode>
 );

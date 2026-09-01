@@ -9,7 +9,8 @@ import {
   Target,
   Wallet,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
@@ -27,6 +28,10 @@ import { authService } from './services/api';
 export type ActiveTab = 'dashboard' | 'transactions' | 'wallets' | 'planning';
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const internalNavRef = useRef(false);
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [planningSubTab, setPlanningSubTab] = useState<PlanningSubTab>('targets');
   const [transactionType, setTransactionType] = useState<TransactionType>(TransactionType.EXPENSE);
@@ -98,35 +103,100 @@ function App() {
     setUser(null);
   };
 
-  const handleNavigate = (tab: string) => {
-    if (tab === 'income') {
-      setTransactionType(TransactionType.INCOME);
-      setActiveTab('transactions');
-    } else if (tab === 'expenses') {
-      setTransactionType(TransactionType.EXPENSE);
-      setActiveTab('transactions');
-    } else if (tab === 'investment') {
-      setTransactionType(TransactionType.INVESTMENT);
-      setActiveTab('transactions');
-    } else if (tab === 'transactions') {
-      setActiveTab('transactions');
-    } else if (tab === 'debts' || tab === 'wallets') {
-      setActiveTab('wallets');
-    } else if (tab === 'categories') {
-      setPlanningSubTab('categories');
-      setActiveTab('planning');
-    } else if (tab === 'targets') {
-      setPlanningSubTab('targets');
-      setActiveTab('planning');
-    } else if (tab === 'planning') {
-      setActiveTab('planning');
-    } else {
-      setActiveTab('dashboard');
+  const getPathForTab = (
+    tab: ActiveTab,
+    opts?: { transactionType?: TransactionType; planningSubTab?: PlanningSubTab }
+  ) => {
+    switch (tab) {
+      case 'transactions':
+        return opts?.transactionType
+          ? `/transactions/${opts.transactionType.toLowerCase()}`
+          : '/transactions';
+      case 'wallets':
+        return '/wallets';
+      case 'planning':
+        return opts?.planningSubTab ? `/planning/${opts.planningSubTab}` : '/planning';
+      case 'dashboard':
+      default:
+        return '/';
     }
-    setIsSidebarOpen(false);
   };
 
-  // Global shortcut for opening AI Copilot (Cmd+K / Ctrl+K)
+  // Parse the current URL hash path into App state (deep-link / back-forward support)
+  const applyPathToState = (pathname: string) => {
+    const segments = pathname.split('/').filter(Boolean); // e.g. ["transactions","income"]
+    const tab = segments[0] as ActiveTab | undefined;
+    setActiveTab(
+      tab === 'transactions' || tab === 'wallets' || tab === 'planning' ? tab : 'dashboard'
+    );
+
+    if (tab === 'transactions') {
+      const typeSegment = segments[1]?.toUpperCase();
+      if (
+        typeSegment === TransactionType.INCOME ||
+        typeSegment === TransactionType.EXPENSE ||
+        typeSegment === TransactionType.INVESTMENT
+      ) {
+        setTransactionType(typeSegment);
+      }
+    } else if (tab === 'planning') {
+      const sub = segments[1];
+      if (sub === 'categories' || sub === 'targets') {
+        setPlanningSubTab(sub);
+      }
+    }
+  };
+
+  // Keep state in sync with the URL (covers browser back/forward + typed deep links)
+  useEffect(() => {
+    if (internalNavRef.current) {
+      internalNavRef.current = false;
+      return;
+    }
+    applyPathToState(location.pathname);
+  }, [location.pathname]);
+
+  const handleNavigate = (tab: string) => {
+    let targetTab: ActiveTab;
+    let opts: { transactionType?: TransactionType; planningSubTab?: PlanningSubTab } = {};
+
+    if (tab === 'income') {
+      targetTab = 'transactions';
+      opts = { transactionType: TransactionType.INCOME };
+    } else if (tab === 'expenses') {
+      targetTab = 'transactions';
+      opts = { transactionType: TransactionType.EXPENSE };
+    } else if (tab === 'investment') {
+      targetTab = 'transactions';
+      opts = { transactionType: TransactionType.INVESTMENT };
+    } else if (tab === 'transactions') {
+      targetTab = 'transactions';
+      opts = { transactionType };
+    } else if (tab === 'debts' || tab === 'wallets') {
+      targetTab = 'wallets';
+    } else if (tab === 'categories') {
+      targetTab = 'planning';
+      opts = { planningSubTab: 'categories' };
+    } else if (tab === 'targets') {
+      targetTab = 'planning';
+      opts = { planningSubTab: 'targets' };
+    } else if (tab === 'planning') {
+      targetTab = 'planning';
+      opts = { planningSubTab };
+    } else {
+      targetTab = 'dashboard';
+    }
+
+    setActiveTab(targetTab);
+    if (opts.transactionType) setTransactionType(opts.transactionType);
+    if (opts.planningSubTab) setPlanningSubTab(opts.planningSubTab);
+    setIsSidebarOpen(false);
+
+    internalNavRef.current = true;
+    navigate(getPathForTab(targetTab, opts));
+  };
+
+  // Global shortcut: Cmd/Ctrl+K opens AI
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -335,18 +405,34 @@ function App() {
           </div>
         </header>
 
-        {/* Content View based on activeTab */}
-        <div className="content-view animate-fade-in" key={activeTab}>
-          {activeTab === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
-          {activeTab === 'transactions' && <Transactions type={transactionType} />}
-          {activeTab === 'wallets' && <Wallets />}
-          {activeTab === 'planning' && (
-            <Planning
-              initialSubTab={planningSubTab}
-              onSubTabChange={setPlanningSubTab}
-              onNavigate={handleNavigate}
-            />
-          )}
+        {/* Content Views — kept mounted to preserve filter/scroll state per tab */}
+        <div
+          className="content-view animate-fade-in"
+          style={{ display: activeTab === 'dashboard' ? 'block' : 'none' }}
+        >
+          <Dashboard onNavigate={handleNavigate} />
+        </div>
+        <div
+          className="content-view animate-fade-in"
+          style={{ display: activeTab === 'transactions' ? 'block' : 'none' }}
+        >
+          <Transactions type={transactionType} />
+        </div>
+        <div
+          className="content-view animate-fade-in"
+          style={{ display: activeTab === 'wallets' ? 'block' : 'none' }}
+        >
+          <Wallets />
+        </div>
+        <div
+          className="content-view animate-fade-in"
+          style={{ display: activeTab === 'planning' ? 'block' : 'none' }}
+        >
+          <Planning
+            initialSubTab={planningSubTab}
+            onSubTabChange={setPlanningSubTab}
+            onNavigate={handleNavigate}
+          />
         </div>
       </main>
 

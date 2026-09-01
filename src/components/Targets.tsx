@@ -17,6 +17,7 @@ import { targetService } from '../services/api';
 import type { TargetSummaryResponse } from '../commons/types';
 import { formatCurrency } from '../commons/utils';
 import { toast } from 'react-toastify';
+import { MonthFilter } from './common';
 import './Targets.css';
 
 export default function Targets() {
@@ -239,7 +240,7 @@ export default function Targets() {
         </div>
       </div>
 
-      {/* Filter bar - cloning Transactions filter layout */}
+      {/* Filter bar aligned with system design */}
       <div className="filter-bar animate-fade-in">
         <div className="category-select-wrapper" style={{ minWidth: '220px' }}>
           <Select
@@ -261,17 +262,11 @@ export default function Targets() {
             menuPortalTarget={document.body}
           />
         </div>
-        <div className="date-range-wrapper">
-          <DatePicker
-            selected={selectedMonth}
-            onChange={(date: Date | null) => {
-              if (date) setSelectedMonth(date);
-            }}
-            dateFormat="MM/yyyy"
-            showMonthYearPicker
-            placeholderText="Chọn tháng"
-            className="react-datepicker-input"
-            portalId="date-picker-portal"
+        <div className="date-range-filter-col">
+          <MonthFilter
+            value={moment(selectedMonth).format('YYYY-MM')}
+            onChange={(monthStr) => setSelectedMonth(moment(monthStr, 'YYYY-MM').toDate())}
+            showQuickButtons={true}
           />
         </div>
       </div>

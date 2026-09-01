@@ -18,6 +18,7 @@ import {
 import { formatCurrency } from '../commons/utils';
 import { debtService } from '../services/api';
 import type { Debt, DebtSummary, DebtType } from '../types/debt';
+import { DateRangeFilter } from './common';
 import './Debts.css';
 
 export default function Debts() {
@@ -324,17 +325,11 @@ export default function Debts() {
           />
         </div>
 
-        <div className="date-range-wrapper">
-          <DatePicker
-            selectsRange={true}
-            startDate={startDate}
-            endDate={endDate}
-            onChange={(update) => setDateRange(update)}
-            isClearable={true}
+        <div className="date-range-filter-col">
+          <DateRangeFilter
+            value={dateRange}
+            onChange={setDateRange}
             placeholderText="Chọn khoảng ngày"
-            dateFormat="dd/MM/yyyy"
-            className="react-datepicker-input"
-            portalId="date-picker-portal"
           />
         </div>
       </div>

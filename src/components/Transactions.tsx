@@ -13,15 +13,12 @@ import {
   Trash2,
   TrendingUp,
   Wallet,
-  X,
 } from 'lucide-react';
 import moment from 'moment';
-import React, { useEffect, useState } from 'react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import { useEffect, useState } from 'react';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
-import { DATE_FORMAT_INPUT, TransactionType } from '../commons/constants';
+import { TransactionType } from '../commons/constants';
 import type {
   Category,
   InvestmentStatus,
@@ -30,6 +27,9 @@ import type {
 } from '../commons/types';
 import { formatCurrency, formatDate, toISODateString } from '../commons/utils';
 import { categoryService, transactionService, walletService } from '../services/api';
+import type { CreateTransactionDTO } from '../services/transactionService';
+import AddTransactionModal from './AddTransactionModal';
+import { DateRangeFilter } from './common';
 import Pagination from './Pagination';
 import './Transactions.css';
 
@@ -85,15 +85,7 @@ export default function Transactions({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  // Form states
-  const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [walletId, setWalletId] = useState('');
-  const [transactionDate, setTransactionDate] = useState('');
-  const [status, setStatus] = useState<InvestmentStatus>('HOLDING');
-  const [realizedPnl, setRealizedPnl] = useState<string>('0');
+  const [modalType, setModalType] = useState<TransactionType>(initialType);
 
   // Sync internal activeType if parent passes or updates the `type` prop
   useEffect(() => {
@@ -182,115 +174,22 @@ export default function Transactions({
     setSearchQuery('');
   };
 
-  const showFeedback = (message: string, type: 'success' | 'error') => {
-    if (type === 'success') {
-      toast.success(message);
-    } else {
-      toast.error(message);
-    }
-  };
-
   const filteredCategories = categories;
-
-  const handleAmountChange = (val: string) => {
-    const cleanNumber = val.replace(/\D/g, '');
-    if (cleanNumber === '') {
-      setAmount('');
-      return;
-    }
-    const formatted = parseInt(cleanNumber, 10).toLocaleString('vi-VN');
-    setAmount(formatted);
-  };
-
-  const handlePnlChange = (val: string) => {
-    const isNegative = val.trim().startsWith('-');
-    const cleanNumber = val.replace(/\D/g, '');
-    if (cleanNumber === '') {
-      setRealizedPnl(isNegative ? '-' : '');
-      return;
-    }
-    const formatted = parseInt(cleanNumber, 10).toLocaleString('vi-VN');
-    setRealizedPnl(isNegative ? `-${formatted}` : formatted);
-  };
 
   const openAddModal = () => {
     setEditingTransaction(null);
-    setTitle('');
-    setAmount('');
-    setCategoryId(filteredCategories.length > 0 ? filteredCategories[0].id : '');
-    setWalletId('');
-    setTransactionDate(formatDate(moment(), DATE_FORMAT_INPUT));
-    setStatus('HOLDING');
-    setRealizedPnl('0');
+    setModalType(activeType);
     setIsModalOpen(true);
   };
 
   const openEditModal = (transaction: Transaction) => {
     setEditingTransaction(transaction);
-    setTitle(transaction.description || '');
-    const rawVal = Math.round(transaction.amount).toString();
-    const formattedAmount = parseInt(rawVal, 10).toLocaleString('vi-VN');
-    setAmount(formattedAmount);
-    setCategoryId(transaction.categoryId);
-    setWalletId(transaction.walletId || '');
-    setTransactionDate(formatDate(transaction.transactionDate, DATE_FORMAT_INPUT));
-    setStatus(transaction.status || 'HOLDING');
-    if (transaction.realizedPnl !== undefined && transaction.realizedPnl !== null) {
-      const pnlVal = Math.round(transaction.realizedPnl);
-      const isNeg = pnlVal < 0;
-      const formattedPnl = Math.abs(pnlVal).toLocaleString('vi-VN');
-      setRealizedPnl(isNeg ? `-${formattedPnl}` : formattedPnl);
-    } else {
-      setRealizedPnl('0');
-    }
+    setModalType(transaction.type as TransactionType);
     setIsModalOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !amount || !categoryId || !transactionDate) {
-      showFeedback('Vui lòng điền đầy đủ các trường bắt buộc', 'error');
-      return;
-    }
-
-    const rawAmount = parseFloat(amount.replace(/\./g, ''));
-    let rawPnl = 0;
-    if (realizedPnl) {
-      const cleanPnl = realizedPnl.replace(/\./g, '');
-      rawPnl = parseFloat(cleanPnl) || 0;
-    }
-
-    const payload: any = {
-      description: title.trim(),
-      amount: rawAmount,
-      categoryId,
-      transactionDate: toISODateString(transactionDate),
-      type: activeType,
-    };
-
-    if (walletId) {
-      payload.walletId = walletId;
-    }
-
-    if (activeType === TransactionType.INVESTMENT) {
-      payload.status = status;
-      payload.realizedPnl = status === 'HOLDING' ? 0 : rawPnl;
-    }
-
-    try {
-      if (editingTransaction) {
-        await transactionService.update(editingTransaction.id, payload);
-        showFeedback('Cập nhật giao dịch thành công!', 'success');
-      } else {
-        await transactionService.create(payload);
-        showFeedback('Thêm giao dịch thành công!', 'success');
-      }
-      setRefreshKey((prev) => prev + 1);
-      window.dispatchEvent(new Event('transactions-changed'));
-      setIsModalOpen(false);
-    } catch (err: any) {
-      showFeedback(err.message || 'Lưu giao dịch thất bại', 'error');
-    }
+  const handleSaved = () => {
+    setRefreshKey((prev) => prev + 1);
   };
 
   const handleDelete = async (id: string, itemDescription: string) => {
@@ -299,13 +198,51 @@ export default function Transactions({
     );
     if (!confirmDelete) return;
 
+    // Capture the full transaction so we can restore it on undo
+    const original = transactions.find((t) => t.id === id);
+
     try {
       await transactionService.delete(id);
       setRefreshKey((prev) => prev + 1);
       window.dispatchEvent(new Event('transactions-changed'));
-      showFeedback('Xóa giao dịch thành công!', 'success');
+      toast.success(
+        ({ closeToast }) => (
+          <span>
+            Đã xóa giao dịch.
+            <button
+              type="button"
+              className="toast-undo-btn"
+              onClick={async () => {
+                closeToast();
+                if (!original) return;
+                try {
+                  const restorePayload: CreateTransactionDTO = {
+                    amount: original.amount,
+                    categoryId: original.categoryId,
+                    transactionDate: original.transactionDate,
+                    type: original.type as TransactionType,
+                    description: original.description,
+                    walletId: original.walletId,
+                    status: original.status as CreateTransactionDTO['status'],
+                    realizedPnl: original.realizedPnl,
+                  };
+                  await transactionService.create(restorePayload);
+                  setRefreshKey((prev) => prev + 1);
+                  window.dispatchEvent(new Event('transactions-changed'));
+                  toast.success('Đã hoàn tác xóa giao dịch!');
+                } catch {
+                  /* ignore restore errors */
+                }
+              }}
+            >
+              Hoàn tác
+            </button>
+          </span>
+        ),
+        { autoClose: 6000 }
+      );
     } catch (err: any) {
-      showFeedback(err.message || 'Xóa giao dịch thất bại', 'error');
+      toast.error(err.message || 'Xóa giao dịch thất bại');
     }
   };
 
@@ -692,29 +629,27 @@ export default function Transactions({
             />
           </div>
         )}
-        <div className="date-range-wrapper">
-          <DatePicker
-            selectsRange={true}
-            startDate={startDate}
-            endDate={endDate}
+        <div className="date-range-filter-col">
+          <DateRangeFilter
+            value={dateRange}
             onChange={(update) => {
               setDateRange(update);
               setCurrentPage(1);
             }}
-            isClearable={true}
             placeholderText="Chọn khoảng ngày"
-            dateFormat="dd/MM/yyyy"
-            className="react-datepicker-input"
-            portalId="date-picker-portal"
           />
         </div>
       </div>
 
       {/* 5. Transactions Table (Desktop) & Cards (Mobile) */}
       {loading ? (
-        <div className="loading-spinner animate-fade-in">
-          <div className="spinner"></div>
-          <p>Đang tải giao dịch...</p>
+        <div className="txn-skeleton animate-fade-in" aria-busy="true">
+          <div className="skeleton txn-skeleton-row" />
+          <div className="skeleton txn-skeleton-row" />
+          <div className="skeleton txn-skeleton-row" />
+          <div className="skeleton txn-skeleton-row" />
+          <div className="skeleton txn-skeleton-row" />
+          <div className="skeleton txn-skeleton-row" />
         </div>
       ) : filteredTransactions.length === 0 ? (
         <div
@@ -995,206 +930,14 @@ export default function Transactions({
         </>
       )}
 
-      {/* 6. Form / Modal Overlay for Create & Edit */}
-      {isModalOpen && (
-        <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>
-                {editingTransaction
-                  ? 'Chỉnh sửa giao dịch'
-                  : activeType === TransactionType.INCOME
-                    ? 'Thêm thu nhập mới'
-                    : activeType === TransactionType.INVESTMENT
-                      ? 'Thêm khoản đầu tư mới'
-                      : 'Thêm chi tiêu mới'}
-              </h3>
-              <button
-                type="button"
-                className="close-btn"
-                onClick={() => setIsModalOpen(false)}
-                aria-label="Đóng"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label htmlFor="txn-title">Tiêu đề / Nội dung</label>
-                <input
-                  id="txn-title"
-                  type="text"
-                  placeholder={
-                    activeType === TransactionType.INCOME
-                      ? 'Ví dụ: Lương tháng 8, Thưởng dự án...'
-                      : activeType === TransactionType.INVESTMENT
-                        ? 'Ví dụ: Mua cổ phiếu Vinamilk, Gửi tiết kiệm...'
-                        : 'Ví dụ: Mua sắm tạp hóa, Ăn uống...'
-                  }
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="txn-amount">
-                  {activeType === TransactionType.INCOME
-                    ? 'Số tiền thu nhập (đ)'
-                    : activeType === TransactionType.INVESTMENT
-                      ? 'Số tiền đầu tư (đ)'
-                      : 'Số tiền chi tiêu (đ)'}
-                </label>
-                <input
-                  id="txn-amount"
-                  type="text"
-                  placeholder={
-                    activeType === TransactionType.INCOME
-                      ? 'Ví dụ: 15.000.000'
-                      : activeType === TransactionType.INVESTMENT
-                        ? 'Ví dụ: 10.000.000'
-                        : 'Ví dụ: 50.000'
-                  }
-                  value={amount}
-                  onChange={(e) => handleAmountChange(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="txn-category">Danh mục</label>
-                <Select
-                  id="txn-category"
-                  options={filteredCategories.map((cat) => ({ value: cat.id, label: cat.name }))}
-                  value={
-                    filteredCategories
-                      .map((cat) => ({ value: cat.id, label: cat.name }))
-                      .find((opt) => opt.value === categoryId) || null
-                  }
-                  onChange={(option) => setCategoryId(option ? option.value : '')}
-                  classNamePrefix="react-select"
-                  placeholder="Chọn Danh mục"
-                  isSearchable={true}
-                  menuPortalTarget={document.body}
-                />
-              </div>
-
-              {/* Wallet Selection Dropdown */}
-              {wallets.length > 0 && (
-                <div className="form-group">
-                  <label htmlFor="txn-wallet">Ví / Nguồn thanh toán (Tùy chọn)</label>
-                  <Select
-                    id="txn-wallet"
-                    options={[
-                      { value: '', label: '-- Không chọn ví cụ thể --' },
-                      ...wallets.map((w) => ({
-                        value: w.id,
-                        label: `${w.icon ? `${w.icon} ` : '💳 '}${w.name} (${formatCurrency(w.balance)})`,
-                      })),
-                    ]}
-                    value={
-                      [
-                        { value: '', label: '-- Không chọn ví cụ thể --' },
-                        ...wallets.map((w) => ({
-                          value: w.id,
-                          label: `${w.icon ? `${w.icon} ` : '💳 '}${w.name} (${formatCurrency(w.balance)})`,
-                        })),
-                      ].find((opt) => opt.value === walletId) || null
-                    }
-                    onChange={(option) => setWalletId(option ? option.value : '')}
-                    classNamePrefix="react-select"
-                    placeholder="Chọn ví hoặc tài khoản"
-                    isSearchable={true}
-                    menuPortalTarget={document.body}
-                  />
-                </div>
-              )}
-
-              {activeType === TransactionType.INVESTMENT && (
-                <div className="form-group">
-                  <label htmlFor="txn-status">Trạng thái đầu tư</label>
-                  <Select
-                    id="txn-status"
-                    options={[
-                      { value: 'HOLDING', label: 'Đang đầu tư' },
-                      { value: 'SOLD', label: 'Đã bán' },
-                      { value: 'MATURED', label: 'Đã đáo hạn' },
-                      { value: 'CANCELLED', label: 'Đã hủy' },
-                    ]}
-                    value={
-                      [
-                        { value: 'HOLDING', label: 'Đang đầu tư' },
-                        { value: 'SOLD', label: 'Đã bán' },
-                        { value: 'MATURED', label: 'Đã đáo hạn' },
-                        { value: 'CANCELLED', label: 'Đã hủy' },
-                      ].find((opt) => opt.value === status) || null
-                    }
-                    onChange={(option) =>
-                      setStatus((option?.value as InvestmentStatus) || 'HOLDING')
-                    }
-                    classNamePrefix="react-select"
-                    placeholder="Chọn Trạng thái"
-                    isSearchable={false}
-                    menuPortalTarget={document.body}
-                  />
-                </div>
-              )}
-
-              {activeType === TransactionType.INVESTMENT && status !== 'HOLDING' && (
-                <div className="form-group">
-                  <label htmlFor="txn-pnl">Số tiền Lãi / Lỗ thực tế (đ)</label>
-                  <input
-                    id="txn-pnl"
-                    type="text"
-                    placeholder="Dương cho Lãi (VD: 500.000), Âm cho Lỗ (VD: -200.000)"
-                    value={realizedPnl}
-                    onChange={(e) => handlePnlChange(e.target.value)}
-                  />
-                  <small
-                    style={{
-                      color: 'var(--text-muted)',
-                      fontSize: '0.8rem',
-                      marginTop: '4px',
-                      display: 'block',
-                    }}
-                  >
-                    Nhập số dương nếu có lãi, hoặc dấu trừ (-) ở đầu nếu bị lỗ.
-                  </small>
-                </div>
-              )}
-
-              <div className="form-group">
-                <label htmlFor="txn-incurred">Ngày thực hiện</label>
-                <DatePicker
-                  id="txn-incurred"
-                  selected={transactionDate ? moment(transactionDate).toDate() : null}
-                  onChange={(date: Date | null) =>
-                    setTransactionDate(date ? moment(date).format('YYYY-MM-DD') : '')
-                  }
-                  dateFormat="dd/MM/yyyy"
-                  portalId="date-picker-portal"
-                />
-              </div>
-
-              <div className="button-group">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className={`btn btn-primary btn-add-${activeType.toLowerCase()}`}
-                >
-                  {editingTransaction ? 'Cập nhật' : 'Thêm'} giao dịch
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* 6. Reusable Create/Edit Modal */}
+      <AddTransactionModal
+        open={isModalOpen}
+        initialType={modalType}
+        transaction={editingTransaction}
+        onSaved={handleSaved}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }
