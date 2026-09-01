@@ -18,12 +18,12 @@
   --border-hover: rgba(255, 255, 255, 0.25);
   --border-active: rgba(14, 165, 233, 0.5);
 
-  /* Unified Brand Gradient (Sky 500 -> Purple 500) */
+  /* Clean Solid Brand Palette (Sky 500) */
   --primary: #0ea5e9;
   --primary-hover: #0284c7;
-  --primary-glow: rgba(14, 165, 233, 0.25);
-  --primary-gradient: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
-  --primary-gradient-hover: linear-gradient(135deg, #0284c7 0%, #7c3aed 100%);
+  --primary-glow: rgba(14, 165, 233, 0.2);
+  --primary-gradient: #0ea5e9;
+  --primary-gradient-hover: #0284c7;
 
   /* Harmonized Semantic Colors */
   --income: #10b981;
@@ -42,10 +42,10 @@
   --radius-lg: 18px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 20px 50px -10px rgba(0, 0, 0, 0.5);
-  --glass-blur: blur(20px);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.35);
+  --glass-blur: blur(12px);
 
   font-family: var(--font-sans);
   letter-spacing: -0.015em;
@@ -58,8 +58,8 @@
 
 .light-theme {
   --bg-app: #f8fafc;
-  --bg-card: rgba(255, 255, 255, 0.95);
-  --bg-card-hover: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
   --bg-input: #f1f5f9;
   --bg-hover: rgba(15, 23, 42, 0.05);
 
@@ -73,9 +73,9 @@
 
   --primary: #0284c7;
   --primary-hover: #0369a1;
-  --primary-glow: rgba(2, 132, 199, 0.2);
-  --primary-gradient: linear-gradient(135deg, #0284c7 0%, #7c3aed 100%);
-  --primary-gradient-hover: linear-gradient(135deg, #0369a1 0%, #6d28d9 100%);
+  --primary-glow: rgba(2, 132, 199, 0.15);
+  --primary-gradient: #0284c7;
+  --primary-gradient-hover: #0369a1;
 
   --income: #059669;
   --income-glow: rgba(5, 150, 105, 0.15);
@@ -244,9 +244,7 @@ button .spinner,
 .brand-name {
   font-size: 1.15rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #38bdf8 0%, #a855f7 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-main);
   letter-spacing: -0.025em;
 }
 
@@ -275,14 +273,49 @@ button.btn,
   border-radius: 10px !important;
 }
 
-/* Global Button Icon & Text Spacing */
+/* Global Button Icon & Text Alignment & Spacing */
+.btn,
+button.btn,
+.submit-btn,
+.nav-item,
+.action-btn,
+.category-tab,
+.period-pill-btn,
+.quick-pay-chip,
+.txn-category-badge,
+.txn-wallet-badge,
+.badge,
+.hero-pill-badge,
+.budget-label-wrap,
+.net-assets-label,
+.summary-stat-header,
+.ai-insight-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  vertical-align: middle !important;
+  line-height: 1.2 !important;
+}
+
 .btn,
 button.btn,
 .submit-btn {
-  display: inline-flex !important;
-  align-items: center !important;
   justify-content: center !important;
-  gap: 0.6rem !important;
+  gap: 0.5rem !important;
+}
+
+/* Ensure all SVG icons in flex containers align properly and do not squish */
+button svg,
+.btn svg,
+.action-btn svg,
+.nav-item svg,
+.summary-stat-header svg,
+.hero-pill-badge svg,
+.budget-label-wrap svg,
+.net-assets-label svg,
+.txn-wallet-badge svg,
+.ai-insight-badge svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 /* Global React-Select internal dummy input reset */
@@ -390,7 +423,7 @@ input[class*='dummyInput'] {
 .user-profile-footer .avatar {
   width: 30px;
   height: 30px;
-  background: linear-gradient(135deg, var(--primary), #8b5cf6);
+  background: var(--primary);
   color: #ffffff;
   font-weight: 700;
   font-size: 0.85rem;
@@ -398,7 +431,7 @@ input[class*='dummyInput'] {
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  box-shadow: 0 2px 8px var(--primary-glow);
+  box-shadow: 0 1px 4px var(--primary-glow);
   flex-shrink: 0;
 }
 
@@ -520,7 +553,7 @@ input[class*='dummyInput'] {
 }
 
 .pwa-install-badge-btn {
-  background: linear-gradient(135deg, var(--primary), #a855f7);
+  background: var(--primary);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
@@ -528,7 +561,7 @@ input[class*='dummyInput'] {
   font-weight: 600;
   border-radius: 9999px;
   cursor: pointer;
-  box-shadow: 0 4px 12px var(--primary-glow);
+  box-shadow: 0 2px 8px var(--primary-glow);
   transition: all 0.2s ease;
 }
 

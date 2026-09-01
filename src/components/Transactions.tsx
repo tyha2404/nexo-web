@@ -1,35 +1,41 @@
+import {
+  AlertTriangle,
+  BarChart3,
+  Calendar,
+  Gem,
+  Pencil,
+  Plus,
+  Receipt,
+  Scale,
+  Search,
+  ShoppingBag,
+  Target,
+  Trash2,
+  TrendingUp,
+  Wallet,
+  X,
+} from 'lucide-react';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
-import {
-  Search,
-  Plus,
-  Pencil,
-  Trash2,
-  Receipt,
-  X,
-  Wallet,
-  ShoppingBag,
-  TrendingUp,
-  Scale,
-  Calendar,
-  Gem,
-  Target,
-  BarChart3,
-  AlertTriangle,
-} from 'lucide-react';
 import { DATE_FORMAT_INPUT, TransactionType } from '../commons/constants';
-import type { Category, InvestmentStatus, Transaction } from '../commons/types';
+import type {
+  Category,
+  InvestmentStatus,
+  Transaction,
+  Wallet as WalletModel,
+} from '../commons/types';
 import { formatCurrency, formatDate, toISODateString } from '../commons/utils';
-import { categoryService, transactionService } from '../services/api';
+import { categoryService, transactionService, walletService } from '../services/api';
 import Pagination from './Pagination';
 import './Transactions.css';
 
 export interface TransactionsProps {
   type?: TransactionType;
+  initialType?: TransactionType;
 }
 
 const INVESTMENT_STATUS_LABELS: Record<InvestmentStatus, string> = {
@@ -39,9 +45,16 @@ const INVESTMENT_STATUS_LABELS: Record<InvestmentStatus, string> = {
   CANCELLED: 'Đã hủy',
 };
 
-export default function Transactions({ type = TransactionType.EXPENSE }: TransactionsProps) {
+export default function Transactions({
+  type,
+  initialType = TransactionType.EXPENSE,
+}: TransactionsProps) {
+  // Internal active transaction type state (defaults to `type` prop or `initialType`)
+  const [activeType, setActiveType] = useState<TransactionType>(type || initialType);
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [wallets, setWallets] = useState<WalletModel[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,38 +90,55 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [walletId, setWalletId] = useState('');
   const [transactionDate, setTransactionDate] = useState('');
   const [status, setStatus] = useState<InvestmentStatus>('HOLDING');
   const [realizedPnl, setRealizedPnl] = useState<string>('0');
 
+  // Sync internal activeType if parent passes or updates the `type` prop
   useEffect(() => {
-    // Reset page and filters when transaction type tab changes
-    setCurrentPage(1);
-    setSelectedCategoryFilter('');
-    setSelectedStatusFilter('');
-    setSearchQuery('');
+    if (type) {
+      setActiveType(type);
+    }
+  }, [type]);
 
+  // Load wallets list for wallet badges and selector
+  useEffect(() => {
+    const fetchWalletsData = async () => {
+      try {
+        const res = await walletService.getWallets();
+        setWallets(res.wallets || []);
+      } catch (err: any) {
+        console.error('Failed to load wallets', err);
+      }
+    };
+    fetchWalletsData();
+  }, []);
+
+  // Reload categories whenever the active transaction type changes
+  useEffect(() => {
     const fetchCategoriesData = async () => {
       try {
-        const categoriesData = await categoryService.list({ type });
+        const categoriesData = await categoryService.list({ type: activeType });
         setCategories(categoriesData.items || []);
       } catch (err: any) {
         console.error('Failed to load categories', err);
       }
     };
     fetchCategoriesData();
-  }, [type]);
+  }, [activeType]);
 
+  // Fetch transactions list
   useEffect(() => {
     const fetchTransactionsData = async () => {
       try {
         setLoading(true);
         setError(null);
         const res = await transactionService.list({
-          type,
+          type: activeType,
           categoryId: selectedCategoryFilter || undefined,
           status:
-            type === TransactionType.INVESTMENT && selectedStatusFilter
+            activeType === TransactionType.INVESTMENT && selectedStatusFilter
               ? (selectedStatusFilter as InvestmentStatus)
               : undefined,
           startDate: startDate ? toISODateString(startDate) : undefined,
@@ -132,7 +162,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
 
     fetchTransactionsData();
   }, [
-    type,
+    activeType,
     selectedCategoryFilter,
     selectedStatusFilter,
     startDate,
@@ -141,6 +171,16 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
     itemsPerPage,
     refreshKey,
   ]);
+
+  // Handle switching transaction type tabs
+  const handleTabSwitch = (newType: TransactionType) => {
+    if (activeType === newType) return;
+    setActiveType(newType);
+    setCurrentPage(1);
+    setSelectedCategoryFilter('');
+    setSelectedStatusFilter('');
+    setSearchQuery('');
+  };
 
   const showFeedback = (message: string, type: 'success' | 'error') => {
     if (type === 'success') {
@@ -151,30 +191,6 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
   };
 
   const filteredCategories = categories;
-
-  // Predefined quick options for Income/Expense/Investment
-  const presetOptions =
-    type === TransactionType.INCOME
-      ? [
-          { label: 'Lương tháng', amount: '15000000', categoryKeyword: 'Lương' },
-          { label: 'Thưởng', amount: '2000000', categoryKeyword: 'Thưởng' },
-          { label: 'Lãi tiết kiệm', amount: '500000', categoryKeyword: 'Đầu tư' },
-          { label: 'Freelance', amount: '3000000', categoryKeyword: 'Thu nhập' },
-        ]
-      : type === TransactionType.INVESTMENT
-        ? [
-            { label: 'Mua cổ phiếu', amount: '5000000', categoryKeyword: 'Cổ phiếu' },
-            { label: 'Chứng chỉ tiền gửi', amount: '10000000', categoryKeyword: 'chứng chỉ' },
-            { label: 'Gửi tiết kiệm', amount: '20000000', categoryKeyword: 'tiết kiệm' },
-          ]
-        : [
-            { label: 'Ăn sáng / Cà phê', amount: '50000', categoryKeyword: 'Ăn uống' },
-            { label: 'Ăn trưa / tối', amount: '80000', categoryKeyword: 'Ăn uống' },
-            { label: 'Đổ xăng', amount: '70000', categoryKeyword: 'Di chuyển' },
-            { label: 'Đi chợ / siêu thị', amount: '200000', categoryKeyword: 'Ăn uống' },
-            { label: 'Tiền điện nước', amount: '1200000', categoryKeyword: 'Tiền nhà' },
-            { label: 'Internet', amount: '250000', categoryKeyword: 'Tiền nhà' },
-          ];
 
   const handleAmountChange = (val: string) => {
     const cleanNumber = val.replace(/\D/g, '');
@@ -197,27 +213,12 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
     setRealizedPnl(isNegative ? `-${formatted}` : formatted);
   };
 
-  const handleApplyPreset = (preset: (typeof presetOptions)[0]) => {
-    setTitle(preset.label);
-
-    const formattedAmount = parseInt(preset.amount, 10).toLocaleString('vi-VN');
-    setAmount(formattedAmount);
-
-    const matchedCategory =
-      filteredCategories.find((cat) =>
-        cat.name.toLowerCase().includes(preset.categoryKeyword.toLowerCase())
-      ) || filteredCategories[0];
-
-    if (matchedCategory) {
-      setCategoryId(matchedCategory.id);
-    }
-  };
-
   const openAddModal = () => {
     setEditingTransaction(null);
     setTitle('');
     setAmount('');
     setCategoryId(filteredCategories.length > 0 ? filteredCategories[0].id : '');
+    setWalletId('');
     setTransactionDate(formatDate(moment(), DATE_FORMAT_INPUT));
     setStatus('HOLDING');
     setRealizedPnl('0');
@@ -231,6 +232,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
     const formattedAmount = parseInt(rawVal, 10).toLocaleString('vi-VN');
     setAmount(formattedAmount);
     setCategoryId(transaction.categoryId);
+    setWalletId(transaction.walletId || '');
     setTransactionDate(formatDate(transaction.transactionDate, DATE_FORMAT_INPUT));
     setStatus(transaction.status || 'HOLDING');
     if (transaction.realizedPnl !== undefined && transaction.realizedPnl !== null) {
@@ -263,10 +265,14 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
       amount: rawAmount,
       categoryId,
       transactionDate: toISODateString(transactionDate),
-      type,
+      type: activeType,
     };
 
-    if (type === TransactionType.INVESTMENT) {
+    if (walletId) {
+      payload.walletId = walletId;
+    }
+
+    if (activeType === TransactionType.INVESTMENT) {
       payload.status = status;
       payload.realizedPnl = status === 'HOLDING' ? 0 : rawPnl;
     }
@@ -308,6 +314,11 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
     return cat ? cat.name : 'Chưa phân loại';
   };
 
+  const getWalletInfo = (wId?: string) => {
+    if (!wId) return null;
+    return wallets.find((w) => w.id === wId) || null;
+  };
+
   // Filter transactions client-side for search query if needed
   const filteredTransactions = transactions.filter((txn) => {
     return (txn.description || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -327,31 +338,99 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
 
   return (
     <div className="transactions-view">
+      {/* 1. Transaction Type Segmented Switcher Header */}
+      <div className="txn-type-switch-wrapper animate-fade-in">
+        <div
+          className="txn-type-switch"
+          role="tablist"
+          aria-label="Phân loại giao dịch (Chi tiêu, Thu nhập, Đầu tư)"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeType === TransactionType.EXPENSE}
+            className={`txn-type-btn btn-expense ${
+              activeType === TransactionType.EXPENSE ? 'active' : ''
+            }`}
+            onClick={() => handleTabSwitch(TransactionType.EXPENSE)}
+          >
+            <div className="txn-type-icon-wrapper">
+              <ShoppingBag size={18} className="txn-type-icon" />
+            </div>
+            <div className="txn-type-text-group">
+              <span className="txn-type-primary-label">Chi tiêu</span>
+              <span className="txn-type-secondary-label">Khoản chi hàng ngày</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeType === TransactionType.INCOME}
+            className={`txn-type-btn btn-income ${
+              activeType === TransactionType.INCOME ? 'active' : ''
+            }`}
+            onClick={() => handleTabSwitch(TransactionType.INCOME)}
+          >
+            <div className="txn-type-icon-wrapper">
+              <TrendingUp size={18} className="txn-type-icon" />
+            </div>
+            <div className="txn-type-text-group">
+              <span className="txn-type-primary-label">Thu nhập</span>
+              <span className="txn-type-secondary-label">Tiền về & nguồn thu</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeType === TransactionType.INVESTMENT}
+            className={`txn-type-btn btn-investment ${
+              activeType === TransactionType.INVESTMENT ? 'active' : ''
+            }`}
+            onClick={() => handleTabSwitch(TransactionType.INVESTMENT)}
+          >
+            <div className="txn-type-icon-wrapper">
+              <Gem size={18} className="txn-type-icon" />
+            </div>
+            <div className="txn-type-text-group">
+              <span className="txn-type-primary-label">Đầu tư</span>
+              <span className="txn-type-secondary-label">Tích lũy & sinh lời</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Standard Header with Action */}
       <header className="transactions-header animate-fade-in">
         <div className="transactions-title">
           <h2>
-            {type === TransactionType.INCOME
+            {activeType === TransactionType.INCOME
               ? 'Quản lý Thu nhập'
-              : type === TransactionType.INVESTMENT
+              : activeType === TransactionType.INVESTMENT
                 ? 'Quản lý Đầu tư'
                 : 'Quản lý Chi tiêu'}
           </h2>
           <p className="subtitle">
             Theo dõi và quản lý các khoản{' '}
-            {type === TransactionType.INCOME
+            {activeType === TransactionType.INCOME
               ? 'thu nhập'
-              : type === TransactionType.INVESTMENT
+              : activeType === TransactionType.INVESTMENT
                 ? 'đầu tư'
                 : 'chi tiêu'}{' '}
             của bạn
           </p>
         </div>
         <div className="header-actions">
-          <button className="btn btn-primary" onClick={openAddModal}>
+          <button
+            type="button"
+            className={`btn btn-primary btn-add-${activeType.toLowerCase()}`}
+            onClick={openAddModal}
+          >
             <Plus size={16} /> Thêm{' '}
-            {type === TransactionType.INCOME
+            {activeType === TransactionType.INCOME
               ? 'thu nhập'
-              : type === TransactionType.INVESTMENT
+              : activeType === TransactionType.INVESTMENT
                 ? 'đầu tư'
                 : 'chi tiêu'}
           </button>
@@ -364,13 +443,13 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         </div>
       )}
 
-      {/* Summary Cards Grid */}
+      {/* 3. Summary Cards Grid */}
       {(() => {
         const sumAmount = summary.sumAmount;
         const count = summary.total;
         const avg = count > 0 ? sumAmount / count : 0;
 
-        if (type === TransactionType.INCOME) {
+        if (activeType === TransactionType.INCOME) {
           return (
             <div className="summary-cards-grid animate-fade-in">
               <div className="summary-stat-card accent-income">
@@ -413,7 +492,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
           );
         }
 
-        if (type === TransactionType.INVESTMENT) {
+        if (activeType === TransactionType.INVESTMENT) {
           const holdingAmount = summary.holdingAmount ?? 0;
           const totalRealizedPnl = summary.realizedPnl ?? 0;
           const holdingCount = summary.holdingCount ?? 0;
@@ -436,18 +515,24 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               </div>
 
               <div
-                className={`summary-stat-card ${totalRealizedPnl >= 0 ? 'accent-income' : 'accent-expense'}`}
+                className={`summary-stat-card ${
+                  totalRealizedPnl >= 0 ? 'accent-income' : 'accent-expense'
+                }`}
               >
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Lãi / Lỗ Đã Thực Hiện</span>
                   <div
-                    className={`kpi-icon-badge ${totalRealizedPnl >= 0 ? 'kpi-badge-emerald' : 'kpi-badge-rose'}`}
+                    className={`kpi-icon-badge ${
+                      totalRealizedPnl >= 0 ? 'kpi-badge-emerald' : 'kpi-badge-rose'
+                    }`}
                   >
                     <TrendingUp size={20} />
                   </div>
                 </div>
                 <div
-                  className={`summary-stat-value ${totalRealizedPnl >= 0 ? 'value-income' : 'value-expense'}`}
+                  className={`summary-stat-value ${
+                    totalRealizedPnl >= 0 ? 'value-income' : 'value-expense'
+                  }`}
                 >
                   {formatCurrency(Math.abs(totalRealizedPnl))}
                 </div>
@@ -541,7 +626,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         );
       })()}
 
-      {/* Filter and Search controls */}
+      {/* 4. Filter and Search controls */}
       <div className="filter-bar animate-fade-in">
         <div className="search-input-wrapper">
           <Search size={16} className="search-icon" />
@@ -577,7 +662,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             menuPortalTarget={document.body}
           />
         </div>
-        {type === TransactionType.INVESTMENT && (
+        {activeType === TransactionType.INVESTMENT && (
           <div className="status-select-wrapper">
             <Select
               options={[
@@ -625,6 +710,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         </div>
       </div>
 
+      {/* 5. Transactions Table (Desktop) & Cards (Mobile) */}
       {loading ? (
         <div className="loading-spinner animate-fade-in">
           <div className="spinner"></div>
@@ -667,14 +753,15 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
             xác hơn!
           </p>
           <button
+            type="button"
             onClick={openAddModal}
-            className="btn btn-primary"
+            className={`btn btn-primary btn-add-${activeType.toLowerCase()}`}
             style={{ padding: '0.65rem 1.5rem', minHeight: '42px', fontWeight: 600 }}
           >
             <Plus size={16} /> Thêm{' '}
-            {type === TransactionType.INVESTMENT
+            {activeType === TransactionType.INVESTMENT
               ? 'đầu tư'
-              : type === TransactionType.INCOME
+              : activeType === TransactionType.INCOME
                 ? 'thu nhập'
                 : 'chi tiêu'}{' '}
             ngay
@@ -682,90 +769,219 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         </div>
       ) : (
         <>
+          {/* Desktop Table View */}
           <div className="transactions-table-container animate-fade-in">
             <table className="transactions-table">
               <thead>
                 <tr>
                   <th>Tiêu đề / Nội dung</th>
                   <th>Số tiền</th>
-                  {type === TransactionType.INVESTMENT && <th>Trạng thái</th>}
-                  {type === TransactionType.INVESTMENT && <th>Lãi / Lỗ</th>}
+                  {activeType === TransactionType.INVESTMENT && <th>Trạng thái</th>}
+                  {activeType === TransactionType.INVESTMENT && <th>Lãi / Lỗ</th>}
                   <th>Danh mục</th>
+                  <th>Ví / Nguồn</th>
                   <th>Ngày thực hiện</th>
-                  <th>Thao tác</th>
+                  <th style={{ textAlign: 'center' }}>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredTransactions.map((txn) => (
-                  <tr key={txn.id}>
-                    <td className="txn-title-cell">{txn.description}</td>
-                    <td
-                      className="txn-amount"
-                      style={{
-                        color:
-                          type === TransactionType.INCOME
-                            ? 'var(--income)'
-                            : type === TransactionType.EXPENSE
-                              ? 'var(--expense)'
-                              : 'var(--text-main)',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {formatCurrency(Math.abs(txn.amount))}
-                    </td>
-                    {type === TransactionType.INVESTMENT && (
+                {filteredTransactions.map((txn) => {
+                  const walletObj = getWalletInfo(txn.walletId);
+                  return (
+                    <tr key={txn.id}>
+                      <td className="txn-title-cell">{txn.description}</td>
+                      <td
+                        className="txn-amount"
+                        style={{
+                          color:
+                            activeType === TransactionType.INCOME
+                              ? 'var(--income)'
+                              : activeType === TransactionType.EXPENSE
+                                ? 'var(--expense)'
+                                : 'var(--text-main)',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {activeType === TransactionType.INCOME
+                          ? '+'
+                          : activeType === TransactionType.EXPENSE
+                            ? '-'
+                            : ''}
+                        {formatCurrency(Math.abs(txn.amount))}
+                      </td>
+                      {activeType === TransactionType.INVESTMENT && (
+                        <td>
+                          <span
+                            className={`txn-status-badge status-${(
+                              txn.status || 'HOLDING'
+                            ).toLowerCase()}`}
+                          >
+                            {INVESTMENT_STATUS_LABELS[txn.status || 'HOLDING']}
+                          </span>
+                        </td>
+                      )}
+                      {activeType === TransactionType.INVESTMENT && (
+                        <td className="txn-pnl-cell">
+                          {txn.status &&
+                          txn.status !== 'HOLDING' &&
+                          txn.realizedPnl !== undefined ? (
+                            <span
+                              style={{
+                                color: txn.realizedPnl >= 0 ? 'var(--income)' : 'var(--expense)',
+                                fontWeight: 600,
+                              }}
+                            >
+                              {txn.realizedPnl >= 0 ? '+' : ''}
+                              {formatCurrency(txn.realizedPnl)}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)' }}>—</span>
+                          )}
+                        </td>
+                      )}
                       <td>
-                        <span
-                          className={`txn-status-badge status-${(txn.status || 'HOLDING').toLowerCase()}`}
-                        >
-                          {INVESTMENT_STATUS_LABELS[txn.status || 'HOLDING']}
+                        <span className="txn-category-badge">
+                          {getCategoryName(txn.categoryId)}
                         </span>
                       </td>
-                    )}
-                    {type === TransactionType.INVESTMENT && (
-                      <td className="txn-pnl-cell">
-                        {txn.status && txn.status !== 'HOLDING' && txn.realizedPnl !== undefined ? (
-                          <span
-                            style={{
-                              color: txn.realizedPnl >= 0 ? 'var(--income)' : 'var(--expense)',
-                              fontWeight: 600,
-                            }}
-                          >
-                            {formatCurrency(Math.abs(txn.realizedPnl))}
+                      <td>
+                        {walletObj ? (
+                          <span className="txn-wallet-badge">
+                            <Wallet size={12} />
+                            <span>
+                              {walletObj.icon ? `${walletObj.icon} ` : ''}
+                              {walletObj.name}
+                            </span>
                           </span>
                         ) : (
                           <span style={{ color: 'var(--text-muted)' }}>—</span>
                         )}
                       </td>
-                    )}
-                    <td>
-                      <span className="txn-category-badge">{getCategoryName(txn.categoryId)}</span>
-                    </td>
-                    <td className="txn-date">{formatDate(txn.transactionDate)}</td>
-                    <td className="txn-actions-cell">
-                      <div className="action-buttons-wrapper">
-                        <button
-                          onClick={() => openEditModal(txn)}
-                          className="action-btn edit-btn"
-                          aria-label={`Chỉnh sửa ${txn.description || 'giao dịch'}`}
-                          title={`Chỉnh sửa ${txn.description || 'giao dịch'}`}
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(txn.id, txn.description || '')}
-                          className="action-btn delete-btn"
-                          aria-label={`Xóa ${txn.description || 'giao dịch'}`}
-                          title={`Xóa ${txn.description || 'giao dịch'}`}
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      <td className="txn-date">{formatDate(txn.transactionDate)}</td>
+                      <td className="txn-actions-cell">
+                        <div className="action-buttons-wrapper">
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(txn)}
+                            className="action-btn edit-btn"
+                            aria-label={`Chỉnh sửa ${txn.description || 'giao dịch'}`}
+                            title={`Chỉnh sửa ${txn.description || 'giao dịch'}`}
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(txn.id, txn.description || '')}
+                            className="action-btn delete-btn"
+                            aria-label={`Xóa ${txn.description || 'giao dịch'}`}
+                            title={`Xóa ${txn.description || 'giao dịch'}`}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Touch-Friendly Card View (<768px) */}
+          <div className="transactions-mobile-cards animate-fade-in">
+            {filteredTransactions.map((txn) => {
+              const walletObj = getWalletInfo(txn.walletId);
+              return (
+                <div key={txn.id} className="transaction-mobile-card">
+                  <div className="mobile-card-top">
+                    <div className="mobile-card-left">
+                      <div className={`mobile-card-icon-badge icon-${activeType.toLowerCase()}`}>
+                        {activeType === TransactionType.INCOME ? (
+                          <TrendingUp size={18} />
+                        ) : activeType === TransactionType.INVESTMENT ? (
+                          <Gem size={18} />
+                        ) : (
+                          <ShoppingBag size={18} />
+                        )}
+                      </div>
+                      <div className="mobile-card-info">
+                        <div className="mobile-card-title">{txn.description}</div>
+                        <div className="mobile-card-date">
+                          <Calendar size={12} className="mobile-date-icon" />
+                          <span>{moment(txn.transactionDate).format('DD/MM/YYYY')}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mobile-card-amount-group">
+                      <div className={`mobile-card-amount amount-${activeType.toLowerCase()}`}>
+                        {activeType === TransactionType.INCOME
+                          ? '+'
+                          : activeType === TransactionType.EXPENSE
+                            ? '-'
+                            : ''}
+                        {formatCurrency(Math.abs(txn.amount))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mobile-card-tags">
+                    <span className="txn-category-badge">{getCategoryName(txn.categoryId)}</span>
+                    {walletObj && (
+                      <span className="txn-wallet-badge">
+                        <Wallet size={12} />
+                        <span>
+                          {walletObj.icon ? `${walletObj.icon} ` : ''}
+                          {walletObj.name}
+                        </span>
+                      </span>
+                    )}
+                    {activeType === TransactionType.INVESTMENT && (
+                      <span
+                        className={`txn-status-badge status-${(
+                          txn.status || 'HOLDING'
+                        ).toLowerCase()}`}
+                      >
+                        {INVESTMENT_STATUS_LABELS[txn.status || 'HOLDING']}
+                      </span>
+                    )}
+                    {activeType === TransactionType.INVESTMENT &&
+                      txn.status &&
+                      txn.status !== 'HOLDING' &&
+                      txn.realizedPnl !== undefined && (
+                        <span
+                          className={`txn-pnl-badge ${
+                            txn.realizedPnl >= 0 ? 'pnl-profit' : 'pnl-loss'
+                          }`}
+                        >
+                          {txn.realizedPnl >= 0 ? 'Lãi: +' : 'Lỗ: '}
+                          {formatCurrency(Math.abs(txn.realizedPnl))}
+                        </span>
+                      )}
+                  </div>
+
+                  <div className="mobile-card-actions">
+                    <button
+                      type="button"
+                      className="mobile-action-btn edit-btn"
+                      onClick={() => openEditModal(txn)}
+                      aria-label={`Chỉnh sửa ${txn.description || 'giao dịch'}`}
+                    >
+                      <Pencil size={14} />
+                      <span>Sửa</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="mobile-action-btn delete-btn"
+                      onClick={() => handleDelete(txn.id, txn.description || '')}
+                      aria-label={`Xóa ${txn.description || 'giao dịch'}`}
+                    >
+                      <Trash2 size={14} />
+                      <span>Xóa</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <Pagination
@@ -779,44 +995,39 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
         </>
       )}
 
-      {/* Form / Modal overlay */}
+      {/* 6. Form / Modal Overlay for Create & Edit */}
       {isModalOpen && (
         <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}>
           <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{editingTransaction ? 'Sửa giao dịch' : 'Thêm giao dịch'}</h3>
-              <button className="close-btn" onClick={() => setIsModalOpen(false)} aria-label="Đóng">
+              <h3>
+                {editingTransaction
+                  ? 'Chỉnh sửa giao dịch'
+                  : activeType === TransactionType.INCOME
+                    ? 'Thêm thu nhập mới'
+                    : activeType === TransactionType.INVESTMENT
+                      ? 'Thêm khoản đầu tư mới'
+                      : 'Thêm chi tiêu mới'}
+              </h3>
+              <button
+                type="button"
+                className="close-btn"
+                onClick={() => setIsModalOpen(false)}
+                aria-label="Đóng"
+              >
                 <X size={18} />
               </button>
             </div>
             <form onSubmit={handleSubmit}>
-              {!editingTransaction && (
-                <div className="form-group">
-                  <label>Chọn nhanh (Mẫu giao dịch)</label>
-                  <div className="presets-container">
-                    {presetOptions.map((opt, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        className="preset-tag-btn"
-                        onClick={() => handleApplyPreset(opt)}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               <div className="form-group">
                 <label htmlFor="txn-title">Tiêu đề / Nội dung</label>
                 <input
                   id="txn-title"
                   type="text"
                   placeholder={
-                    type === TransactionType.INCOME
+                    activeType === TransactionType.INCOME
                       ? 'Ví dụ: Lương tháng 8, Thưởng dự án...'
-                      : type === TransactionType.INVESTMENT
+                      : activeType === TransactionType.INVESTMENT
                         ? 'Ví dụ: Mua cổ phiếu Vinamilk, Gửi tiết kiệm...'
                         : 'Ví dụ: Mua sắm tạp hóa, Ăn uống...'
                   }
@@ -828,9 +1039,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
 
               <div className="form-group">
                 <label htmlFor="txn-amount">
-                  {type === TransactionType.INCOME
+                  {activeType === TransactionType.INCOME
                     ? 'Số tiền thu nhập (đ)'
-                    : type === TransactionType.INVESTMENT
+                    : activeType === TransactionType.INVESTMENT
                       ? 'Số tiền đầu tư (đ)'
                       : 'Số tiền chi tiêu (đ)'}
                 </label>
@@ -838,9 +1049,9 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                   id="txn-amount"
                   type="text"
                   placeholder={
-                    type === TransactionType.INCOME
+                    activeType === TransactionType.INCOME
                       ? 'Ví dụ: 15.000.000'
-                      : type === TransactionType.INVESTMENT
+                      : activeType === TransactionType.INVESTMENT
                         ? 'Ví dụ: 10.000.000'
                         : 'Ví dụ: 50.000'
                   }
@@ -850,7 +1061,56 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                 />
               </div>
 
-              {type === TransactionType.INVESTMENT && (
+              <div className="form-group">
+                <label htmlFor="txn-category">Danh mục</label>
+                <Select
+                  id="txn-category"
+                  options={filteredCategories.map((cat) => ({ value: cat.id, label: cat.name }))}
+                  value={
+                    filteredCategories
+                      .map((cat) => ({ value: cat.id, label: cat.name }))
+                      .find((opt) => opt.value === categoryId) || null
+                  }
+                  onChange={(option) => setCategoryId(option ? option.value : '')}
+                  classNamePrefix="react-select"
+                  placeholder="Chọn Danh mục"
+                  isSearchable={true}
+                  menuPortalTarget={document.body}
+                />
+              </div>
+
+              {/* Wallet Selection Dropdown */}
+              {wallets.length > 0 && (
+                <div className="form-group">
+                  <label htmlFor="txn-wallet">Ví / Nguồn thanh toán (Tùy chọn)</label>
+                  <Select
+                    id="txn-wallet"
+                    options={[
+                      { value: '', label: '-- Không chọn ví cụ thể --' },
+                      ...wallets.map((w) => ({
+                        value: w.id,
+                        label: `${w.icon ? `${w.icon} ` : '💳 '}${w.name} (${formatCurrency(w.balance)})`,
+                      })),
+                    ]}
+                    value={
+                      [
+                        { value: '', label: '-- Không chọn ví cụ thể --' },
+                        ...wallets.map((w) => ({
+                          value: w.id,
+                          label: `${w.icon ? `${w.icon} ` : '💳 '}${w.name} (${formatCurrency(w.balance)})`,
+                        })),
+                      ].find((opt) => opt.value === walletId) || null
+                    }
+                    onChange={(option) => setWalletId(option ? option.value : '')}
+                    classNamePrefix="react-select"
+                    placeholder="Chọn ví hoặc tài khoản"
+                    isSearchable={true}
+                    menuPortalTarget={document.body}
+                  />
+                </div>
+              )}
+
+              {activeType === TransactionType.INVESTMENT && (
                 <div className="form-group">
                   <label htmlFor="txn-status">Trạng thái đầu tư</label>
                   <Select
@@ -880,7 +1140,7 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                 </div>
               )}
 
-              {type === TransactionType.INVESTMENT && status !== 'HOLDING' && (
+              {activeType === TransactionType.INVESTMENT && status !== 'HOLDING' && (
                 <div className="form-group">
                   <label htmlFor="txn-pnl">Số tiền Lãi / Lỗ thực tế (đ)</label>
                   <input
@@ -904,24 +1164,6 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
               )}
 
               <div className="form-group">
-                <label htmlFor="txn-category">Danh mục</label>
-                <Select
-                  id="txn-category"
-                  options={filteredCategories.map((cat) => ({ value: cat.id, label: cat.name }))}
-                  value={
-                    filteredCategories
-                      .map((cat) => ({ value: cat.id, label: cat.name }))
-                      .find((opt) => opt.value === categoryId) || null
-                  }
-                  onChange={(option) => setCategoryId(option ? option.value : '')}
-                  classNamePrefix="react-select"
-                  placeholder="Chọn Danh mục"
-                  isSearchable={true}
-                  menuPortalTarget={document.body}
-                />
-              </div>
-
-              <div className="form-group">
                 <label htmlFor="txn-incurred">Ngày thực hiện</label>
                 <DatePicker
                   id="txn-incurred"
@@ -942,7 +1184,10 @@ export default function Transactions({ type = TransactionType.EXPENSE }: Transac
                 >
                   Hủy
                 </button>
-                <button type="submit" className="btn btn-primary">
+                <button
+                  type="submit"
+                  className={`btn btn-primary btn-add-${activeType.toLowerCase()}`}
+                >
                   {editingTransaction ? 'Cập nhật' : 'Thêm'} giao dịch
                 </button>
               </div>

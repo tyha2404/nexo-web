@@ -1,29 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import {
+  AlertTriangle,
+  ArrowRightLeft,
+  Building2,
+  CheckCircle2,
+  CreditCard,
+  FileText,
+  FolderTree,
+  History,
+  Pencil,
+  Plus,
+  ShieldAlert,
+  Sparkles,
+  Trash2,
+  Wallet,
+  X,
+} from 'lucide-react';
 import moment from 'moment';
-import Select from 'react-select';
+import React, { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import Select from 'react-select';
 import { toast } from 'react-toastify';
-import {
-  CreditCard,
-  Wallet,
-  Plus,
-  ArrowRightLeft,
-  Pencil,
-  Trash2,
-  AlertTriangle,
-  Building2,
-  Sparkles,
-  X,
-  FolderTree,
-  CheckCircle2,
-  ShieldAlert,
-  History,
-  FileText,
-} from 'lucide-react';
+import type { CreditCardStatement, WalletType, Wallet as WalletTypeModel } from '../commons/types';
 import { formatCurrency } from '../commons/utils';
-import { walletService, statementService } from '../services/api';
-import type { Wallet as WalletTypeModel, WalletType, CreditCardStatement } from '../commons/types';
+import { statementService, walletService } from '../services/api';
 import './Wallets.css';
 
 const WALLET_TYPE_OPTIONS = [
@@ -662,189 +662,334 @@ export default function Wallets() {
           </p>
         </div>
       ) : (
-        <div className="debts-table-container animate-fade-in">
-          <table className="debts-table">
-            <thead>
-              <tr>
-                <th>Tên Thẻ / Tài khoản</th>
-                <th>Phân loại</th>
-                <th>Hạn mức / Vốn</th>
-                <th>Dư nợ sao kê kỳ này</th>
-                <th>Tối thiểu cần trả</th>
-                <th>Khả dụng / Số dư</th>
-                <th>Chu kỳ sao kê</th>
-                <th>Tình trạng</th>
-                <th style={{ textAlign: 'center' }}>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayedWallets.map((wallet) => {
-                const isCredit = wallet.type === 'CREDIT';
-                const limit = wallet.creditLimit || 0;
-                const debt = wallet.outstandingDebt || Math.abs(wallet.balance);
-                const stmtBalance = wallet.statementBalance ?? (isCredit ? debt : 0);
-                const minPay =
-                  wallet.minimumPayment ??
-                  (isCredit && stmtBalance > 0 ? Math.max(50000, stmtBalance * 0.05) : 0);
-                const available = isCredit
-                  ? wallet.availableCredit || Math.max(0, limit - debt)
-                  : wallet.balance;
-                const usedPercent =
-                  isCredit && limit > 0 ? Math.min(100, Math.round((debt / limit) * 100)) : 0;
+        <>
+          {/* Desktop Table View */}
+          <div className="wallets-table-container animate-fade-in">
+            <table className="wallets-table">
+              <thead>
+                <tr>
+                  <th className="col-wallet-name">Tên Thẻ / Tài khoản</th>
+                  <th className="col-wallet-type">Phân loại</th>
+                  <th className="col-wallet-limit">Hạn mức / Vốn</th>
+                  <th className="col-wallet-debt">Dư nợ sao kê</th>
+                  <th className="col-wallet-minpay">Tối thiểu</th>
+                  <th className="col-wallet-available">Khả dụng / Số dư</th>
+                  <th className="col-wallet-cycle">Chu kỳ sao kê</th>
+                  <th className="col-wallet-status">Hạn mức đã dùng</th>
+                  <th className="col-wallet-actions">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayedWallets.map((wallet) => {
+                  const isCredit = wallet.type === 'CREDIT';
+                  const limit = wallet.creditLimit || 0;
+                  const debt = wallet.outstandingDebt || Math.abs(wallet.balance);
+                  const stmtBalance = wallet.statementBalance ?? (isCredit ? debt : 0);
+                  const minPay =
+                    wallet.minimumPayment ??
+                    (isCredit && stmtBalance > 0 ? Math.max(50000, stmtBalance * 0.05) : 0);
+                  const available = isCredit
+                    ? wallet.availableCredit || Math.max(0, limit - debt)
+                    : wallet.balance;
+                  const usedPercent =
+                    isCredit && limit > 0 ? Math.min(100, Math.round((debt / limit) * 100)) : 0;
 
-                return (
-                  <tr key={wallet.id}>
-                    <td className="txn-title-cell">
-                      <div className="wallet-row-title">
-                        <span className="wallet-row-icon">{wallet.icon || '💳'}</span>
-                        <div>
-                          <div className="debt-title-text">{wallet.name}</div>
-                          {wallet.allocationPercent && wallet.allocationPercent > 0 ? (
-                            <div className="debt-notes-text">
-                              Phân bổ: {wallet.allocationPercent}%
+                  return (
+                    <tr key={wallet.id}>
+                      <td className="col-wallet-name">
+                        <div className="wallet-row-title">
+                          <span className="wallet-row-icon">{wallet.icon || '💳'}</span>
+                          <div>
+                            <div
+                              className="debt-title-text"
+                              style={{ fontWeight: 600, color: 'var(--text-main)' }}
+                            >
+                              {wallet.name}
                             </div>
+                            {wallet.allocationPercent && wallet.allocationPercent > 0 ? (
+                              <div className="debt-notes-text">
+                                Phân bổ: {wallet.allocationPercent}%
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="col-wallet-type">
+                        <span
+                          className={`txn-category-badge ${
+                            isCredit ? 'badge-payable' : 'badge-receivable'
+                          }`}
+                        >
+                          {wallet.type === 'CREDIT' && 'Thẻ tín dụng'}
+                          {wallet.type === 'BANK' && 'Ngân hàng'}
+                          {wallet.type === 'CASH' && 'Tiền mặt'}
+                          {wallet.type === 'E_WALLET' && 'Ví điện tử'}
+                          {wallet.type === 'SAVINGS' && 'Tiết kiệm'}
+                          {wallet.type === 'JAR' && 'Hũ chi tiêu'}
+                        </span>
+                      </td>
+                      <td className="col-wallet-limit">{isCredit ? formatCurrency(limit) : '—'}</td>
+                      {/* Dư nợ sao kê kỳ này */}
+                      <td className="col-wallet-debt">
+                        {isCredit ? (
+                          <div>
+                            <div
+                              style={{
+                                color: stmtBalance > 0 ? 'var(--expense)' : 'var(--text-main)',
+                                fontWeight: 700,
+                                fontFamily: 'var(--font-mono)',
+                              }}
+                            >
+                              {formatCurrency(stmtBalance)}
+                            </div>
+                            {wallet.dueDay ? (
+                              <span className="badge-due-warning">Hạn: Ngày {wallet.dueDay}</span>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>—</span>
+                        )}
+                      </td>
+                      {/* Số tiền thanh toán tối thiểu */}
+                      <td className="col-wallet-minpay">
+                        {isCredit ? (
+                          <div>
+                            <div
+                              style={{
+                                color: minPay > 0 ? '#f59e0b' : 'var(--text-muted)',
+                                fontWeight: 600,
+                                fontFamily: 'var(--font-mono)',
+                              }}
+                            >
+                              {formatCurrency(minPay)}
+                            </div>
+                            {minPay > 0 ? <span className="badge-minpay-sub">Min 5%</span> : null}
+                          </div>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)' }}>—</span>
+                        )}
+                      </td>
+                      {/* Hạn mức khả dụng / Số dư */}
+                      <td
+                        className="col-wallet-available"
+                        style={{
+                          color: available >= 0 ? 'var(--income)' : 'var(--expense)',
+                        }}
+                      >
+                        {formatCurrency(available)}
+                      </td>
+                      <td className="col-wallet-cycle">
+                        {isCredit && (wallet.statementDay || wallet.dueDay) ? (
+                          <div className="statement-cycle-text">
+                            <div>Sao kê: Ngày {wallet.statementDay || '--'}</div>
+                            <div className="due-day-sub">Hạn trả: Ngày {wallet.dueDay || '--'}</div>
+                          </div>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td className="col-wallet-status">
+                        {isCredit ? (
+                          <div className="table-progress-wrap">
+                            <div className="table-progress-bg">
+                              <div
+                                className={`table-progress-fill ${
+                                  usedPercent > 80
+                                    ? 'danger'
+                                    : usedPercent > 50
+                                      ? 'warning'
+                                      : 'safe'
+                                }`}
+                                style={{ width: `${usedPercent}%` }}
+                              />
+                            </div>
+                            <span className="table-progress-text">{usedPercent}%</span>
+                          </div>
+                        ) : (
+                          <span className="badge-completed">Đang hoạt động</span>
+                        )}
+                      </td>
+                      <td className="col-wallet-actions">
+                        <div className="action-buttons-wrapper">
+                          {isCredit ? (
+                            <>
+                              <button
+                                type="button"
+                                className="action-btn btn-history-mini"
+                                onClick={() => openHistoryModal(wallet)}
+                                title="Xem lịch sử dư nợ từng kỳ sao kê"
+                              >
+                                <History size={13} />
+                              </button>
+                              <button
+                                type="button"
+                                className="action-btn btn-repay-mini"
+                                onClick={() => openRepayCreditModal(wallet)}
+                                title="Thanh toán sao kê thẻ"
+                              >
+                                <ArrowRightLeft size={13} />
+                              </button>
+                            </>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="action-btn edit-btn"
+                            onClick={() => openEditModal(wallet)}
+                            title="Chỉnh sửa ví"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            className="action-btn delete-btn"
+                            onClick={() => handleDeleteWallet(wallet.id, wallet.name)}
+                            title="Xóa ví"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View (<768px) */}
+          <div className="transactions-mobile-cards">
+            {displayedWallets.map((wallet) => {
+              const isCredit = wallet.type === 'CREDIT';
+              const limit = wallet.creditLimit || 0;
+              const debt = wallet.outstandingDebt || Math.abs(wallet.balance);
+              const stmtBalance = wallet.statementBalance ?? (isCredit ? debt : 0);
+              const available = isCredit
+                ? wallet.availableCredit || Math.max(0, limit - debt)
+                : wallet.balance;
+
+              return (
+                <div key={`m-${wallet.id}`} className="transaction-mobile-card animate-fade-in">
+                  <div className="txn-mobile-top">
+                    <div className="txn-mobile-info">
+                      <div className="txn-mobile-icon-badge badge-neutral">
+                        <span style={{ fontSize: '1.2rem' }}>{wallet.icon || '💳'}</span>
+                      </div>
+                      <div className="txn-mobile-title-wrap">
+                        <span className="txn-mobile-title">{wallet.name}</span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className={`txn-category-badge ${
+                              isCredit ? 'badge-payable' : 'badge-receivable'
+                            }`}
+                          >
+                            {wallet.type === 'CREDIT' && 'Thẻ tín dụng'}
+                            {wallet.type === 'BANK' && 'Ngân hàng'}
+                            {wallet.type === 'CASH' && 'Tiền mặt'}
+                            {wallet.type === 'E_WALLET' && 'Ví điện tử'}
+                            {wallet.type === 'SAVINGS' && 'Tiết kiệm'}
+                            {wallet.type === 'JAR' && 'Hũ chi tiêu'}
+                          </span>
+                          {wallet.allocationPercent && wallet.allocationPercent > 0 ? (
+                            <span className="badge-due-warning">
+                              Phân bổ {wallet.allocationPercent}%
+                            </span>
                           ) : null}
                         </div>
                       </div>
-                    </td>
-                    <td>
+                    </div>
+
+                    <div className="txn-mobile-amount-wrap">
                       <span
-                        className={`txn-category-badge ${
-                          isCredit ? 'badge-payable' : 'badge-receivable'
-                        }`}
+                        className="txn-mobile-amount"
+                        style={{ color: available >= 0 ? 'var(--income)' : 'var(--expense)' }}
                       >
-                        {wallet.type === 'CREDIT' && 'Thẻ tín dụng'}
-                        {wallet.type === 'BANK' && 'Ngân hàng'}
-                        {wallet.type === 'CASH' && 'Tiền mặt'}
-                        {wallet.type === 'E_WALLET' && 'Ví điện tử'}
-                        {wallet.type === 'SAVINGS' && 'Tiết kiệm'}
-                        {wallet.type === 'JAR' && 'Hũ chi tiêu'}
+                        {formatCurrency(available)}
                       </span>
-                    </td>
-                    <td className="txn-amount">{isCredit ? formatCurrency(limit) : '—'}</td>
-                    {/* Dư nợ sao kê kỳ này */}
-                    <td>
-                      {isCredit ? (
-                        <div>
-                          <div
-                            style={{
-                              color: stmtBalance > 0 ? 'var(--expense)' : 'var(--text-main)',
-                              fontWeight: 600,
-                            }}
-                          >
-                            {formatCurrency(stmtBalance)}
-                          </div>
-                          {wallet.dueDay ? (
-                            <span className="badge-due-warning">Hạn: Ngày {wallet.dueDay}</span>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <span style={{ color: 'var(--text-muted)' }}>—</span>
-                      )}
-                    </td>
-                    {/* Số tiền thanh toán tối thiểu */}
-                    <td>
-                      {isCredit ? (
-                        <div>
-                          <div
-                            style={{
-                              color: minPay > 0 ? '#eab308' : 'var(--text-muted)',
-                              fontWeight: 500,
-                            }}
-                          >
-                            {formatCurrency(minPay)}
-                          </div>
-                          {minPay > 0 ? <span className="badge-minpay-sub">Min 5%</span> : null}
-                        </div>
-                      ) : (
-                        <span style={{ color: 'var(--text-muted)' }}>—</span>
-                      )}
-                    </td>
-                    {/* Hạn mức khả dụng / Số dư */}
-                    <td
-                      className="cell-remaining"
+                      <span className="txn-mobile-date">
+                        {isCredit ? `Hạn mức: ${formatCurrency(limit)}` : 'Số dư khả dụng'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {isCredit && stmtBalance > 0 && (
+                    <div
                       style={{
-                        color: available >= 0 ? 'var(--income)' : 'var(--expense)',
-                        fontWeight: 'bold',
+                        padding: '0.45rem 0.65rem',
+                        background: 'rgba(239, 68, 68, 0.08)',
+                        borderRadius: '8px',
+                        fontSize: '0.8rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginTop: '0.4rem',
                       }}
                     >
-                      {formatCurrency(available)}
-                    </td>
-                    <td className="txn-date">
+                      <span style={{ color: 'var(--expense)', fontWeight: 600 }}>
+                        Dư nợ sao kê: {formatCurrency(stmtBalance)}
+                      </span>
+                      {wallet.dueDay && (
+                        <span style={{ color: 'var(--text-muted)' }}>
+                          Hạn: Ngày {wallet.dueDay}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="txn-mobile-bottom">
+                    <div className="txn-mobile-badges">
                       {isCredit && (wallet.statementDay || wallet.dueDay) ? (
-                        <div className="statement-cycle-text">
-                          <div>Sao kê: Ngày {wallet.statementDay || '--'}</div>
-                          <div className="due-day-sub">Hạn trả: Ngày {wallet.dueDay || '--'}</div>
-                        </div>
+                        <span className="txn-wallet-badge">
+                          Sao kê ngày {wallet.statementDay || '--'}
+                        </span>
                       ) : (
-                        '—'
+                        <span className="txn-wallet-badge">Đang hoạt động</span>
                       )}
-                    </td>
-                    <td>
-                      {isCredit ? (
-                        <div className="table-progress-wrap">
-                          <div className="table-progress-bg">
-                            <div
-                              className={`table-progress-fill ${
-                                usedPercent > 80 ? 'danger' : usedPercent > 50 ? 'warning' : 'safe'
-                              }`}
-                              style={{ width: `${usedPercent}%` }}
-                            />
-                          </div>
-                          <span className="table-progress-text">{usedPercent}% hạn mức</span>
-                        </div>
-                      ) : (
-                        <span className="badge-completed">Đang hoạt động</span>
+                    </div>
+
+                    <div className="txn-mobile-actions">
+                      {isCredit && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => openHistoryModal(wallet)}
+                            className="action-btn"
+                            title="Lịch sử sao kê"
+                          >
+                            <History size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openRepayCreditModal(wallet)}
+                            className="action-btn"
+                            title="Trả nợ"
+                          >
+                            <ArrowRightLeft size={14} />
+                          </button>
+                        </>
                       )}
-                    </td>
-                    <td>
-                      <div className="table-actions-cell">
-                        {isCredit ? (
-                          <>
-                            <button
-                              type="button"
-                              className="btn-history-mini"
-                              onClick={() => openHistoryModal(wallet)}
-                              title="Xem lịch sử dư nợ từng kỳ sao kê"
-                            >
-                              <History size={13} />
-                              <span>Lịch sử</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-repay-mini"
-                              onClick={() => openRepayCreditModal(wallet)}
-                              title="Thanh toán sao kê thẻ"
-                            >
-                              <ArrowRightLeft size={13} />
-                              <span>Trả nợ</span>
-                            </button>
-                          </>
-                        ) : null}
-                        <button
-                          type="button"
-                          className="action-btn btn-edit"
-                          onClick={() => openEditModal(wallet)}
-                          title="Chỉnh sửa"
-                        >
-                          <Pencil size={15} />
-                        </button>
-                        <button
-                          type="button"
-                          className="action-btn btn-delete"
-                          onClick={() => handleDeleteWallet(wallet.id, wallet.name)}
-                          title="Xóa ví"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(wallet)}
+                        className="action-btn edit-btn"
+                        title="Chỉnh sửa ví"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteWallet(wallet.id, wallet.name)}
+                        className="action-btn delete-btn"
+                        title="Xóa ví"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* 5. Modal: Thêm / Sửa Thẻ & Ví */}

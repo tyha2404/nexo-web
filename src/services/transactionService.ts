@@ -1,9 +1,10 @@
-import type { TransactionType, InvestmentStatus } from '../commons/constants';
+import type { InvestmentStatus, TransactionType } from '../commons/constants';
 import type { Transaction } from '../commons/types';
 import { CRUDService } from './crudService';
 
 export interface CreateTransactionDTO {
   categoryId: string;
+  walletId?: string;
   amount: number;
   type: TransactionType;
   status?: InvestmentStatus;
@@ -14,6 +15,7 @@ export interface CreateTransactionDTO {
 
 export interface UpdateTransactionDTO {
   categoryId?: string;
+  walletId?: string;
   amount?: number;
   type?: TransactionType;
   status?: InvestmentStatus;

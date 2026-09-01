@@ -30,6 +30,8 @@ export interface Transaction {
   userId: string;
   categoryId: string;
   categoryName?: string;
+  walletId?: string;
+  walletName?: string;
   amount: number;
   description?: string;
   type: 'INCOME' | 'EXPENSE' | 'INVESTMENT';

@@ -1,44 +1,35 @@
 import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  CreditCard,
-  FolderTree,
+  ArrowLeftRight,
   LayoutDashboard,
   LogOut,
   Menu,
   Moon,
-  Scale,
+  Sparkles,
   Sun,
   Target,
-  TrendingUp,
+  Wallet,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import './App.css';
 import { TransactionType } from './commons/constants';
 import type { User } from './commons/types';
 import Auth from './components/Auth';
-import Categories from './components/Categories';
 import Dashboard from './components/Dashboard';
-import Debts from './components/Debts';
+import Planning, { type PlanningSubTab } from './components/Planning';
 import ReloadPrompt from './components/ReloadPrompt';
-import Targets from './components/Targets';
 import Transactions from './components/Transactions';
 import Wallets from './components/Wallets';
 import { AIChatWidget } from './components/chat';
 import { authService } from './services/api';
 
+export type ActiveTab = 'dashboard' | 'transactions' | 'wallets' | 'planning';
+
 function App() {
-  const [activeTab, setActiveTab] = useState<
-    | 'dashboard'
-    | 'wallets'
-    | 'income'
-    | 'expenses'
-    | 'investment'
-    | 'categories'
-    | 'targets'
-    | 'debts'
-  >('dashboard');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const [planningSubTab, setPlanningSubTab] = useState<PlanningSubTab>('targets');
+  const [transactionType, setTransactionType] = useState<TransactionType>(TransactionType.EXPENSE);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -98,15 +89,56 @@ function App() {
     };
   }, [isSidebarOpen]);
 
+  const handleOpenAIChat = () => {
+    window.dispatchEvent(new CustomEvent('open-ai-chat'));
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     setUser(null);
   };
 
-  const handleGoHome = () => {
-    setActiveTab('dashboard');
+  const handleNavigate = (tab: string) => {
+    if (tab === 'income') {
+      setTransactionType(TransactionType.INCOME);
+      setActiveTab('transactions');
+    } else if (tab === 'expenses') {
+      setTransactionType(TransactionType.EXPENSE);
+      setActiveTab('transactions');
+    } else if (tab === 'investment') {
+      setTransactionType(TransactionType.INVESTMENT);
+      setActiveTab('transactions');
+    } else if (tab === 'transactions') {
+      setActiveTab('transactions');
+    } else if (tab === 'debts' || tab === 'wallets') {
+      setActiveTab('wallets');
+    } else if (tab === 'categories') {
+      setPlanningSubTab('categories');
+      setActiveTab('planning');
+    } else if (tab === 'targets') {
+      setPlanningSubTab('targets');
+      setActiveTab('planning');
+    } else if (tab === 'planning') {
+      setActiveTab('planning');
+    } else {
+      setActiveTab('dashboard');
+    }
     setIsSidebarOpen(false);
   };
+
+  // Global shortcut for opening AI Copilot (Cmd+K / Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        handleOpenAIChat();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   if (authLoading) {
     return (
@@ -127,7 +159,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      {/* Mobile Header */}
+      {/* Mobile Top Header */}
       <header className="mobile-header">
         <button
           className="hamburger-btn"
@@ -138,12 +170,12 @@ function App() {
         </button>
         <div
           className="mobile-brand brand-clickable"
-          onClick={handleGoHome}
+          onClick={() => handleNavigate('dashboard')}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
-              handleGoHome();
+              handleNavigate('dashboard');
             }
           }}
           aria-label="Trang chủ Nexo"
@@ -165,16 +197,17 @@ function App() {
         <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />
       )}
 
+      {/* Desktop & Drawer Sidebar */}
       <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div
             className="sidebar-brand brand-clickable"
-            onClick={handleGoHome}
+            onClick={() => handleNavigate('dashboard')}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
-                handleGoHome();
+                handleNavigate('dashboard');
               }
             }}
             aria-label="Trang chủ Nexo"
@@ -184,105 +217,50 @@ function App() {
           </div>
         </div>
 
+        {/* 4 Primary Navigation Hubs */}
         <nav className="nav-menu">
           <button
-            onClick={() => {
-              setActiveTab('dashboard');
-              setIsSidebarOpen(false);
-            }}
+            onClick={() => handleNavigate('dashboard')}
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
           >
             <span className="nav-icon">
               <LayoutDashboard size={18} />
             </span>
-            <span className="nav-text">Bảng điều khiển</span>
+            <span className="nav-text">Tổng quan</span>
           </button>
+
           <button
-            onClick={() => {
-              setActiveTab('wallets');
-              setIsSidebarOpen(false);
-            }}
+            onClick={() => handleNavigate('transactions')}
+            className={`nav-item ${activeTab === 'transactions' ? 'active' : ''}`}
+          >
+            <span className="nav-icon">
+              <ArrowLeftRight size={18} />
+            </span>
+            <span className="nav-text">Giao dịch</span>
+          </button>
+
+          <button
+            onClick={() => handleNavigate('wallets')}
             className={`nav-item ${activeTab === 'wallets' ? 'active' : ''}`}
           >
             <span className="nav-icon">
-              <CreditCard size={18} />
+              <Wallet size={18} />
             </span>
-            <span className="nav-text">Tài khoản & Thẻ</span>
+            <span className="nav-text">Tài sản & Ví</span>
           </button>
+
           <button
-            onClick={() => {
-              setActiveTab('targets');
-              setIsSidebarOpen(false);
-            }}
-            className={`nav-item ${activeTab === 'targets' ? 'active' : ''}`}
+            onClick={() => handleNavigate('planning')}
+            className={`nav-item ${activeTab === 'planning' ? 'active' : ''}`}
           >
             <span className="nav-icon">
               <Target size={18} />
             </span>
-            <span className="nav-text">Mục tiêu tài chính</span>
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('debts');
-              setIsSidebarOpen(false);
-            }}
-            className={`nav-item ${activeTab === 'debts' ? 'active' : ''}`}
-          >
-            <span className="nav-icon">
-              <Scale size={18} />
-            </span>
-            <span className="nav-text">Quản lý Vay & Nợ</span>
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('income');
-              setIsSidebarOpen(false);
-            }}
-            className={`nav-item ${activeTab === 'income' ? 'active' : ''}`}
-          >
-            <span className="nav-icon">
-              <ArrowDownLeft size={18} />
-            </span>
-            <span className="nav-text">Thu nhập</span>
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('expenses');
-              setIsSidebarOpen(false);
-            }}
-            className={`nav-item ${activeTab === 'expenses' ? 'active' : ''}`}
-          >
-            <span className="nav-icon">
-              <ArrowUpRight size={18} />
-            </span>
-            <span className="nav-text">Chi tiêu</span>
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('investment');
-              setIsSidebarOpen(false);
-            }}
-            className={`nav-item ${activeTab === 'investment' ? 'active' : ''}`}
-          >
-            <span className="nav-icon">
-              <TrendingUp size={18} />
-            </span>
-            <span className="nav-text">Đầu tư</span>
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('categories');
-              setIsSidebarOpen(false);
-            }}
-            className={`nav-item ${activeTab === 'categories' ? 'active' : ''}`}
-          >
-            <span className="nav-icon">
-              <FolderTree size={18} />
-            </span>
-            <span className="nav-text">Danh mục</span>
+            <span className="nav-text">Kế hoạch & Mục tiêu</span>
           </button>
         </nav>
 
+        {/* Sidebar Footer */}
         <div className="sidebar-footer">
           <div className="user-profile-footer">
             <div className="avatar">{user.username ? user.username[0].toUpperCase() : 'U'}</div>
@@ -319,27 +297,109 @@ function App() {
         </div>
       </aside>
 
+      {/* Main Content Area */}
       <main className="main-content">
+        {/* Desktop Top Header with Sleek AI Action Button */}
+        <header className="main-desktop-header">
+          <div className="header-page-info">
+            <h1 className="header-page-title">
+              {activeTab === 'dashboard' && 'Tổng quan'}
+              {activeTab === 'transactions' && 'Sổ giao dịch'}
+              {activeTab === 'wallets' && 'Tài sản & Ví'}
+              {activeTab === 'planning' && 'Kế hoạch & Mục tiêu'}
+            </h1>
+          </div>
+
+          <div className="header-actions">
+            <button
+              className="header-ai-btn"
+              onClick={handleOpenAIChat}
+              type="button"
+              aria-label="Trợ lý AI"
+              title="Trợ lý Nexo AI (⌘K)"
+            >
+              <div className="ai-btn-glow" />
+              <Sparkles size={16} className="ai-btn-icon" />
+              <span className="ai-btn-text">Trợ lý AI</span>
+              <kbd className="ai-btn-kbd">⌘K</kbd>
+            </button>
+
+            <button
+              className="theme-toggle-btn"
+              onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+              aria-label="Toggle Theme"
+              title="Đổi giao diện"
+            >
+              {theme === 'light' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+          </div>
+        </header>
+
+        {/* Content View based on activeTab */}
         <div className="content-view animate-fade-in" key={activeTab}>
-          {activeTab === 'dashboard' ? (
-            <Dashboard onNavigate={(tab) => setActiveTab(tab as any)} />
-          ) : activeTab === 'wallets' ? (
-            <Wallets />
-          ) : activeTab === 'debts' ? (
-            <Debts />
-          ) : activeTab === 'income' ? (
-            <Transactions type={TransactionType.INCOME} />
-          ) : activeTab === 'expenses' ? (
-            <Transactions type={TransactionType.EXPENSE} />
-          ) : activeTab === 'investment' ? (
-            <Transactions type={TransactionType.INVESTMENT} />
-          ) : activeTab === 'categories' ? (
-            <Categories />
-          ) : (
-            <Targets />
+          {activeTab === 'dashboard' && <Dashboard onNavigate={handleNavigate} />}
+          {activeTab === 'transactions' && <Transactions type={transactionType} />}
+          {activeTab === 'wallets' && <Wallets />}
+          {activeTab === 'planning' && (
+            <Planning
+              initialSubTab={planningSubTab}
+              onSubTabChange={setPlanningSubTab}
+              onNavigate={handleNavigate}
+            />
           )}
         </div>
       </main>
+
+      {/* Mobile PWA Bottom Navigation Bar */}
+      <nav className="bottom-nav" aria-label="Mobile Navigation">
+        <button
+          type="button"
+          className={`bottom-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+          onClick={() => handleNavigate('dashboard')}
+          aria-label="Tổng quan"
+        >
+          <div className="bottom-nav-icon">
+            <LayoutDashboard size={20} />
+          </div>
+          <span className="bottom-nav-label">Tổng quan</span>
+        </button>
+
+        <button
+          type="button"
+          className={`bottom-nav-item ${activeTab === 'transactions' ? 'active' : ''}`}
+          onClick={() => handleNavigate('transactions')}
+          aria-label="Giao dịch"
+        >
+          <div className="bottom-nav-icon">
+            <ArrowLeftRight size={20} />
+          </div>
+          <span className="bottom-nav-label">Giao dịch</span>
+        </button>
+
+        <button
+          type="button"
+          className={`bottom-nav-item ${activeTab === 'wallets' ? 'active' : ''}`}
+          onClick={() => handleNavigate('wallets')}
+          aria-label="Tài sản & Ví"
+        >
+          <div className="bottom-nav-icon">
+            <Wallet size={20} />
+          </div>
+          <span className="bottom-nav-label">Tài sản</span>
+        </button>
+
+        <button
+          type="button"
+          className={`bottom-nav-item ${activeTab === 'planning' ? 'active' : ''}`}
+          onClick={() => handleNavigate('planning')}
+          aria-label="Kế hoạch & Mục tiêu"
+        >
+          <div className="bottom-nav-icon">
+            <Target size={20} />
+          </div>
+          <span className="bottom-nav-label">Kế hoạch</span>
+        </button>
+      </nav>
 
       <ReloadPrompt />
       <AIChatWidget user={user} />

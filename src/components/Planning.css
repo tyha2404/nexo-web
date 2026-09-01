@@ -1,0 +1,190 @@
+/* =========================================================
+   Nexo Web - Planning & Management Hub Styles
+   ========================================================= */
+
+.planning-hub-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Segmented Hub Tabs Header Bar */
+.planning-hub-nav-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 0.5rem 0.5rem 0.75rem 0.5rem;
+}
+
+.planning-hub-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 18px);
+  padding: 0.35rem;
+  box-shadow: var(--shadow-sm);
+  max-width: 100%;
+}
+
+.planning-hub-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 46px;
+}
+
+.planning-hub-tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-main);
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+}
+
+.planning-hub-tab.active {
+  background: var(--bg-input);
+  border-color: var(--border-active);
+  color: var(--text-main);
+  box-shadow:
+    0 4px 14px -2px rgba(0, 0, 0, 0.25),
+    0 0 12px var(--primary-glow);
+}
+
+.planning-hub-tab .tab-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.planning-hub-tab:hover .tab-icon-wrapper {
+  color: var(--primary);
+}
+
+.planning-hub-tab.active .tab-icon-wrapper {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.planning-hub-tab .tab-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.planning-hub-tab .tab-primary-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.planning-hub-tab .tab-secondary-label {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+.planning-hub-tab.active .tab-primary-label {
+  color: var(--primary);
+}
+
+/* Light Theme Enhancements */
+.light-theme .planning-hub-tabs {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--border);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.light-theme .planning-hub-tab.active {
+  background: #ffffff;
+  border-color: var(--border-active);
+  box-shadow:
+    0 4px 12px rgba(14, 165, 233, 0.12),
+    0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.light-theme .planning-hub-tab.active .tab-primary-label {
+  color: var(--primary);
+}
+
+/* Content Area Transitions */
+.planning-hub-content {
+  width: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .planning-hub-nav-wrapper {
+    padding: 0.25rem 0.5rem 0.5rem 0.5rem;
+    width: 100%;
+  }
+
+  .planning-hub-tabs {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.35rem;
+  }
+
+  .planning-hub-tab {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+    min-height: 44px;
+  }
+
+  .planning-hub-tab .tab-icon-wrapper {
+    width: 28px;
+    height: 28px;
+  }
+
+  .planning-hub-tab .tab-primary-label {
+    font-size: 0.82rem;
+  }
+
+  .planning-hub-tab .tab-secondary-label {
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .planning-hub-tab {
+    padding: 0.45rem 0.5rem;
+    gap: 0.4rem;
+  }
+
+  .planning-hub-tab .tab-secondary-label {
+    display: none;
+  }
+
+  .planning-hub-tab .tab-primary-label {
+    font-size: 0.8rem;
+    text-align: center;
+  }
+}

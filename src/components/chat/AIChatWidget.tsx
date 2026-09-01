@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { createPortal } from 'react-dom';
 import moment from 'moment';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import type { User } from '../../commons/types';
 import {
   authService,
   chatService,
   transactionService,
+  type ActionCard,
   type ChatMessage,
   type ChatSession,
-  type ActionCard,
 } from '../../services/api';
-import type { User } from '../../commons/types';
 import './AIChatWidget.css';
 
 interface AIChatWidgetProps {
@@ -38,6 +38,13 @@ export interface AIToolItem {
   description: string;
   promptExample: string;
 }
+
+export const CORE_QUICK_CHIPS = [
+  { text: 'Chi 45k cafe qua MoMo', icon: '💸', category: 'Ghi chép chi' },
+  { text: 'Vừa nhận lương 15tr', icon: '💰', category: 'Ghi chép thu' },
+  { text: 'Số dư các ví hiện tại', icon: '💳', category: 'Tra cứu ví' },
+  { text: 'Tháng này đã chi tiêu bao nhiêu?', icon: '📊', category: 'Báo cáo' },
+];
 
 export const AI_TOOLS_CATALOG: AIToolItem[] = [
   // ─── Giao dịch ───────────────────────────────────────────────
@@ -353,6 +360,10 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
   const [voiceSupported, setVoiceSupported] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<Record<string, string>>({});
 
+  // Mobile touch drag-to-dismiss states
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [dragOffset, setDragOffset] = useState<number>(0);
+
   // Catalog grouped by category, following AI_TOOL_CATEGORIES order.
   const groupedTools = useMemo(() => {
     return AI_TOOL_CATEGORIES.map((cat) => ({
@@ -370,10 +381,9 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
     const isWeekend = now.day() === 0 || now.day() === 6;
 
     const base = [
-      { text: 'Tôi vừa chi 45k ăn sáng bánh mì', icon: '💸' },
-      { text: 'Xem danh sách và số dư các ví tài khoản', icon: '💳' },
       { text: 'Giải thích mô hình tháp tài sản và cách phân bổ vốn', icon: '🏛️' },
       { text: 'Tư vấn phân bổ thu nhập theo quy tắc 50/30/20', icon: '⚖️' },
+      { text: 'Cách chia thu nhập vào 6 chiếc hũ tài chính', icon: '🏺' },
     ];
 
     if (day <= 7) {
@@ -381,7 +391,6 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
         { text: 'Lập kế hoạch và kiểm tra ngân sách tháng này', icon: '🎯' },
         { text: 'Tổng quan tài chính tháng này của tôi', icon: '📊' },
         ...base,
-        { text: 'Cách chia thu nhập vào 6 chiếc hũ tài chính', icon: '🏺' },
         { text: 'Xem các khoản nợ cần thanh toán trong tháng', icon: '📋' },
       ];
     } else if (isWeekend || day >= 25) {
@@ -480,13 +489,49 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Click outside to close chat window
+  const handleSendMessageRef = useRef<(textToSend?: string) => Promise<void>>(async () => {});
+
+  // Listen to open-ai-chat custom event triggered by omni-bar or external action
+  useEffect(() => {
+    const handleOpenAIChat = (e?: any) => {
+      setIsOpen(true);
+      const prompt = e?.detail?.prompt;
+      const autoSend = e?.detail?.autoSend;
+
+      if (prompt) {
+        if (autoSend) {
+          handleSendMessageRef.current(prompt);
+        } else {
+          setInput(prompt);
+          setTimeout(() => {
+            if (textareaRef.current) {
+              textareaRef.current.focus();
+              textareaRef.current.style.height = 'auto';
+              textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+            }
+          }, 100);
+        }
+      } else {
+        setTimeout(() => {
+          textareaRef.current?.focus();
+        }, 100);
+      }
+    };
+
+    window.addEventListener('open-ai-chat', handleOpenAIChat);
+    return () => {
+      window.removeEventListener('open-ai-chat', handleOpenAIChat);
+    };
+  }, []);
+
+  // Click outside & Escape key to close chat window on desktop
   useEffect(() => {
     if (!isOpen) return;
 
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       const target = e.target as Node;
       if (
+        window.innerWidth > 768 &&
         chatWindowRef.current &&
         !chatWindowRef.current.contains(target) &&
         fabRef.current &&
@@ -558,7 +603,12 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
     setCurrentSessionId(undefined);
     setMessages([]);
     setShowSessionsList(false);
+    setShowToolsDrawer(false);
     setActiveToolTitle(null);
+    setInput('');
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
   };
 
   const handleDeleteSession = async (e: React.MouseEvent, sessionId: string) => {
@@ -586,11 +636,56 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
     }
   };
 
+  // Confirm transaction proposed by Action Card
+  const handleConfirmTransaction = async (cardData: any, msgIdx: number) => {
+    try {
+      if (cardData) {
+        await transactionService.create({
+          amount: Number(cardData.amount) || 0,
+          type: cardData.type || 'EXPENSE',
+          categoryId: cardData.categoryId || cardData.category_id || '',
+          walletId: cardData.walletId || cardData.wallet_id,
+          transactionDate: cardData.date
+            ? moment(cardData.date).format('YYYY-MM-DD')
+            : moment().format('YYYY-MM-DD'),
+          description: cardData.note || cardData.description || '',
+        });
+        setActionFeedback((prev) => ({
+          ...prev,
+          [msgIdx]: 'Đã xác nhận và ghi chép giao dịch thành công!',
+        }));
+        window.dispatchEvent(new CustomEvent('transaction-created'));
+        window.dispatchEvent(new CustomEvent('transactions-changed'));
+      }
+    } catch (err: any) {
+      console.error('Failed to confirm transaction:', err);
+      setActionFeedback((prev) => ({
+        ...prev,
+        [msgIdx]: `Lỗi ghi chép: ${err.message || 'Không thể tạo giao dịch'}`,
+      }));
+    }
+  };
+
+  // Cancel action card
+  const handleCancelAction = (msgIdx: number) => {
+    setActionFeedback((prev) => ({
+      ...prev,
+      [msgIdx]: 'Đã hủy thao tác này.',
+    }));
+  };
+
   // Undo transaction created by Action Card
   const handleUndoTransaction = async (cardData: any, msgIdx: number) => {
-    if (!cardData?.id) return;
+    const transactionId = cardData?.id || cardData?.transactionId || cardData?.transaction_id;
+    if (!transactionId) {
+      setActionFeedback((prev) => ({
+        ...prev,
+        [msgIdx]: 'Đã hoàn tác thao tác.',
+      }));
+      return;
+    }
     try {
-      await transactionService.delete(cardData.id);
+      await transactionService.delete(transactionId);
       setActionFeedback((prev) => ({
         ...prev,
         [msgIdx]: 'Đã hoàn tác và xóa giao dịch thành công.',
@@ -628,14 +723,14 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
       role: 'user',
       content: messageText,
       status: 'SUCCESS',
-      createdAt: new Date().toISOString(),
+      createdAt: moment().toISOString(),
     };
 
     const modelMsg: ChatMessage = {
       role: 'model',
       content: '',
       status: 'STREAMING',
-      createdAt: new Date().toISOString(),
+      createdAt: moment().toISOString(),
     };
 
     setMessages((prev) => {
@@ -760,6 +855,8 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
     );
   };
 
+  handleSendMessageRef.current = handleSendMessage;
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -767,7 +864,29 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
     }
   };
 
-  // Resizing state
+  // Mobile Touch Gestures for Drag-to-Dismiss
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY === null) return;
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - touchStartY;
+    if (diff > 0) {
+      setDragOffset(diff);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (dragOffset > 90) {
+      setIsOpen(false);
+    }
+    setTouchStartY(null);
+    setDragOffset(0);
+  };
+
+  // Desktop Resizing state
   const [chatDimensions, setChatDimensions] = useState<{ width: number; height: number }>(() => {
     if (typeof window !== 'undefined') {
       const savedW = localStorage.getItem('nexo_chat_width');
@@ -780,6 +899,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
     return { width: 460, height: 640 };
   });
   const [isResizing, setIsResizing] = useState(false);
+
   const resizeStartRef = useRef<{
     startX: number;
     startY: number;
@@ -801,7 +921,6 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing || !resizeStartRef.current) return;
-      // Resizing from top-left corner
       const deltaX = resizeStartRef.current.startX - e.clientX;
       const deltaY = resizeStartRef.current.startY - e.clientY;
 
@@ -901,7 +1020,6 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
             .split('|')
             .map((c) => c.trim());
 
-          // Check if line 2 is divider (|---|---|)
           let bodyStartIndex = 1;
           if (tableLines[1].replace(/[\s|:-]/g, '').length === 0) {
             bodyStartIndex = 2;
@@ -1043,17 +1161,48 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
         )}
       </button>
 
-      {/* Chat Window */}
+      {/* Backdrop Overlay with Blur Effect */}
+      {isOpen && (
+        <div
+          className="ai-backdrop"
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+          title="Nhấn để đóng chat"
+        />
+      )}
+
+      {/* Chat Window / Drawer / Bottom Sheet */}
       {isOpen && (
         <div
           ref={chatWindowRef}
           className={`nexo-chat-window ${isResizing ? 'resizing' : ''}`}
           style={{
-            width: `${chatDimensions.width}px`,
-            height: `${chatDimensions.height}px`,
+            ...(window.innerWidth > 768
+              ? {
+                  width: `${chatDimensions.width}px`,
+                  height: `${chatDimensions.height}px`,
+                }
+              : {
+                  transform: dragOffset > 0 ? `translateY(${dragOffset}px)` : undefined,
+                  transition: dragOffset > 0 ? 'none' : undefined,
+                }),
           }}
         >
-          {/* Top-Left Resize Handle */}
+          {/* Top Mobile Drag Handle Bar */}
+          <div
+            className="chat-mobile-drag-bar"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onClick={() => setIsOpen(false)}
+            role="button"
+            tabIndex={0}
+            aria-label="Kéo xuống hoặc nhấn để đóng"
+          >
+            <div className="chat-drag-indicator" />
+          </div>
+
+          {/* Desktop Top-Left Resize Handle */}
           <div
             className="chat-resize-handle-nw"
             onMouseDown={startResizing}
@@ -1075,40 +1224,67 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
             </svg>
           </div>
 
-          {/* Header */}
+          {/* Prominent Header inside Chat Drawer */}
           <div className="chat-header">
             <div className="chat-header-info">
-              <div className="chat-avatar">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M12 2v4" />
-                  <path d="m19.07 4.93-2.83 2.83" />
-                  <path d="M20 12h-4" />
-                  <path d="m16.24 16.24 2.83 2.83" />
-                  <path d="M12 18v4" />
-                  <path d="m4.93 19.07 2.83-2.83" />
-                  <path d="M4 12h4" />
-                  <path d="m7.76 7.76-2.83-2.83" />
-                </svg>
+              <div className="chat-avatar-wrapper">
+                <div className="chat-avatar">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 2v4" />
+                    <path d="m19.07 4.93-2.83 2.83" />
+                    <path d="M20 12h-4" />
+                    <path d="m16.24 16.24 2.83 2.83" />
+                    <path d="M12 18v4" />
+                    <path d="m4.93 19.07 2.83-2.83" />
+                    <path d="M4 12h4" />
+                    <path d="m7.76 7.76-2.83-2.83" />
+                  </svg>
+                </div>
+                <span className="online-indicator-dot" />
               </div>
               <div className="chat-header-title">
-                <h3>Nexo AI</h3>
+                <div className="chat-header-name-row">
+                  <h3>Nexo AI</h3>
+                  <span className="chat-mode-badge">Trợ lý tài chính AI</span>
+                </div>
                 <div className="chat-status-indicator">
                   <span className="online-dot" />
-                  <span>Online</span>
+                  <span>Sẵn sàng hỗ trợ</span>
                 </div>
               </div>
             </div>
 
             <div className="chat-header-actions">
+              <button
+                className="chat-header-new-btn"
+                onClick={handleNewChat}
+                title="Tạo hội thoại mới"
+              >
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span className="new-chat-label">+ Hội thoại mới</span>
+              </button>
+
               <button
                 className={`chat-icon-btn ${showToolsDrawer ? 'active' : ''}`}
                 onClick={() => {
@@ -1118,8 +1294,8 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
                 title="Danh sách công cụ AI (Financial Tools)"
               >
                 <svg
-                  width="18"
-                  height="18"
+                  width="17"
+                  height="17"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -1128,22 +1304,6 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
                   strokeLinejoin="round"
                 >
                   <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-                </svg>
-              </button>
-
-              <button className="chat-icon-btn" onClick={handleNewChat} title="Tạo đoạn chat mới">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
               </button>
 
@@ -1156,8 +1316,8 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
                 title="Lịch sử trò chuyện"
               >
                 <svg
-                  width="18"
-                  height="18"
+                  width="17"
+                  height="17"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -1174,14 +1334,19 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
                 </svg>
               </button>
 
-              <button className="chat-icon-btn" onClick={() => setIsOpen(false)} title="Đóng">
+              <button
+                className="chat-icon-btn chat-close-btn"
+                onClick={() => setIsOpen(false)}
+                title="Đóng"
+                aria-label="Close"
+              >
                 <svg
                   width="18"
                   height="18"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2"
+                  strokeWidth="2.2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
@@ -1216,11 +1381,33 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
                     </div>
                     <h4>Xin chào! Tôi là Nexo AI Copilot</h4>
                     <p>
-                      Tôi có thể giúp bạn tự động ghi nhận thu chi, tra cứu tổng quan tài chính,
-                      kiểm tra ngân sách, ví tiền và phân tích chi tiêu ngay tức thì.
+                      Tôi có thể giúp bạn tự động ghi nhận thu chi, tra cứu số dư ví, đối soát ngân
+                      sách và phân tích chi tiêu ngay tức thì.
                     </p>
 
+                    {/* Primary 1-Tap Quick Prompt Chips */}
+                    <div className="core-quick-chips-section">
+                      <span className="quick-chips-title">⚡ Gợi ý thử nghiệm nhanh</span>
+                      <div className="core-quick-chips-grid">
+                        {CORE_QUICK_CHIPS.map((chip, idx) => (
+                          <button
+                            key={idx}
+                            className="core-quick-chip-card"
+                            onClick={() => handleSendMessage(chip.text)}
+                          >
+                            <div className="chip-card-top">
+                              <span className="chip-card-icon">{chip.icon}</span>
+                              <span className="chip-card-badge">{chip.category}</span>
+                            </div>
+                            <span className="chip-card-text">{chip.text}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Contextual Prompts */}
                     <div className="quick-prompts-grid">
+                      <span className="quick-chips-title">💡 Gợi ý theo thời gian</span>
                       {dynamicQuickPrompts.map((prompt, idx) => (
                         <button
                           key={idx}
@@ -1269,39 +1456,123 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
                           {/* Interactive Action Card if present */}
                           {msg.actionCard && (
                             <div className={`chat-action-card ${msg.actionCard.actionType}`}>
-                              <div className="action-card-header">
-                                <span>
-                                  {msg.actionCard.actionType === 'TRANSACTION_CREATED' && '✅ '}
-                                  {msg.actionCard.actionType === 'CATEGORY_CREATED' && '🏷️ '}
-                                  {msg.actionCard.actionType === 'WALLET_TRANSFER' && '🔄 '}
-                                  {msg.actionCard.actionType === 'DEBT_CREATED' && '🤝 '}
-                                  {msg.actionCard.actionType === 'DEBT_REPAID' && '💳 '}
-                                  {msg.actionCard.actionType === 'BUDGET_SET' && '🎯 '}
-                                  {msg.actionCard.actionType === 'BUDGET_ALERT' && '⚠️ '}
-                                  {msg.actionCard.actionType === 'KNOWLEDGE_SOURCE' && '📖 '}
-                                  {msg.actionCard.actionType === 'FINANCIAL_SUMMARY' && '📊 '}
+                              <div className="action-card-top-bar">
+                                <div className="action-card-badge">
+                                  <span>
+                                    {msg.actionCard.actionType === 'TRANSACTION_CREATED' &&
+                                      '💸 Ghi chép thành công'}
+                                    {msg.actionCard.actionType === 'TRANSACTION_PROPOSED' &&
+                                      '📝 Đề xuất ghi chép'}
+                                    {msg.actionCard.actionType === 'PENDING_CONFIRMATION' &&
+                                      '⏳ Chờ xác nhận'}
+                                    {msg.actionCard.actionType === 'CATEGORY_CREATED' &&
+                                      '🏷️ Danh mục mới'}
+                                    {msg.actionCard.actionType === 'WALLET_TRANSFER' &&
+                                      '🔄 Chuyển tiền ví'}
+                                    {msg.actionCard.actionType === 'DEBT_CREATED' &&
+                                      '🤝 Ghi nhận vay/nợ'}
+                                    {msg.actionCard.actionType === 'DEBT_REPAID' && '💵 Trả/Thu nợ'}
+                                    {msg.actionCard.actionType === 'BUDGET_SET' &&
+                                      '🎯 Thiết lập ngân sách'}
+                                    {msg.actionCard.actionType === 'BUDGET_ALERT' &&
+                                      '⚠️ Cảnh báo ngân sách'}
+                                    {msg.actionCard.actionType === 'KNOWLEDGE_SOURCE' &&
+                                      '📖 Tri thức tài chính'}
+                                    {msg.actionCard.actionType === 'FINANCIAL_SUMMARY' &&
+                                      '📊 Tổng quan tài chính'}
+                                    {![
+                                      'TRANSACTION_CREATED',
+                                      'TRANSACTION_PROPOSED',
+                                      'PENDING_CONFIRMATION',
+                                      'CATEGORY_CREATED',
+                                      'WALLET_TRANSFER',
+                                      'DEBT_CREATED',
+                                      'DEBT_REPAID',
+                                      'BUDGET_SET',
+                                      'BUDGET_ALERT',
+                                      'KNOWLEDGE_SOURCE',
+                                      'FINANCIAL_SUMMARY',
+                                    ].includes(msg.actionCard.actionType) && '⚡ Hành động AI'}
+                                  </span>
+                                </div>
+                                <span className="action-card-timestamp">
+                                  {moment(msg.createdAt).format('HH:mm')}
                                 </span>
-                                <span>{msg.actionCard.title}</span>
                               </div>
-                              <div className="action-card-desc">{msg.actionCard.description}</div>
 
-                              {/* Interactive Controls for TRANSACTION_CREATED */}
-                              {msg.actionCard.actionType === 'TRANSACTION_CREATED' &&
-                                cardData?.id && (
-                                  <div className="action-card-interactive-row">
-                                    {actionFeedback[idx] ? (
-                                      <span className="action-card-feedback-text">
-                                        {actionFeedback[idx]}
-                                      </span>
-                                    ) : (
+                              <div className="action-card-title">{msg.actionCard.title}</div>
+                              {msg.actionCard.description && (
+                                <div className="action-card-desc">{msg.actionCard.description}</div>
+                              )}
+
+                              {/* Transaction Details Meta Grid */}
+                              {cardData &&
+                                (cardData.amount !== undefined ||
+                                  cardData.categoryName ||
+                                  cardData.walletName) && (
+                                  <div className="action-card-meta-grid">
+                                    {cardData.amount !== undefined && (
+                                      <div className="action-meta-item amount">
+                                        <span className="meta-label">Số tiền:</span>
+                                        <span
+                                          className={`meta-value ${cardData.type === 'INCOME' ? 'income' : 'expense'}`}
+                                        >
+                                          {cardData.type === 'INCOME' ? '+' : '-'}
+                                          {new Intl.NumberFormat('vi-VN').format(
+                                            Math.abs(Number(cardData.amount))
+                                          )}{' '}
+                                          ₫
+                                        </span>
+                                      </div>
+                                    )}
+                                    {cardData.categoryName && (
+                                      <div className="action-meta-item">
+                                        <span className="meta-label">Danh mục:</span>
+                                        <span className="meta-value tag">
+                                          {cardData.categoryName}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {cardData.walletName && (
+                                      <div className="action-meta-item">
+                                        <span className="meta-label">Ví / TK:</span>
+                                        <span className="meta-value tag">
+                                          {cardData.walletName}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                              {/* Interactive Action Controls */}
+                              {actionFeedback[idx] ? (
+                                <div className="action-card-feedback-banner">
+                                  <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <polyline points="20 6 9 17 4 12" />
+                                  </svg>
+                                  <span>{actionFeedback[idx]}</span>
+                                </div>
+                              ) : (
+                                <div className="action-card-buttons-row">
+                                  {(msg.actionCard.actionType === 'TRANSACTION_PROPOSED' ||
+                                    msg.actionCard.actionType === 'PENDING_CONFIRMATION') && (
+                                    <>
                                       <button
-                                        className="action-card-undo-btn"
-                                        onClick={() => handleUndoTransaction(cardData, idx)}
-                                        title="Hoàn tác và xóa giao dịch này"
+                                        className="action-card-btn action-confirm-btn"
+                                        onClick={() => handleConfirmTransaction(cardData, idx)}
                                       >
                                         <svg
-                                          width="12"
-                                          height="12"
+                                          width="13"
+                                          height="13"
                                           viewBox="0 0 24 24"
                                           fill="none"
                                           stroke="currentColor"
@@ -1309,14 +1580,43 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
                                           strokeLinecap="round"
                                           strokeLinejoin="round"
                                         >
-                                          <path d="M3 7v6h6" />
-                                          <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+                                          <polyline points="20 6 9 17 4 12" />
                                         </svg>
-                                        Hoàn tác / Xóa
+                                        Xác nhận ghi chép
                                       </button>
-                                    )}
-                                  </div>
-                                )}
+                                      <button
+                                        className="action-card-btn action-cancel-btn"
+                                        onClick={() => handleCancelAction(idx)}
+                                      >
+                                        Hủy
+                                      </button>
+                                    </>
+                                  )}
+
+                                  {msg.actionCard.actionType === 'TRANSACTION_CREATED' && (
+                                    <button
+                                      className="action-card-btn action-undo-btn"
+                                      onClick={() => handleUndoTransaction(cardData, idx)}
+                                      title="Hoàn tác và xóa giao dịch vừa tạo"
+                                    >
+                                      <svg
+                                        width="12"
+                                        height="12"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      >
+                                        <path d="M3 7v6h6" />
+                                        <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+                                      </svg>
+                                      Hoàn tác / Hủy
+                                    </button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
 
@@ -1376,6 +1676,24 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
                 <div ref={messagesEndRef} />
               </div>
 
+              {/* Horizontal Quick Chips Bar (Above Input) */}
+              {messages.length > 0 && (
+                <div className="chat-quick-chips-bar" aria-label="Gợi ý nhanh">
+                  {CORE_QUICK_CHIPS.map((chip, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      className="chat-quick-chip-item"
+                      onClick={() => handleSendMessage(chip.text)}
+                      title={`Gửi: "${chip.text}"`}
+                    >
+                      <span className="chip-icon">{chip.icon}</span>
+                      <span className="chip-text">{chip.text}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Input Footer */}
               <div className="chat-input-container">
                 {voiceSupported && (
@@ -1412,7 +1730,7 @@ export const AIChatWidget: React.FC<AIChatWidgetProps> = ({ user: initialUser })
                   placeholder={
                     isListening
                       ? '🎙️ Đang nghe giọng nói của bạn...'
-                      : 'Nhập yêu cầu (ví dụ: Vừa chi 50k ăn trưa, Tổng quan tài chính tháng này...)'
+                      : 'Nhập yêu cầu (ví dụ: Chi 45k cafe, Số dư các ví, Ngân sách...)'
                   }
                   value={input}
                   onChange={(e) => {
