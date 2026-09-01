@@ -3,7 +3,6 @@ import {
   Handshake,
   LayoutDashboard,
   LogOut,
-  Menu,
   Moon,
   Sparkles,
   Sun,
@@ -37,7 +36,6 @@ function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [planningSubTab, setPlanningSubTab] = useState<PlanningSubTab>('targets');
   const [transactionType, setTransactionType] = useState<TransactionType>(TransactionType.EXPENSE);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [theme, setTheme] = useState<'dark' | 'light'>(
@@ -84,17 +82,6 @@ function App() {
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
-
-  useEffect(() => {
-    if (isSidebarOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isSidebarOpen]);
 
   const handleOpenAIChat = () => {
     window.dispatchEvent(new CustomEvent('open-ai-chat'));
@@ -198,7 +185,6 @@ function App() {
     setActiveTab(targetTab);
     if (opts.transactionType) setTransactionType(opts.transactionType);
     if (opts.planningSubTab) setPlanningSubTab(opts.planningSubTab);
-    setIsSidebarOpen(false);
 
     internalNavRef.current = true;
     navigate(getPathForTab(targetTab, opts));
@@ -239,13 +225,6 @@ function App() {
     <div className="app-shell">
       {/* Mobile Top Header */}
       <header className="mobile-header">
-        <button
-          className="hamburger-btn"
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          aria-label="Toggle menu"
-        >
-          <Menu size={22} />
-        </button>
         <div
           className="mobile-brand brand-clickable"
           onClick={() => handleNavigate('dashboard')}
@@ -261,32 +240,36 @@ function App() {
           <img src="/logo-transparent.svg" className="mobile-logo" alt="Nexo logo" />
           <span className="brand-name">Nexo Portal</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        <div className="mobile-header-actions">
           <button
-            className="theme-toggle-btn"
+            className="mobile-header-btn"
             onClick={handleOpenAIChat}
             aria-label="Trợ lý AI"
             title="Trợ lý Nexo AI"
           >
-            <Sparkles size={18} color="var(--primary)" />
+            <Sparkles size={16} color="var(--primary)" />
           </button>
           <button
-            className="theme-toggle-btn"
+            className="mobile-header-btn"
             onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
             aria-label="Toggle Theme"
+            title="Đổi giao diện"
           >
-            {theme === 'light' ? <Sun size={20} /> : <Moon size={20} />}
+            {theme === 'light' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <button
+            className="mobile-header-btn mobile-logout-btn"
+            onClick={handleLogout}
+            aria-label="Đăng xuất"
+            title={`Đăng xuất (${user.username || ''})`}
+          >
+            <LogOut size={16} />
           </button>
         </div>
       </header>
 
-      {/* Sidebar Backdrop Overlay */}
-      {isSidebarOpen && (
-        <div className="sidebar-backdrop" onClick={() => setIsSidebarOpen(false)} />
-      )}
-
-      {/* Desktop & Drawer Sidebar */}
-      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+      {/* Desktop Sidebar (Hidden on mobile/PWA since Bottom Navigation is active) */}
+      <aside className="sidebar">
         <div className="sidebar-header">
           <div
             className="sidebar-brand brand-clickable"
@@ -380,10 +363,7 @@ function App() {
                 {theme === 'light' ? <Sun size={16} /> : <Moon size={16} />}
               </button>
               <button
-                onClick={() => {
-                  handleLogout();
-                  setIsSidebarOpen(false);
-                }}
+                onClick={handleLogout}
                 className="icon-only-btn logout-btn"
                 title="Đăng xuất"
                 aria-label="Đăng xuất"

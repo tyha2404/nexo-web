@@ -554,7 +554,7 @@ export default function Wallets() {
 
       {/* 3. Category Tabs Filter */}
       <div className="list-header-tabs animate-fade-in" style={{ marginBottom: '1rem' }}>
-        <div className="category-tabs">
+        <div className="category-tabs wallets-filter-tabs">
           <button
             type="button"
             className={`category-tab flex items-center gap-1.5 ${
@@ -562,8 +562,9 @@ export default function Wallets() {
             }`}
             onClick={() => setActiveTab('CREDIT')}
           >
-            <CreditCard size={15} />
-            <span>Thẻ Tín Dụng ({creditCards.length})</span>
+            <CreditCard size={14} className="tab-icon-svg" />
+            <span className="tab-label-desktop">Thẻ Tín Dụng ({creditCards.length})</span>
+            <span className="tab-label-mobile">Thẻ TD ({creditCards.length})</span>
           </button>
           <button
             type="button"
@@ -572,8 +573,9 @@ export default function Wallets() {
             }`}
             onClick={() => setActiveTab('NORMAL')}
           >
-            <Building2 size={15} />
-            <span>Tài Khoản & Ví ({normalWallets.length})</span>
+            <Building2 size={14} className="tab-icon-svg" />
+            <span className="tab-label-desktop">Tài Khoản & Ví ({normalWallets.length})</span>
+            <span className="tab-label-mobile">Ví & TK ({normalWallets.length})</span>
           </button>
           <button
             type="button"
@@ -582,8 +584,9 @@ export default function Wallets() {
             }`}
             onClick={() => setActiveTab('ALL')}
           >
-            <FolderTree size={15} />
-            <span>Tất Cả ({wallets.length})</span>
+            <FolderTree size={14} className="tab-icon-svg" />
+            <span className="tab-label-desktop">Tất Cả ({wallets.length})</span>
+            <span className="tab-label-mobile">Tất Cả ({wallets.length})</span>
           </button>
         </div>
       </div>

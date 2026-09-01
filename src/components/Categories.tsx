@@ -246,7 +246,7 @@ export default function Categories() {
                 className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.EXPENSE ? 'active' : ''}`}
                 onClick={() => setActiveTab(TransactionType.EXPENSE)}
               >
-                <ShoppingBag size={15} />
+                <ShoppingBag size={14} />
                 <span>Chi tiêu</span>
               </button>
               <button
@@ -254,7 +254,7 @@ export default function Categories() {
                 className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.INCOME ? 'active' : ''}`}
                 onClick={() => setActiveTab(TransactionType.INCOME)}
               >
-                <Wallet size={15} />
+                <Wallet size={14} />
                 <span>Thu nhập</span>
               </button>
               <button
@@ -262,7 +262,7 @@ export default function Categories() {
                 className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.INVESTMENT ? 'active' : ''}`}
                 onClick={() => setActiveTab(TransactionType.INVESTMENT)}
               >
-                <TrendingUp size={15} />
+                <TrendingUp size={14} />
                 <span>Đầu tư</span>
               </button>
             </div>
@@ -327,19 +327,24 @@ export default function Categories() {
                   <div key={cat.id} className="category-item-card">
                     <div className="category-item-info">
                       <div className="category-item-title-row">
-                        <h4>
-                          {cat.name}{' '}
-                          {cat.budgetLimit !== undefined && (
-                            <span className="text-xs text-slate-400 font-normal ml-1">
-                              (Hạn mức: {cat.budgetLimit.toLocaleString('vi-VN')}đ)
-                            </span>
-                          )}
-                          {cat.excludeFromAverageDaily && (
-                            <span className="exclude-avg-badge">
-                              Không tính vào trung bình ngày
-                            </span>
-                          )}
-                        </h4>
+                        <h4 className="category-name">{cat.name}</h4>
+                        {(cat.budgetLimit !== undefined || cat.excludeFromAverageDaily) && (
+                          <div className="category-meta-tags">
+                            {cat.budgetLimit !== undefined && (
+                              <span className="category-limit-tag">
+                                Hạn mức: {cat.budgetLimit.toLocaleString('vi-VN')}đ
+                              </span>
+                            )}
+                            {cat.excludeFromAverageDaily && (
+                              <span className="exclude-avg-badge">
+                                <span className="badge-text-desktop">
+                                  Không tính vào trung bình ngày
+                                </span>
+                                <span className="badge-text-mobile">Không tính TB ngày</span>
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                       {cat.description ? (
                         <p className="category-item-desc">{cat.description}</p>
@@ -354,7 +359,7 @@ export default function Categories() {
                         aria-label={`Chỉnh sửa danh mục ${cat.name}`}
                         title={`Chỉnh sửa danh mục ${cat.name}`}
                       >
-                        <Pencil size={14} />
+                        <Pencil size={13} />
                       </button>
                       <button
                         onClick={() => handleDelete(cat.id, cat.name)}
@@ -362,7 +367,7 @@ export default function Categories() {
                         aria-label={`Xóa danh mục ${cat.name}`}
                         title={`Xóa danh mục ${cat.name}`}
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </div>

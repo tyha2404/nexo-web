@@ -141,7 +141,7 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .planning-hub-nav-wrapper {
-    padding: 0.25rem 0.5rem 0.5rem 0.5rem;
+    padding: 0.25rem 0 0.5rem 0;
     width: 100%;
   }
 
@@ -149,42 +149,44 @@
     width: 100%;
     display: flex;
     justify-content: space-between;
-    gap: 0.35rem;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    box-sizing: border-box;
   }
 
   .planning-hub-tab {
-    flex: 1;
-    padding: 0.5rem 0.75rem;
-    gap: 0.5rem;
-    min-height: 44px;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.45rem 0.35rem;
+    gap: 0.35rem;
+    min-height: 40px;
+    justify-content: center;
   }
 
   .planning-hub-tab .tab-icon-wrapper {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .planning-hub-tab .tab-icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .planning-hub-tab .tab-text-group {
+    min-width: 0;
+    text-align: center;
   }
 
   .planning-hub-tab .tab-primary-label {
-    font-size: 0.82rem;
-  }
-
-  .planning-hub-tab .tab-secondary-label {
-    font-size: 0.68rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .planning-hub-tab {
-    padding: 0.45rem 0.5rem;
-    gap: 0.4rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .planning-hub-tab .tab-secondary-label {
     display: none;
-  }
-
-  .planning-hub-tab .tab-primary-label {
-    font-size: 0.8rem;
-    text-align: center;
   }
 }

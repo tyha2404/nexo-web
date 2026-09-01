@@ -290,7 +290,7 @@ export default function Transactions({
             onClick={() => handleTabSwitch(TransactionType.EXPENSE)}
           >
             <div className="txn-type-icon-wrapper">
-              <ShoppingBag size={18} className="txn-type-icon" />
+              <ShoppingBag size={16} className="txn-type-icon" />
             </div>
             <div className="txn-type-text-group">
               <span className="txn-type-primary-label">Chi tiêu</span>
@@ -308,7 +308,7 @@ export default function Transactions({
             onClick={() => handleTabSwitch(TransactionType.INCOME)}
           >
             <div className="txn-type-icon-wrapper">
-              <TrendingUp size={18} className="txn-type-icon" />
+              <TrendingUp size={16} className="txn-type-icon" />
             </div>
             <div className="txn-type-text-group">
               <span className="txn-type-primary-label">Thu nhập</span>
@@ -326,7 +326,7 @@ export default function Transactions({
             onClick={() => handleTabSwitch(TransactionType.INVESTMENT)}
           >
             <div className="txn-type-icon-wrapper">
-              <Gem size={18} className="txn-type-icon" />
+              <Gem size={16} className="txn-type-icon" />
             </div>
             <div className="txn-type-text-group">
               <span className="txn-type-primary-label">Đầu tư</span>
