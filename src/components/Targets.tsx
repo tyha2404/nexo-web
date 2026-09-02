@@ -3,16 +3,7 @@ import moment from 'moment';
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import {
-  Plus,
-  Pencil,
-  X,
-  CreditCard,
-  TrendingUp,
-  Calendar,
-  AlertTriangle,
-  Target as TargetIcon,
-} from 'lucide-react';
+import { Plus, Pencil, X, AlertTriangle, Target as TargetIcon } from 'lucide-react';
 import { targetService } from '../services/api';
 import type { TargetSummaryResponse } from '../commons/types';
 import { formatCurrency } from '../commons/utils';
@@ -181,9 +172,6 @@ export default function Targets() {
         <div className="summary-stat-card accent-expense">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Hạn Mức Chi Tiêu Tháng</span>
-            <div className="kpi-icon-badge kpi-badge-rose">
-              <CreditCard size={20} />
-            </div>
           </div>
           <div className="summary-stat-value value-expense">
             {targetSummary?.expense
@@ -200,9 +188,6 @@ export default function Targets() {
         <div className="summary-stat-card accent-primary">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Mục Tiêu Đầu Tư Tháng</span>
-            <div className="kpi-icon-badge kpi-badge-sky">
-              <TrendingUp size={20} />
-            </div>
           </div>
           <div className="summary-stat-value value-primary">
             {targetSummary?.investment
@@ -219,9 +204,6 @@ export default function Targets() {
         <div className="summary-stat-card accent-purple">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Gợi Ý Chi Tiêu / Ngày</span>
-            <div className="kpi-icon-badge kpi-badge-indigo">
-              <Calendar size={20} />
-            </div>
           </div>
           <div
             className={`summary-stat-value ${targetSummary?.expense?.isOverBudget ? 'value-expense' : 'value-primary'}`}

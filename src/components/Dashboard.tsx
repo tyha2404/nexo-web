@@ -1,17 +1,13 @@
 import {
   AlertCircle,
-  ArrowRight,
-  Coins,
   CreditCard,
   Gem,
-  LineChart,
   Plus,
   ReceiptText,
   ShoppingBag,
   Target,
   TrendingDown,
   TrendingUp,
-  Wallet,
 } from 'lucide-react';
 import moment from 'moment';
 import { useEffect, useMemo, useState } from 'react';
@@ -234,120 +230,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const totalExpense = summary?.totalExpense ?? 0;
   const monthlyNetCashFlow = totalIncome - totalExpense;
 
-  // Dispatch AI Chat Event
-  const handleTriggerAIChat = (prompt: string) => {
-    window.dispatchEvent(
-      new CustomEvent('open-ai-chat', {
-        detail: {
-          prompt,
-          autoSend: true,
-        },
-      })
-    );
-  };
-
-  // Dynamic AI Financial Insight
-  const aiInsight = useMemo(() => {
-    const m = moment(selectedMonth, 'YYYY-MM');
-    const isCurrent = selectedMonth === moment().format('YYYY-MM');
-    const daysInMonth = m.daysInMonth();
-    const currentDay = isCurrent ? moment().date() : daysInMonth;
-    const daysRemaining = Math.max(0, daysInMonth - currentDay);
-
-    if (targetSummary?.expense?.targetAmount && targetSummary.expense.targetAmount > 0) {
-      const targetAmt = targetSummary.expense.targetAmount;
-      const spentAmt = targetSummary.expense.spentAmount;
-      const pct = Math.round((spentAmt / targetAmt) * 100);
-      const dailyAllow = Math.round(targetSummary.expense.dailyAllowance);
-
-      if (targetSummary.expense.isOverBudget || spentAmt > targetAmt) {
-        const over = targetSummary.expense.overspentAmount || spentAmt - targetAmt;
-        return {
-          type: 'danger',
-          icon: '⚠️',
-          title: 'Vượt hạn mức ngân sách',
-          message: `Bạn đã chi vượt ${formatCurrency(over)} (${pct}% hạn mức). Hãy hạn chế các khoản chi ngoài kế hoạch!`,
-          prompt: `Tôi đã chi tiêu vượt hạn mức tháng ${m.format('MM/YYYY')} là ${formatCurrency(over)}. Hãy phân tích các khoản chi và đề xuất giải pháp kiểm soát dòng tiền.`,
-        };
-      }
-
-      if (pct >= 85) {
-        return {
-          type: 'warning',
-          icon: '⚡',
-          title: 'Chi tiêu chạm ngưỡng an toàn',
-          message: `Bạn đã dùng ${pct}% ngân sách tháng này (${daysRemaining} ngày còn lại). Hạn mức an toàn còn lại: ${formatCurrency(dailyAllow)}/ngày.`,
-          prompt: `Tôi đã dùng ${pct}% ngân sách tháng ${m.format('MM/YYYY')} trong khi còn ${daysRemaining} ngày. Hãy gợi ý cách phân bổ ${formatCurrency(dailyAllow)}/ngày an toàn.`,
-        };
-      }
-
-      if (pct < 50 && currentDay >= Math.floor(daysInMonth / 2)) {
-        return {
-          type: 'success',
-          icon: '💡',
-          title: 'Tốc độ chi tiêu rất tối ưu',
-          message: `Rất tốt! Bạn mới chi ${pct}% ngân sách tháng này. Tốc độ chi tiêu đang ở mức an toàn, còn dư ${formatCurrency(targetSummary.expense.remainingAmount)}!`,
-          prompt: `Tôi đang chi tiêu tiết kiệm trong tháng ${m.format('MM/YYYY')} (mới dùng ${pct}% ngân sách). Hãy tư vấn phương án tích lũy số tiền dư.`,
-        };
-      }
-
-      return {
-        type: 'info',
-        icon: '💡',
-        title: 'Tiến độ ngân sách ổn định',
-        message: `Bạn đã chi ${pct}% ngân sách tháng này. Tốc độ chi tiêu đang ở mức an toàn (~${formatCurrency(dailyAllow)}/ngày cho ${daysRemaining} ngày còn lại)!`,
-        prompt: `Phân tích sâu hơn về tiến độ chi tiêu và dự báo dòng tiền tháng ${m.format('MM/YYYY')} của tôi.`,
-      };
-    }
-
-    if (totalIncome > 0 && totalExpense > 0) {
-      const savingsRate = Math.round((monthlyNetCashFlow / totalIncome) * 100);
-      if (savingsRate >= 25) {
-        return {
-          type: 'success',
-          icon: '🌟',
-          title: 'Dòng tiền thặng dư xuất sắc',
-          message: `Tháng này bạn đang tích lũy được ${savingsRate}% tổng thu nhập (thặng dư ${formatCurrency(monthlyNetCashFlow)}). Dòng tiền tài chính rất lành mạnh!`,
-          prompt: `Tôi đang có thặng dư dòng tiền ${formatCurrency(monthlyNetCashFlow)} (${savingsRate}% thu nhập) trong tháng ${m.format('MM/YYYY')}. Hãy gợi ý phân bổ đầu tư.`,
-        };
-      }
-      if (monthlyNetCashFlow < 0) {
-        return {
-          type: 'danger',
-          icon: '⚠️',
-          title: 'Thâm hụt chi tiêu tháng',
-          message: `Chi tiêu đang vượt thu nhập tháng này (-${formatCurrency(Math.abs(monthlyNetCashFlow))}). Hãy rà soát lại các danh mục chi lớn!`,
-          prompt: `Dòng tiền tháng ${m.format('MM/YYYY')} của tôi bị âm ${formatCurrency(Math.abs(monthlyNetCashFlow))}. Hãy phân tích danh mục nào chiếm tỷ trọng lớn nhất.`,
-        };
-      }
-      return {
-        type: 'info',
-        icon: '💡',
-        title: 'Cân bằng thu chi',
-        message: `Đã ghi nhận ${formatCurrency(totalExpense)} chi tiêu trên ${formatCurrency(totalIncome)} thu nhập tháng này. Đặt hạn mức chi tiêu để AI theo dõi tốt hơn!`,
-        prompt: `Tư vấn thiết lập ngân sách chi tiêu và phân bổ hũ tài chính cho mức thu nhập ${formatCurrency(totalIncome)}/tháng.`,
-      };
-    }
-
-    if (totalExpense > 0) {
-      return {
-        type: 'info',
-        icon: '💡',
-        title: 'Gợi ý thiết lập ngân sách',
-        message: `Tổng chi tiêu tháng này là ${formatCurrency(totalExpense)}. Bạn có thể thiết lập hạn mức để AI tự động cảnh báo khi sắp vượt mức!`,
-        prompt: `Tư vấn cách đặt hạn mức chi tiêu tháng ${m.format('MM/YYYY')} dựa trên tổng chi tiêu hiện tại ${formatCurrency(totalExpense)}.`,
-      };
-    }
-
-    return {
-      type: 'neutral',
-      icon: '✨',
-      title: 'Trợ lý tài chính AI sẵn sàng',
-      message: `Chưa có nhiều giao dịch trong tháng ${m.format('MM/YYYY')}. Hãy ghi chép chi tiêu để AI phân tích sức khỏe tài chính của bạn!`,
-      prompt: `Hướng dẫn tôi các mẹo quản lý tài chính cá nhân và cách sử dụng trợ lý AI trên Nexo hiệu quả.`,
-    };
-  }, [selectedMonth, targetSummary, totalIncome, totalExpense, monthlyNetCashFlow]);
-
   // Top 5 Expense Categories
   const topExpenseCategories = useMemo(() => {
     return [...categoryBreakdown].sort((a, b) => b.totalAmount - a.totalAmount).slice(0, 5);
@@ -368,33 +250,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const investSurplus = targetSummary?.investment?.surplusAmount ?? 0;
   const investPercent =
     investmentTarget > 0 ? Math.min(100, Math.round((investedAmount / investmentTarget) * 100)) : 0;
-
-  const quickActionPrompts = [
-    {
-      id: 'quick-expense',
-      icon: '💸',
-      label: 'Ghi 35k ăn sáng',
-      prompt: 'Tôi vừa chi 35k ăn sáng bánh mì qua ví MoMo',
-    },
-    {
-      id: 'quick-report',
-      icon: '📊',
-      label: 'Báo cáo tháng này',
-      prompt: `Báo cáo chi tiết tình hình thu chi và dòng tiền tháng ${moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}`,
-    },
-    {
-      id: 'quick-wallets',
-      icon: '💳',
-      label: 'Kiểm tra số dư ví',
-      prompt: 'Kiểm tra số dư và trạng thái tất cả các ví hiện tại',
-    },
-    {
-      id: 'quick-targets',
-      icon: '🎯',
-      label: 'Tiến độ mục tiêu',
-      prompt: `Kiểm tra tiến độ thực hiện hạn mức chi tiêu và mục tiêu đầu tư tháng ${moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}`,
-    },
-  ];
 
   return (
     <div className="dashboard-container animate-fade-in">
@@ -511,9 +366,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 onClick={() => onNavigate?.('income')}
                 title="Xem chi tiết Thu nhập"
               >
-                <div className="submetric-icon-wrap icon-emerald">
-                  <Wallet size={18} />
-                </div>
                 <div className="submetric-details">
                   <span className="submetric-title">Tổng Thu nhập ↗</span>
                   <span
@@ -530,9 +382,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 onClick={() => onNavigate?.('expenses')}
                 title="Xem chi tiết Chi tiêu"
               >
-                <div className="submetric-icon-wrap icon-rose">
-                  <ShoppingBag size={18} />
-                </div>
                 <div className="submetric-details">
                   <span className="submetric-title">Tổng Chi tiêu ↗</span>
                   <span
@@ -549,9 +398,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 onClick={() => onNavigate?.('investment')}
                 title="Xem chi tiết Đầu tư"
               >
-                <div className="submetric-icon-wrap icon-sky">
-                  <LineChart size={18} />
-                </div>
                 <div className="submetric-details">
                   <span className="submetric-title">Đầu tư tháng ↗</span>
                   <span
@@ -614,11 +460,36 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     </div>
                     <div className="budget-progress-footer">
                       <span>
-                        Đã chi: <strong>{formatCurrency(budgetSpent)}</strong>
+                        Đã chi: <strong>{formatCurrency(budgetSpent)}</strong> /{' '}
+                        {formatCurrency(budgetLimit)}
                       </span>
-                      <span>
-                        Hạn mức: <strong>{formatCurrency(budgetLimit)}</strong>
-                      </span>
+                      {targetSummary?.expense?.dailyAllowance !== undefined &&
+                      targetSummary.expense.dailyAllowance > 0 &&
+                      !isOverBudget ? (
+                        <span className="budget-allowance-hint">
+                          Gợi ý:{' '}
+                          <strong>
+                            {formatCurrency(Math.round(targetSummary.expense.dailyAllowance))}/ngày
+                          </strong>{' '}
+                          (còn {targetSummary.daysRemaining || 0} ngày)
+                        </span>
+                      ) : isOverBudget ? (
+                        <span style={{ color: 'var(--expense)', fontWeight: 600 }}>
+                          Vượt ngân sách:{' '}
+                          <strong>
+                            {formatCurrency(
+                              Math.abs(
+                                targetSummary?.expense?.overspentAmount ?? budgetSpent - budgetLimit
+                              )
+                            )}
+                          </strong>
+                        </span>
+                      ) : targetSummary?.expense?.remainingAmount !== undefined ? (
+                        <span>
+                          Còn lại:{' '}
+                          <strong>{formatCurrency(targetSummary.expense.remainingAmount)}</strong>
+                        </span>
+                      ) : null}
                     </div>
                   </>
                 ) : (
@@ -680,11 +551,14 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     </div>
                     <div className="budget-progress-footer">
                       <span>
-                        Đã đầu tư: <strong>{formatCurrency(investedAmount)}</strong>
+                        Đã đầu tư: <strong>{formatCurrency(investedAmount)}</strong> /{' '}
+                        {formatCurrency(investmentTarget)}
                       </span>
-                      <span>
-                        Mục tiêu: <strong>{formatCurrency(investmentTarget)}</strong>
-                      </span>
+                      {isInvestReached && (
+                        <span style={{ color: '#10b981', fontWeight: 600 }}>
+                          Vượt chỉ tiêu: <strong>+{formatCurrency(investSurplus)}</strong> 🎉
+                        </span>
+                      )}
                     </div>
                   </>
                 ) : (
@@ -706,46 +580,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </div>
           </div>
 
-          {/* 3. AI Smart Daily Insight Banner */}
-          <div className={`ai-insight-banner insight-${aiInsight.type} glass-card animate-fade-in`}>
-            <div className="ai-insight-content">
-              <div className="ai-insight-badge">
-                <span className="ai-insight-badge-text">{aiInsight.title}</span>
-              </div>
-              <p className="ai-insight-text">{aiInsight.message}</p>
-            </div>
-
-            <button
-              type="button"
-              className="ai-insight-action-btn"
-              onClick={() => handleTriggerAIChat(aiInsight.prompt)}
-              title="Hỏi trợ lý AI phân tích chuyên sâu"
-            >
-              <span>Hỏi AI phân tích</span>
-              <ArrowRight size={14} />
-            </button>
-          </div>
-
-          {/* 4. AI Quick Action Prompts Bar */}
-          <div className="ai-quick-prompts-section animate-fade-in">
-            <div className="quick-prompts-label">
-              <span>Gợi ý câu lệnh:</span>
-            </div>
-            <div className="quick-prompts-scroll">
-              {quickActionPrompts.map((chip) => (
-                <button
-                  key={chip.id}
-                  type="button"
-                  className="quick-prompt-chip"
-                  onClick={() => handleTriggerAIChat(chip.prompt)}
-                >
-                  <span className="chip-label">{chip.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 5. Analytics Main Grid: Category Breakdown & Recent Transactions */}
+          {/* 3. Analytics Main Grid: Category Breakdown & Recent Transactions */}
           <div className="dashboard-main-grid animate-fade-in">
             {/* Left: Top Expense Categories Breakdown */}
             <div className="glass-card dashboard-card breakdown-card">
@@ -884,7 +719,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 {recentTransactions.length > 0 ? (
                   <div className="txns-timeline-list">
                     {recentTransactions.map((txn) => {
-                      const icon = getCategoryIcon(txn.categoryName, txn.type);
                       const matchedWallet = wallets.find((w) => w.id === txn.walletId);
                       const walletLabel = txn.walletName || matchedWallet?.name || 'Ví mặc định';
 
@@ -896,17 +730,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                           title="Bấm để xem danh sách giao dịch"
                         >
                           <div className="txn-left-col">
-                            <div
-                              className={`txn-icon-badge ${
-                                txn.type === 'INCOME'
-                                  ? 'icon-income'
-                                  : txn.type === 'INVESTMENT'
-                                    ? 'icon-investment'
-                                    : 'icon-expense'
-                              }`}
-                            >
-                              <span className="txn-emoji">{icon}</span>
-                            </div>
                             <div className="txn-info-meta">
                               <span className="txn-title">
                                 {txn.description || txn.categoryName || 'Giao dịch'}
@@ -976,13 +799,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                       >
                         <Plus size={14} /> Ghi giao dịch
                       </button>
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => handleTriggerAIChat('Tôi muốn ghi một giao dịch mới')}
-                      >
-                        💬 Hỏi AI ghi nhanh
-                      </button>
                     </div>
                   </div>
                 )}
@@ -1005,9 +821,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               >
                 <div className="secondary-card-head">
                   <span className="secondary-card-label">Danh mục Đầu tư ↗</span>
-                  <div className="sec-icon-circle icon-sky">
-                    <LineChart size={18} />
-                  </div>
                 </div>
                 <div className="secondary-card-value text-sky">
                   {formatCurrency(allTimeSummary?.totalInvestment ?? 0)}
@@ -1027,9 +840,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               >
                 <div className="secondary-card-head">
                   <span className="secondary-card-label">Tôi Nợ (Phải Trả) ↗</span>
-                  <div className="sec-icon-circle icon-rose">
-                    <ReceiptText size={18} />
-                  </div>
                 </div>
                 <div className="secondary-card-value text-expense">
                   {formatCurrency(Math.abs(debtSummary?.totalPayable ?? 0))}
@@ -1047,9 +857,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               >
                 <div className="secondary-card-head">
                   <span className="secondary-card-label">Người Khác Nợ (Phải Thu) ↗</span>
-                  <div className="sec-icon-circle icon-teal">
-                    <Coins size={18} />
-                  </div>
                 </div>
                 <div className="secondary-card-value text-teal">
                   {formatCurrency(Math.abs(debtSummary?.totalReceivable ?? 0))}

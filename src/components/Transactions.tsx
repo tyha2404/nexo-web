@@ -1,15 +1,12 @@
 import {
   AlertTriangle,
-  BarChart3,
   Calendar,
   Gem,
   Pencil,
   Plus,
   Receipt,
-  Scale,
   Search,
   ShoppingBag,
-  Target,
   Trash2,
   TrendingUp,
   Wallet,
@@ -32,6 +29,7 @@ import AddTransactionModal from './AddTransactionModal';
 import { MonthFilter } from './common';
 import Pagination from './Pagination';
 import './Transactions.css';
+import ConfirmModal from './common/ConfirmModal';
 
 export interface TransactionsProps {
   type?: TransactionType;
@@ -190,11 +188,21 @@ export default function Transactions({
     setRefreshKey((prev) => prev + 1);
   };
 
-  const handleDelete = async (id: string, itemDescription: string) => {
-    const confirmDelete = window.confirm(
-      `Bạn có chắc chắn muốn xóa giao dịch "${itemDescription}" không?`
-    );
-    if (!confirmDelete) return;
+  // Confirm Modal state for deletion
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    id: string;
+    description: string;
+  } | null>(null);
+
+  const handleDelete = (id: string, itemDescription: string) => {
+    setDeleteConfirm({ isOpen: true, id, description: itemDescription });
+  };
+
+  const executeDelete = async () => {
+    if (!deleteConfirm) return;
+    const { id, description } = deleteConfirm;
+    setDeleteConfirm(null);
 
     // Capture the full transaction so we can restore it on undo
     const original = transactions.find((t) => t.id === id);
@@ -206,7 +214,7 @@ export default function Transactions({
       toast.success(
         ({ closeToast }) => (
           <span>
-            Đã xóa giao dịch.
+            Đã xóa "{description}".
             <button
               type="button"
               className="toast-undo-btn"
@@ -273,70 +281,7 @@ export default function Transactions({
 
   return (
     <div className="transactions-view">
-      {/* 1. Transaction Type Segmented Switcher Header */}
-      <div className="txn-type-switch-wrapper animate-fade-in">
-        <div
-          className="txn-type-switch"
-          role="tablist"
-          aria-label="Phân loại giao dịch (Chi tiêu, Thu nhập, Đầu tư)"
-        >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeType === TransactionType.EXPENSE}
-            className={`txn-type-btn btn-expense ${
-              activeType === TransactionType.EXPENSE ? 'active' : ''
-            }`}
-            onClick={() => handleTabSwitch(TransactionType.EXPENSE)}
-          >
-            <div className="txn-type-icon-wrapper">
-              <ShoppingBag size={16} className="txn-type-icon" />
-            </div>
-            <div className="txn-type-text-group">
-              <span className="txn-type-primary-label">Chi tiêu</span>
-              <span className="txn-type-secondary-label">Khoản chi hàng ngày</span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeType === TransactionType.INCOME}
-            className={`txn-type-btn btn-income ${
-              activeType === TransactionType.INCOME ? 'active' : ''
-            }`}
-            onClick={() => handleTabSwitch(TransactionType.INCOME)}
-          >
-            <div className="txn-type-icon-wrapper">
-              <TrendingUp size={16} className="txn-type-icon" />
-            </div>
-            <div className="txn-type-text-group">
-              <span className="txn-type-primary-label">Thu nhập</span>
-              <span className="txn-type-secondary-label">Tiền về & nguồn thu</span>
-            </div>
-          </button>
-
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeType === TransactionType.INVESTMENT}
-            className={`txn-type-btn btn-investment ${
-              activeType === TransactionType.INVESTMENT ? 'active' : ''
-            }`}
-            onClick={() => handleTabSwitch(TransactionType.INVESTMENT)}
-          >
-            <div className="txn-type-icon-wrapper">
-              <Gem size={16} className="txn-type-icon" />
-            </div>
-            <div className="txn-type-text-group">
-              <span className="txn-type-primary-label">Đầu tư</span>
-              <span className="txn-type-secondary-label">Tích lũy & sinh lời</span>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* 2. Standard Header with Action */}
+      {/* 1. Standard Header with Action */}
       <header className="transactions-header animate-fade-in">
         <div className="transactions-title">
           <h2>
@@ -372,6 +317,54 @@ export default function Transactions({
         </div>
       </header>
 
+      {/* 2. Transaction Type Segmented Tabs Switcher (Below Page Title) */}
+      <div className="txn-type-switch-wrapper animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+        <div
+          className="category-tabs"
+          role="tablist"
+          aria-label="Phân loại giao dịch (Chi tiêu, Thu nhập, Đầu tư)"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeType === TransactionType.EXPENSE}
+            className={`category-tab flex items-center gap-1.5 ${
+              activeType === TransactionType.EXPENSE ? 'active' : ''
+            }`}
+            onClick={() => handleTabSwitch(TransactionType.EXPENSE)}
+          >
+            <ShoppingBag size={14} />
+            <span>Chi tiêu</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeType === TransactionType.INCOME}
+            className={`category-tab flex items-center gap-1.5 ${
+              activeType === TransactionType.INCOME ? 'active' : ''
+            }`}
+            onClick={() => handleTabSwitch(TransactionType.INCOME)}
+          >
+            <TrendingUp size={14} />
+            <span>Thu nhập</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeType === TransactionType.INVESTMENT}
+            className={`category-tab flex items-center gap-1.5 ${
+              activeType === TransactionType.INVESTMENT ? 'active' : ''
+            }`}
+            onClick={() => handleTabSwitch(TransactionType.INVESTMENT)}
+          >
+            <Gem size={14} />
+            <span>Đầu tư</span>
+          </button>
+        </div>
+      </div>
+
       {error && (
         <div className="error-banner animate-fade-in">
           <AlertTriangle size={18} className="error-icon" /> {error}
@@ -390,9 +383,6 @@ export default function Transactions({
               <div className="summary-stat-card accent-income">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Tổng Thu Nhập</span>
-                  <div className="kpi-icon-badge kpi-badge-emerald">
-                    <Wallet size={20} />
-                  </div>
                 </div>
                 <div className="summary-stat-value value-income">
                   {formatCurrency(Math.abs(sumAmount))}
@@ -403,9 +393,6 @@ export default function Transactions({
               <div className="summary-stat-card accent-purple">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Số Giao Dịch Thu</span>
-                  <div className="kpi-icon-badge kpi-badge-indigo">
-                    <BarChart3 size={20} />
-                  </div>
                 </div>
                 <div className="summary-stat-value value-purple">{count} khoản</div>
                 <div className="summary-stat-subtitle">Tổng số đợt nhận thu nhập</div>
@@ -414,9 +401,6 @@ export default function Transactions({
               <div className="summary-stat-card accent-primary">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Trung Bình / Khoản</span>
-                  <div className="kpi-icon-badge kpi-badge-sky">
-                    <Scale size={20} />
-                  </div>
                 </div>
                 <div className="summary-stat-value value-primary">
                   {formatCurrency(Math.abs(avg))}
@@ -437,9 +421,6 @@ export default function Transactions({
               <div className="summary-stat-card accent-primary">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Tiền Đang Đầu Tư (Holding)</span>
-                  <div className="kpi-icon-badge kpi-badge-sky">
-                    <Gem size={20} />
-                  </div>
                 </div>
                 <div className="summary-stat-value value-primary">
                   {formatCurrency(holdingAmount)}
@@ -456,13 +437,6 @@ export default function Transactions({
               >
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Lãi / Lỗ Đã Thực Hiện</span>
-                  <div
-                    className={`kpi-icon-badge ${
-                      totalRealizedPnl >= 0 ? 'kpi-badge-emerald' : 'kpi-badge-rose'
-                    }`}
-                  >
-                    <TrendingUp size={20} />
-                  </div>
                 </div>
                 <div
                   className={`summary-stat-value ${
@@ -479,9 +453,6 @@ export default function Transactions({
               <div className="summary-stat-card accent-purple">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Tổng Vốn Tích Lũy</span>
-                  <div className="kpi-icon-badge kpi-badge-purple">
-                    <Target size={20} />
-                  </div>
                 </div>
                 <div className="summary-stat-value value-purple">{formatCurrency(sumAmount)}</div>
                 <div className="summary-stat-subtitle">
@@ -506,9 +477,6 @@ export default function Transactions({
             <div className="summary-stat-card accent-expense">
               <div className="summary-stat-header">
                 <span className="summary-stat-title">Tổng Chi Tiêu</span>
-                <div className="kpi-icon-badge kpi-badge-rose">
-                  <ShoppingBag size={20} />
-                </div>
               </div>
               <div className="summary-stat-value value-expense">
                 {formatCurrency(Math.abs(sumAmount))}
@@ -519,9 +487,6 @@ export default function Transactions({
             <div className="summary-stat-card accent-warning">
               <div className="summary-stat-header">
                 <span className="summary-stat-title">Trung Bình / Ngày</span>
-                <div className="kpi-icon-badge kpi-badge-amber">
-                  <Calendar size={20} />
-                </div>
               </div>
               <div className="summary-stat-value value-warning">
                 {formatCurrency(Math.abs(dailyAvg))}
@@ -537,9 +502,6 @@ export default function Transactions({
             <div className="summary-stat-card accent-primary">
               <div className="summary-stat-header">
                 <span className="summary-stat-title">Trung Bình / Lần Chi</span>
-                <div className="kpi-icon-badge kpi-badge-sky">
-                  <Wallet size={20} />
-                </div>
               </div>
               <div className="summary-stat-value value-primary">
                 {formatCurrency(Math.abs(avg))}
@@ -550,9 +512,6 @@ export default function Transactions({
             <div className="summary-stat-card accent-purple">
               <div className="summary-stat-header">
                 <span className="summary-stat-title">Số Lần Chi Tiêu</span>
-                <div className="kpi-icon-badge kpi-badge-indigo">
-                  <Receipt size={20} />
-                </div>
               </div>
               <div className="summary-stat-value value-purple">{count} giao dịch</div>
               <div className="summary-stat-subtitle">Tổng số hóa đơn / giao dịch chi</div>
@@ -934,6 +893,17 @@ export default function Transactions({
         transaction={editingTransaction}
         onSaved={handleSaved}
         onClose={() => setIsModalOpen(false)}
+      />
+
+      {/* 7. Delete Confirmation Dialog */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirm?.isOpen)}
+        title="Xóa giao dịch"
+        message={`Bạn có chắc chắn muốn xóa giao dịch "${deleteConfirm?.description || ''}"? Thao tác này có thể hoàn tác trong vài giây.`}
+        confirmText="Xác nhận xóa"
+        variant="danger"
+        onConfirm={executeDelete}
+        onCancel={() => setDeleteConfirm(null)}
       />
     </div>
   );

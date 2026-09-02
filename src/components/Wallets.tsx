@@ -5,14 +5,11 @@ import {
   CheckCircle2,
   CreditCard,
   FileText,
-  FolderTree,
   History,
   Pencil,
   Plus,
   ShieldAlert,
-  Sparkles,
   Trash2,
-  Wallet,
   X,
 } from 'lucide-react';
 import moment from 'moment';
@@ -25,6 +22,7 @@ import type { CreditCardStatement, WalletType, Wallet as WalletTypeModel } from 
 import { formatCurrency } from '../commons/utils';
 import { statementService, walletService } from '../services/api';
 import './Wallets.css';
+import ConfirmModal from './common/ConfirmModal';
 
 const WALLET_TYPE_OPTIONS = [
   { value: 'CREDIT', label: '💳 Thẻ tín dụng (Credit Card)' },
@@ -212,8 +210,21 @@ export default function Wallets() {
     }
   };
 
-  const handleDeleteWallet = async (id: string, name: string) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa "${name}"?`)) return;
+  // Confirm Dialog State
+  const [deleteWalletConfirm, setDeleteWalletConfirm] = useState<{
+    isOpen: boolean;
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const handleDeleteWallet = (id: string, name: string) => {
+    setDeleteWalletConfirm({ isOpen: true, id, name });
+  };
+
+  const executeDeleteWallet = async () => {
+    if (!deleteWalletConfirm) return;
+    const { id, name } = deleteWalletConfirm;
+    setDeleteWalletConfirm(null);
     try {
       await walletService.deleteWallet(id);
       toast.success(`Đã xóa "${name}"`);
@@ -325,16 +336,28 @@ export default function Wallets() {
     }
   };
 
-  const handleDeleteStatement = async (id: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa kỳ sao kê này?')) return;
+  const [deleteStmtConfirm, setDeleteStmtConfirm] = useState<{
+    isOpen: boolean;
+    id: string;
+  } | null>(null);
+
+  const handleDeleteStatement = (id: string) => {
+    setDeleteStmtConfirm({ isOpen: true, id });
+  };
+
+  const executeDeleteStatement = async () => {
+    if (!deleteStmtConfirm) return;
+    const { id } = deleteStmtConfirm;
+    setDeleteStmtConfirm(null);
     try {
       await statementService.delete(id);
       toast.success('Đã xóa kỳ sao kê');
       if (selectedCardForHistory) {
         fetchStatements(selectedCardForHistory.id);
       }
+      fetchWallets();
     } catch (err: any) {
-      toast.error('Lỗi khi xóa kỳ sao kê: ' + (err.message || 'Lỗi server'));
+      toast.error('Không thể xóa kỳ sao kê: ' + (err.message || 'Lỗi server'));
     }
   };
 
@@ -398,17 +421,18 @@ export default function Wallets() {
   const normalWallets = wallets.filter((w) => w.type !== 'CREDIT');
 
   const totalCreditLimit = creditCards.reduce((sum, w) => sum + (w.creditLimit || 0), 0);
-  const totalOutstandingDebt = creditCards.reduce(
-    (sum, w) => sum + (w.outstandingDebt || Math.abs(w.balance)),
-    0
-  );
-  const totalAvailableCredit = creditCards.reduce(
-    (sum, w) =>
-      sum +
-      (w.availableCredit ||
-        Math.max(0, (w.creditLimit || 0) - (w.outstandingDebt || Math.abs(w.balance)))),
-    0
-  );
+  const totalOutstandingDebt = creditCards.reduce((sum, w) => {
+    const debt =
+      w.outstandingDebt ?? (w.balance < 0 ? Math.abs(w.balance) : w.statementBalance || 0);
+    return sum + debt;
+  }, 0);
+  const totalAvailableCredit = creditCards.reduce((sum, w) => {
+    const limit = w.creditLimit || 0;
+    const debt =
+      w.outstandingDebt ?? (w.balance < 0 ? Math.abs(w.balance) : w.statementBalance || 0);
+    const avail = Math.max(0, limit - debt);
+    return sum + (w.availableCredit !== undefined && w.balance < 0 ? w.availableCredit : avail);
+  }, 0);
 
   // Credit Health & Utilization Calculations (CIC Standards)
   const creditUtilizationPercent =
@@ -493,71 +517,18 @@ export default function Wallets() {
         </div>
       </header>
 
-      {error && (
-        <div className="error-banner animate-fade-in">
-          <AlertTriangle size={18} className="error-icon" /> {error}
-        </div>
-      )}
-
-      {/* 2. Unified 4 KPI Summary Cards */}
-      <div className="summary-cards-grid animate-fade-in" style={{ marginBottom: '1.25rem' }}>
-        <div className="summary-stat-card accent-income">
-          <div className="summary-stat-header">
-            <span className="summary-stat-title">Tổng Tài Sản Trong Ví</span>
-            <div className="kpi-icon-badge kpi-badge-teal">
-              <Wallet size={20} />
-            </div>
-          </div>
-          <div className="summary-stat-value value-receivable">{formatCurrency(totalBalance)}</div>
-          <div className="summary-stat-subtitle">Đã tính các tài khoản thanh toán</div>
-        </div>
-
-        <div className="summary-stat-card accent-neutral">
-          <div className="summary-stat-header">
-            <span className="summary-stat-title">Tổng Hạn Mức Tín Dụng</span>
-            <div className="kpi-icon-badge kpi-badge-blue">
-              <CreditCard size={20} />
-            </div>
-          </div>
-          <div className="summary-stat-value" style={{ color: '#38bdf8' }}>
-            {formatCurrency(totalCreditLimit)}
-          </div>
-          <div className="summary-stat-subtitle">{creditCards.length} thẻ đang hoạt động</div>
-        </div>
-
-        <div className="summary-stat-card accent-expense">
-          <div className="summary-stat-header">
-            <span className="summary-stat-title">Dư Nợ Đã Quẹt</span>
-            <div className="kpi-icon-badge kpi-badge-rose">
-              <AlertTriangle size={20} />
-            </div>
-          </div>
-          <div className="summary-stat-value value-payable">
-            {formatCurrency(totalOutstandingDebt)}
-          </div>
-          <div className="summary-stat-subtitle">Cần thanh toán trước ngày đến hạn</div>
-        </div>
-
-        <div className="summary-stat-card accent-investment">
-          <div className="summary-stat-header">
-            <span className="summary-stat-title">Hạn Mức Khả Dụng</span>
-            <div className="kpi-icon-badge kpi-badge-purple">
-              <Sparkles size={20} />
-            </div>
-          </div>
-          <div className="summary-stat-value" style={{ color: '#a78bfa' }}>
-            {formatCurrency(totalAvailableCredit)}
-          </div>
-          <div className="summary-stat-subtitle">Hạn mức còn lại có thể chi tiêu</div>
-        </div>
-      </div>
-
-      {/* 3. Category Tabs Filter */}
-      <div className="list-header-tabs animate-fade-in" style={{ marginBottom: '1rem' }}>
-        <div className="category-tabs wallets-filter-tabs">
+      {/* 2. Wallets Type Tabs Switcher (Directly Below Page Title) */}
+      <div className="wallets-tabs-nav-wrapper animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+        <div
+          className="category-tabs wallets-filter-tabs"
+          role="tablist"
+          aria-label="Loại tài khoản ví"
+        >
           <button
             type="button"
-            className={`category-tab flex items-center gap-1.5 ${
+            role="tab"
+            aria-selected={activeTab === 'CREDIT'}
+            className={`category-tab flex items-center gap-2 ${
               activeTab === 'CREDIT' ? 'active' : ''
             }`}
             onClick={() => setActiveTab('CREDIT')}
@@ -568,7 +539,9 @@ export default function Wallets() {
           </button>
           <button
             type="button"
-            className={`category-tab flex items-center gap-1.5 ${
+            role="tab"
+            aria-selected={activeTab === 'NORMAL'}
+            className={`category-tab flex items-center gap-2 ${
               activeTab === 'NORMAL' ? 'active' : ''
             }`}
             onClick={() => setActiveTab('NORMAL')}
@@ -577,17 +550,53 @@ export default function Wallets() {
             <span className="tab-label-desktop">Tài Khoản & Ví ({normalWallets.length})</span>
             <span className="tab-label-mobile">Ví & TK ({normalWallets.length})</span>
           </button>
-          <button
-            type="button"
-            className={`category-tab flex items-center gap-1.5 ${
-              activeTab === 'ALL' ? 'active' : ''
-            }`}
-            onClick={() => setActiveTab('ALL')}
-          >
-            <FolderTree size={14} className="tab-icon-svg" />
-            <span className="tab-label-desktop">Tất Cả ({wallets.length})</span>
-            <span className="tab-label-mobile">Tất Cả ({wallets.length})</span>
-          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="error-banner animate-fade-in">
+          <AlertTriangle size={18} className="error-icon" /> {error}
+        </div>
+      )}
+
+      {/* 3. Unified 4 KPI Summary Cards */}
+      <div className="summary-cards-grid animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+        <div className="summary-stat-card accent-income">
+          <div className="summary-stat-header">
+            <span className="summary-stat-title">Tổng Tài Sản Trong Ví</span>
+          </div>
+          <div className="summary-stat-value value-receivable">{formatCurrency(totalBalance)}</div>
+          <div className="summary-stat-subtitle">Đã tính các tài khoản thanh toán</div>
+        </div>
+
+        <div className="summary-stat-card accent-neutral">
+          <div className="summary-stat-header">
+            <span className="summary-stat-title">Tổng Hạn Mức Tín Dụng</span>
+          </div>
+          <div className="summary-stat-value" style={{ color: '#38bdf8' }}>
+            {formatCurrency(totalCreditLimit)}
+          </div>
+          <div className="summary-stat-subtitle">{creditCards.length} thẻ đang hoạt động</div>
+        </div>
+
+        <div className="summary-stat-card accent-expense">
+          <div className="summary-stat-header">
+            <span className="summary-stat-title">Dư Nợ Đã Quẹt</span>
+          </div>
+          <div className="summary-stat-value value-payable">
+            {formatCurrency(totalOutstandingDebt)}
+          </div>
+          <div className="summary-stat-subtitle">Cần thanh toán trước ngày đến hạn</div>
+        </div>
+
+        <div className="summary-stat-card accent-investment">
+          <div className="summary-stat-header">
+            <span className="summary-stat-title">Hạn Mức Khả Dụng</span>
+          </div>
+          <div className="summary-stat-value" style={{ color: '#a78bfa' }}>
+            {formatCurrency(totalAvailableCredit)}
+          </div>
+          <div className="summary-stat-subtitle">Hạn mức còn lại có thể chi tiêu</div>
         </div>
       </div>
 
@@ -726,13 +735,23 @@ export default function Wallets() {
                 {displayedWallets.map((wallet) => {
                   const isCredit = wallet.type === 'CREDIT';
                   const limit = wallet.creditLimit || 0;
-                  const debt = wallet.outstandingDebt || Math.abs(wallet.balance);
+                  const debt = isCredit
+                    ? (wallet.outstandingDebt ??
+                      (wallet.balance < 0
+                        ? Math.abs(wallet.balance)
+                        : wallet.statementBalance || 0))
+                    : 0;
                   const stmtBalance = wallet.statementBalance ?? (isCredit ? debt : 0);
                   const minPay =
                     wallet.minimumPayment ??
                     (isCredit && stmtBalance > 0 ? Math.max(50000, stmtBalance * 0.05) : 0);
                   const available = isCredit
-                    ? wallet.availableCredit || Math.max(0, limit - debt)
+                    ? Math.max(
+                        0,
+                        limit -
+                          (wallet.outstandingDebt ??
+                            (wallet.balance < 0 ? Math.abs(wallet.balance) : stmtBalance))
+                      )
                     : wallet.balance;
                   const usedPercent =
                     isCredit && limit > 0 ? Math.min(100, Math.round((debt / limit) * 100)) : 0;
@@ -904,10 +923,18 @@ export default function Wallets() {
             {displayedWallets.map((wallet) => {
               const isCredit = wallet.type === 'CREDIT';
               const limit = wallet.creditLimit || 0;
-              const debt = wallet.outstandingDebt || Math.abs(wallet.balance);
+              const debt = isCredit
+                ? (wallet.outstandingDebt ??
+                  (wallet.balance < 0 ? Math.abs(wallet.balance) : wallet.statementBalance || 0))
+                : 0;
               const stmtBalance = wallet.statementBalance ?? (isCredit ? debt : 0);
               const available = isCredit
-                ? wallet.availableCredit || Math.max(0, limit - debt)
+                ? Math.max(
+                    0,
+                    limit -
+                      (wallet.outstandingDebt ??
+                        (wallet.balance < 0 ? Math.abs(wallet.balance) : stmtBalance))
+                  )
                 : wallet.balance;
 
               return (
@@ -1716,6 +1743,28 @@ export default function Wallets() {
           </div>
         </div>
       )}
+
+      {/* Delete Wallet Confirm Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteWalletConfirm?.isOpen)}
+        title="Xóa tài khoản / thẻ"
+        message={`Bạn có chắc chắn muốn xóa "${deleteWalletConfirm?.name || ''}"? Toàn bộ dữ liệu số dư của ví/thẻ này sẽ bị xóa.`}
+        confirmText="Xác nhận xóa"
+        variant="danger"
+        onConfirm={executeDeleteWallet}
+        onCancel={() => setDeleteWalletConfirm(null)}
+      />
+
+      {/* Delete Statement Confirm Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteStmtConfirm?.isOpen)}
+        title="Xóa kỳ sao kê"
+        message="Bạn có chắc chắn muốn xóa bản ghi kỳ sao kê này không?"
+        confirmText="Xác nhận xóa"
+        variant="danger"
+        onConfirm={executeDeleteStatement}
+        onCancel={() => setDeleteStmtConfirm(null)}
+      />
     </div>
   );
 }

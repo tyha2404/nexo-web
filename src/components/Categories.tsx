@@ -1,22 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  FolderPlus,
-  X,
-  ShoppingBag,
-  Wallet,
-  TrendingUp,
   AlertTriangle,
+  FolderPlus,
+  Pencil,
+  Plus,
+  ShoppingBag,
+  Trash2,
+  TrendingUp,
+  Wallet,
+  X,
 } from 'lucide-react';
-import { categoryService } from '../services/api';
+import React, { useEffect, useState } from 'react';
+import Select from 'react-select';
+import { toast } from 'react-toastify';
 import { TransactionType } from '../commons/constants';
 import type { Category } from '../commons/types';
-import { toast } from 'react-toastify';
-import Pagination from './Pagination';
+import { categoryService } from '../services/api';
 import './Categories.css';
+import Pagination from './Pagination';
+import ConfirmModal from './common/ConfirmModal';
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -166,15 +167,27 @@ export default function Categories() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    const confirmDelete = window.confirm(`Bạn có chắc chắn muốn xóa danh mục "${name}" không?`);
-    if (!confirmDelete) return;
+  // Confirm Modal state
+  const [deleteCatConfirm, setDeleteCatConfirm] = useState<{
+    isOpen: boolean;
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const handleDelete = (id: string, name: string) => {
+    setDeleteCatConfirm({ isOpen: true, id, name });
+  };
+
+  const executeDelete = async () => {
+    if (!deleteCatConfirm) return;
+    const { id, name } = deleteCatConfirm;
+    setDeleteCatConfirm(null);
 
     try {
       setError(null);
       await categoryService.delete(id);
       setCategories((prev) => prev.filter((cat) => cat.id !== id));
-      showFeedback('Xóa danh mục thành công!', 'success');
+      showFeedback(`Đã xóa danh mục "${name}"!`, 'success');
     } catch (err: any) {
       showFeedback(err.message || 'Xóa danh mục thất bại', 'error');
     }
@@ -229,6 +242,42 @@ export default function Categories() {
         </div>
       </header>
 
+      {/* Category Type Tabs Switcher (Below Page Title) */}
+      <div className="category-tabs-nav animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+        <div className="category-tabs" role="tablist" aria-label="Loại danh mục">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === TransactionType.EXPENSE}
+            className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.EXPENSE ? 'active' : ''}`}
+            onClick={() => setActiveTab(TransactionType.EXPENSE)}
+          >
+            <ShoppingBag size={14} />
+            <span>Chi tiêu</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === TransactionType.INCOME}
+            className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.INCOME ? 'active' : ''}`}
+            onClick={() => setActiveTab(TransactionType.INCOME)}
+          >
+            <Wallet size={14} />
+            <span>Thu nhập</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === TransactionType.INVESTMENT}
+            className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.INVESTMENT ? 'active' : ''}`}
+            onClick={() => setActiveTab(TransactionType.INVESTMENT)}
+          >
+            <TrendingUp size={14} />
+            <span>Đầu tư</span>
+          </button>
+        </div>
+      </div>
+
       {error && (
         <div className="error-banner animate-fade-in">
           <AlertTriangle size={18} className="error-icon" /> {error}
@@ -239,33 +288,7 @@ export default function Categories() {
       <div className="categories-single-column animate-fade-in">
         <div className="glass-card list-card">
           <div className="list-header-tabs">
-            <h3>Danh mục hiện có</h3>
-            <div className="category-tabs">
-              <button
-                type="button"
-                className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.EXPENSE ? 'active' : ''}`}
-                onClick={() => setActiveTab(TransactionType.EXPENSE)}
-              >
-                <ShoppingBag size={14} />
-                <span>Chi tiêu</span>
-              </button>
-              <button
-                type="button"
-                className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.INCOME ? 'active' : ''}`}
-                onClick={() => setActiveTab(TransactionType.INCOME)}
-              >
-                <Wallet size={14} />
-                <span>Thu nhập</span>
-              </button>
-              <button
-                type="button"
-                className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.INVESTMENT ? 'active' : ''}`}
-                onClick={() => setActiveTab(TransactionType.INVESTMENT)}
-              >
-                <TrendingUp size={14} />
-                <span>Đầu tư</span>
-              </button>
-            </div>
+            <h3>Danh mục hiện có ({categories.length})</h3>
           </div>
 
           {loading ? (
@@ -547,6 +570,17 @@ export default function Categories() {
           </div>
         </div>
       )}
+
+      {/* Delete Category Confirm Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteCatConfirm?.isOpen)}
+        title="Xóa danh mục"
+        message={`Bạn có chắc chắn muốn xóa danh mục "${deleteCatConfirm?.name || ''}" không? Các giao dịch liên kết có thể cần được phân loại lại.`}
+        confirmText="Xác nhận xóa"
+        variant="danger"
+        onConfirm={executeDelete}
+        onCancel={() => setDeleteCatConfirm(null)}
+      />
     </div>
   );
 }

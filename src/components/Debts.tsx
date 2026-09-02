@@ -4,22 +4,13 @@ import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
-import {
-  Search,
-  Plus,
-  Trash2,
-  Handshake,
-  X,
-  CreditCard,
-  Wallet,
-  AlertTriangle,
-  ArrowRightLeft,
-} from 'lucide-react';
+import { Search, Plus, Trash2, Handshake, X, AlertTriangle, ArrowRightLeft } from 'lucide-react';
 import { formatCurrency } from '../commons/utils';
 import { debtService } from '../services/api';
 import type { Debt, DebtType } from '../types/debt';
 import { MonthFilter } from './common';
 import './Debts.css';
+import ConfirmModal from './common/ConfirmModal';
 
 export default function Debts() {
   const [debts, setDebts] = useState<Debt[]>([]);
@@ -170,14 +161,26 @@ export default function Debts() {
     }
   };
 
-  const handleDelete = async (debtId: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa khoản vay/nợ này không?')) return;
+  // Confirm Modal State
+  const [deleteDebtConfirm, setDeleteDebtConfirm] = useState<{
+    isOpen: boolean;
+    id: string;
+  } | null>(null);
+
+  const handleDelete = (debtId: string) => {
+    setDeleteDebtConfirm({ isOpen: true, id: debtId });
+  };
+
+  const executeDeleteDebt = async () => {
+    if (!deleteDebtConfirm) return;
+    const { id } = deleteDebtConfirm;
+    setDeleteDebtConfirm(null);
     try {
-      await debtService.deleteDebt(debtId);
-      toast.success('Đã xóa thành công');
+      await debtService.deleteDebt(id);
+      toast.success('Đã xóa khoản vay/nợ thành công');
       fetchDebtData();
     } catch (err: any) {
-      toast.error(err.message || 'Không thể xóa');
+      toast.error(err.message || 'Không thể xóa khoản vay/nợ');
     }
   };
 
@@ -232,9 +235,6 @@ export default function Debts() {
         <div className="summary-stat-card accent-expense">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Tôi Nợ (Payable)</span>
-            <div className="kpi-icon-badge kpi-badge-rose">
-              <CreditCard size={20} />
-            </div>
           </div>
           <div className="summary-stat-value value-payable">
             {formatCurrency(Math.abs(displayPayable))}
@@ -247,9 +247,6 @@ export default function Debts() {
         <div className="summary-stat-card accent-income">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Người Khác Nợ (Receivable)</span>
-            <div className="kpi-icon-badge kpi-badge-teal">
-              <Wallet size={20} />
-            </div>
           </div>
           <div className="summary-stat-value value-receivable">
             {formatCurrency(Math.abs(displayReceivable))}
@@ -353,9 +350,9 @@ export default function Debts() {
               <tr>
                 <th>Tên khoản nợ / Đối tác</th>
                 <th>Loại</th>
-                <th>Tổng số tiền</th>
-                <th>Đã thanh toán</th>
-                <th>Còn lại</th>
+                <th className="text-right">Tổng số tiền</th>
+                <th className="text-right">Đã thanh toán</th>
+                <th className="text-right">Còn lại</th>
                 <th>Ngày vay/cho vay</th>
                 <th>Hạn chót</th>
                 <th>Trạng thái</th>
@@ -655,6 +652,17 @@ export default function Debts() {
           </div>
         </div>
       )}
+
+      {/* Delete Debt Confirm Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteDebtConfirm?.isOpen)}
+        title="Xóa khoản vay / nợ"
+        message="Bạn có chắc chắn muốn xóa khoản vay/nợ này không? Toàn bộ lịch sử thanh toán liên quan sẽ bị xóa."
+        confirmText="Xác nhận xóa"
+        variant="danger"
+        onConfirm={executeDeleteDebt}
+        onCancel={() => setDeleteDebtConfirm(null)}
+      />
     </div>
   );
 }

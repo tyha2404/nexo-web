@@ -140,6 +140,17 @@
   color: var(--income);
 }
 
+.debts-table th.text-right {
+  text-align: right;
+}
+
+.debts-table .txn-amount,
+.debts-table .cell-paid,
+.debts-table .cell-remaining {
+  font-family: var(--font-mono);
+  text-align: right;
+}
+
 .cell-paid {
   color: var(--income);
   font-weight: 500;

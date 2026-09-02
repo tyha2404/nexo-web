@@ -31,48 +31,44 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
 
   return (
     <div className="planning-hub-container">
-      {/* Hub Navigation Segmented Pills */}
-      <div className="planning-hub-nav-wrapper animate-fade-in">
-        <div
-          className="planning-hub-tabs"
-          role="tablist"
-          aria-label="Planning and Management Sections"
-        >
+      {/* 1. Planning Page Header */}
+      <header className="transactions-header animate-fade-in">
+        <div className="transactions-title">
+          <h2>Kế hoạch & Mục tiêu</h2>
+          <p className="subtitle">
+            Thiết lập hạn mức ngân sách, mục tiêu đầu tư và danh mục thu chi tài chính
+          </p>
+        </div>
+      </header>
+
+      {/* 2. Hub Navigation Segmented Tabs (Below Page Title) */}
+      <div className="planning-hub-nav-wrapper animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+        <div className="category-tabs" role="tablist" aria-label="Planning and Management Sections">
           <button
             type="button"
             role="tab"
             aria-selected={activeSubTab === 'targets'}
-            className={`planning-hub-tab ${activeSubTab === 'targets' ? 'active' : ''}`}
+            className={`category-tab flex items-center gap-1.5 ${activeSubTab === 'targets' ? 'active' : ''}`}
             onClick={() => handleTabChange('targets')}
           >
-            <div className="tab-icon-wrapper">
-              <Target size={18} className="tab-icon" />
-            </div>
-            <div className="tab-text-group">
-              <span className="tab-primary-label">Mục tiêu & Ngân sách</span>
-              <span className="tab-secondary-label">Hạn mức chi & đầu tư</span>
-            </div>
+            <Target size={14} />
+            <span>Mục tiêu & Ngân sách</span>
           </button>
 
           <button
             type="button"
             role="tab"
             aria-selected={activeSubTab === 'categories'}
-            className={`planning-hub-tab ${activeSubTab === 'categories' ? 'active' : ''}`}
+            className={`category-tab flex items-center gap-1.5 ${activeSubTab === 'categories' ? 'active' : ''}`}
             onClick={() => handleTabChange('categories')}
           >
-            <div className="tab-icon-wrapper">
-              <Tags size={18} className="tab-icon" />
-            </div>
-            <div className="tab-text-group">
-              <span className="tab-primary-label">Danh mục thu chi</span>
-              <span className="tab-secondary-label">Phân loại & định mức</span>
-            </div>
+            <Tags size={14} />
+            <span>Danh mục thu chi</span>
           </button>
         </div>
       </div>
 
-      {/* Sub-view Content Area */}
+      {/* 3. Sub-view Content Area */}
       <div className="planning-hub-content animate-fade-in" key={activeSubTab}>
         {activeSubTab === 'targets' ? <Targets /> : <Categories />}
       </div>

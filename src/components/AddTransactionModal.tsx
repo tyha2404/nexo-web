@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { Gem, ShoppingBag, TrendingUp, X } from 'lucide-react';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import DatePicker from 'react-datepicker';
@@ -191,32 +191,59 @@ export default function AddTransactionModal({
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <div className="modal-header-title-group">
-            <h3>{isEditing ? 'Chỉnh sửa giao dịch' : `Thêm ${typeLabel} mới`}</h3>
-            <div className="addmodal-type-tabs" role="tablist" aria-label="Loại giao dịch">
-              {(Object.keys(TransactionType) as TransactionType[]).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeType === t}
-                  className={`addmodal-type-tab addmodal-type-${t.toLowerCase()} ${
-                    activeType === t ? 'active' : ''
-                  }`}
-                  onClick={() => setActiveType(t)}
-                >
-                  {t === TransactionType.INCOME
-                    ? 'Thu'
-                    : t === TransactionType.INVESTMENT
-                      ? 'Đầu tư'
-                      : 'Chi'}
-                </button>
-              ))}
-            </div>
-          </div>
+          <h3>{isEditing ? 'Chỉnh sửa giao dịch' : `Thêm ${typeLabel} mới`}</h3>
           <button type="button" className="close-btn" onClick={onClose} aria-label="Đóng">
             <X size={18} />
           </button>
+        </div>
+
+        <div className="addmodal-type-tabs-container" style={{ marginBottom: '1.25rem' }}>
+          <div
+            className="category-tabs"
+            role="tablist"
+            aria-label="Loại giao dịch"
+            style={{ width: '100%' }}
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeType === TransactionType.EXPENSE}
+              className={`category-tab flex items-center gap-1.5 ${
+                activeType === TransactionType.EXPENSE ? 'active' : ''
+              }`}
+              style={{ flex: 1 }}
+              onClick={() => setActiveType(TransactionType.EXPENSE)}
+            >
+              <ShoppingBag size={14} />
+              <span>Chi tiêu</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeType === TransactionType.INCOME}
+              className={`category-tab flex items-center gap-1.5 ${
+                activeType === TransactionType.INCOME ? 'active' : ''
+              }`}
+              style={{ flex: 1 }}
+              onClick={() => setActiveType(TransactionType.INCOME)}
+            >
+              <TrendingUp size={14} />
+              <span>Thu nhập</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeType === TransactionType.INVESTMENT}
+              className={`category-tab flex items-center gap-1.5 ${
+                activeType === TransactionType.INVESTMENT ? 'active' : ''
+              }`}
+              style={{ flex: 1 }}
+              onClick={() => setActiveType(TransactionType.INVESTMENT)}
+            >
+              <Gem size={14} />
+              <span>Đầu tư</span>
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit}>

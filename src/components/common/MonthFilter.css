@@ -66,6 +66,13 @@
   outline: none !important;
   box-shadow: none !important;
   text-align: center;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.month-filter-container .month-datepicker-input:active {
+  transform: scale(0.96);
 }
 
 @media (max-width: 768px) {
