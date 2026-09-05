@@ -29,9 +29,9 @@
 }
 
 .auth-logo {
-  width: 52px;
-  height: 52px;
-  margin-bottom: 0.75rem;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 0.85rem;
   filter: drop-shadow(0 4px 12px var(--primary-glow));
   transition: transform 0.3s ease;
 }

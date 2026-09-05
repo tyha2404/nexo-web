@@ -1,16 +1,16 @@
 module.exports = {
   apps: [
     {
-      name: "nexo-web",
-      script: "server.cjs",
+      name: 'nexo-web',
+      script: 'server.cjs',
       instances: 1,
       autorestart: true,
       watch: false,
-      max_memory_restart: "500M",
+      max_memory_restart: '500M',
       env: {
-        NODE_ENV: "production",
+        NODE_ENV: 'production',
         PORT: 5173,
-        BACKEND_API_URL: "http://127.0.0.1:3001",
+        BACKEND_API_URL: 'http://127.0.0.1:3001',
       },
     },
   ],

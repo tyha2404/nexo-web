@@ -14,6 +14,7 @@ import Select from 'react-select';
 import { toast } from 'react-toastify';
 import { TransactionType } from '../commons/constants';
 import type { Category } from '../commons/types';
+import { formatNumberInput, parseNumberInput } from '../commons/utils';
 import { categoryService } from '../services/api';
 import './Categories.css';
 import Pagination from './Pagination';
@@ -80,28 +81,19 @@ export default function Categories() {
     fetchCategories(activeTab, currentPage, itemsPerPage);
   }, [activeTab, currentPage, itemsPerPage]);
 
-  const formatBudgetVal = (val: string) => {
-    const cleanNumber = val.replace(/\D/g, '');
-    if (cleanNumber === '') return '';
-    return parseInt(cleanNumber, 10).toLocaleString('vi-VN');
-  };
-
   const handleBudgetChange = (val: string) => {
-    setBudgetLimit(formatBudgetVal(val));
+    setBudgetLimit(formatNumberInput(val));
   };
 
   const handleEditBudgetChange = (val: string) => {
-    setEditBudgetLimit(formatBudgetVal(val));
+    setEditBudgetLimit(formatNumberInput(val));
   };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
-    // Parse dot formatted string back to raw number
-    const parsedBudget = budgetLimit.trim()
-      ? parseFloat(budgetLimit.replace(/\./g, ''))
-      : undefined;
+    const parsedBudget = budgetLimit.trim() ? parseNumberInput(budgetLimit) : undefined;
 
     try {
       setError(null);
@@ -132,10 +124,7 @@ export default function Categories() {
     e.preventDefault();
     if (!editingCategory || !editName.trim()) return;
 
-    // Parse dot formatted string back to raw number
-    const parsedEditBudget = editBudgetLimit.trim()
-      ? parseFloat(editBudgetLimit.replace(/\./g, ''))
-      : undefined;
+    const parsedEditBudget = editBudgetLimit.trim() ? parseNumberInput(editBudgetLimit) : undefined;
 
     try {
       setError(null);
@@ -228,20 +217,18 @@ export default function Categories() {
     return 'chi tiêu';
   };
 
-  return (
-    <div className="categories-view">
-      <header className="categories-header animate-fade-in">
-        <div className="categories-title-row">
-          <div>
-            <h2>Quản lý Danh mục</h2>
-            <p className="subtitle">Tổ chức và phân loại chi phí, thu nhập & đầu tư của bạn</p>
-          </div>
-          <button className="btn btn-primary create-category-btn" onClick={openCreateModal}>
-            <Plus size={16} /> Tạo danh mục
-          </button>
-        </div>
-      </header>
+  useEffect(() => {
+    const handleOpenModal = () => {
+      openCreateModal();
+    };
+    window.addEventListener('open-add-category-modal', handleOpenModal);
+    return () => {
+      window.removeEventListener('open-add-category-modal', handleOpenModal);
+    };
+  }, [activeTab]);
 
+  return (
+    <div className="categories-subview">
       {/* Category Type Tabs Switcher (Below Page Title) */}
       <div className="category-tabs-nav animate-fade-in" style={{ marginBottom: '1.25rem' }}>
         <div className="category-tabs" role="tablist" aria-label="Loại danh mục">

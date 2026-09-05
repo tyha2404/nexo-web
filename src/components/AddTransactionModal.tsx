@@ -12,7 +12,13 @@ import type {
   Transaction,
   Wallet as WalletModel,
 } from '../commons/types';
-import { formatCurrency, formatDate, toISODateString } from '../commons/utils';
+import {
+  formatCurrency,
+  formatDate,
+  formatNumberInput,
+  parseNumberInput,
+  toISODateString,
+} from '../commons/utils';
 import { categoryService, transactionService, walletService } from '../services/api';
 import type { CreateTransactionDTO } from '../services/transactionService';
 
@@ -115,22 +121,13 @@ export default function AddTransactionModal({
   if (!open) return null;
 
   const handleAmountChange = (val: string) => {
-    const cleanNumber = val.replace(/\D/g, '');
-    if (cleanNumber === '') {
-      setAmount('');
-      return;
-    }
-    setAmount(parseInt(cleanNumber, 10).toLocaleString('vi-VN'));
+    setAmount(formatNumberInput(val));
   };
 
   const handlePnlChange = (val: string) => {
     const isNegative = val.trim().startsWith('-');
-    const cleanNumber = val.replace(/\D/g, '');
-    if (cleanNumber === '') {
-      setRealizedPnl(isNegative ? '-' : '');
-      return;
-    }
-    setRealizedPnl((isNegative ? '-' : '') + parseInt(cleanNumber, 10).toLocaleString('vi-VN'));
+    const formatted = formatNumberInput(val);
+    setRealizedPnl(formatted ? (isNegative ? `-${formatted}` : formatted) : isNegative ? '-' : '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,10 +137,12 @@ export default function AddTransactionModal({
       return;
     }
 
-    const rawAmount = parseFloat(amount.replace(/\./g, ''));
+    const rawAmount = parseNumberInput(amount);
     let rawPnl = 0;
     if (realizedPnl) {
-      rawPnl = parseFloat(realizedPnl.replace(/\./g, '')) || 0;
+      const isNegative = realizedPnl.trim().startsWith('-');
+      const absPnl = parseNumberInput(realizedPnl);
+      rawPnl = isNegative ? -absPnl : absPnl;
     }
 
     const payload: CreateTransactionDTO = {

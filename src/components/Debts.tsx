@@ -5,7 +5,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
 import { Search, Plus, Trash2, Handshake, X, AlertTriangle, ArrowRightLeft } from 'lucide-react';
-import { formatCurrency } from '../commons/utils';
+import { formatCurrency, formatNumberInput, parseNumberInput } from '../commons/utils';
 import { debtService } from '../services/api';
 import type { Debt, DebtType } from '../types/debt';
 import { MonthFilter } from './common';
@@ -39,23 +39,6 @@ export default function Debts() {
   const [repayAmount, setRepayAmount] = useState<string>('');
   const [repayNotes, setRepayNotes] = useState<string>('');
 
-  // Presets like Transactions.tsx
-  const payablePresets = [
-    { label: 'Vay ngân hàng (TPBank/MB)', type: 'PAYABLE' as DebtType },
-    { label: 'Vay người thân / bạn bè', type: 'PAYABLE' as DebtType },
-    { label: 'Nợ thẻ tín dụng', type: 'PAYABLE' as DebtType },
-    { label: 'Trả góp hàng tháng', type: 'PAYABLE' as DebtType },
-  ];
-
-  const receivablePresets = [
-    { label: 'Cho bạn mượn', type: 'RECEIVABLE' as DebtType },
-    { label: 'Thu tiền phòng / nhà', type: 'RECEIVABLE' as DebtType },
-    { label: 'Ứng trước tiền công', type: 'RECEIVABLE' as DebtType },
-    { label: 'Tiền bán hàng chưa thu', type: 'RECEIVABLE' as DebtType },
-  ];
-
-  const activePresets = formType === 'PAYABLE' ? payablePresets : receivablePresets;
-
   const fetchDebtData = async () => {
     try {
       setLoading(true);
@@ -76,18 +59,7 @@ export default function Debts() {
   }, [filterType]);
 
   const handleAmountChange = (val: string, setter: (v: string) => void) => {
-    const cleanNumber = val.replace(/\D/g, '');
-    if (cleanNumber === '') {
-      setter('');
-      return;
-    }
-    const formatted = parseInt(cleanNumber, 10).toLocaleString('vi-VN');
-    setter(formatted);
-  };
-
-  const handleApplyPreset = (preset: { label: string; type: DebtType }) => {
-    setFormTitle(preset.label);
-    setFormType(preset.type);
+    setter(formatNumberInput(val));
   };
 
   const openCreateModal = (defaultType: DebtType = 'PAYABLE') => {
@@ -102,14 +74,13 @@ export default function Debts() {
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanNumber = formAmount.replace(/\./g, '').replace(/,/g, '');
-    const parsedAmount = parseFloat(cleanNumber);
+    const parsedAmount = parseNumberInput(formAmount);
 
     if (!formTitle.trim()) {
       toast.error('Vui lòng nhập tên khoản nợ / đối tác');
       return;
     }
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    if (parsedAmount <= 0) {
       toast.error('Vui lòng nhập số tiền hợp lệ');
       return;
     }
@@ -136,10 +107,9 @@ export default function Debts() {
     e.preventDefault();
     if (!selectedDebt) return;
 
-    const cleanNumber = repayAmount.replace(/\./g, '').replace(/,/g, '');
-    const parsedAmount = parseFloat(cleanNumber);
+    const parsedAmount = parseNumberInput(repayAmount);
 
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    if (parsedAmount <= 0) {
       toast.error('Vui lòng nhập số tiền hợp lệ');
       return;
     }
@@ -568,23 +538,6 @@ export default function Debts() {
               </button>
             </div>
             <form onSubmit={handleCreateSubmit}>
-              {/* Presets like Transactions.tsx */}
-              <div className="form-group">
-                <label>Chọn nhanh (Mẫu tiêu đề)</label>
-                <div className="presets-container">
-                  {activePresets.map((opt, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      className="preset-tag-btn"
-                      onClick={() => handleApplyPreset(opt)}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <div className="form-group">
                 <label htmlFor="debt-title">Tên khoản nợ / Đối tác</label>
                 <input

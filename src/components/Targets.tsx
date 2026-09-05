@@ -6,7 +6,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { Plus, Pencil, X, AlertTriangle, Target as TargetIcon } from 'lucide-react';
 import { targetService } from '../services/api';
 import type { TargetSummaryResponse } from '../commons/types';
-import { formatCurrency } from '../commons/utils';
+import { formatCurrency, formatNumberInput, parseNumberInput } from '../commons/utils';
 import { toast } from 'react-toastify';
 import { MonthFilter } from './common';
 import './Targets.css';
@@ -45,13 +45,7 @@ export default function Targets() {
   }, [selectedMonth]);
 
   const handleAmountChange = (val: string) => {
-    const cleanNumber = val.replace(/\D/g, '');
-    if (cleanNumber === '') {
-      setAmount('');
-      return;
-    }
-    const formatted = parseInt(cleanNumber, 10).toLocaleString('vi-VN');
-    setAmount(formatted);
+    setAmount(formatNumberInput(val));
   };
 
   const openAddModal = (defaultType: 'EXPENSE' | 'INVESTMENT' = 'EXPENSE') => {
@@ -62,15 +56,14 @@ export default function Targets() {
         ? targetSummary?.expense?.targetAmount
         : targetSummary?.investment?.targetAmount;
 
-    setAmount(existingAmount ? existingAmount.toLocaleString('vi-VN') : '');
+    setAmount(existingAmount ? formatNumberInput(existingAmount) : '');
     setIsModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanNumber = amount.replace(/\./g, '').replace(/,/g, '');
-    const parsedAmount = parseFloat(cleanNumber);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    const parsedAmount = parseNumberInput(amount);
+    if (parsedAmount <= 0) {
       toast.error('Vui lòng nhập số tiền mục tiêu hợp lệ');
       return;
     }
@@ -140,27 +133,23 @@ export default function Targets() {
     });
   }
 
+  useEffect(() => {
+    const handleOpenModal = () => {
+      openAddModal('EXPENSE');
+    };
+    window.addEventListener('open-add-target-modal', handleOpenModal);
+    return () => {
+      window.removeEventListener('open-add-target-modal', handleOpenModal);
+    };
+  }, [targetSummary]);
+
   const filteredRows = targetRows.filter((row) => {
     if (!filterType) return true;
     return row.type === filterType;
   });
 
   return (
-    <div className="transactions-view">
-      <header className="transactions-header animate-fade-in">
-        <div className="transactions-title">
-          <h2>Quản lý Mục tiêu Tài chính</h2>
-          <p className="subtitle">
-            Theo dõi và đặt hạn mức chi tiêu & mục tiêu đầu tư tích lũy của bạn
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button className="btn btn-primary" onClick={() => openAddModal('EXPENSE')}>
-            <Plus size={16} /> Thêm mục tiêu
-          </button>
-        </div>
-      </header>
-
+    <div className="targets-subview">
       {error && (
         <div className="error-banner animate-fade-in">
           <AlertTriangle size={18} className="error-icon" /> {error}

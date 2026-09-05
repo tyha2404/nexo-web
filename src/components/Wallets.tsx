@@ -19,7 +19,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 import type { CreditCardStatement, WalletType, Wallet as WalletTypeModel } from '../commons/types';
-import { formatCurrency } from '../commons/utils';
+import { formatCurrency, formatNumberInput } from '../commons/utils';
 import { statementService, walletService } from '../services/api';
 import './Wallets.css';
 import ConfirmModal from './common/ConfirmModal';
@@ -70,13 +70,13 @@ export default function Wallets() {
   const [stmtNote, setStmtNote] = useState<string>('');
 
   // Form State - Wallet
-  const [formName, setFormName] = useState<string>('Thẻ tín dụng ACB');
+  const [formName, setFormName] = useState<string>('');
   const [formType, setFormType] = useState<WalletType>('CREDIT');
   const [formBalance, setFormBalance] = useState<string>('0');
   const [formIcon, setFormIcon] = useState<string>('💳');
-  const [formCreditLimit, setFormCreditLimit] = useState<string>('30.000.000');
-  const [formStatementDay, setFormStatementDay] = useState<string>('20');
-  const [formDueDay, setFormDueDay] = useState<string>('5');
+  const [formCreditLimit, setFormCreditLimit] = useState<string>('');
+  const [formStatementDay, setFormStatementDay] = useState<string>('');
+  const [formDueDay, setFormDueDay] = useState<string>('');
   const [formStatementBalance, setFormStatementBalance] = useState<string>('0');
   const [formMinimumPayment, setFormMinimumPayment] = useState<string>('0');
   const [formPreviousBalance, setFormPreviousBalance] = useState<string>('0');
@@ -121,25 +121,23 @@ export default function Wallets() {
     fetchWallets();
   }, []);
 
-  const formatDotNumber = (val: string) => {
-    const clean = val.replace(/\D/g, '');
-    if (!clean) return '';
-    return parseInt(clean, 10).toLocaleString('vi-VN');
+  const formatDotNumber = (val: string | number) => {
+    return formatNumberInput(val);
   };
 
   const handleAmountChange = (val: string, setter: (v: string) => void) => {
-    setter(formatDotNumber(val));
+    setter(formatNumberInput(val));
   };
 
   const openCreateModal = () => {
     setEditingWallet(null);
-    setFormName('Thẻ tín dụng ACB');
+    setFormName('');
     setFormType('CREDIT');
     setFormBalance('0');
     setFormIcon('💳');
-    setFormCreditLimit('30.000.000');
-    setFormStatementDay('20');
-    setFormDueDay('5');
+    setFormCreditLimit('');
+    setFormStatementDay('');
+    setFormDueDay('');
     setFormStatementBalance('0');
     setFormMinimumPayment('0');
     setFormPreviousBalance('0');

@@ -31,7 +31,7 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
 
   return (
     <div className="planning-hub-container">
-      {/* 1. Planning Page Header */}
+      {/* 1. Planning Page Header with Action Button */}
       <header className="transactions-header animate-fade-in">
         <div className="transactions-title">
           <h2>Kế hoạch & Mục tiêu</h2>
@@ -39,11 +39,30 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
             Thiết lập hạn mức ngân sách, mục tiêu đầu tư và danh mục thu chi tài chính
           </p>
         </div>
+        <div className="header-actions">
+          {activeSubTab === 'targets' ? (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-add-target-modal'))}
+            >
+              <Target size={16} /> Thêm mục tiêu
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-add-category-modal'))}
+            >
+              <Tags size={16} /> Tạo danh mục
+            </button>
+          )}
+        </div>
       </header>
 
       {/* 2. Hub Navigation Segmented Tabs (Below Page Title) */}
       <div className="planning-hub-nav-wrapper animate-fade-in" style={{ marginBottom: '1.25rem' }}>
-        <div className="category-tabs" role="tablist" aria-label="Planning and Management Sections">
+        <div className="category-tabs" role="tablist" aria-label="Phân mục Kế hoạch">
           <button
             type="button"
             role="tab"
