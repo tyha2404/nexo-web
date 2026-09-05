@@ -344,110 +344,213 @@ export default function Debts() {
           </button>
         </div>
       ) : (
-        <div className="debts-table-container transactions-table-container animate-fade-in">
-          <table className="debts-table transactions-table">
-            <thead>
-              <tr>
-                <th>Tên khoản nợ / Đối tác</th>
-                <th>Loại</th>
-                <th className="text-right">Tổng số tiền</th>
-                <th className="text-right">Đã thanh toán</th>
-                <th className="text-right">Còn lại</th>
-                <th>Ngày vay/cho vay</th>
-                <th>Hạn chót</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDebts.map((debt) => {
-                const percent = Math.min(
-                  100,
-                  Math.round((debt.paidAmount / debt.totalAmount) * 100)
-                );
+        <>
+          {/* Desktop Table View */}
+          <div className="debts-table-container transactions-table-container animate-fade-in">
+            <table className="debts-table transactions-table">
+              <thead>
+                <tr>
+                  <th>Tên khoản nợ / Đối tác</th>
+                  <th>Loại</th>
+                  <th className="text-right">Tổng số tiền</th>
+                  <th className="text-right">Đã thanh toán</th>
+                  <th className="text-right">Còn lại</th>
+                  <th>Ngày vay/cho vay</th>
+                  <th>Hạn chót</th>
+                  <th>Trạng thái</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredDebts.map((debt) => {
+                  const percent = Math.min(
+                    100,
+                    Math.round((debt.paidAmount / debt.totalAmount) * 100)
+                  );
 
-                return (
-                  <tr key={debt.id}>
-                    <td className="txn-title-cell">
-                      <div className="debt-title-text">{debt.title}</div>
-                      {debt.notes && <div className="debt-notes-text">{debt.notes}</div>}
-                    </td>
-                    <td>
-                      <span
-                        className={`txn-category-badge ${
-                          debt.type === 'PAYABLE' ? 'badge-payable' : 'badge-receivable'
-                        }`}
-                      >
-                        {debt.type === 'PAYABLE' ? 'Tôi nợ' : 'Phải thu'}
-                      </span>
-                    </td>
-                    <td className="txn-amount">{formatCurrency(debt.totalAmount)}</td>
-                    <td className="cell-paid" style={{ color: 'var(--income)' }}>
-                      {formatCurrency(debt.paidAmount)}
-                    </td>
-                    <td
-                      className="cell-remaining"
-                      style={{
-                        color: debt.type === 'PAYABLE' ? 'var(--expense)' : 'var(--income)',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {formatCurrency(Math.abs(debt.remaining))}
-                    </td>
-                    <td className="txn-date">
-                      {debt.startDate ? moment(debt.startDate).format('DD/MM/YYYY') : '—'}
-                    </td>
-                    <td className="txn-date">
-                      {debt.dueDate ? moment(debt.dueDate).format('DD/MM/YYYY') : '—'}
-                    </td>
-                    <td>
-                      <span
-                        className={`txn-category-badge ${
-                          debt.status === 'COMPLETED'
-                            ? 'badge-completed'
-                            : debt.status === 'OVERDUE'
-                              ? 'badge-overdue-status'
-                              : 'badge-pending-status'
-                        }`}
-                      >
-                        {debt.status === 'COMPLETED'
-                          ? '🎉 Đã xong'
-                          : debt.status === 'OVERDUE'
-                            ? '🚨 Quá hạn'
-                            : `Đang nợ (${percent}%)`}
-                      </span>
-                    </td>
-                    <td className="txn-actions-cell">
-                      <div className="debt-actions-group">
-                        {debt.status !== 'COMPLETED' && (
-                          <button
-                            onClick={() => {
-                              setSelectedDebt(debt);
-                              setRepayAmount('');
-                              setIsRepayModalOpen(true);
-                            }}
-                            className="btn btn-secondary repay-action-btn"
-                            title="Ghi nhận trả/thu tiền"
-                          >
-                            <ArrowRightLeft size={14} /> Trả tiền
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleDelete(debt.id)}
-                          className="action-btn delete-btn"
-                          aria-label="Xóa khoản vay"
-                          title="Xóa"
+                  return (
+                    <tr key={debt.id}>
+                      <td className="txn-title-cell">
+                        <div className="debt-title-text">{debt.title}</div>
+                        {debt.notes && <div className="debt-notes-text">{debt.notes}</div>}
+                      </td>
+                      <td>
+                        <span
+                          className={`txn-category-badge ${
+                            debt.type === 'PAYABLE' ? 'badge-payable' : 'badge-receivable'
+                          }`}
                         >
-                          <Trash2 size={15} />
-                        </button>
+                          {debt.type === 'PAYABLE' ? 'Tôi nợ' : 'Phải thu'}
+                        </span>
+                      </td>
+                      <td className="txn-amount">{formatCurrency(debt.totalAmount)}</td>
+                      <td className="cell-paid" style={{ color: 'var(--income)' }}>
+                        {formatCurrency(debt.paidAmount)}
+                      </td>
+                      <td
+                        className="cell-remaining"
+                        style={{
+                          color: debt.type === 'PAYABLE' ? 'var(--expense)' : 'var(--income)',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        {formatCurrency(Math.abs(debt.remaining))}
+                      </td>
+                      <td className="txn-date">
+                        {debt.startDate ? moment(debt.startDate).format('DD/MM/YYYY') : '—'}
+                      </td>
+                      <td className="txn-date">
+                        {debt.dueDate ? moment(debt.dueDate).format('DD/MM/YYYY') : '—'}
+                      </td>
+                      <td>
+                        <span
+                          className={`txn-category-badge ${
+                            debt.status === 'COMPLETED'
+                              ? 'badge-completed'
+                              : debt.status === 'OVERDUE'
+                                ? 'badge-overdue-status'
+                                : 'badge-pending-status'
+                          }`}
+                        >
+                          {debt.status === 'COMPLETED'
+                            ? '🎉 Đã xong'
+                            : debt.status === 'OVERDUE'
+                              ? '🚨 Quá hạn'
+                              : `Đang nợ (${percent}%)`}
+                        </span>
+                      </td>
+                      <td className="txn-actions-cell">
+                        <div className="debt-actions-group">
+                          {debt.status !== 'COMPLETED' && (
+                            <button
+                              onClick={() => {
+                                setSelectedDebt(debt);
+                                setRepayAmount('');
+                                setIsRepayModalOpen(true);
+                              }}
+                              className="btn btn-secondary repay-action-btn"
+                              title="Ghi nhận trả/thu tiền"
+                            >
+                              <ArrowRightLeft size={14} /> Trả tiền
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDelete(debt.id)}
+                            className="action-btn delete-btn"
+                            aria-label="Xóa khoản vay"
+                            title="Xóa"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View (<768px) */}
+          <div className="transactions-mobile-cards animate-fade-in">
+            {filteredDebts.map((debt) => {
+              const isPayable = debt.type === 'PAYABLE';
+              const percent = Math.min(100, Math.round((debt.paidAmount / debt.totalAmount) * 100));
+
+              return (
+                <div key={`m-debt-${debt.id}`} className="transaction-mobile-card">
+                  <div className="mobile-card-top">
+                    <div className="mobile-card-left">
+                      <div
+                        className={`mobile-card-icon-badge ${isPayable ? 'icon-expense' : 'icon-income'}`}
+                      >
+                        <Handshake size={18} />
                       </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      <div className="mobile-card-info">
+                        <div className="mobile-card-title">{debt.title}</div>
+                        {debt.notes && (
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            {debt.notes}
+                          </div>
+                        )}
+                        <div className="mobile-card-date">
+                          <span>
+                            {debt.startDate ? moment(debt.startDate).format('DD/MM/YYYY') : '—'}
+                            {debt.dueDate
+                              ? ` → Hạn: ${moment(debt.dueDate).format('DD/MM/YYYY')}`
+                              : ''}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mobile-card-amount-group">
+                      <div
+                        className="mobile-card-amount"
+                        style={{ color: isPayable ? 'var(--expense)' : 'var(--income)' }}
+                      >
+                        {formatCurrency(Math.abs(debt.remaining))}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                        Tổng: {formatCurrency(debt.totalAmount)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mobile-card-tags">
+                    <span
+                      className={`txn-category-badge ${
+                        isPayable ? 'badge-payable' : 'badge-receivable'
+                      }`}
+                    >
+                      {isPayable ? 'Tôi nợ' : 'Phải thu'}
+                    </span>
+                    <span
+                      className={`txn-category-badge ${
+                        debt.status === 'COMPLETED'
+                          ? 'badge-completed'
+                          : debt.status === 'OVERDUE'
+                            ? 'badge-overdue-status'
+                            : 'badge-pending-status'
+                      }`}
+                    >
+                      {debt.status === 'COMPLETED'
+                        ? '🎉 Đã xong'
+                        : debt.status === 'OVERDUE'
+                          ? '🚨 Quá hạn'
+                          : `Đã trả ${percent}% (${formatCurrency(debt.paidAmount)})`}
+                    </span>
+                  </div>
+
+                  <div className="mobile-card-actions">
+                    {debt.status !== 'COMPLETED' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedDebt(debt);
+                          setRepayAmount('');
+                          setIsRepayModalOpen(true);
+                        }}
+                        className="mobile-action-btn edit-btn"
+                        title="Ghi nhận trả/thu tiền"
+                      >
+                        <ArrowRightLeft size={14} /> Trả tiền
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(debt.id)}
+                      className="mobile-action-btn delete-btn"
+                      title="Xóa khoản nợ"
+                    >
+                      <Trash2 size={14} /> Xóa
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Create Modal */}

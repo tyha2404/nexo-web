@@ -301,89 +301,187 @@ export default function Targets() {
           </button>
         </div>
       ) : (
-        <div className="transactions-table-container animate-fade-in">
-          <table className="transactions-table">
-            <thead>
-              <tr>
-                <th>Loại mục tiêu</th>
-                <th>Số tiền mục tiêu</th>
-                <th>Thực tế hiện tại</th>
-                <th>Trạng thái / Tiến độ</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRows.map((row) => {
-                const percent =
-                  row.targetAmount > 0
-                    ? Math.min(100, Math.round((row.currentAmount / row.targetAmount) * 100))
-                    : 0;
+        <>
+          {/* Desktop Table View */}
+          <div className="transactions-table-container animate-fade-in">
+            <table className="transactions-table">
+              <thead>
+                <tr>
+                  <th>Loại mục tiêu</th>
+                  <th>Số tiền mục tiêu</th>
+                  <th>Thực tế hiện tại</th>
+                  <th>Trạng thái / Tiến độ</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRows.map((row) => {
+                  const percent =
+                    row.targetAmount > 0
+                      ? Math.min(100, Math.round((row.currentAmount / row.targetAmount) * 100))
+                      : 0;
 
-                return (
-                  <tr key={row.id}>
-                    <td className="txn-title-cell">
-                      <span>{row.title}</span>
-                    </td>
-                    <td className="txn-amount">
-                      {row.targetAmount > 0 ? formatCurrency(row.targetAmount) : 'Chưa đặt'}
-                    </td>
-                    <td className="txn-date">{formatCurrency(row.currentAmount)}</td>
-                    <td>
-                      {row.targetAmount > 0 ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  return (
+                    <tr key={row.id}>
+                      <td className="txn-title-cell">
+                        <span>{row.title}</span>
+                      </td>
+                      <td className="txn-amount">
+                        {row.targetAmount > 0 ? formatCurrency(row.targetAmount) : 'Chưa đặt'}
+                      </td>
+                      <td className="txn-date">{formatCurrency(row.currentAmount)}</td>
+                      <td>
+                        {row.targetAmount > 0 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            <span
+                              className="txn-category-badge"
+                              style={{
+                                alignSelf: 'flex-start',
+                                background:
+                                  row.status === 'OVER_BUDGET'
+                                    ? 'rgba(244, 63, 94, 0.15)'
+                                    : row.status === 'COMPLETED'
+                                      ? 'rgba(16, 185, 129, 0.15)'
+                                      : 'rgba(14, 165, 233, 0.15)',
+                                color:
+                                  row.status === 'OVER_BUDGET'
+                                    ? '#f43f5e'
+                                    : row.status === 'COMPLETED'
+                                      ? '#10b981'
+                                      : '#38bdf8',
+                                border:
+                                  row.status === 'OVER_BUDGET'
+                                    ? '1px solid rgba(244, 63, 94, 0.3)'
+                                    : row.status === 'COMPLETED'
+                                      ? '1px solid rgba(16, 185, 129, 0.3)'
+                                      : '1px solid rgba(14, 165, 233, 0.3)',
+                              }}
+                            >
+                              {row.status === 'OVER_BUDGET'
+                                ? '🚨 Vượt hạn mức'
+                                : row.status === 'COMPLETED'
+                                  ? '🎉 Đã hoàn thành'
+                                  : `${percent}% hoàn thành`}
+                            </span>
+                          </div>
+                        ) : (
                           <span
                             className="txn-category-badge"
-                            style={{
-                              alignSelf: 'flex-start',
-                              background:
-                                row.status === 'OVER_BUDGET'
-                                  ? 'rgba(244, 63, 94, 0.15)'
-                                  : row.status === 'COMPLETED'
-                                    ? 'rgba(16, 185, 129, 0.15)'
-                                    : 'rgba(14, 165, 233, 0.15)',
-                              color:
-                                row.status === 'OVER_BUDGET'
-                                  ? '#f43f5e'
-                                  : row.status === 'COMPLETED'
-                                    ? '#10b981'
-                                    : '#38bdf8',
-                              border:
-                                row.status === 'OVER_BUDGET'
-                                  ? '1px solid rgba(244, 63, 94, 0.3)'
-                                  : row.status === 'COMPLETED'
-                                    ? '1px solid rgba(16, 185, 129, 0.3)'
-                                    : '1px solid rgba(14, 165, 233, 0.3)',
-                            }}
+                            style={{ color: 'var(--text-muted)' }}
                           >
-                            {row.status === 'OVER_BUDGET'
-                              ? '🚨 Vượt hạn mức'
-                              : row.status === 'COMPLETED'
-                                ? '🎉 Đã hoàn thành'
-                                : `${percent}% hoàn thành`}
+                            Chưa thiết lập
+                          </span>
+                        )}
+                      </td>
+                      <td className="txn-actions-cell">
+                        <button
+                          onClick={() => openAddModal(row.type as 'EXPENSE' | 'INVESTMENT')}
+                          className="action-btn edit-btn"
+                          aria-label={`Chỉnh sửa ${row.title}`}
+                          title={`Chỉnh sửa ${row.title}`}
+                        >
+                          <Pencil size={15} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View (<768px) */}
+          <div className="transactions-mobile-cards animate-fade-in">
+            {filteredRows.map((row) => {
+              const percent =
+                row.targetAmount > 0
+                  ? Math.min(100, Math.round((row.currentAmount / row.targetAmount) * 100))
+                  : 0;
+              const isExpense = row.type === 'EXPENSE';
+
+              return (
+                <div key={`m-target-${row.id}`} className="transaction-mobile-card">
+                  <div className="mobile-card-top">
+                    <div className="mobile-card-left">
+                      <div
+                        className={`mobile-card-icon-badge ${
+                          isExpense ? 'icon-expense' : 'icon-investment'
+                        }`}
+                      >
+                        <TargetIcon size={18} />
+                      </div>
+                      <div className="mobile-card-info">
+                        <div className="mobile-card-title">{row.title}</div>
+                        <div className="mobile-card-date">
+                          <span>
+                            Thực tế: <strong>{formatCurrency(row.currentAmount)}</strong>
                           </span>
                         </div>
-                      ) : (
-                        <span className="txn-category-badge" style={{ color: 'var(--text-muted)' }}>
-                          Chưa thiết lập
-                        </span>
-                      )}
-                    </td>
-                    <td className="txn-actions-cell">
-                      <button
-                        onClick={() => openAddModal(row.type as 'EXPENSE' | 'INVESTMENT')}
-                        className="action-btn edit-btn"
-                        aria-label={`Chỉnh sửa ${row.title}`}
-                        title={`Chỉnh sửa ${row.title}`}
+                      </div>
+                    </div>
+
+                    <div className="mobile-card-amount-group">
+                      <div
+                        className="mobile-card-amount"
+                        style={{ color: isExpense ? 'var(--expense)' : '#38bdf8' }}
                       >
-                        <Pencil size={15} />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                        {row.targetAmount > 0 ? formatCurrency(row.targetAmount) : 'Chưa đặt'}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                        {row.targetAmount > 0 ? `Tiến độ: ${percent}%` : 'Hạn mức mục tiêu'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mobile-card-tags">
+                    <span
+                      className="txn-category-badge"
+                      style={{
+                        background:
+                          row.status === 'OVER_BUDGET'
+                            ? 'rgba(244, 63, 94, 0.15)'
+                            : row.status === 'COMPLETED'
+                              ? 'rgba(16, 185, 129, 0.15)'
+                              : 'rgba(14, 165, 233, 0.15)',
+                        color:
+                          row.status === 'OVER_BUDGET'
+                            ? '#f43f5e'
+                            : row.status === 'COMPLETED'
+                              ? '#10b981'
+                              : '#38bdf8',
+                        border:
+                          row.status === 'OVER_BUDGET'
+                            ? '1px solid rgba(244, 63, 94, 0.3)'
+                            : row.status === 'COMPLETED'
+                              ? '1px solid rgba(16, 185, 129, 0.3)'
+                              : '1px solid rgba(14, 165, 233, 0.3)',
+                      }}
+                    >
+                      {row.targetAmount === 0
+                        ? 'Chưa thiết lập'
+                        : row.status === 'OVER_BUDGET'
+                          ? '🚨 Vượt hạn mức'
+                          : row.status === 'COMPLETED'
+                            ? '🎉 Đã hoàn thành'
+                            : `${percent}% hoàn thành`}
+                    </span>
+                  </div>
+
+                  <div className="mobile-card-actions">
+                    <button
+                      type="button"
+                      onClick={() => openAddModal(row.type as 'EXPENSE' | 'INVESTMENT')}
+                      className="mobile-action-btn edit-btn"
+                      title="Thiết lập / Chỉnh sửa mục tiêu"
+                    >
+                      <Pencil size={14} /> {row.targetAmount > 0 ? 'Chỉnh sửa' : 'Thiết lập'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Form Modal overlay (100% cloned from Transactions modal) */}
