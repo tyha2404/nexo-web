@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       injectRegister: 'script',
       includeAssets: [
         'favicon.svg',
@@ -17,6 +17,9 @@ export default defineConfig({
       ],
       workbox: {
         importScripts: ['/sw-push.js'],
+        clientsClaim: true,
+        skipWaiting: true,
+        cleanupOutdatedCaches: true,
       },
       manifest: {
         name: 'Nexo Web App',
