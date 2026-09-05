@@ -31,23 +31,54 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+async function getOrRegisterServiceWorker(): Promise<ServiceWorkerRegistration> {
+  if (!('serviceWorker' in navigator)) {
+    throw new Error('Trình duyệt không hỗ trợ Service Worker.');
+  }
+
+  // Check if existing registration is ready
+  try {
+    const regPromise = navigator.serviceWorker.ready;
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500));
+    const readyReg = await Promise.race([regPromise, timeoutPromise]);
+    if (readyReg) {
+      return readyReg;
+    }
+  } catch (e) {
+    console.warn('serviceWorker.ready wait error', e);
+  }
+
+  // If not ready yet (e.g. in dev mode or before SW activates), register directly
+  try {
+    const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    return registration;
+  } catch (err) {
+    console.warn('Failed to register /sw.js, trying /sw-push.js fallback', err);
+    return await navigator.serviceWorker.register('/sw-push.js', { scope: '/' });
+  }
+}
+
 export const notificationService = {
   isIOS(): boolean {
     if (typeof window === 'undefined') return false;
     const userAgent = window.navigator.userAgent.toLowerCase();
-    return /iphone|ipad|ipod/.test(userAgent);
+    const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
+    // Also detect modern iPad running desktop Safari
+    const isIPadSafari = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+    return isIOSDevice || isIPadSafari;
   },
 
   isStandalone(): boolean {
     if (typeof window === 'undefined') return false;
-    return (
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as unknown as { standalone?: boolean }).standalone === true
-    );
+    const isDisplayStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    const isNavigatorStandalone =
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+    return isDisplayStandalone || isNavigatorStandalone;
   },
 
   isPushSupported(): boolean {
     if (typeof window === 'undefined') return false;
+    // On iOS, Notification and PushManager only exist when in Standalone mode (added to Home Screen)
     return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   },
 
@@ -67,35 +98,77 @@ export const notificationService = {
 
   async getExistingSubscription(): Promise<PushSubscription | null> {
     if (!this.isPushSupported()) return null;
-    const registration = await navigator.serviceWorker.ready;
-    return await registration.pushManager.getSubscription();
+    try {
+      const registration = await getOrRegisterServiceWorker();
+      return await registration.pushManager.getSubscription();
+    } catch {
+      return null;
+    }
   },
 
   async subscribe(): Promise<PushSubscription> {
-    if (!this.isPushSupported()) {
-      throw new Error('Trình duyệt hoặc thiết bị này không hỗ trợ Web Push Notifications.');
+    // Detailed check for iOS vs Non-iOS
+    if (this.isIOS()) {
+      if (!this.isStandalone()) {
+        throw new Error('IOS_NEED_STANDALONE');
+      }
+      if (!window.isSecureContext) {
+        throw new Error(
+          'Apple yêu cầu trang web phải chạy qua giao thức bảo mật HTTPS để kích hoạt thông báo.'
+        );
+      }
     }
 
+    if (!('serviceWorker' in navigator)) {
+      throw new Error('Trình duyệt không hỗ trợ Service Worker.');
+    }
+
+    if (!('Notification' in window) || !('PushManager' in window)) {
+      if (this.isIOS()) {
+        throw new Error('IOS_NEED_STANDALONE');
+      }
+      throw new Error(
+        'Trình duyệt của bạn hiện chưa hỗ trợ Web Push Notifications hoặc đang chặn quyền này.'
+      );
+    }
+
+    // 1. Request permission first (Must be triggered during user gesture)
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
-      throw new Error('Quyền nhận thông báo đã bị từ chối.');
+      throw new Error(
+        'Quyền nhận thông báo chưa được cấp (Bạn đã từ chối hoặc đóng thông báo hỏi quyền).'
+      );
     }
 
+    // 2. Fetch public key from backend
     const publicKey = await this.getVapidPublicKey();
     if (!publicKey) {
       throw new Error('Không thể lấy VAPID Public Key từ server.');
     }
 
-    const registration = await navigator.serviceWorker.ready;
+    // 3. Obtain active ServiceWorkerRegistration
+    const registration = await getOrRegisterServiceWorker();
+    if (!registration) {
+      throw new Error('Không thể khởi tạo Service Worker trên trình duyệt.');
+    }
+
     let subscription = await registration.pushManager.getSubscription();
 
-    if (!subscription) {
-      const convertedVapidKey = urlBase64ToUint8Array(publicKey);
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: convertedVapidKey as unknown as ArrayBuffer,
-      });
+    // If an existing subscription is present, unsubscribe it first to guarantee
+    // registration with the latest VAPID public key configured on backend
+    if (subscription) {
+      try {
+        await subscription.unsubscribe();
+      } catch (e) {
+        console.warn('Failed to unsubscribe old push subscription', e);
+      }
     }
+
+    const convertedVapidKey = urlBase64ToUint8Array(publicKey);
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: convertedVapidKey as unknown as ArrayBuffer,
+    });
 
     const subscriptionJson = subscription.toJSON();
     const endpoint = subscription.endpoint;
@@ -103,7 +176,7 @@ export const notificationService = {
     const auth = subscriptionJson.keys?.auth;
 
     if (!p256dh || !auth) {
-      throw new Error('Không thể đọc mã bảo mật push subscription từ trình duyệt.');
+      throw new Error('Không thể đọc mã bảo mật push subscription từ thiết bị.');
     }
 
     let deviceType = 'web';
@@ -132,17 +205,22 @@ export const notificationService = {
   async unsubscribe(): Promise<void> {
     if (!this.isPushSupported()) return;
 
-    const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.getSubscription();
+    try {
+      const registration = await getOrRegisterServiceWorker();
+      const subscription = await registration.pushManager.getSubscription();
 
-    if (subscription) {
-      await request('/notifications/unsubscribe', {
-        method: 'POST',
-        body: JSON.stringify({
-          endpoint: subscription.endpoint,
-        }),
-      });
-      await subscription.unsubscribe();
+      if (subscription) {
+        await request('/notifications/unsubscribe', {
+          method: 'POST',
+          body: JSON.stringify({
+            endpoint: subscription.endpoint,
+          }),
+        });
+        await subscription.unsubscribe();
+      }
+    } catch (err) {
+      console.error('Unsubscribe error:', err);
+      throw err;
     }
   },
 

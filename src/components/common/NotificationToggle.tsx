@@ -15,7 +15,16 @@ export const NotificationToggle: React.FC = () => {
   const checkSubscription = async () => {
     try {
       const sub = await notificationService.getExistingSubscription();
-      setIsSubscribed(!!sub);
+      const permission = notificationService.getPermissionState();
+      if (sub && permission === 'granted') {
+        setIsSubscribed(true);
+        // Silently sync current subscription to backend to ensure DB is up to date
+        notificationService.subscribe().catch((err) => {
+          console.warn('Silent subscription sync warning:', err);
+        });
+      } else {
+        setIsSubscribed(false);
+      }
     } catch (e) {
       console.error('Failed to check push subscription', e);
     }
@@ -26,7 +35,7 @@ export const NotificationToggle: React.FC = () => {
   }, []);
 
   const handleToggle = async () => {
-    // Check if iOS not standalone
+    // Check if iOS not standalone (Safari browser tab)
     if (notificationService.isIOS() && !notificationService.isStandalone()) {
       setShowIOSModal(true);
       setShowPopover(false);
@@ -45,8 +54,13 @@ export const NotificationToggle: React.FC = () => {
         toast.success('Bật thông báo đẩy thành công!');
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Có lỗi xảy ra khi cài đặt thông báo';
-      toast.error(message);
+      const message = err instanceof Error ? err.message : '';
+      if (message === 'IOS_NEED_STANDALONE') {
+        setShowPopover(false);
+        setShowIOSModal(true);
+      } else {
+        toast.error(message || 'Có lỗi xảy ra khi cài đặt thông báo');
+      }
     } finally {
       setLoading(false);
     }
