@@ -194,9 +194,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  background: rgba(14, 165, 233, 0.12);
-  color: #38bdf8;
-  border: 1px solid rgba(14, 165, 233, 0.25);
+  background: var(--primary-glow);
+  color: var(--primary);
+  border: 1px solid rgba(99, 102, 241, 0.25);
   padding: 0.35rem 0.6rem;
   border-radius: 6px;
   font-size: 0.8rem;
@@ -207,7 +207,7 @@
 }
 
 .btn-history-mini:hover {
-  background: #0ea5e9;
+  background: var(--primary, #6366f1);
   color: #ffffff;
 }
 

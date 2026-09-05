@@ -622,8 +622,8 @@
 
 .tool-card-prompt-hint {
   font-size: 10.5px;
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.08);
+  color: var(--primary, #6366f1);
+  background: var(--primary-glow, rgba(99, 102, 241, 0.12));
   padding: 4px 7px;
   border-radius: 5px;
 }
@@ -1032,7 +1032,7 @@
 .chat-inline-code {
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #38bdf8;
+  color: #a5b4fc;
   padding: 1px 5px;
   border-radius: 4px;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -1087,7 +1087,7 @@
 }
 
 .message-bubble strong {
-  color: #38bdf8;
+  color: var(--primary, #6366f1);
   font-weight: 600;
 }
 .message-bubble ul,
@@ -1156,11 +1156,11 @@
   display: inline-block;
   width: 7px;
   height: 14px;
-  background: linear-gradient(180deg, #38bdf8 0%, #818cf8 100%);
+  background: linear-gradient(180deg, #6366f1 0%, #818cf8 100%);
   margin-left: 4px;
   vertical-align: text-bottom;
   border-radius: 2px;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.8);
   animation: cursorPulse 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -1226,7 +1226,7 @@
 }
 
 .chat-action-card.WALLET_TRANSFER {
-  border-left-color: #38bdf8;
+  border-left-color: #6366f1;
 }
 
 .chat-action-card.DEBT_CREATED {
@@ -1250,7 +1250,7 @@
 }
 
 .chat-action-card.FINANCIAL_SUMMARY {
-  border-left-color: #38bdf8;
+  border-left-color: #6366f1;
 }
 
 .action-card-top-bar {
@@ -1660,8 +1660,8 @@ body.light-theme .tool-card-desc {
 }
 
 body.light-theme .tool-card-prompt-hint {
-  background: #eff6ff;
-  color: #0284c7;
+  background: #ede9fe;
+  color: #4f46e5;
 }
 
 body.light-theme .tool-card-prompt-hint em {
@@ -1745,7 +1745,7 @@ body.light-theme .chat-message-row.model .message-bubble {
 }
 
 body.light-theme .message-bubble strong {
-  color: #2563eb;
+  color: #4f46e5;
 }
 
 body.light-theme .chat-md-h3 {
@@ -1759,7 +1759,7 @@ body.light-theme .chat-md-h4 {
 body.light-theme .chat-inline-code {
   background: #e2e8f0;
   border-color: #cbd5e1;
-  color: #0369a1;
+  color: #4f46e5;
 }
 
 body.light-theme .chat-markdown-table-wrapper {

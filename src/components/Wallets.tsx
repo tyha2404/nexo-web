@@ -516,7 +516,7 @@ export default function Wallets() {
       </header>
 
       {/* 2. Wallets Type Tabs Switcher (Directly Below Page Title) */}
-      <div className="wallets-tabs-nav-wrapper animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+      <div className="wallets-tabs-nav-wrapper animate-fade-in" style={{ marginBottom: '0.75rem' }}>
         <div
           className="category-tabs wallets-filter-tabs"
           role="tablist"
@@ -558,7 +558,7 @@ export default function Wallets() {
       )}
 
       {/* 3. Unified 4 KPI Summary Cards */}
-      <div className="summary-cards-grid animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+      <div className="summary-cards-grid animate-fade-in" style={{ marginBottom: '0.85rem' }}>
         <div className="summary-stat-card accent-income">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Tổng Tài Sản Trong Ví</span>
@@ -571,9 +571,7 @@ export default function Wallets() {
           <div className="summary-stat-header">
             <span className="summary-stat-title">Tổng Hạn Mức Tín Dụng</span>
           </div>
-          <div className="summary-stat-value" style={{ color: '#38bdf8' }}>
-            {formatCurrency(totalCreditLimit)}
-          </div>
+          <div className="summary-stat-value">{formatCurrency(totalCreditLimit)}</div>
           <div className="summary-stat-subtitle">{creditCards.length} thẻ đang hoạt động</div>
         </div>
 
@@ -591,7 +589,7 @@ export default function Wallets() {
           <div className="summary-stat-header">
             <span className="summary-stat-title">Hạn Mức Khả Dụng</span>
           </div>
-          <div className="summary-stat-value" style={{ color: '#a78bfa' }}>
+          <div className="summary-stat-value value-income">
             {formatCurrency(totalAvailableCredit)}
           </div>
           <div className="summary-stat-subtitle">Hạn mức còn lại có thể chi tiêu</div>

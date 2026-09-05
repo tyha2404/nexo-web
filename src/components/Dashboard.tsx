@@ -263,7 +263,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 </div>
                 <div
                   className={`net-assets-value ${
-                    allTimeNetAssets >= 0 ? 'text-positive' : 'text-negative'
+                    allTimeNetAssets >= 0 ? 'text-income' : 'text-expense'
                   }`}
                 >
                   {formatCurrency(allTimeNetAssets)}
@@ -313,7 +313,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 <div className="submetric-details">
                   <span className="submetric-title">Đầu tư tháng ↗</span>
                   <span
-                    className="submetric-number text-sky"
+                    className="submetric-number"
                     title={formatCurrency(summary?.totalInvestment ?? 0)}
                   >
                     {formatCurrency(summary?.totalInvestment ?? 0)}
@@ -497,22 +497,13 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             {/* Left: Top Expense Categories Breakdown */}
             <div className="glass-card dashboard-card breakdown-card">
               <div className="card-section-header">
-                <div className="card-title-wrap">
-                  <h3
-                    className="clickable-title"
-                    onClick={() => onNavigate?.('categories')}
-                    title="Quản lý Danh mục"
-                  >
-                    Phân tích Chi tiêu Danh mục
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  className="card-header-link"
+                <h3
+                  className="clickable-title"
                   onClick={() => onNavigate?.('categories')}
+                  title="Quản lý Danh mục"
                 >
-                  Quản lý danh mục
-                </button>
+                  Phân tích Chi tiêu Danh mục
+                </h3>
               </div>
 
               <div className="breakdown-card-body">
@@ -618,13 +609,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     Giao dịch Gần đây
                   </h3>
                 </div>
-                <button
-                  type="button"
-                  className="card-header-link"
-                  onClick={() => onNavigate?.('transactions')}
-                >
-                  Xem tất cả ({recentTransactions.length > 0 ? recentTransactions.length : 0}) ↗
-                </button>
               </div>
 
               <div className="recent-txns-body">
@@ -666,7 +650,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                                 txn.type === 'INCOME'
                                   ? 'text-income'
                                   : txn.type === 'INVESTMENT'
-                                    ? 'text-sky'
+                                    ? ''
                                     : 'text-expense'
                               }`}
                             >
@@ -734,7 +718,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 <div className="secondary-card-head">
                   <span className="secondary-card-label">Danh mục Đầu tư ↗</span>
                 </div>
-                <div className="secondary-card-value text-sky">
+                <div className="secondary-card-value">
                   {formatCurrency(allTimeSummary?.totalInvestment ?? 0)}
                 </div>
                 <div className="secondary-card-sub">
@@ -753,7 +737,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 <div className="secondary-card-head">
                   <span className="secondary-card-label">Tôi Nợ (Phải Trả) ↗</span>
                 </div>
-                <div className="secondary-card-value text-expense">
+                <div className="secondary-card-value">
                   {formatCurrency(Math.abs(debtSummary?.totalPayable ?? 0))}
                 </div>
                 <div className="secondary-card-sub">
@@ -770,7 +754,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 <div className="secondary-card-head">
                   <span className="secondary-card-label">Người Khác Nợ (Phải Thu) ↗</span>
                 </div>
-                <div className="secondary-card-value text-teal">
+                <div className="secondary-card-value">
                   {formatCurrency(Math.abs(debtSummary?.totalReceivable ?? 0))}
                 </div>
                 <div className="secondary-card-sub">

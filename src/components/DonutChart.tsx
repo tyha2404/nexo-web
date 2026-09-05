@@ -13,7 +13,7 @@ interface DonutChartProps {
   centerLabel?: string;
 }
 
-const COLORS = ['#0ea5e9', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#14b8a6', '#6366f1'];
+const COLORS = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#14b8a6', '#0ea5e9'];
 
 export const DonutChart: React.FC<DonutChartProps> = ({ items, centerLabel = 'Tổng chi tiêu' }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);

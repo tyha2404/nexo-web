@@ -174,11 +174,11 @@ export default function Targets() {
           </div>
         </div>
 
-        <div className="summary-stat-card accent-primary">
+        <div className="summary-stat-card">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Mục Tiêu Đầu Tư Tháng</span>
           </div>
-          <div className="summary-stat-value value-primary">
+          <div className="summary-stat-value">
             {targetSummary?.investment
               ? formatCurrency(targetSummary.investment.targetAmount)
               : 'Chưa đặt'}
@@ -190,12 +190,12 @@ export default function Targets() {
           </div>
         </div>
 
-        <div className="summary-stat-card accent-purple">
+        <div className="summary-stat-card">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Gợi Ý Chi Tiêu / Ngày</span>
           </div>
           <div
-            className={`summary-stat-value ${targetSummary?.expense?.isOverBudget ? 'value-expense' : 'value-primary'}`}
+            className={`summary-stat-value ${targetSummary?.expense?.isOverBudget ? 'value-expense' : ''}`}
           >
             {targetSummary?.expense && targetSummary.expense.dailyAllowance > 0
               ? `${formatCurrency(Math.round(targetSummary.expense.dailyAllowance))}/ngày`
@@ -331,19 +331,19 @@ export default function Targets() {
                                     ? 'rgba(244, 63, 94, 0.15)'
                                     : row.status === 'COMPLETED'
                                       ? 'rgba(16, 185, 129, 0.15)'
-                                      : 'rgba(14, 165, 233, 0.15)',
+                                      : 'var(--primary-glow)',
                                 color:
                                   row.status === 'OVER_BUDGET'
                                     ? '#f43f5e'
                                     : row.status === 'COMPLETED'
                                       ? '#10b981'
-                                      : '#38bdf8',
+                                      : 'var(--primary)',
                                 border:
                                   row.status === 'OVER_BUDGET'
                                     ? '1px solid rgba(244, 63, 94, 0.3)'
                                     : row.status === 'COMPLETED'
                                       ? '1px solid rgba(16, 185, 129, 0.3)'
-                                      : '1px solid rgba(14, 165, 233, 0.3)',
+                                      : '1px solid rgba(99, 102, 241, 0.3)',
                               }}
                             >
                               {row.status === 'OVER_BUDGET'
@@ -410,10 +410,7 @@ export default function Targets() {
                     </div>
 
                     <div className="mobile-card-amount-group">
-                      <div
-                        className="mobile-card-amount"
-                        style={{ color: isExpense ? 'var(--expense)' : '#38bdf8' }}
-                      >
+                      <div className="mobile-card-amount" style={{ color: 'var(--text-main)' }}>
                         {row.targetAmount > 0 ? formatCurrency(row.targetAmount) : 'Chưa đặt'}
                       </div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
@@ -431,19 +428,19 @@ export default function Targets() {
                             ? 'rgba(244, 63, 94, 0.15)'
                             : row.status === 'COMPLETED'
                               ? 'rgba(16, 185, 129, 0.15)'
-                              : 'rgba(14, 165, 233, 0.15)',
+                              : 'var(--primary-glow)',
                         color:
                           row.status === 'OVER_BUDGET'
                             ? '#f43f5e'
                             : row.status === 'COMPLETED'
                               ? '#10b981'
-                              : '#38bdf8',
+                              : 'var(--primary)',
                         border:
                           row.status === 'OVER_BUDGET'
                             ? '1px solid rgba(244, 63, 94, 0.3)'
                             : row.status === 'COMPLETED'
                               ? '1px solid rgba(16, 185, 129, 0.3)'
-                              : '1px solid rgba(14, 165, 233, 0.3)',
+                              : '1px solid rgba(99, 102, 241, 0.3)',
                       }}
                     >
                       {row.targetAmount === 0

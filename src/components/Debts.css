@@ -76,7 +76,7 @@
 }
 
 .value-payable {
-  color: var(--expense);
+  color: var(--text-main);
 }
 
 .icon-receivable {
@@ -85,7 +85,7 @@
 }
 
 .value-receivable {
-  color: var(--income);
+  color: var(--text-main);
 }
 
 .icon-overdue {
@@ -94,16 +94,16 @@
 }
 
 .value-overdue {
-  color: var(--expense);
+  color: var(--text-main);
 }
 
 .icon-pending {
-  background: rgba(14, 165, 233, 0.15);
-  color: #38bdf8;
+  background: var(--primary-glow);
+  color: var(--primary);
 }
 
 .value-pending {
-  color: #38bdf8;
+  color: var(--text-main);
 }
 
 /* Select Wrappers */
@@ -113,7 +113,7 @@
 }
 
 .select-wrapper-status {
-  min-width: 170px;
+  min-width: 180px;
   flex: 1;
 }
 
@@ -130,37 +130,39 @@
   margin-top: 2px;
 }
 
-.badge-payable {
-  background: rgba(239, 68, 68, 0.12);
+.debt-type-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tag-payable {
+  background: rgba(239, 68, 68, 0.15);
   color: var(--expense);
 }
 
-.badge-receivable {
-  background: rgba(16, 185, 129, 0.12);
+.tag-receivable {
+  background: rgba(16, 185, 129, 0.15);
   color: var(--income);
 }
 
-.debts-table th.text-right {
-  text-align: right;
+.debt-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
 }
 
-.debts-table .txn-amount,
-.debts-table .cell-paid,
-.debts-table .cell-remaining {
-  font-family: var(--font-mono);
-  text-align: right;
-}
-
-.cell-paid {
-  color: var(--income);
-  font-weight: 500;
-}
-
-.cell-remaining {
-  font-weight: bold;
-}
-
-.badge-completed {
+.badge-paid-status {
   background: rgba(16, 185, 129, 0.15);
   color: var(--income);
 }
@@ -171,9 +173,9 @@
 }
 
 .badge-pending-status {
-  background: rgba(14, 165, 233, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(14, 165, 233, 0.3);
+  background: var(--primary-glow);
+  color: var(--primary);
+  border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 .debt-actions-group {
@@ -208,7 +210,7 @@
 
 .repay-info-remaining {
   font-size: 0.85rem;
-  color: #38bdf8;
+  color: var(--primary);
   margin-top: 0.2rem;
 }
 

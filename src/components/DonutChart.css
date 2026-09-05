@@ -52,7 +52,7 @@
 }
 
 .donut-center-value.main-total {
-  color: var(--primary);
+  color: var(--text-main);
   font-size: 1.5rem;
 }
 

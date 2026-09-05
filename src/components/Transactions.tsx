@@ -302,11 +302,7 @@ export default function Transactions({
           </p>
         </div>
         <div className="header-actions">
-          <button
-            type="button"
-            className={`btn btn-primary btn-add-${activeType.toLowerCase()}`}
-            onClick={openAddModal}
-          >
+          <button type="button" className="btn btn-primary" onClick={openAddModal}>
             <Plus size={16} /> Thêm{' '}
             {activeType === TransactionType.INCOME
               ? 'thu nhập'
@@ -390,21 +386,19 @@ export default function Transactions({
                 <div className="summary-stat-subtitle">Tổng khoản thu nhập trong kỳ</div>
               </div>
 
-              <div className="summary-stat-card accent-purple">
+              <div className="summary-stat-card">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Số Giao Dịch Thu</span>
                 </div>
-                <div className="summary-stat-value value-purple">{count} khoản</div>
+                <div className="summary-stat-value">{count} khoản</div>
                 <div className="summary-stat-subtitle">Tổng số đợt nhận thu nhập</div>
               </div>
 
-              <div className="summary-stat-card accent-primary">
+              <div className="summary-stat-card">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Trung Bình / Khoản</span>
                 </div>
-                <div className="summary-stat-value value-primary">
-                  {formatCurrency(Math.abs(avg))}
-                </div>
+                <div className="summary-stat-value">{formatCurrency(Math.abs(avg))}</div>
                 <div className="summary-stat-subtitle">Giá trị thu nhập trung bình</div>
               </div>
             </div>
@@ -418,13 +412,11 @@ export default function Transactions({
 
           return (
             <div className="summary-cards-grid animate-fade-in">
-              <div className="summary-stat-card accent-primary">
+              <div className="summary-stat-card">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Tiền Đang Đầu Tư (Holding)</span>
                 </div>
-                <div className="summary-stat-value value-primary">
-                  {formatCurrency(holdingAmount)}
-                </div>
+                <div className="summary-stat-value">{formatCurrency(holdingAmount)}</div>
                 <div className="summary-stat-subtitle">
                   Giá trị các khoản đang giữ vốn ({holdingCount} mục)
                 </div>
@@ -450,11 +442,11 @@ export default function Transactions({
                 </div>
               </div>
 
-              <div className="summary-stat-card accent-purple">
+              <div className="summary-stat-card">
                 <div className="summary-stat-header">
                   <span className="summary-stat-title">Tổng Vốn Tích Lũy</span>
                 </div>
-                <div className="summary-stat-value value-purple">{formatCurrency(sumAmount)}</div>
+                <div className="summary-stat-value">{formatCurrency(sumAmount)}</div>
                 <div className="summary-stat-subtitle">
                   Tổng {count} đợt rót vốn đầu tư trong kỳ
                 </div>
@@ -484,13 +476,11 @@ export default function Transactions({
               <div className="summary-stat-subtitle">Tổng tiền đã chi trong kỳ</div>
             </div>
 
-            <div className="summary-stat-card accent-warning">
+            <div className="summary-stat-card">
               <div className="summary-stat-header">
                 <span className="summary-stat-title">Trung Bình / Ngày</span>
               </div>
-              <div className="summary-stat-value value-warning">
-                {formatCurrency(Math.abs(dailyAvg))}
-              </div>
+              <div className="summary-stat-value">{formatCurrency(Math.abs(dailyAvg))}</div>
               <div className="summary-stat-subtitle">
                 Chi tiêu bình quân trong {daysCount} ngày (tới hôm nay)
                 {summary.sumAmountForAverage !== undefined &&
@@ -499,21 +489,19 @@ export default function Transactions({
               </div>
             </div>
 
-            <div className="summary-stat-card accent-primary">
+            <div className="summary-stat-card">
               <div className="summary-stat-header">
                 <span className="summary-stat-title">Trung Bình / Lần Chi</span>
               </div>
-              <div className="summary-stat-value value-primary">
-                {formatCurrency(Math.abs(avg))}
-              </div>
+              <div className="summary-stat-value">{formatCurrency(Math.abs(avg))}</div>
               <div className="summary-stat-subtitle">Mức chi trung bình mỗi giao dịch</div>
             </div>
 
-            <div className="summary-stat-card accent-purple">
+            <div className="summary-stat-card">
               <div className="summary-stat-header">
                 <span className="summary-stat-title">Số Lần Chi Tiêu</span>
               </div>
-              <div className="summary-stat-value value-purple">{count} giao dịch</div>
+              <div className="summary-stat-value">{count} giao dịch</div>
               <div className="summary-stat-subtitle">Tổng số hóa đơn / giao dịch chi</div>
             </div>
           </div>
@@ -646,7 +634,7 @@ export default function Transactions({
           <button
             type="button"
             onClick={openAddModal}
-            className={`btn btn-primary btn-add-${activeType.toLowerCase()}`}
+            className="btn btn-primary"
             style={{ padding: '0.65rem 1.5rem', minHeight: '42px', fontWeight: 600 }}
           >
             <Plus size={16} /> Thêm{' '}

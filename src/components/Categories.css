@@ -250,14 +250,15 @@
 }
 
 .btn-secondary {
-  background: rgba(71, 85, 105, 0.5);
-  color: var(--text-main);
+  background: var(--bg-input);
+  color: var(--text-muted);
   border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
   background: var(--bg-hover);
   color: var(--text-main);
+  border-color: var(--border-hover);
 }
 
 .btn-block {

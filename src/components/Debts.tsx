@@ -201,7 +201,7 @@ export default function Debts() {
       )}
 
       {/* Summary Cards Grid */}
-      <div className="summary-cards-grid animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+      <div className="summary-cards-grid animate-fade-in" style={{ marginBottom: '0.85rem' }}>
         <div className="summary-stat-card accent-expense">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Tôi Nợ (Payable)</span>
@@ -354,14 +354,12 @@ export default function Debts() {
                         </span>
                       </td>
                       <td className="txn-amount">{formatCurrency(debt.totalAmount)}</td>
-                      <td className="cell-paid" style={{ color: 'var(--income)' }}>
-                        {formatCurrency(debt.paidAmount)}
-                      </td>
+                      <td className="cell-paid">{formatCurrency(debt.paidAmount)}</td>
                       <td
                         className="cell-remaining"
                         style={{
+                          fontWeight: 700,
                           color: debt.type === 'PAYABLE' ? 'var(--expense)' : 'var(--income)',
-                          fontWeight: 'bold',
                         }}
                       >
                         {formatCurrency(Math.abs(debt.remaining))}
