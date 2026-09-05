@@ -1,15 +1,16 @@
-.targets-view {
+.targets-view,
+.targets-subview {
   width: 100%;
-  max-width: 1400px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 1rem 0.5rem;
+  padding: 0;
 }
 
 .targets-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.85rem;
   flex-wrap: wrap;
   gap: 0.75rem;
 }
@@ -19,17 +20,17 @@
 }
 
 .targets-title h2 {
-  font-size: 1.6rem;
+  font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: -0.025em;
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.15rem 0;
   color: var(--text-main);
 }
 
 .targets-title .subtitle {
   color: var(--text-muted);
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
 }
 
 /* Custom React Select Styling */

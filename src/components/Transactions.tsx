@@ -314,7 +314,7 @@ export default function Transactions({
       </header>
 
       {/* 2. Transaction Type Segmented Tabs Switcher (Below Page Title) */}
-      <div className="txn-type-switch-wrapper animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+      <div className="txn-type-switch-wrapper animate-fade-in">
         <div
           className="category-tabs"
           role="tablist"

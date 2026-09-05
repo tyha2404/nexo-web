@@ -1,16 +1,16 @@
 /* Dashboard Container & Layout */
 .dashboard-container {
   width: 100%;
-  max-width: 1360px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 0.5rem 0.25rem 2rem 0.25rem;
+  padding: 0;
   box-sizing: border-box;
 }
 
 /* 1. Header & Period Switcher */
 .dashboard-header {
   text-align: left;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.85rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1146,14 +1146,14 @@
 /* Mobile PWA Refinements (<768px) */
 @media (max-width: 768px) {
   .dashboard-container {
-    padding: 0.5rem 0.35rem 3.5rem 0.35rem;
+    padding: 0;
   }
 
   .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.75rem;
-    margin-bottom: 0.85rem;
+    gap: 0.65rem;
+    margin-bottom: 0.75rem;
   }
 
   .period-switcher-container {

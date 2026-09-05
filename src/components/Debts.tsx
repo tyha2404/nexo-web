@@ -201,7 +201,7 @@ export default function Debts() {
       )}
 
       {/* Summary Cards Grid */}
-      <div className="summary-cards-grid animate-fade-in" style={{ marginBottom: '0.85rem' }}>
+      <div className="summary-cards-grid animate-fade-in">
         <div className="summary-stat-card accent-expense">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Tôi Nợ (Payable)</span>

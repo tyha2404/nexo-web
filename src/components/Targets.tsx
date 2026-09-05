@@ -157,7 +157,7 @@ export default function Targets() {
       )}
 
       {/* Summary Cards Grid */}
-      <div className="summary-cards-grid animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+      <div className="summary-cards-grid animate-fade-in">
         <div className="summary-stat-card accent-expense">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Hạn Mức Chi Tiêu Tháng</span>

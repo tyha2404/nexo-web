@@ -230,7 +230,7 @@ export default function Categories() {
   return (
     <div className="categories-subview">
       {/* Category Type Tabs Switcher (Below Page Title) */}
-      <div className="category-tabs-nav animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+      <div className="category-tabs-nav animate-fade-in">
         <div className="category-tabs" role="tablist" aria-label="Loại danh mục">
           <button
             type="button"

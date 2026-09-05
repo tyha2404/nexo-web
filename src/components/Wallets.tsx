@@ -516,7 +516,7 @@ export default function Wallets() {
       </header>
 
       {/* 2. Wallets Type Tabs Switcher (Directly Below Page Title) */}
-      <div className="wallets-tabs-nav-wrapper animate-fade-in" style={{ marginBottom: '0.75rem' }}>
+      <div className="wallets-tabs-nav-wrapper animate-fade-in">
         <div
           className="category-tabs wallets-filter-tabs"
           role="tablist"
@@ -558,7 +558,7 @@ export default function Wallets() {
       )}
 
       {/* 3. Unified 4 KPI Summary Cards */}
-      <div className="summary-cards-grid animate-fade-in" style={{ marginBottom: '0.85rem' }}>
+      <div className="summary-cards-grid animate-fade-in">
         <div className="summary-stat-card accent-income">
           <div className="summary-stat-header">
             <span className="summary-stat-title">Tổng Tài Sản Trong Ví</span>

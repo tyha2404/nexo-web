@@ -569,11 +569,27 @@ input[class*='dummyInput'] {
 }
 
 .content-view {
-  padding: 0.5rem 0.75rem;
+  padding: 1.25rem 1.5rem 2.5rem 1.5rem;
   flex-grow: 1;
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Screen container normalization across all tabs */
+.dashboard-container,
+.transactions-view,
+.debts-view,
+.planning-hub-container,
+.targets-view,
+.categories-view,
+.targets-subview,
+.categories-subview {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 !important;
   box-sizing: border-box;
 }
 
@@ -791,7 +807,7 @@ input[class*='dummyInput'] {
 
   .main-content {
     padding-top: calc(56px + env(safe-area-inset-top, 0px));
-    padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
     min-height: 100vh;
     min-height: 100dvh;
     height: auto;
@@ -804,7 +820,7 @@ input[class*='dummyInput'] {
   }
 
   .content-view {
-    padding: 0.35rem 0.35rem 1.5rem 0.35rem;
+    padding: 0.85rem 0.85rem 1.5rem 0.85rem !important;
   }
 
   /* Responsive Page Headers */
@@ -812,20 +828,36 @@ input[class*='dummyInput'] {
   .transactions-header,
   .categories-title-row,
   .debts-header,
-  .targets-header {
+  .targets-header,
+  .categories-header {
     display: flex;
     flex-direction: column;
     align-items: stretch !important;
-    gap: 0.5rem !important;
-    margin-bottom: 0.65rem !important;
+    gap: 0.65rem !important;
+    margin-bottom: 0.75rem !important;
   }
 
   .dashboard-header h2,
+  .dashboard-title-group h2,
   .transactions-title h2,
   .categories-header h2,
   .debts-title h2,
   .targets-title h2 {
-    font-size: 1.35rem !important;
+    font-size: 1.3rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.025em !important;
+    margin: 0 0 0.15rem 0 !important;
+    color: var(--text-main) !important;
+  }
+
+  .dashboard-title-group .subtitle,
+  .transactions-title .subtitle,
+  .debts-title .subtitle,
+  .targets-title .subtitle,
+  .categories-header .subtitle {
+    font-size: 0.8rem !important;
+    color: var(--text-muted) !important;
+    margin: 0 !important;
   }
 
   .dashboard-header-actions {
