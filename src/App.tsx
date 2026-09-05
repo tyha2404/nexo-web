@@ -24,6 +24,7 @@ import ReloadPrompt from './components/ReloadPrompt';
 import Transactions from './components/Transactions';
 import Wallets from './components/Wallets';
 import { AIChatWidget } from './components/chat';
+import { NotificationToggle } from './components/common';
 import { authService } from './services/api';
 
 export type ActiveTab = 'dashboard' | 'transactions' | 'wallets' | 'debts' | 'planning';
@@ -241,6 +242,7 @@ function App() {
           <span className="brand-name">Nexo Portal</span>
         </div>
         <div className="mobile-header-actions">
+          <NotificationToggle />
           <button
             className="mobile-header-btn"
             onClick={handleOpenAIChat}
@@ -390,6 +392,7 @@ function App() {
           </div>
 
           <div className="header-actions">
+            <NotificationToggle />
             <button
               className="header-ai-btn"
               onClick={handleOpenAIChat}

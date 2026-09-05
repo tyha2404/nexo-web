@@ -1,0 +1,179 @@
+.notification-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-input, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--border, #334155);
+  color: var(--text-main, #f8fafc);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.notification-btn:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.1));
+  border-color: var(--border-hover, rgba(255, 255, 255, 0.2));
+}
+
+.notification-btn.active {
+  color: var(--primary, #6366f1);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.notification-btn.active::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}
+
+.notification-panel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+}
+
+.notification-popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 280px;
+  background: var(--bg-card, #121215);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.notification-popover-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main, #f8fafc);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notification-status-badge {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+}
+
+.notification-status-badge.on {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.notification-status-badge.off {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.notification-popover-desc {
+  font-size: 0.8125rem;
+  color: var(--text-muted, #a1a1aa);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.notification-popover-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.notification-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.notification-action-btn.primary {
+  background: var(--primary, #6366f1) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--primary, #6366f1) !important;
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.notification-action-btn.primary:hover {
+  background: var(--primary-hover, #4f46e5) !important;
+  color: #ffffff !important;
+  border-color: var(--primary-hover, #4f46e5) !important;
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+/* Secondary Button (Gửi thử thông báo / Hướng dẫn): nền tương phản rõ rệt */
+.notification-action-btn.secondary {
+  background: var(--bg-input, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  color: var(--text-main, #f4f4f5);
+}
+
+.notification-action-btn.secondary:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+}
+
+.notification-action-btn.danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.notification-action-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+
+.notification-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Light Theme Adjustments */
+.light-theme .notification-popover {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.light-theme .notification-action-btn.secondary {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.light-theme .notification-action-btn.secondary:hover {
+  background: #e0e7ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
