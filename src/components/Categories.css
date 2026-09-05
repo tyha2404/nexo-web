@@ -583,3 +583,17 @@
 .react-select__dropdown-indicator:hover {
   color: var(--primary) !important;
 }
+
+.category-tabs-nav {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .category-tabs-nav {
+    margin-bottom: 0.75rem;
+    width: 100%;
+  }
+}
