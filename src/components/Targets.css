@@ -154,9 +154,10 @@
 
 @media (max-width: 768px) {
   .targets-view {
-    padding: 0.75rem;
+    padding: 0.35rem;
   }
   .targets-view .filter-bar {
     grid-template-columns: 1fr;
+    gap: 0.4rem;
   }
 }
