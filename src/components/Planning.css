@@ -12,37 +12,7 @@
   padding: 0;
 }
 
-/* Segmented Hub Tabs Header Bar */
-.planning-hub-nav-wrapper {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  padding: 0;
-  margin-bottom: 0.85rem;
-}
-
 /* Content Area Transitions */
 .planning-hub-content {
   width: 100%;
-}
-
-@media (max-width: 768px) {
-  .planning-hub-nav-wrapper {
-    padding: 0;
-    margin-bottom: 0.65rem;
-    width: 100%;
-  }
-
-  .planning-hub-nav-wrapper .category-tabs {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .planning-hub-nav-wrapper .category-tab {
-    flex: 1 1 0;
-    min-width: 0;
-    padding: 0.45rem 0.35rem;
-    font-size: 0.78rem;
-  }
 }

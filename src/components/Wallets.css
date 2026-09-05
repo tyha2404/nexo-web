@@ -539,37 +539,3 @@
   color: var(--text-muted);
   line-height: 1.25;
 }
-
-/* Wallets Filter Tabs Responsive */
-.wallets-tabs-nav-wrapper {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  margin-bottom: 0.85rem;
-}
-
-.wallets-filter-tabs {
-  width: auto;
-}
-
-.tab-label-mobile {
-  display: none;
-}
-
-.tab-label-desktop {
-  display: inline;
-}
-
-@media (max-width: 768px) {
-  .wallets-tabs-nav-wrapper {
-    margin-bottom: 0.75rem;
-    width: 100%;
-  }
-
-  .tab-label-mobile {
-    display: inline;
-  }
-  .tab-label-desktop {
-    display: none;
-  }
-}

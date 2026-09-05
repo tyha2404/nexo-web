@@ -61,7 +61,7 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
       </header>
 
       {/* 2. Hub Navigation Segmented Tabs (Below Page Title) */}
-      <div className="planning-hub-nav-wrapper animate-fade-in">
+      <div className="category-tabs-nav animate-fade-in">
         <div className="category-tabs" role="tablist" aria-label="Phân mục Kế hoạch">
           <button
             type="button"

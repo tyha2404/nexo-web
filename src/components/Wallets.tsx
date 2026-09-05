@@ -516,12 +516,8 @@ export default function Wallets() {
       </header>
 
       {/* 2. Wallets Type Tabs Switcher (Directly Below Page Title) */}
-      <div className="wallets-tabs-nav-wrapper animate-fade-in">
-        <div
-          className="category-tabs wallets-filter-tabs"
-          role="tablist"
-          aria-label="Loại tài khoản ví"
-        >
+      <div className="category-tabs-nav animate-fade-in">
+        <div className="category-tabs" role="tablist" aria-label="Loại tài khoản ví">
           <button
             type="button"
             role="tab"
