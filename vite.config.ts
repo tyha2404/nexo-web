@@ -8,15 +8,8 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: 'script',
-      includeAssets: [
-        'favicon.svg',
-        'logo-transparent.svg',
-        'robots.txt',
-        'apple-touch-icon.png',
-        'sw-push.js',
-      ],
+      includeAssets: ['favicon.svg', 'logo-transparent.svg', 'robots.txt', 'apple-touch-icon.png'],
       workbox: {
-        importScripts: ['/sw-push.js'],
         clientsClaim: true,
         skipWaiting: true,
         cleanupOutdatedCaches: true,

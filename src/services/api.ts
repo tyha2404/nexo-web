@@ -5,7 +5,6 @@ export * from './chatService';
 export * from './client';
 export * from './crudService';
 export * from './debtService';
-export * from './notificationService';
 export * from './presetService';
 export * from './reportService';
 export * from './statementService';
