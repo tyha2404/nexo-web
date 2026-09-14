@@ -665,12 +665,12 @@
   font-size: 0.95rem;
 }
 
-/* 5. Analytics Main Grid */
 .dashboard-main-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
+  align-items: stretch;
 }
 
 @media (max-width: 1024px) {
@@ -683,6 +683,16 @@
   padding: 0.85rem 1rem;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.breakdown-card-body,
+.recent-txns-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .card-section-header {
@@ -798,6 +808,149 @@
   overflow: hidden;
 }
 
+/* MoM Spending & Category Comparison Styles */
+.mom-summary-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.85rem;
+  gap: 0.75rem;
+}
+
+.mom-banner-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+}
+
+.mom-banner-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.mom-banner-delta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mom-delta-amount {
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+}
+
+.mom-banner-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.725rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.mom-badge-increase {
+  background: rgba(244, 63, 94, 0.12);
+  color: var(--expense);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+}
+
+.mom-badge-decrease {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--income);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.mom-badge-neutral {
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.mom-prev-month-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 0.45rem 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-align: right;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.mom-prev-month-box:hover {
+  border-color: var(--border-hover);
+}
+
+.mom-prev-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.15rem;
+}
+
+.mom-prev-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.mom-categories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.mom-cat-change-tag {
+  font-size: 0.725rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.change-increase {
+  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.1);
+}
+
+.change-decrease {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.change-new {
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.change-flat {
+  color: var(--text-muted);
+  background: var(--bg-hover);
+}
+
 .cat-progress-fill {
   height: 100%;
   background: var(--primary);
@@ -809,18 +962,19 @@
   font-size: 0.725rem;
 }
 
-/* Recent 5 Transactions Feed */
+/* Recent Transactions Feed */
 .txns-timeline-list {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.45rem;
+  flex: 1;
 }
 
 .recent-txn-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.65rem 0.85rem;
+  padding: 0.55rem 0.75rem;
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -1172,9 +1326,10 @@
   }
 
   .hero-cashflow-card {
-    padding: 0.65rem 0.75rem;
+    padding: 0.65rem 0.65rem;
     border-radius: var(--radius-md);
     margin-bottom: 0.5rem;
+    box-sizing: border-box;
   }
 
   .hero-top-row {
@@ -1214,25 +1369,35 @@
   .dashboard-main-grid {
     gap: 0.5rem;
     margin-bottom: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .dashboard-card {
-    padding: 0.65rem 0.75rem;
+    padding: 0.65rem 0.65rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .secondary-cards-grid {
     gap: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .secondary-stat-card {
-    padding: 0.75rem 0.85rem;
+    padding: 0.65rem 0.65rem;
+    box-sizing: border-box;
   }
 
   .ai-insight-banner {
     flex-direction: column;
     align-items: flex-start;
-    padding: 0.75rem 0.85rem;
+    padding: 0.65rem 0.65rem;
     gap: 0.5rem;
+    box-sizing: border-box;
   }
 
   .ai-insight-action-btn {
@@ -1252,6 +1417,41 @@
   }
 
   .txn-title {
-    max-width: 140px;
+    max-width: 130px;
+  }
+
+  .recent-txn-row {
+    padding: 0.45rem 0.6rem;
+    gap: 0.4rem;
+  }
+
+  .mom-summary-banner {
+    padding: 0.55rem 0.65rem;
+    gap: 0.4rem;
+    box-sizing: border-box;
+  }
+
+  .mom-delta-amount {
+    font-size: 0.95rem;
+  }
+
+  .mom-prev-month-box {
+    padding: 0.3rem 0.45rem;
+  }
+
+  .mom-prev-label {
+    font-size: 0.65rem;
+  }
+
+  .mom-prev-value {
+    font-size: 0.775rem;
+  }
+
+  .cat-amounts {
+    gap: 0.3rem;
+  }
+
+  .cat-amount-val {
+    font-size: 0.8rem;
   }
 }

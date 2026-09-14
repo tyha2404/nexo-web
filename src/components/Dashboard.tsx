@@ -1,11 +1,12 @@
 import {
   AlertCircle,
+  ArrowDownRight,
+  ArrowUpRight,
   CreditCard,
-  Gem,
   Plus,
   ReceiptText,
   ShoppingBag,
-  Target,
+  Sparkles,
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
@@ -14,6 +15,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type {
   Category,
   CategoryBreakdownItem,
+  MonthlyTrendReport,
   SummaryReport,
   TargetSummaryResponse,
   Transaction,
@@ -30,7 +32,7 @@ import {
 } from '../services/api';
 import type { DebtSummary } from '../types/debt';
 import './Dashboard.css';
-import { DonutChart } from './DonutChart';
+import { MonthlyTrendChart } from './MonthlyTrendChart';
 import { MonthFilter } from './common';
 
 export { getCategoryIcon };
@@ -46,9 +48,12 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [targetSummary, setTargetSummary] = useState<TargetSummaryResponse | null>(null);
   const [debtSummary, setDebtSummary] = useState<DebtSummary | null>(null);
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdownItem[]>([]);
+  const [prevCategoryBreakdown, setPrevCategoryBreakdown] = useState<CategoryBreakdownItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<WalletModel[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [monthlyTrend, setMonthlyTrend] = useState<MonthlyTrendReport | null>(null);
+  const [prevSummary, setPrevSummary] = useState<SummaryReport | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,19 +68,32 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       const dateFilters = { startDate: startOfMonth, endDate: endOfMonth };
       const targetParams = { month: m.month() + 1, year: m.year() };
 
+      const prevM = m.clone().subtract(1, 'month');
+      const prevDateFilters = {
+        startDate: prevM.startOf('month').format('YYYY-MM-DD'),
+        endDate: prevM.endOf('month').format('YYYY-MM-DD'),
+      };
+
       const [
         summaryData,
         allTimeData,
         breakdownData,
+        prevBreakdownData,
+        prevSummaryData,
         categoriesData,
         targetData,
         debtData,
         walletsData,
         txnsData,
+        monthlyTrendData,
       ] = await Promise.all([
         reportService.summary(dateFilters),
         reportService.summary({ allTime: true }),
         reportService.categoryBreakdown(dateFilters),
+        reportService
+          .categoryBreakdown(prevDateFilters)
+          .catch(() => ({ items: [], totalExpense: 0 })),
+        reportService.summary(prevDateFilters).catch(() => ({ totalIncome: 0, totalExpense: 0 })),
         categoryService.list(),
         targetService.getSummary(targetParams).catch(() => null),
         debtService.getSummary().catch(() => null),
@@ -84,20 +102,24 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           .list({
             startDate: startOfMonth,
             endDate: endOfMonth,
-            limit: 5,
+            limit: 6,
             page: 1,
           })
           .catch(() => ({ items: [] })),
+        reportService.monthlyTrend(12).catch(() => null),
       ]);
 
       setSummary(summaryData);
       setAllTimeSummary(allTimeData);
       setCategoryBreakdown(breakdownData.items || []);
+      setPrevCategoryBreakdown(prevBreakdownData.items || []);
+      setPrevSummary(prevSummaryData);
       setCategories(categoriesData.items || []);
       setTargetSummary(targetData);
       setDebtSummary(debtData);
       setWallets(walletsData.wallets || []);
       setRecentTransactions(txnsData.items || []);
+      setMonthlyTrend(monthlyTrendData);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Không thể tải dữ liệu bảng điều khiển');
     } finally {
@@ -142,10 +164,40 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const totalExpense = summary?.totalExpense ?? 0;
   const monthlyNetCashFlow = totalIncome - totalExpense;
 
-  // Top 5 Expense Categories
-  const topExpenseCategories = useMemo(() => {
-    return [...categoryBreakdown].sort((a, b) => b.totalAmount - a.totalAmount).slice(0, 5);
-  }, [categoryBreakdown]);
+  // MoM Expense calculations
+  const prevTotalExpense = prevSummary?.totalExpense ?? 0;
+  const momExpenseDelta = totalExpense - prevTotalExpense;
+  const momExpenseDeltaPercent =
+    prevTotalExpense > 0 ? (momExpenseDelta / prevTotalExpense) * 100 : null;
+
+  // Sorted categories with MoM comparison (take top 6)
+  const momCategoryList = useMemo(() => {
+    return [...categoryBreakdown]
+      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .slice(0, 6)
+      .map((item) => {
+        const prevItem = prevCategoryBreakdown.find((p) => p.categoryId === item.categoryId);
+        const prevAmt = prevItem ? prevItem.totalAmount : 0;
+        const delta = item.totalAmount - prevAmt;
+        const deltaPct = prevAmt > 0 ? (delta / prevAmt) * 100 : null;
+        const isNew = !prevItem || prevAmt === 0;
+
+        const catMeta = categories.find((c) => c.id === item.categoryId);
+        const hasBudget = catMeta?.budgetLimit && catMeta.budgetLimit > 0;
+        const budgetUtil = hasBudget ? (item.totalAmount / catMeta.budgetLimit!) * 100 : 0;
+
+        return {
+          ...item,
+          prevAmount: prevAmt,
+          delta,
+          deltaPct,
+          isNew,
+          hasBudget,
+          budgetLimit: catMeta?.budgetLimit,
+          budgetUtil,
+        };
+      });
+  }, [categoryBreakdown, prevCategoryBreakdown, categories]);
 
   // Budget progress calculations
   const budgetSpent = targetSummary?.expense?.spentAmount ?? totalExpense;
@@ -311,7 +363,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 title="Xem chi tiết Đầu tư"
               >
                 <div className="submetric-details">
-                  <span className="submetric-title">Đầu tư tháng ↗</span>
+                  <span className="submetric-title">Tổng Đầu tư ↗</span>
                   <span
                     className="submetric-number"
                     title={formatCurrency(summary?.totalInvestment ?? 0)}
@@ -327,10 +379,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               {/* 1. Expense Budget Progress */}
               <div className="hero-budget-progress-box">
                 <div className="budget-progress-header">
-                  <div className="budget-label-wrap">
-                    <Target size={15} className="text-primary" />
-                    <span className="budget-title">Hạn mức Ngân sách Chi tiêu</span>
-                  </div>
+                  <span className="budget-progress-title">Hạn mức Ngân sách Chi tiêu</span>
                   {budgetLimit > 0 ? (
                     <span
                       className={`budget-status-badge ${
@@ -424,10 +473,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               {/* 2. Monthly Investment Target Progress */}
               <div className="hero-budget-progress-box hero-invest-progress-box">
                 <div className="budget-progress-header">
-                  <div className="budget-label-wrap">
-                    <Gem size={15} className="text-sky" />
-                    <span className="budget-title">Mục tiêu Đầu tư Tháng</span>
-                  </div>
+                  <span className="budget-progress-title">Mục tiêu Đầu tư Tháng</span>
                   {investmentTarget > 0 ? (
                     <span
                       className={`budget-status-badge ${
@@ -492,87 +538,151 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             </div>
           </div>
 
+          {/* 2.5 Monthly Trend Chart (12 Months) */}
+          <MonthlyTrendChart
+            items={monthlyTrend?.items || []}
+            averageExpense={monthlyTrend?.averageExpense || 0}
+            loading={loading}
+          />
+
           {/* 3. Analytics Main Grid: Category Breakdown & Recent Transactions */}
           <div className="dashboard-main-grid animate-fade-in">
-            {/* Left: Top Expense Categories Breakdown */}
+            {/* Left: MoM Spending & Category Comparison */}
             <div className="glass-card dashboard-card breakdown-card">
               <div className="card-section-header">
-                <h3
-                  className="clickable-title"
-                  onClick={() => onNavigate?.('categories')}
-                  title="Quản lý Danh mục"
-                >
-                  Phân tích Chi tiêu Danh mục
-                </h3>
+                <div className="card-title-wrap">
+                  <h3
+                    className="clickable-title"
+                    onClick={() => onNavigate?.('categories')}
+                    title="Quản lý Danh mục"
+                  >
+                    Biến động Chi tiêu (vs Tháng trước)
+                  </h3>
+                </div>
               </div>
 
               <div className="breakdown-card-body">
                 {categoryBreakdown.length > 0 ? (
                   <>
-                    <DonutChart
-                      items={categoryBreakdown.map((item) => ({
-                        categoryName: item.categoryName,
-                        totalAmount: item.totalAmount,
-                        percentage: item.percentage,
-                      }))}
-                      centerLabel="Tổng chi tiêu"
-                    />
+                    {/* MoM Quick Summary Banner */}
+                    <div className="mom-summary-banner">
+                      <div className="mom-banner-left">
+                        <span className="mom-banner-label">Tổng chi tiêu thay đổi</span>
+                        <div className="mom-banner-delta">
+                          <span
+                            className={`mom-delta-amount ${
+                              momExpenseDelta > 0
+                                ? 'text-expense'
+                                : momExpenseDelta < 0
+                                  ? 'text-income'
+                                  : 'text-muted'
+                            }`}
+                          >
+                            {momExpenseDelta > 0 ? '+' : ''}
+                            {formatCurrency(momExpenseDelta)}
+                          </span>
+                          {momExpenseDeltaPercent !== null && (
+                            <span
+                              className={`mom-banner-badge ${
+                                momExpenseDeltaPercent > 0
+                                  ? 'mom-badge-increase'
+                                  : momExpenseDeltaPercent < 0
+                                    ? 'mom-badge-decrease'
+                                    : 'mom-badge-neutral'
+                              }`}
+                            >
+                              {momExpenseDeltaPercent > 0
+                                ? `+${momExpenseDeltaPercent.toFixed(1)}% ▲`
+                                : `${momExpenseDeltaPercent.toFixed(1)}% ▼`}
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-                    <div className="top-categories-list">
-                      <h4 className="top-categories-title">Top Danh mục Chi lớn nhất</h4>
-                      <div className="category-progress-items">
-                        {topExpenseCategories.map((item) => {
-                          const icon = getCategoryIcon(item.categoryName, 'EXPENSE');
-                          const catMeta = categories.find((c) => c.id === item.categoryId);
-                          const hasBudget = catMeta?.budgetLimit && catMeta.budgetLimit > 0;
-                          const budgetUtil = hasBudget
-                            ? (item.totalAmount / catMeta.budgetLimit!) * 100
-                            : 0;
+                      <div className="mom-prev-month-box">
+                        <span className="mom-prev-label">
+                          Tháng{' '}
+                          {moment(selectedMonth, 'YYYY-MM').subtract(1, 'month').format('MM/YYYY')}
+                        </span>
+                        <span className="mom-prev-value">{formatCurrency(prevTotalExpense)}</span>
+                      </div>
+                    </div>
 
-                          return (
-                            <div key={item.categoryId} className="category-progress-row">
-                              <div className="cat-row-header">
-                                <div className="cat-identity">
-                                  <span className="cat-emoji">{icon}</span>
-                                  <span className="cat-name">{item.categoryName}</span>
-                                </div>
-                                <div className="cat-amounts">
-                                  <span className="cat-amount-val">
-                                    {formatCurrency(item.totalAmount)}
-                                  </span>
-                                  <span className="cat-percent-tag">
-                                    {item.percentage.toFixed(1)}%
-                                  </span>
-                                </div>
+                    {/* Category List with MoM tags */}
+                    <div className="mom-categories-list">
+                      {momCategoryList.map((item) => {
+                        const icon = getCategoryIcon(item.categoryName, 'EXPENSE');
+
+                        return (
+                          <div key={item.categoryId} className="category-progress-row">
+                            <div className="cat-row-header">
+                              <div className="cat-identity">
+                                <span className="cat-emoji">{icon}</span>
+                                <span className="cat-name">{item.categoryName}</span>
                               </div>
-
-                              <div className="cat-progress-track">
-                                <div
-                                  className="cat-progress-fill"
-                                  style={{ width: `${Math.min(100, item.percentage)}%` }}
-                                />
-                              </div>
-
-                              {hasBudget && (
-                                <div className="cat-budget-meta">
+                              <div className="cat-amounts">
+                                <span className="cat-amount-val">
+                                  {formatCurrency(item.totalAmount)}
+                                </span>
+                                {item.isNew ? (
+                                  <span className="mom-cat-change-tag change-new">
+                                    <Sparkles size={10} /> Mới
+                                  </span>
+                                ) : item.deltaPct !== null ? (
                                   <span
-                                    className={`cat-budget-status ${
-                                      budgetUtil > 100
-                                        ? 'text-danger'
-                                        : budgetUtil >= 80
-                                          ? 'text-warning'
-                                          : 'text-muted'
+                                    className={`mom-cat-change-tag ${
+                                      item.deltaPct > 0
+                                        ? 'change-increase'
+                                        : item.deltaPct < 0
+                                          ? 'change-decrease'
+                                          : 'change-flat'
                                     }`}
                                   >
-                                    Đã dùng {budgetUtil.toFixed(0)}% hạn mức (Hạn mức:{' '}
-                                    {formatCurrency(catMeta.budgetLimit!)})
+                                    {item.deltaPct > 0 ? (
+                                      <ArrowUpRight size={11} />
+                                    ) : item.deltaPct < 0 ? (
+                                      <ArrowDownRight size={11} />
+                                    ) : null}
+                                    {item.deltaPct > 0 ? '+' : ''}
+                                    {item.deltaPct.toFixed(0)}%
                                   </span>
-                                </div>
-                              )}
+                                ) : (
+                                  <span className="mom-cat-change-tag change-flat">0%</span>
+                                )}
+                              </div>
                             </div>
-                          );
-                        })}
-                      </div>
+
+                            <div className="cat-progress-track">
+                              <div
+                                className="cat-progress-fill"
+                                style={{
+                                  width: `${Math.min(100, item.percentage)}%`,
+                                  background:
+                                    item.hasBudget && item.budgetUtil > 100 ? '#f43f5e' : undefined,
+                                }}
+                              />
+                            </div>
+
+                            {item.hasBudget && item.budgetLimit && (
+                              <div className="cat-budget-meta">
+                                <span
+                                  className={`cat-budget-status ${
+                                    item.budgetUtil > 100
+                                      ? 'text-danger'
+                                      : item.budgetUtil >= 80
+                                        ? 'text-warning'
+                                        : 'text-muted'
+                                  }`}
+                                >
+                                  {item.budgetUtil > 100
+                                    ? `⚠️ Vượt hạn mức (+${formatCurrency(item.totalAmount - item.budgetLimit)})`
+                                    : `Đã dùng ${item.budgetUtil.toFixed(0)}% hạn mức (${formatCurrency(item.budgetLimit)})`}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </>
                 ) : (

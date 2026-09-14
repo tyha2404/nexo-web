@@ -30,3 +30,19 @@ export const parseNumberInput = (val?: string | number): number => {
   const num = parseFloat(cleanNumber);
   return isNaN(num) ? 0 : num;
 };
+
+/**
+ * Format a number into compact human-readable format (e.g. 15.000.000 -> 15 tr)
+ */
+export const formatCompactCurrency = (amount: number): string => {
+  if (Math.abs(amount) >= 1_000_000_000) {
+    return `${(amount / 1_000_000_000).toFixed(1).replace(/\.0$/, '')} tỷ`;
+  }
+  if (Math.abs(amount) >= 1_000_000) {
+    return `${(amount / 1_000_000).toFixed(1).replace(/\.0$/, '')} tr`;
+  }
+  if (Math.abs(amount) >= 1_000) {
+    return `${(amount / 1_000).toFixed(0)}k`;
+  }
+  return amount.toString();
+};

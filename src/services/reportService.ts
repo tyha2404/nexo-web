@@ -1,4 +1,4 @@
-import type { CategoryBreakdownReport, SummaryReport } from '../commons/types';
+import type { CategoryBreakdownReport, MonthlyTrendReport, SummaryReport } from '../commons/types';
 import { request } from './client';
 
 export const reportService = {
@@ -26,6 +26,12 @@ export const reportService = {
         ? `?startDate=${params.startDate}&endDate=${params.endDate}`
         : '';
     return request<CategoryBreakdownReport>(`/reports/category-breakdown${query}`, {
+      method: 'GET',
+    });
+  },
+
+  monthlyTrend: async (months: number = 12): Promise<MonthlyTrendReport> => {
+    return request<MonthlyTrendReport>(`/reports/monthly-trend?months=${months}`, {
       method: 'GET',
     });
   },

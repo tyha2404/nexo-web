@@ -60,6 +60,19 @@ export interface CategoryBreakdownReport {
   totalExpense: number;
 }
 
+export interface MonthlyTrendItem {
+  month: string;
+  label: string;
+  expense: number;
+  income: number;
+  target: number;
+}
+
+export interface MonthlyTrendReport {
+  averageExpense: number;
+  items: MonthlyTrendItem[];
+}
+
 export interface TransactionSummary {
   sumAmount: number;
   sumAmountForAverage?: number;

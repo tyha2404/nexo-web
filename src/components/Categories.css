@@ -81,12 +81,13 @@
   color: var(--text-main);
 }
 
-/* Glass Card Styling */
-.glass-card {
+/* Categories Card Styling */
+.categories-view .glass-card,
+.list-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  padding: 1.25rem;
   box-shadow: var(--shadow-md);
   transition:
     transform 0.2s ease,
@@ -99,12 +100,11 @@
   box-shadow: var(--shadow-lg);
 }
 
-.glass-card h3 {
+.categories-view .glass-card h3 {
   margin-top: 0;
-  margin-bottom: 1.5rem;
-  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  font-size: 1.15rem;
   color: var(--text-main);
-  padding-bottom: 0.75rem;
   text-align: left;
 }
 

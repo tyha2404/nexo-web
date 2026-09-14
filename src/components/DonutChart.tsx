@@ -11,11 +11,16 @@ interface DonutChartItem {
 interface DonutChartProps {
   items: DonutChartItem[];
   centerLabel?: string;
+  hideLegend?: boolean;
 }
 
 const COLORS = ['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899', '#14b8a6', '#0ea5e9'];
 
-export const DonutChart: React.FC<DonutChartProps> = ({ items, centerLabel = 'Tổng chi tiêu' }) => {
+export const DonutChart: React.FC<DonutChartProps> = ({
+  items,
+  centerLabel = 'Tổng chi tiêu',
+  hideLegend = false,
+}) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   // Filter out items with 0 or negative amounts to avoid drawing invalid segments
@@ -107,28 +112,30 @@ export const DonutChart: React.FC<DonutChartProps> = ({ items, centerLabel = 'T�
         </div>
       </div>
 
-      <div className="donut-legend-list">
-        {chartSegments.map((segment) => {
-          const isHighlighted = activeIndex === null || activeIndex === segment.index;
-          return (
-            <div
-              key={segment.index}
-              className={`donut-legend-item ${isHighlighted ? 'active' : 'inactive'}`}
-              onMouseEnter={() => setActiveIndex(segment.index)}
-              onMouseLeave={() => setActiveIndex(null)}
-            >
-              <div className="legend-label-group">
-                <div className="legend-color-dot" style={{ backgroundColor: segment.color }} />
-                <span className="legend-name">{segment.categoryName}</span>
+      {!hideLegend && (
+        <div className="donut-legend-list">
+          {chartSegments.map((segment) => {
+            const isHighlighted = activeIndex === null || activeIndex === segment.index;
+            return (
+              <div
+                key={segment.index}
+                className={`donut-legend-item ${isHighlighted ? 'active' : 'inactive'}`}
+                onMouseEnter={() => setActiveIndex(segment.index)}
+                onMouseLeave={() => setActiveIndex(null)}
+              >
+                <div className="legend-label-group">
+                  <div className="legend-color-dot" style={{ backgroundColor: segment.color }} />
+                  <span className="legend-name">{segment.categoryName}</span>
+                </div>
+                <div className="legend-value-group">
+                  <span className="legend-amount">{formatCurrency(segment.totalAmount)}</span>
+                  <span className="legend-percent">({segment.percentage.toFixed(1)}%)</span>
+                </div>
               </div>
-              <div className="legend-value-group">
-                <span className="legend-amount">{formatCurrency(segment.totalAmount)}</span>
-                <span className="legend-percent">({segment.percentage.toFixed(1)}%)</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
