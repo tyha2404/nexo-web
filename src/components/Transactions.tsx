@@ -10,6 +10,7 @@ import {
   Trash2,
   TrendingUp,
   Wallet,
+  Image as ImageIcon,
 } from 'lucide-react';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
@@ -26,7 +27,7 @@ import { formatCurrency, formatDate, toISODateString } from '../commons/utils';
 import { categoryService, transactionService, walletService } from '../services/api';
 import type { CreateTransactionDTO } from '../services/transactionService';
 import AddTransactionModal from './AddTransactionModal';
-import { MonthFilter } from './common';
+import { MonthFilter, ReceiptModal } from './common';
 import Pagination from './Pagination';
 import './Transactions.css';
 import ConfirmModal from './common/ConfirmModal';
@@ -78,6 +79,7 @@ export default function Transactions({
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [selectedReceiptUrl, setSelectedReceiptUrl] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [modalType, setModalType] = useState<TransactionType>(initialType);
 
@@ -668,7 +670,21 @@ export default function Transactions({
                   const walletObj = getWalletInfo(txn.walletId);
                   return (
                     <tr key={txn.id}>
-                      <td className="txn-title-cell">{txn.description}</td>
+                      <td className="txn-title-cell">
+                        <div className="flex items-center gap-2">
+                          <span>{txn.description}</span>
+                          {txn.receiptUrl && (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedReceiptUrl(txn.receiptUrl || null)}
+                              className="p-1 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition"
+                              title="Xem hóa đơn / chứng từ"
+                            >
+                              <ImageIcon size={15} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
                       <td
                         className="txn-amount"
                         style={{
@@ -839,6 +855,19 @@ export default function Transactions({
                   </div>
 
                   <div className="mobile-card-actions">
+                    {txn.receiptUrl && (
+                      <button
+                        type="button"
+                        className="mobile-action-btn"
+                        onClick={() => setSelectedReceiptUrl(txn.receiptUrl || null)}
+                        aria-label="Xem hóa đơn"
+                        title="Xem hóa đơn"
+                        style={{ color: 'var(--primary, #6366f1)' }}
+                      >
+                        <ImageIcon size={14} />
+                        <span>Ảnh</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="mobile-action-btn edit-btn"
@@ -892,6 +921,13 @@ export default function Transactions({
         variant="danger"
         onConfirm={executeDelete}
         onCancel={() => setDeleteConfirm(null)}
+      />
+
+      {/* 8. Receipt Image Lightbox Modal */}
+      <ReceiptModal
+        isOpen={Boolean(selectedReceiptUrl)}
+        imageUrl={selectedReceiptUrl || undefined}
+        onClose={() => setSelectedReceiptUrl(null)}
       />
     </div>
   );

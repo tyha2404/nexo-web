@@ -37,6 +37,7 @@ export interface Transaction {
   type: 'INCOME' | 'EXPENSE' | 'INVESTMENT';
   status?: InvestmentStatus;
   realizedPnl?: number;
+  receiptUrl?: string;
   transactionDate: string;
   createdAt: string;
   updatedAt: string;

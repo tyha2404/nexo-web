@@ -10,6 +10,7 @@ import type { Category, InvestmentStatus, Transaction } from '../commons/types';
 import { formatDate, formatNumberInput, parseNumberInput, toISODateString } from '../commons/utils';
 import { categoryService, transactionService } from '../services/api';
 import type { CreateTransactionDTO } from '../services/transactionService';
+import { ReceiptUploader } from './common';
 
 const INVESTMENT_STATUS_OPTIONS = [
   { value: 'HOLDING', label: 'Đang đầu tư' },
@@ -44,6 +45,7 @@ export default function AddTransactionModal({
   const [transactionDate, setTransactionDate] = useState('');
   const [status, setStatus] = useState<InvestmentStatus>('HOLDING');
   const [realizedPnl, setRealizedPnl] = useState('0');
+  const [receiptUrl, setReceiptUrl] = useState<string | undefined>(undefined);
   const [submitting, setSubmitting] = useState(false);
 
   const isEditing = Boolean(transaction);
@@ -57,6 +59,7 @@ export default function AddTransactionModal({
     setCategoryId(transaction?.categoryId ?? '');
     setTransactionDate(formatDate(transaction?.transactionDate ?? moment(), DATE_FORMAT_INPUT));
     setStatus((transaction?.status ?? 'HOLDING') as InvestmentStatus);
+    setReceiptUrl(transaction?.receiptUrl ?? undefined);
     const pnl = transaction?.realizedPnl;
     if (pnl !== undefined && pnl !== null && pnl !== 0) {
       const absVal = Math.abs(Math.round(pnl)).toLocaleString('vi-VN');
@@ -121,6 +124,7 @@ export default function AddTransactionModal({
       description: title.trim(),
       amount: rawAmount,
       categoryId,
+      receiptUrl,
       transactionDate: toISODateString(transactionDate),
       type: activeType,
     };
@@ -322,6 +326,10 @@ export default function AddTransactionModal({
               dateFormat="dd/MM/yyyy"
               portalId="date-picker-portal"
             />
+          </div>
+
+          <div className="form-group">
+            <ReceiptUploader value={receiptUrl} onChange={setReceiptUrl} disabled={submitting} />
           </div>
 
           <div className="button-group">

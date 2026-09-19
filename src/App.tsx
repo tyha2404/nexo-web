@@ -23,6 +23,7 @@ import ReloadPrompt from './components/ReloadPrompt';
 import Transactions from './components/Transactions';
 import { AIChatWidget } from './components/chat';
 import { authService } from './services/api';
+import { useRealtimeSync } from './hooks/useRealtimeSync';
 
 export type ActiveTab = 'dashboard' | 'transactions' | 'debts' | 'planning';
 
@@ -39,6 +40,8 @@ function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>(
     (localStorage.getItem('theme') as 'dark' | 'light') || 'dark'
   );
+
+  useRealtimeSync({ userId: user?.id });
 
   const checkAuth = async () => {
     const token = localStorage.getItem('token');

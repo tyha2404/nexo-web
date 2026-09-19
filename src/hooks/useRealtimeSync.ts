@@ -1,23 +1,32 @@
 import { useEffect } from 'react';
 import { supabase } from '../services/supabase';
 
-interface UseRealtimeSyncProps {
+export interface UseRealtimeSyncProps {
+  userId?: string;
   onTransactionChange?: () => void;
   onWalletChange?: () => void;
+  onBudgetChange?: () => void;
+  onDebtChange?: () => void;
 }
 
-export function useRealtimeSync({ onTransactionChange, onWalletChange }: UseRealtimeSyncProps) {
+export function useRealtimeSync(props?: UseRealtimeSyncProps) {
+  const { userId, onTransactionChange, onWalletChange, onBudgetChange, onDebtChange } = props || {};
+
   useEffect(() => {
+    if (!userId) return;
+
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel(`user-sync-${userId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'transactions',
+          filter: `user_id=eq.${userId}`,
         },
         () => {
+          window.dispatchEvent(new Event('transactions-changed'));
           if (onTransactionChange) {
             onTransactionChange();
           }
@@ -29,10 +38,42 @@ export function useRealtimeSync({ onTransactionChange, onWalletChange }: UseReal
           event: '*',
           schema: 'public',
           table: 'wallets',
+          filter: `user_id=eq.${userId}`,
         },
         () => {
+          window.dispatchEvent(new Event('wallets-changed'));
           if (onWalletChange) {
             onWalletChange();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'budgets',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          window.dispatchEvent(new Event('budgets-changed'));
+          if (onBudgetChange) {
+            onBudgetChange();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'debts',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          window.dispatchEvent(new Event('debts-changed'));
+          if (onDebtChange) {
+            onDebtChange();
           }
         }
       )
@@ -41,5 +82,5 @@ export function useRealtimeSync({ onTransactionChange, onWalletChange }: UseReal
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [onTransactionChange, onWalletChange]);
+  }, [userId, onTransactionChange, onWalletChange, onBudgetChange, onDebtChange]);
 }

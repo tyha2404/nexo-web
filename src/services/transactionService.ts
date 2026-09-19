@@ -10,6 +10,7 @@ export interface CreateTransactionDTO {
   status?: InvestmentStatus;
   realizedPnl?: number;
   description?: string;
+  receiptUrl?: string;
   transactionDate: string;
 }
 
@@ -21,6 +22,7 @@ export interface UpdateTransactionDTO {
   status?: InvestmentStatus;
   realizedPnl?: number;
   description?: string;
+  receiptUrl?: string;
   transactionDate?: string;
 }
 
