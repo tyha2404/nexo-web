@@ -13,6 +13,7 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   // Form states
+  const [identifier, setIdentifier] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [username, setUsername] = useState<string>('');
@@ -42,8 +43,8 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
 
     try {
       if (isLogin) {
-        // Handle Login
-        const response = await authService.login(email, password);
+        // Handle Login (accepts Username or Email)
+        const response = await authService.login(identifier, password);
         localStorage.setItem('token', response.token);
 
         toast.success('Đăng nhập thành công!');
@@ -57,7 +58,7 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
         await authService.register(username, email, password);
 
         // Auto-login the user after registration to get the token
-        const loginResponse = await authService.login(email, password);
+        const loginResponse = await authService.login(username, password);
         localStorage.setItem('token', loginResponse.token);
 
         toast.success('Tạo tài khoản và đăng nhập thành công!');
@@ -109,57 +110,79 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          {!isLogin && (
+          {isLogin ? (
             <div className="input-group">
-              <label className="input-label" htmlFor="username">
-                Tên đăng nhập
+              <label className="input-label" htmlFor="identifier">
+                Tên đăng nhập hoặc Email
               </label>
               <div className="input-wrapper">
                 <input
-                  id="username"
+                  id="identifier"
                   type="text"
-                  className={`input-field ${usernameError ? 'input-invalid' : ''}`}
-                  placeholder="johndoe"
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    if (e.target.value) validateUsername(e.target.value);
-                    else setUsernameError('');
-                  }}
-                  required={!isLogin}
+                  className="input-field"
+                  placeholder="Nhập tên đăng nhập hoặc email"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  autoCapitalize="none"
+                  required
                 />
               </div>
-              {usernameError && (
-                <span
-                  style={{
-                    color: '#ef4444',
-                    fontSize: '0.78rem',
-                    marginTop: '0.25rem',
-                    display: 'block',
-                  }}
-                >
-                  {usernameError}
-                </span>
-              )}
             </div>
-          )}
+          ) : (
+            <>
+              <div className="input-group">
+                <label className="input-label" htmlFor="username">
+                  Tên đăng nhập
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    id="username"
+                    type="text"
+                    className={`input-field ${usernameError ? 'input-invalid' : ''}`}
+                    placeholder="johndoe"
+                    value={username}
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      if (e.target.value) validateUsername(e.target.value);
+                      else setUsernameError('');
+                    }}
+                    autoCapitalize="none"
+                    required
+                  />
+                </div>
+                {usernameError && (
+                  <span
+                    style={{
+                      color: '#ef4444',
+                      fontSize: '0.78rem',
+                      marginTop: '0.25rem',
+                      display: 'block',
+                    }}
+                  >
+                    {usernameError}
+                  </span>
+                )}
+              </div>
 
-          <div className="input-group">
-            <label className="input-label" htmlFor="email">
-              Địa chỉ Email
-            </label>
-            <div className="input-wrapper">
-              <input
-                id="email"
-                type="email"
-                className="input-field"
-                placeholder="john@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-          </div>
+              <div className="input-group">
+                <label className="input-label" htmlFor="email">
+                  Địa chỉ Email
+                </label>
+                <div className="input-wrapper">
+                  <input
+                    id="email"
+                    type="email"
+                    className="input-field"
+                    placeholder="john@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoCapitalize="none"
+                    required
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="input-group">
             <label className="input-label" htmlFor="password">

@@ -3,30 +3,38 @@ import { request } from './client';
 import { supabase } from './supabase';
 
 export const authService = {
-  login: async (email: string, password: string): Promise<AuthResponse> => {
-    // 1. Authenticate with Supabase Auth
-    const { data: sbData, error: sbError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+  login: async (usernameOrEmail: string, password: string): Promise<AuthResponse> => {
+    const isEmail = usernameOrEmail.includes('@');
 
-    if (!sbError && sbData?.session) {
-      return {
-        token: sbData.session.access_token,
-        user: {
-          id: sbData.user.id,
-          email: sbData.user.email || email,
-          username: sbData.user.user_metadata?.username || email.split('@')[0],
-          createdAt: sbData.user.created_at,
-          updatedAt: sbData.user.updated_at || sbData.user.created_at,
-        },
-      };
+    // 1. If email, attempt Supabase Auth first
+    if (isEmail) {
+      const { data: sbData, error: sbError } = await supabase.auth.signInWithPassword({
+        email: usernameOrEmail,
+        password,
+      });
+
+      if (!sbError && sbData?.session) {
+        return {
+          token: sbData.session.access_token,
+          user: {
+            id: sbData.user.id,
+            email: sbData.user.email || usernameOrEmail,
+            username: sbData.user.user_metadata?.username || usernameOrEmail.split('@')[0],
+            createdAt: sbData.user.created_at,
+            updatedAt: sbData.user.updated_at || sbData.user.created_at,
+          },
+        };
+      }
     }
 
-    // 2. Fallback to existing Go API login for legacy accounts
+    // 2. Call Go API login (supports username or email)
     return request<AuthResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        username: !isEmail ? usernameOrEmail : undefined,
+        email: isEmail ? usernameOrEmail : undefined,
+        password,
+      }),
     });
   },
 
