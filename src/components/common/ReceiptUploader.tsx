@@ -72,56 +72,174 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
 
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+      <label
+        style={{
+          display: 'block',
+          fontSize: '0.875rem',
+          fontWeight: 500,
+          color: 'var(--text-main)',
+          marginBottom: '0.5rem',
+        }}
+      >
         Hóa đơn / Chứng từ đính kèm
       </label>
 
       {value ? (
-        <div className="relative group w-full h-36 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-center">
-          <img src={value} alt="Receipt preview" className="w-full h-full object-contain" />
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '140px',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border)',
+            background: 'var(--bg-card)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+            boxShadow: 'var(--shadow-sm)',
+          }}
+        >
+          <img
+            src={value}
+            alt="Receipt preview"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              padding: '0.5rem',
+            }}
+          />
           {!disabled && (
             <button
               type="button"
               onClick={handleRemove}
-              className="absolute top-2 right-2 p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full shadow transition-all opacity-90 hover:opacity-100"
+              style={{
+                position: 'absolute',
+                top: '0.5rem',
+                right: '0.5rem',
+                padding: '0.35rem',
+                background: 'rgba(244, 63, 94, 0.9)',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: 'var(--radius-full)',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.08)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
               title="Xóa ảnh"
             >
-              <X size={16} />
+              <X size={15} />
             </button>
           )}
         </div>
       ) : (
         <div
           onClick={() => !disabled && !uploading && fileInputRef.current?.click()}
-          className={`w-full h-28 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors ${
-            disabled || uploading
-              ? 'border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50 cursor-not-allowed'
-              : 'border-gray-300 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 bg-gray-50 dark:bg-gray-800/40 hover:bg-indigo-50/20'
-          }`}
+          style={{
+            width: '100%',
+            minHeight: '96px',
+            border: '1.5px dashed var(--border)',
+            borderRadius: 'var(--radius-md)',
+            background: disabled || uploading ? 'var(--bg-hover)' : 'var(--bg-card)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+            cursor: disabled || uploading ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s ease',
+            color: 'var(--text-muted)',
+          }}
+          onMouseEnter={(e) => {
+            if (!disabled && !uploading) {
+              e.currentTarget.style.borderColor = 'var(--primary)';
+              e.currentTarget.style.background = 'var(--bg-hover)';
+              e.currentTarget.style.boxShadow = '0 0 12px var(--primary-glow)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!disabled && !uploading) {
+              e.currentTarget.style.borderColor = 'var(--border)';
+              e.currentTarget.style.background = 'var(--bg-card)';
+              e.currentTarget.style.boxShadow = 'none';
+            }
+          }}
         >
           {uploading ? (
-            <div className="flex flex-col items-center gap-2 text-indigo-600 dark:text-indigo-400">
-              <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="text-xs font-medium">Đang tải ảnh lên Supabase...</span>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem',
+                color: 'var(--primary)',
+              }}
+            >
+              <Loader2 className="animate-spin" size={22} />
+              <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>
+                Đang tải ảnh lên máy chủ...
+              </span>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-1.5 text-gray-500 dark:text-gray-400">
-              <Upload className="w-5 h-5 text-gray-400" />
-              <span className="text-xs font-medium">Bấm để tải ảnh hóa đơn (tối đa 10MB)</span>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'var(--bg-hover)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--primary)',
+                }}
+              >
+                <Upload size={16} />
+              </div>
+              <span style={{ fontSize: '0.825rem', fontWeight: 500, color: 'var(--text-main)' }}>
+                Bấm để tải ảnh hóa đơn / chứng từ
+              </span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Hỗ trợ PNG, JPEG, WEBP (tối đa 10MB)
+              </span>
             </div>
           )}
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            className="hidden"
+            style={{ display: 'none' }}
             onChange={handleFileChange}
             disabled={disabled || uploading}
           />
         </div>
       )}
 
-      {error && <p className="mt-1 text-xs text-red-500 dark:text-red-400">{error}</p>}
+      {error && (
+        <p
+          style={{
+            marginTop: '0.35rem',
+            fontSize: '0.75rem',
+            color: 'var(--expense)',
+            fontWeight: 500,
+          }}
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
 };

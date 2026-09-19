@@ -7,8 +7,6 @@ import {
   ReceiptText,
   ShoppingBag,
   Sparkles,
-  TrendingDown,
-  TrendingUp,
 } from 'lucide-react';
 import moment from 'moment';
 import { useEffect, useMemo, useState } from 'react';
@@ -302,21 +300,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     {monthlyNetCashFlow > 0 ? '+' : ''}
                     {formatCurrency(monthlyNetCashFlow)}
                   </span>
-                  <span
-                    className={`hero-flow-status-tag ${
-                      monthlyNetCashFlow >= 0 ? 'status-surplus' : 'status-deficit'
-                    }`}
-                  >
-                    {monthlyNetCashFlow >= 0 ? (
-                      <>
-                        <TrendingUp size={14} /> Thặng dư dòng tiền
-                      </>
-                    ) : (
-                      <>
-                        <TrendingDown size={14} /> Thâm hụt chi tiêu
-                      </>
-                    )}
-                  </span>
                 </div>
               </div>
 
@@ -328,12 +311,13 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   className={`net-assets-value ${
                     availableCash >= 0 ? 'text-income' : 'text-expense'
                   }`}
-                  title={`Tổng tài sản: ${formatCurrency(totalNetWorth)}`}
+                  title={`Tiền mặt khả dụng: ${formatCurrency(availableCash)}`}
                 >
                   {formatCurrency(availableCash)}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  Tổng tài sản: {formatCurrency(totalNetWorth)}
+                <div className="hero-total-networth-tag">
+                  <span>Tổng tài sản:</span>
+                  <strong>{formatCurrency(totalNetWorth)}</strong>
                 </div>
               </div>
             </div>

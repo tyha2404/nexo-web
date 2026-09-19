@@ -245,14 +245,26 @@
   font-family: var(--font-mono);
   letter-spacing: -0.02em;
   color: var(--text-main);
+  white-space: nowrap;
 }
 
-.text-positive {
-  color: var(--text-main);
+.hero-total-networth-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.5rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
-.text-negative {
-  color: var(--text-main);
+.hero-total-networth-tag strong {
+  color: var(--primary);
+  font-family: var(--font-mono);
+  font-weight: 600;
 }
 
 /* Hero Submetrics Grid */
@@ -1344,6 +1356,11 @@
     padding-top: 0.35rem;
     border-top: 1px dashed var(--border);
     width: 100%;
+  }
+
+  .hero-total-networth-tag {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.45rem;
   }
 
   .hero-submetrics-grid {

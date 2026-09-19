@@ -1079,6 +1079,7 @@ table tbody tr {
   padding: 1rem !important;
   box-sizing: border-box !important;
   overflow-y: auto !important;
+  overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
 }
 
@@ -1092,8 +1093,10 @@ table tbody tr {
   max-height: calc(100vh - 2rem);
   max-height: calc(100dvh - 2rem);
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding: 2rem;
+  overscroll-behavior: contain;
+  padding: 1.75rem;
   box-shadow: var(--shadow-lg);
   box-sizing: border-box;
   display: flex;
@@ -1101,22 +1104,77 @@ table tbody tr {
   margin: auto;
 }
 
+/* Custom scrollbar for modal content */
+.modal-content::-webkit-scrollbar,
+.modal-card::-webkit-scrollbar {
+  width: 5px;
+}
+
+.modal-content::-webkit-scrollbar-track,
+.modal-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-content::-webkit-scrollbar-thumb,
+.modal-card::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-full);
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover,
+.modal-card::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+
 @media (max-width: 600px) {
   .modal-backdrop {
-    padding: env(safe-area-inset-top, 0.75rem) env(safe-area-inset-right, 0.75rem)
-      max(0.75rem, env(safe-area-inset-bottom, 0.75rem)) env(safe-area-inset-left, 0.75rem) !important;
-    align-items: center !important;
+    padding: max(1rem, calc(env(safe-area-inset-top, 0px) + 12px))
+      max(0.5rem, env(safe-area-inset-right, 0.5rem)) calc(80px + env(safe-area-inset-bottom, 0px))
+      max(0.5rem, env(safe-area-inset-left, 0.5rem)) !important;
+    align-items: flex-start !important;
   }
   .modal-content,
   .modal-card {
-    padding: 1.25rem;
-    padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 1.25rem));
+    padding: 1.25rem 1rem 1.5rem 1rem;
     width: 100%;
     max-width: 100%;
-    max-height: calc(100dvh - 1.5rem);
-    max-height: calc(100vh - 1.5rem);
+    max-height: calc(100dvh - 100px - env(safe-area-inset-top, 0px));
+    max-height: calc(100vh - 100px - env(safe-area-inset-top, 0px));
     border-radius: var(--radius-md);
+    margin: 0 auto;
   }
+}
+
+.modal-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.75rem !important;
+  margin: -1.75rem -1.75rem 1.25rem -1.75rem !important;
+  padding: 1.25rem 1.75rem 0.75rem 1.75rem !important;
+  border-bottom: 1px solid var(--border) !important;
+  position: sticky !important;
+  top: -1.75rem !important;
+  background: var(--bg-card) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  z-index: 20 !important;
+}
+
+@media (max-width: 600px) {
+  .modal-header {
+    margin: -1.25rem -1rem 1.25rem -1rem !important;
+    padding: 1rem 1rem 0.75rem 1rem !important;
+    top: -1.25rem !important;
+  }
+}
+
+.modal-header h3 {
+  margin: 0 !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: var(--text-main) !important;
+  letter-spacing: -0.01em !important;
 }
 
 .form-row-2col {
