@@ -46,6 +46,7 @@ export interface SummaryReport {
   totalIncome: number;
   totalExpense: number;
   totalInvestment?: number;
+  realizedPnL?: number;
 }
 
 export interface CategoryBreakdownItem {

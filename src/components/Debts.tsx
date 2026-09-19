@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import moment from 'moment';
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
@@ -39,24 +39,24 @@ export default function Debts() {
   const [repayAmount, setRepayAmount] = useState<string>('');
   const [repayNotes, setRepayNotes] = useState<string>('');
 
-  const fetchDebtData = async () => {
+  const fetchDebtData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const debtList = await debtService.getDebts(
         filterType ? (filterType as DebtType) : undefined
       );
-      setDebts(Array.isArray(debtList) ? debtList : (debtList as any)?.data || []);
-    } catch (err: any) {
-      setError(err.message || 'Không thể tải dữ liệu khoản vay/nợ');
+      setDebts(Array.isArray(debtList) ? debtList : (debtList as { data?: Debt[] })?.data || []);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Không thể tải dữ liệu khoản vay/nợ');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterType]);
 
   useEffect(() => {
     fetchDebtData();
-  }, [filterType]);
+  }, [fetchDebtData]);
 
   const handleAmountChange = (val: string, setter: (v: string) => void) => {
     setter(formatNumberInput(val));
@@ -96,10 +96,11 @@ export default function Debts() {
       });
 
       toast.success('Đã tạo khoản vay/nợ thành công!');
+      window.dispatchEvent(new Event('debts-changed'));
       setIsCreateModalOpen(false);
       fetchDebtData();
-    } catch (err: any) {
-      toast.error(err.message || 'Lỗi khi tạo khoản vay/nợ');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Lỗi khi tạo khoản vay/nợ');
     }
   };
 
@@ -121,13 +122,14 @@ export default function Debts() {
       });
 
       toast.success('Đã ghi nhận thanh toán thành công!');
+      window.dispatchEvent(new Event('debts-changed'));
       setIsRepayModalOpen(false);
       setSelectedDebt(null);
       setRepayAmount('');
       setRepayNotes('');
       fetchDebtData();
-    } catch (err: any) {
-      toast.error(err.message || 'Lỗi khi ghi nhận thanh toán');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Lỗi khi ghi nhận thanh toán');
     }
   };
 
@@ -148,9 +150,10 @@ export default function Debts() {
     try {
       await debtService.deleteDebt(id);
       toast.success('Đã xóa khoản vay/nợ thành công');
+      window.dispatchEvent(new Event('debts-changed'));
       fetchDebtData();
-    } catch (err: any) {
-      toast.error(err.message || 'Không thể xóa khoản vay/nợ');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Lỗi khi xóa khoản vay/nợ');
     }
   };
 
@@ -159,12 +162,12 @@ export default function Debts() {
 
   const filteredDebts = (Array.isArray(debts) ? debts : []).filter((d) => {
     if (!d) return false;
-    const debtTitle = d.title || (d as any).personName || '';
+    const debtTitle = d.title || '';
     const matchSearch =
       debtTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (d.notes || '').toLowerCase().includes(searchQuery.toLowerCase());
 
-    const debtDate = d.startDate || (d as any).createdAt;
+    const debtDate = d.startDate || d.createdAt;
     if (!debtDate) return matchSearch;
     const m = moment(debtDate);
     const matchMonth = m.isBetween(startOfMonth, endOfMonth, undefined, '[]');
@@ -174,11 +177,11 @@ export default function Debts() {
 
   const displayPayable = filteredDebts
     .filter((d) => d.type === 'PAYABLE')
-    .reduce((sum, d) => sum + (d.remaining ?? (d as any).remainingAmount ?? d.totalAmount ?? 0), 0);
+    .reduce((sum, d) => sum + (d.remaining ?? d.totalAmount ?? 0), 0);
 
   const displayReceivable = filteredDebts
     .filter((d) => d.type === 'RECEIVABLE')
-    .reduce((sum, d) => sum + (d.remaining ?? (d as any).remainingAmount ?? d.totalAmount ?? 0), 0);
+    .reduce((sum, d) => sum + (d.remaining ?? d.totalAmount ?? 0), 0);
 
   return (
     <div className="transactions-view">

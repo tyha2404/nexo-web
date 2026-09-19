@@ -151,14 +151,25 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     };
   }, [selectedMonth]);
 
-  // Net Asset Calculations
+  // Net Asset & Available Cash Calculations (Single Pool)
   const allTimeIncome = allTimeSummary?.totalIncome ?? 0;
   const allTimeExpense = allTimeSummary?.totalExpense ?? 0;
-  const allTimeInvestment = allTimeSummary?.totalInvestment ?? 0;
+  const allTimeInvestment = allTimeSummary?.totalInvestment ?? 0; // Đang đầu tư (HOLDING)
+  const allTimeRealizedPnL = allTimeSummary?.realizedPnL ?? 0; // Lãi đã chốt từ đầu tư
   const debtPayable = debtSummary?.totalPayable ?? 0;
   const debtReceivable = debtSummary?.totalReceivable ?? 0;
-  const allTimeNetAssets =
-    allTimeIncome + allTimeInvestment + debtReceivable - allTimeExpense - debtPayable;
+
+  // Tiền mặt khả dụng ngoài đời: (Thu - Chi + Lãi đầu tư đã chốt) - Đang đầu tư - Cho vay (chưa thu) + Đi vay (chưa trả)
+  const availableCash =
+    allTimeIncome -
+    allTimeExpense +
+    allTimeRealizedPnL -
+    allTimeInvestment -
+    debtReceivable +
+    debtPayable;
+
+  // Tổng tài sản tích lũy (Net Worth): Tiền mặt khả dụng + Đang đầu tư + Cho vay - Đi vay = Thu - Chi + Lãi đầu tư đã chốt
+  const totalNetWorth = allTimeIncome - allTimeExpense + allTimeRealizedPnL;
 
   const totalIncome = summary?.totalIncome ?? 0;
   const totalExpense = summary?.totalExpense ?? 0;
@@ -311,14 +322,18 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
               <div className="hero-net-assets-box">
                 <div className="net-assets-label">
-                  <span>Tổng tài sản tích lũy</span>
+                  <span>Tiền khả dụng thực tế</span>
                 </div>
                 <div
                   className={`net-assets-value ${
-                    allTimeNetAssets >= 0 ? 'text-income' : 'text-expense'
+                    availableCash >= 0 ? 'text-income' : 'text-expense'
                   }`}
+                  title={`Tổng tài sản: ${formatCurrency(totalNetWorth)}`}
                 >
-                  {formatCurrency(allTimeNetAssets)}
+                  {formatCurrency(availableCash)}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  Tổng tài sản: {formatCurrency(totalNetWorth)}
                 </div>
               </div>
             </div>

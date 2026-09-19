@@ -7,7 +7,6 @@ import {
   Sparkles,
   Sun,
   Target,
-  Wallet,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -22,11 +21,10 @@ import Debts from './components/Debts';
 import Planning, { type PlanningSubTab } from './components/Planning';
 import ReloadPrompt from './components/ReloadPrompt';
 import Transactions from './components/Transactions';
-import Wallets from './components/Wallets';
 import { AIChatWidget } from './components/chat';
 import { authService } from './services/api';
 
-export type ActiveTab = 'dashboard' | 'transactions' | 'wallets' | 'debts' | 'planning';
+export type ActiveTab = 'dashboard' | 'transactions' | 'debts' | 'planning';
 
 function App() {
   const navigate = useNavigate();
@@ -101,8 +99,6 @@ function App() {
         return opts?.transactionType
           ? `/transactions/${opts.transactionType.toLowerCase()}`
           : '/transactions';
-      case 'wallets':
-        return '/wallets';
       case 'debts':
         return '/debts';
       case 'planning':
@@ -118,9 +114,7 @@ function App() {
     const segments = pathname.split('/').filter(Boolean); // e.g. ["transactions","income"]
     const tab = segments[0] as ActiveTab | undefined;
     setActiveTab(
-      tab === 'transactions' || tab === 'wallets' || tab === 'debts' || tab === 'planning'
-        ? tab
-        : 'dashboard'
+      tab === 'transactions' || tab === 'debts' || tab === 'planning' ? tab : 'dashboard'
     );
 
     if (tab === 'transactions') {
@@ -165,8 +159,6 @@ function App() {
     } else if (tab === 'transactions') {
       targetTab = 'transactions';
       opts = { transactionType };
-    } else if (tab === 'wallets') {
-      targetTab = 'wallets';
     } else if (tab === 'debts') {
       targetTab = 'debts';
     } else if (tab === 'categories') {
@@ -311,16 +303,6 @@ function App() {
           </button>
 
           <button
-            onClick={() => handleNavigate('wallets')}
-            className={`nav-item ${activeTab === 'wallets' ? 'active' : ''}`}
-          >
-            <span className="nav-icon">
-              <Wallet size={18} />
-            </span>
-            <span className="nav-text">Tài sản & Ví</span>
-          </button>
-
-          <button
             onClick={() => handleNavigate('debts')}
             className={`nav-item ${activeTab === 'debts' ? 'active' : ''}`}
           >
@@ -383,7 +365,6 @@ function App() {
             <h1 className="header-page-title">
               {activeTab === 'dashboard' && 'Tổng quan'}
               {activeTab === 'transactions' && 'Sổ giao dịch'}
-              {activeTab === 'wallets' && 'Tài sản & Ví'}
               {activeTab === 'debts' && 'Sổ Vay & Nợ'}
               {activeTab === 'planning' && 'Kế hoạch & Mục tiêu'}
             </h1>
@@ -429,12 +410,6 @@ function App() {
         </div>
         <div
           className="content-view animate-fade-in"
-          style={{ display: activeTab === 'wallets' ? 'block' : 'none' }}
-        >
-          <Wallets />
-        </div>
-        <div
-          className="content-view animate-fade-in"
           style={{ display: activeTab === 'debts' ? 'block' : 'none' }}
         >
           <Debts />
@@ -475,18 +450,6 @@ function App() {
             <ArrowLeftRight size={20} />
           </div>
           <span className="bottom-nav-label">Giao dịch</span>
-        </button>
-
-        <button
-          type="button"
-          className={`bottom-nav-item ${activeTab === 'wallets' ? 'active' : ''}`}
-          onClick={() => handleNavigate('wallets')}
-          aria-label="Tài sản & Ví"
-        >
-          <div className="bottom-nav-icon">
-            <Wallet size={20} />
-          </div>
-          <span className="bottom-nav-label">Tài sản</span>
         </button>
 
         <button

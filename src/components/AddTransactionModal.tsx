@@ -6,20 +6,9 @@ import 'react-datepicker/dist/react-datepicker.css';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 import { DATE_FORMAT_INPUT, TransactionType } from '../commons/constants';
-import type {
-  Category,
-  InvestmentStatus,
-  Transaction,
-  Wallet as WalletModel,
-} from '../commons/types';
-import {
-  formatCurrency,
-  formatDate,
-  formatNumberInput,
-  parseNumberInput,
-  toISODateString,
-} from '../commons/utils';
-import { categoryService, transactionService, walletService } from '../services/api';
+import type { Category, InvestmentStatus, Transaction } from '../commons/types';
+import { formatDate, formatNumberInput, parseNumberInput, toISODateString } from '../commons/utils';
+import { categoryService, transactionService } from '../services/api';
 import type { CreateTransactionDTO } from '../services/transactionService';
 
 const INVESTMENT_STATUS_OPTIONS = [
@@ -49,11 +38,9 @@ export default function AddTransactionModal({
 }: AddTransactionModalProps) {
   const [activeType, setActiveType] = useState<TransactionType>(initialType);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [wallets, setWallets] = useState<WalletModel[]>([]);
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [walletId, setWalletId] = useState('');
   const [transactionDate, setTransactionDate] = useState('');
   const [status, setStatus] = useState<InvestmentStatus>('HOLDING');
   const [realizedPnl, setRealizedPnl] = useState('0');
@@ -68,7 +55,6 @@ export default function AddTransactionModal({
     setTitle(transaction?.description ?? '');
     setAmount(transaction ? Math.round(transaction.amount).toLocaleString('vi-VN') : '');
     setCategoryId(transaction?.categoryId ?? '');
-    setWalletId(transaction?.walletId ?? '');
     setTransactionDate(formatDate(transaction?.transactionDate ?? moment(), DATE_FORMAT_INPUT));
     setStatus((transaction?.status ?? 'HOLDING') as InvestmentStatus);
     const pnl = transaction?.realizedPnl;
@@ -79,20 +65,6 @@ export default function AddTransactionModal({
       setRealizedPnl('0');
     }
   }, [open, transaction, initialType]);
-
-  // Load wallets once
-  useEffect(() => {
-    let active = true;
-    walletService
-      .getWallets()
-      .then((res) => {
-        if (active) setWallets(res.wallets || []);
-      })
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, []);
 
   // Load categories matching the active type
   useEffect(() => {
@@ -152,8 +124,6 @@ export default function AddTransactionModal({
       transactionDate: toISODateString(transactionDate),
       type: activeType,
     };
-
-    if (walletId) payload.walletId = walletId;
 
     if (activeType === TransactionType.INVESTMENT) {
       payload.status = status as CreateTransactionDTO['status'];
@@ -300,36 +270,6 @@ export default function AddTransactionModal({
               menuPortalTarget={document.body}
             />
           </div>
-
-          {wallets.length > 0 && (
-            <div className="form-group">
-              <label htmlFor="atxn-wallet">Ví / Nguồn thanh toán (Tùy chọn)</label>
-              <Select
-                inputId="atxn-wallet"
-                options={[
-                  { value: '', label: '-- Không chọn ví cụ thể --' },
-                  ...wallets.map((w) => ({
-                    value: w.id,
-                    label: `${w.icon ? `${w.icon} ` : '💳 '}${w.name} (${formatCurrency(w.balance)})`,
-                  })),
-                ]}
-                value={
-                  [
-                    { value: '', label: '-- Không chọn ví cụ thể --' },
-                    ...wallets.map((w) => ({
-                      value: w.id,
-                      label: `${w.icon ? `${w.icon} ` : '💳 '}${w.name} (${formatCurrency(w.balance)})`,
-                    })),
-                  ].find((o) => o.value === walletId) || null
-                }
-                onChange={(option) => setWalletId(option ? option.value : '')}
-                classNamePrefix="react-select"
-                placeholder="Chọn ví hoặc tài khoản"
-                isSearchable
-                menuPortalTarget={document.body}
-              />
-            </div>
-          )}
 
           {activeType === TransactionType.INVESTMENT && (
             <div className="form-group">

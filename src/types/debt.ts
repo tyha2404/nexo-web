@@ -7,6 +7,7 @@ export interface Repayment {
   amount: number;
   paidAt: string;
   notes?: string;
+  walletId?: string;
   createdAt: string;
 }
 
@@ -22,6 +23,7 @@ export interface Debt {
   dueDate?: string;
   status: DebtStatus;
   notes?: string;
+  walletId?: string;
   repayments?: Repayment[];
   createdAt: string;
   updatedAt: string;
@@ -41,10 +43,12 @@ export interface CreateDebtPayload {
   startDate?: string;
   dueDate?: string;
   notes?: string;
+  walletId?: string;
 }
 
 export interface AddRepaymentPayload {
   amount: number;
   paidAt?: string;
   notes?: string;
+  walletId?: string;
 }
