@@ -10,7 +10,6 @@ const ReloadPrompt: React.FC = () => {
     return () => window.removeEventListener('nexo-form-dirty', handleDirty);
   }, []);
   const {
-    offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
@@ -23,23 +22,15 @@ const ReloadPrompt: React.FC = () => {
   });
 
   const close = () => {
-    setOfflineReady(false);
     setNeedRefresh(false);
   };
 
-  if (!offlineReady && !needRefresh) return null;
+  if (!needRefresh) return null;
 
   return (
     <div className="pwa-toast" role="alert">
       <div className="pwa-message">
-        {offlineReady ? (
-          <span>
-            Đã lưu giao diện để mở ngoại tuyến. Bạn có thể xem dữ liệu đã tải; giao dịch mới sẽ tự
-            đồng bộ khi có mạng.
-          </span>
-        ) : (
-          <span>Có phiên bản mới. Lưu hoặc đóng biểu mẫu trước khi cập nhật.</span>
-        )}
+        <span>Có phiên bản mới. Lưu hoặc đóng biểu mẫu trước khi cập nhật.</span>
       </div>
       <div className="pwa-actions">
         {needRefresh && (

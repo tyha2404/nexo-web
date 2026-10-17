@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { setup, openTransactionForm } from './fixtures';
+import { setup, openTransactionForm, USER, EXPENSE } from './fixtures';
 
 const queueLength = (page: Page) =>
   page.evaluate(() => {
@@ -16,104 +16,63 @@ async function fillExpense(page: Page, amount: string, note: string) {
   return dialog;
 }
 
-test('a save that cannot reach the server is queued, shown as pending and flushed when back online', async ({
+test('a network failure preserves the form without queuing and allows an explicit retry', async ({
   page,
 }) => {
   const state = await setup(page);
   await page.goto('/');
-  await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
-  const dialog = await fillExpense(page, '30000', 'Cà phê ngoại tuyến');
+  const dialog = await fillExpense(page, '30000', 'Chưa gửi');
   state.offline = true;
   await dialog.getByRole('button', { name: 'Thêm giao dịch', exact: true }).click();
-  await expect(dialog).toBeHidden();
-  const pending = page
-    .getByRole('list', { name: 'Giao dịch chờ đồng bộ' })
-    .filter({ visible: true });
-  await expect(pending.getByText('Cà phê ngoại tuyến')).toBeVisible();
-  await expect(pending.getByText('Chờ đồng bộ')).toBeVisible();
-  await expect(page.locator('.connection-status')).toContainText('Chờ đồng bộ');
-  expect(await queueLength(page)).toBe(1);
+  await expect(page.locator('.Toastify__toast--error')).toBeVisible();
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel('Ghi chú (không bắt buộc)')).toHaveValue('Chưa gửi');
+  expect(await queueLength(page)).toBe(0);
   expect(state.writes).toHaveLength(0);
-  // Drafts are not kept for queued saves
-  expect(
-    await page.evaluate(() =>
-      Object.keys(localStorage).some((key) => key.startsWith('nexo-draft:'))
-    )
-  ).toBe(false);
-
-  // Server errors keep the item queued
-  const posts = () => state.requests.filter((path) => path === '/transactions').length;
-  const postsBefore = posts();
   state.offline = false;
-  state.failSave = true;
-  await page.evaluate(() => window.dispatchEvent(new Event('online')));
-  await expect.poll(posts).toBeGreaterThan(postsBefore);
-  expect(await queueLength(page)).toBe(1);
+  await dialog.getByRole('button', { name: 'Thêm giao dịch', exact: true }).click();
+  await expect(dialog).toBeHidden();
+  expect(state.writes).toHaveLength(1);
+});
 
-  state.failSave = false;
-  await page.evaluate(() => {
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
+test('a false browser offline signal does not block a working API', async ({ page }) => {
+  const state = await setup(page);
+  await page.goto('/');
+  const dialog = await fillExpense(page, '10000', 'Trực tuyến');
+  await page.evaluate(() => Object.defineProperty(navigator, 'onLine', { get: () => false }));
+  await dialog.getByRole('button', { name: 'Thêm giao dịch', exact: true }).click();
+  await expect(dialog).toBeHidden();
+  expect(state.writes).toHaveLength(1);
+  expect(await queueLength(page)).toBe(0);
+});
+
+test('transactions queued by an older version are still recovered', async ({ page }) => {
+  const state = await setup(page);
+  await page.addInitScript(
+    ({ userId, categoryId }) => {
+      localStorage.setItem(
+        `nexo-offline-queue:${userId}`,
+        JSON.stringify([
+          {
+            localId: 'legacy-1',
+            queuedAt: '2026-10-18T00:00:00Z',
+            payload: {
+              amount: 20000,
+              description: 'Giao dịch cũ',
+              categoryId,
+              type: 'EXPENSE',
+              transactionDate: '2026-10-18T00:00:00Z',
+            },
+          },
+        ])
+      );
+    },
+    { userId: USER.id, categoryId: EXPENSE }
+  );
+  await page.goto('/');
   await expect.poll(() => state.writes.length).toBe(1);
-  expect(state.writes[0]).toMatchObject({ amount: 30000, description: 'Cà phê ngoại tuyến' });
+  expect(state.writes[0].description).toBe('Giao dịch cũ');
   await expect.poll(() => queueLength(page)).toBe(0);
-  await expect(page.getByRole('list', { name: 'Giao dịch chờ đồng bộ' })).toHaveCount(0);
-});
-
-test('navigator offline queues immediately and the browser online event flushes in order', async ({
-  page,
-  context,
-}) => {
-  const state = await setup(page);
-  await page.goto('/');
-  await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
-  for (const note of ['Thứ nhất', 'Thứ hai']) {
-    // Categories come from the read cache once the API is unreachable
-    const dialog = await fillExpense(page, '10000', note);
-    await context.setOffline(true);
-    state.offline = true;
-    await dialog.getByRole('button', { name: 'Thêm giao dịch', exact: true }).click();
-    await expect(dialog).toBeHidden();
-    await context.setOffline(false); // the 'online' flush fails while the API stays down
-  }
-  await expect.poll(() => queueLength(page)).toBe(2);
-  await expect(page.locator('.connection-status')).toBeVisible();
-  state.offline = false;
-  await page.evaluate(() => window.dispatchEvent(new Event('online')));
-  await expect.poll(() => state.writes.length).toBe(2);
-  expect(state.writes.map((write) => write.description)).toEqual(['Thứ nhất', 'Thứ hai']);
-  await expect.poll(() => queueLength(page)).toBe(0);
-});
-
-test('a 4xx rejection drops the queued item with an error toast; logout clears the queue', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  await page.goto('/');
-  await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
-  let dialog = await fillExpense(page, '20000', 'Bị từ chối');
-  state.offline = true;
-  await dialog.getByRole('button', { name: 'Thêm giao dịch', exact: true }).click();
-  await expect(dialog).toBeHidden();
-  state.offline = false;
-  state.rejectSave = true;
-  await page.evaluate(() => window.dispatchEvent(new Event('online')));
-  await expect(page.getByText(/Không thể đồng bộ "Bị từ chối"/)).toBeVisible();
-  await expect.poll(() => queueLength(page)).toBe(0);
-  expect(state.writes).toHaveLength(0);
-
-  state.rejectSave = false;
-  dialog = await fillExpense(page, '20000', 'Chưa gửi trước khi đăng xuất');
-  state.offline = true;
-  await dialog.getByRole('button', { name: 'Thêm giao dịch', exact: true }).click();
-  await expect(dialog).toBeHidden();
-  expect(await queueLength(page)).toBe(1);
-  await page.getByRole('button', { name: 'Đăng xuất' }).filter({ visible: true }).first().click();
-  expect(
-    await page.evaluate(() =>
-      Object.keys(localStorage).some((key) => key.startsWith('nexo-offline-queue:'))
-    )
-  ).toBe(false);
 });
 
 test('without a Supabase session the app polls every minute while visible', async ({ page }) => {

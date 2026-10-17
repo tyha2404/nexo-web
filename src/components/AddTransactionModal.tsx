@@ -14,12 +14,7 @@ import {
   parseNumberInput,
   toISODateString,
 } from '../commons/utils';
-import {
-  categoryService,
-  enqueueTransaction,
-  isNetworkError,
-  transactionService,
-} from '../services';
+import { categoryService, transactionService } from '../services';
 import type { CreateTransactionDTO } from '../services';
 import { ReceiptUploader } from './common';
 
@@ -144,10 +139,6 @@ export default function AddTransactionModal({
       toast.error('Vui lòng chọn danh mục phù hợp với loại giao dịch');
       return;
     }
-    if (!navigator.onLine && isEditing) {
-      toast.info('Đang ngoại tuyến. Kết nối mạng rồi nhấn Cập nhật để lưu thay đổi.');
-      return;
-    }
     let rawPnl = 0;
     if (realizedPnl) {
       const isNegative = realizedPnl.trim().startsWith('-');
@@ -174,22 +165,6 @@ export default function AddTransactionModal({
       onSaved?.();
       onClose();
     };
-    // Offline (or the request never reached the server): queue it and sync later
-    const queueOffline = () => {
-      try {
-        enqueueTransaction(payload);
-      } catch {
-        toast.error('Không thể lưu giao dịch trên thiết bị. Bản nháp vẫn được giữ.');
-        return;
-      }
-      toast.info('Đang ngoại tuyến. Giao dịch đã được lưu và sẽ tự đồng bộ khi có mạng.');
-      finishSave();
-    };
-    if (!isEditing && !navigator.onLine) {
-      queueOffline();
-      return;
-    }
-
     try {
       submittingRef.current = true;
       setSubmitting(true);
@@ -203,8 +178,7 @@ export default function AddTransactionModal({
       window.dispatchEvent(new Event('transactions-changed'));
       finishSave();
     } catch (err: unknown) {
-      if (!isEditing && isNetworkError(err)) queueOffline();
-      else toast.error(getErrorMessage(err, 'Lưu giao dịch thất bại'));
+      toast.error(getErrorMessage(err, 'Lưu giao dịch thất bại'));
     } finally {
       submittingRef.current = false;
       setSubmitting(false);

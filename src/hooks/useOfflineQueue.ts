@@ -22,10 +22,10 @@ export function useOfflineQueue(): QueuedTransaction[] {
   return items;
 }
 
-/** Flush the offline queue on start, when the network returns and when the PWA resumes. */
+/** Recover transactions queued by older versions without accepting new offline writes. */
 export function useOfflineQueueSync(enabled: boolean) {
   const flush = useCallback(async () => {
-    if (!navigator.onLine || !getQueuedTransactions().length) return;
+    if (!getQueuedTransactions().length) return;
     const { sent, dropped } = await flushOfflineQueue();
     for (const { item, message } of dropped) {
       toast.error(`Không thể đồng bộ "${item.payload.description || 'giao dịch'}": ${message}`);

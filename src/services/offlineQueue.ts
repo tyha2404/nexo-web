@@ -1,4 +1,3 @@
-import moment from 'moment';
 import { ApiError } from './client';
 import { transactionService, type CreateTransactionDTO } from './transactionService';
 
@@ -40,20 +39,6 @@ function saveQueue(items: QueuedTransaction[]) {
   else localStorage.removeItem(queueKey());
   notify();
 }
-
-/** Append a transaction to the queue. Throws when storage is unavailable. */
-export function enqueueTransaction(payload: CreateTransactionDTO): QueuedTransaction {
-  const item: QueuedTransaction = {
-    localId: `offline-${moment().valueOf()}-${Math.random().toString(36).slice(2, 8)}`,
-    payload,
-    queuedAt: moment().toISOString(),
-  };
-  saveQueue([...getQueuedTransactions(), item]);
-  return item;
-}
-
-/** True when an error means the request never reached the server. */
-export const isNetworkError = (error: unknown) => error instanceof TypeError;
 
 /** Remove every user's queue (logout). */
 export function clearOfflineQueues() {

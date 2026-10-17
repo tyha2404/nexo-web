@@ -43,7 +43,6 @@ const AIChatWidget = lazy(() =>
   import('./components/chat').then((module) => ({ default: module.AIChatWidget }))
 );
 import { ApiError, authService, clearOfflineQueues, invalidateRequestCache } from './services';
-import { ConnectionStatus } from './components/common';
 import { useOfflineQueueSync, useRealtimeSync } from './hooks';
 
 export type ActiveTab = 'dashboard' | 'transactions' | 'debts' | 'planning';
@@ -97,7 +96,7 @@ function App() {
         setUser(null);
       } else {
         setAuthError(
-          'Chưa thể kết nối để xác minh phiên. Thông tin đăng nhập vẫn được giữ, hãy thử lại khi có mạng.'
+          'Không thể xác minh phiên đăng nhập. Vui lòng thử lại hoặc đăng nhập bên dưới.'
         );
       }
     } finally {
@@ -292,28 +291,17 @@ function App() {
     );
   }
 
-  if (!user && authError) {
-    return (
-      <div className="loading-screen" role="alert">
-        <p>{authError}</p>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setAuthLoading(true);
-            void checkAuth();
-          }}
-        >
-          Thử kết nối lại
-        </button>
-        <button className="btn btn-secondary" onClick={handleLogout}>
-          Đăng xuất
-        </button>
-      </div>
-    );
-  }
   if (!user) {
     return (
-      <div className="auth-outer-container animate-fade-in">
+      <div className="auth-outer-container animate-fade-in flex-col">
+        {authError && (
+          <div role="alert" className="mb-4 text-center">
+            <p>{authError}</p>
+            <button className="btn btn-secondary" onClick={() => void checkAuth()}>
+              Thử lại
+            </button>
+          </div>
+        )}
         {/* Auth fires 'auth-changed', which already re-runs checkAuth */}
         <Auth />
       </div>
@@ -466,7 +454,6 @@ function App() {
 
       {/* Main Content Area */}
       <main className="main-content">
-        <ConnectionStatus />
         {/* Desktop Top Header with Sleek AI Action Button */}
         <header className="main-desktop-header">
           <div className="header-page-info">

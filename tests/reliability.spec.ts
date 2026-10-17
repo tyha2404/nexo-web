@@ -76,10 +76,13 @@ test('a network error on startup retains the token and offers retry', async ({ p
   const state = await setup(page);
   state.offline = true;
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Thử kết nối lại' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Thử lại' })).toBeVisible();
+  await expect(
+    page.locator('form').getByRole('button', { name: 'Đăng nhập', exact: true })
+  ).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('token'))).toBe(TOKEN);
   state.offline = false;
-  await page.getByRole('button', { name: 'Thử kết nối lại' }).click();
+  await page.getByRole('button', { name: 'Thử lại' }).click();
   await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
 });
 
@@ -103,33 +106,6 @@ test('a failed save keeps the form open with its values', async ({ page }) => {
   await expect(page.getByText('Không lưu được', { exact: true })).toBeVisible();
   await expect(dialog).toBeVisible();
   await expect(dialog.getByLabel('Ghi chú (không bắt buộc)')).toHaveValue('Chưa gửi');
-});
-
-test.describe('installed PWA cache', () => {
-  test.use({ serviceWorkers: 'allow' });
-  test('offline PWA reopens cached data without logging out', async ({
-    page,
-    context,
-    browserName,
-  }) => {
-    test.skip(
-      browserName === 'webkit',
-      'Playwright WebKit does not expose service worker control; covered in Chromium.'
-    );
-    const state = await setup(page);
-    await page.goto('/');
-    await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
-    await page.evaluate(async () => {
-      await navigator.serviceWorker.ready;
-    });
-    await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
-    state.offline = true;
-    await context.setOffline(true);
-    await page.reload();
-    await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
-    expect(await page.evaluate(() => localStorage.getItem('token'))).toBe(TOKEN);
-    await expect(page.locator('.connection-status')).toBeVisible();
-  });
 });
 
 test('quick add from the bottom nav saves with only amount and category', async ({
