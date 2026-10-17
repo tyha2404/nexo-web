@@ -615,7 +615,8 @@ input[class*='dummyInput'] {
   margin-bottom: 0.75rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   .glass-card {
     padding: 0.65rem 0.65rem !important;
     border-radius: var(--radius-md) !important;
@@ -743,7 +744,8 @@ input[class*='dummyInput'] {
   z-index: 99;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   .app-shell {
     flex-direction: column;
     min-height: 100vh;
@@ -1545,7 +1547,7 @@ input[type='checkbox'] {
   padding: 0;
 }
 
-@media (pointer: coarse) or (max-width: 768px) {
+@media (pointer: coarse), (max-width: 768px) {
   .action-btn,
   .pagination-btn,
   .icon-only-btn,
@@ -2012,7 +2014,8 @@ body.light-theme .kpi-badge-neutral,
   display: inline;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   .category-tabs-nav,
   .tabs-nav-wrapper,
   .wallets-tabs-nav-wrapper,
@@ -2367,7 +2370,8 @@ select:focus-visible,
 }
 
 /* Responsive & PWA: Offset Toast above Bottom Navigation Bar */
-@media (max-width: 768px) {
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   .Toastify__toast-container {
     width: 100% !important;
     max-width: 100% !important;
@@ -2443,7 +2447,8 @@ html {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   /* Apple HIG minimum touch target is 44x44pt */
   .mobile-header-btn {
     width: 44px;
@@ -2466,7 +2471,8 @@ html {
 
 /* iOS always draws white status-bar text with black-translucent, so the light
    theme paints a dark strip behind the status bar to keep the clock readable. */
-@media (display-mode: standalone) and (max-width: 768px) {
+@media (display-mode: standalone) and (max-width: 768px),
+  (display-mode: standalone) and (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   .light-theme .mobile-header {
     background: linear-gradient(
       to bottom,
@@ -2518,4 +2524,32 @@ html {
 .logout-btn:hover,
 .mobile-logout-btn:hover {
   background-color: var(--expense-hover-bg) !important;
+}
+
+/* Reserve a separate row for actions; the receipt and fields scroll above it. */
+.app-modal-backdrop .modal-form-shell {
+  overflow: hidden;
+  padding: 0;
+}
+.app-modal-backdrop .modal-form-shell .modal-header {
+  position: static !important;
+  margin: 0 !important;
+  padding: 12px 16px !important;
+  flex-shrink: 0;
+}
+.modal-form-shell > form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.modal-form-body {
+  padding: 16px;
+}
+.app-modal-backdrop .modal-form-shell .button-group {
+  position: static;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 12px 16px 0;
+  border-top: 1px solid var(--border);
 }

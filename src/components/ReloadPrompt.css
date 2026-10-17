@@ -53,7 +53,8 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
-@media (max-width: 768px) {
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   .pwa-toast {
     left: 12px;
     right: 12px;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent, type TouchEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { User } from '../../commons/types';
+import { useMobileChatViewport } from '../../hooks';
 import { authService } from '../../services';
 import './AIChatWidget.css';
 import { ChatHeader } from './ChatHeader';
@@ -40,6 +41,8 @@ export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AICha
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatWindowRef = useRef<HTMLDivElement>(null);
+
+  const isMobile = useMobileChatViewport(isOpen, chatWindowRef);
 
   const chat = useChatConversation({
     onSessionLoaded: () => {
@@ -116,11 +119,7 @@ export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AICha
 
     const handleClickOutside = (e: globalThis.MouseEvent | globalThis.TouchEvent) => {
       const target = e.target as Node;
-      if (
-        window.innerWidth > 768 &&
-        chatWindowRef.current &&
-        !chatWindowRef.current.contains(target)
-      ) {
+      if (!isMobile && chatWindowRef.current && !chatWindowRef.current.contains(target)) {
         const isHeaderAiBtn = (target as HTMLElement).closest?.('.header-ai-btn');
         if (!isHeaderAiBtn) {
           setIsOpen(false);
@@ -143,7 +142,7 @@ export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AICha
       document.removeEventListener('touchstart', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen]);
+  }, [isOpen, isMobile]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -222,7 +221,7 @@ export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AICha
           ref={chatWindowRef}
           className={`nexo-chat-window ${isResizing ? 'resizing' : ''}`}
           style={{
-            ...(window.innerWidth > 768
+            ...(!isMobile
               ? {
                   width: `${chatDimensions.width}px`,
                   height: `${chatDimensions.height}px`,

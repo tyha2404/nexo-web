@@ -1,31 +1,35 @@
 import { test, expect } from '@playwright/test';
 import { setup, openTransactionForm, TOKEN, INCOME } from './fixtures';
 
-test('dashboard prioritizes spending, stays within viewport and defers analysis', async ({
+test('dashboard shows the original sections without expanding analysis and fits the viewport', async ({
   page,
 }) => {
   const state = await setup(page);
   await page.goto('/');
-  await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
-  expect(state.requests.filter((path) => path.startsWith('/reports/monthly-trend'))).toHaveLength(
+  await expect(page.getByText('Tiền khả dụng thực tế', { exact: true })).toBeVisible();
+  await expect(page.getByText('Tổng tài sản:', { exact: true })).toBeVisible();
+  await expect(page.getByText('Tổng Đầu tư ↗', { exact: true })).toBeVisible();
+  await expect(page.getByText('Mục tiêu Đầu tư Tháng', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('Xu hướng Chi tiêu & Thu nhập (12 Tháng)', { exact: true })
+  ).toBeVisible();
+  await expect(page.locator('.dashboard-main-grid .recent-txns-card')).toBeVisible();
+  await expect(page.locator('.dashboard-secondary-section')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Xem phân tích, tài sản và đầu tư' })).toHaveCount(
     0
   );
-  expect(
-    state.requests.filter((path) => path.startsWith('/reports/category-breakdown'))
-  ).toHaveLength(0);
-  expect(state.requests.filter((path) => path.startsWith('/debts?'))).toHaveLength(0);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
-    true
-  );
-  await page.screenshot({
-    path: `test-results/dashboard-${test.info().project.name}.png`,
-    fullPage: true,
-  });
-  await page.getByRole('button', { name: 'Xem phân tích, tài sản và đầu tư' }).click();
   await expect
     .poll(() => state.requests.some((path) => path.startsWith('/reports/monthly-trend')))
     .toBe(true);
-  await expect(page.getByText('Mục tiêu Đầu tư Tháng', { exact: true })).toBeVisible();
+  expect(state.requests.some((path) => path.startsWith('/reports/category-breakdown'))).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({
+    path: `test-results/dashboard-restored-${test.info().project.name}.png`,
+    fullPage: true,
+  });
+  await page
+    .locator('.dashboard-main-grid')
+    .screenshot({ path: `test-results/dashboard-analysis-${test.info().project.name}.png` });
 });
 
 test('switching type clears the previous category; closing never asks about drafts', async ({
@@ -83,7 +87,7 @@ test('a network error on startup retains the token and offers retry', async ({ p
   expect(await page.evaluate(() => localStorage.getItem('token'))).toBe(TOKEN);
   state.offline = false;
   await page.getByRole('button', { name: 'Thử lại' }).click();
-  await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
+  await expect(page.getByText('Tiền khả dụng thực tế', { exact: true })).toBeVisible();
 });
 
 test('an explicit 401 clears the expired token', async ({ page }) => {

@@ -554,7 +554,8 @@ input[class*='dummyInput'] {
 }
 
 /* Responsive view tweaks */
-@media (max-width: 768px) {
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   .transactions-view {
     padding: 0;
   }

@@ -424,7 +424,7 @@ export default function Categories() {
               aria-modal="true"
               aria-labelledby="category-modal-title"
               tabIndex={-1}
-              className="modal-content animate-scale-in"
+              className="modal-content modal-form-shell animate-scale-in"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="modal-header">
@@ -437,67 +437,69 @@ export default function Categories() {
               </div>
               {editingCategory ? (
                 <form onSubmit={handleUpdate}>
-                  <div className="form-group">
-                    <label htmlFor="edit-name">Tên danh mục</label>
-                    <input
-                      id="edit-name"
-                      type="text"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="edit-type">Loại danh mục</label>
-                    <Select
-                      id="edit-type"
-                      options={typeOptions}
-                      value={typeOptions.find((opt) => opt.value === editType) || null}
-                      onChange={(option) =>
-                        setEditType(
-                          (option ? option.value : TransactionType.EXPENSE) as TransactionType
-                        )
-                      }
-                      classNamePrefix="react-select"
-                      placeholder="Chọn Loại danh mục"
-                      menuPortalTarget={document.body}
-                    />
-                  </div>
-                  {editType === TransactionType.EXPENSE && (
-                    <>
-                      <div className="form-group">
-                        <label htmlFor="edit-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
-                        <input
-                          id="edit-budget"
-                          type="text"
-                          value={editBudgetLimit}
-                          onChange={(e) => handleEditBudgetChange(e.target.value)}
-                          placeholder="Ví dụ: 5.000.000"
-                        />
-                      </div>
-                      <div className="form-group form-check">
-                        <label className="checkbox-label">
+                  <div className="modal-form-body min-h-0 overflow-y-auto overscroll-contain">
+                    <div className="form-group">
+                      <label htmlFor="edit-name">Tên danh mục</label>
+                      <input
+                        id="edit-name"
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="edit-type">Loại danh mục</label>
+                      <Select
+                        id="edit-type"
+                        options={typeOptions}
+                        value={typeOptions.find((opt) => opt.value === editType) || null}
+                        onChange={(option) =>
+                          setEditType(
+                            (option ? option.value : TransactionType.EXPENSE) as TransactionType
+                          )
+                        }
+                        classNamePrefix="react-select"
+                        placeholder="Chọn Loại danh mục"
+                        menuPortalTarget={document.body}
+                      />
+                    </div>
+                    {editType === TransactionType.EXPENSE && (
+                      <>
+                        <div className="form-group">
+                          <label htmlFor="edit-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
                           <input
-                            id="edit-exclude-avg"
-                            type="checkbox"
-                            checked={editExcludeFromAverageDaily}
-                            onChange={(e) => setEditExcludeFromAverageDaily(e.target.checked)}
+                            id="edit-budget"
+                            type="text"
+                            value={editBudgetLimit}
+                            onChange={(e) => handleEditBudgetChange(e.target.value)}
+                            placeholder="Ví dụ: 5.000.000"
                           />
-                          Không tính vào chi tiêu trung bình ngày
-                        </label>
-                      </div>
-                    </>
-                  )}
-                  <div className="form-group">
-                    <label htmlFor="edit-desc">Mô tả</label>
-                    <textarea
-                      id="edit-desc"
-                      value={editDescription}
-                      onChange={(e) => setEditDescription(e.target.value)}
-                      placeholder="Mô tả ngắn về danh mục này..."
-                      rows={3}
-                    />
+                        </div>
+                        <div className="form-group form-check">
+                          <label className="checkbox-label">
+                            <input
+                              id="edit-exclude-avg"
+                              type="checkbox"
+                              checked={editExcludeFromAverageDaily}
+                              onChange={(e) => setEditExcludeFromAverageDaily(e.target.checked)}
+                            />
+                            Không tính vào chi tiêu trung bình ngày
+                          </label>
+                        </div>
+                      </>
+                    )}
+                    <div className="form-group">
+                      <label htmlFor="edit-desc">Mô tả</label>
+                      <textarea
+                        id="edit-desc"
+                        value={editDescription}
+                        onChange={(e) => setEditDescription(e.target.value)}
+                        placeholder="Mô tả ngắn về danh mục này..."
+                        rows={3}
+                      />
+                    </div>
                   </div>
                   <div className="button-group">
                     <button type="button" className="btn btn-secondary" onClick={closeModal}>
@@ -510,67 +512,69 @@ export default function Categories() {
                 </form>
               ) : (
                 <form onSubmit={handleCreate}>
-                  <div className="form-group">
-                    <label htmlFor="new-name">Tên danh mục</label>
-                    <input
-                      id="new-name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="new-type">Loại danh mục</label>
-                    <Select
-                      id="new-type"
-                      options={typeOptions}
-                      value={typeOptions.find((opt) => opt.value === type) || null}
-                      onChange={(option) =>
-                        setType(
-                          (option ? option.value : TransactionType.EXPENSE) as TransactionType
-                        )
-                      }
-                      classNamePrefix="react-select"
-                      placeholder="Chọn Loại danh mục"
-                      menuPortalTarget={document.body}
-                    />
-                  </div>
-                  {type === TransactionType.EXPENSE && (
-                    <>
-                      <div className="form-group">
-                        <label htmlFor="new-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
-                        <input
-                          id="new-budget"
-                          type="text"
-                          value={budgetLimit}
-                          onChange={(e) => handleBudgetChange(e.target.value)}
-                          placeholder="Ví dụ: 5.000.000"
-                        />
-                      </div>
-                      <div className="form-group form-check">
-                        <label className="checkbox-label">
+                  <div className="modal-form-body min-h-0 overflow-y-auto overscroll-contain">
+                    <div className="form-group">
+                      <label htmlFor="new-name">Tên danh mục</label>
+                      <input
+                        id="new-name"
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="new-type">Loại danh mục</label>
+                      <Select
+                        id="new-type"
+                        options={typeOptions}
+                        value={typeOptions.find((opt) => opt.value === type) || null}
+                        onChange={(option) =>
+                          setType(
+                            (option ? option.value : TransactionType.EXPENSE) as TransactionType
+                          )
+                        }
+                        classNamePrefix="react-select"
+                        placeholder="Chọn Loại danh mục"
+                        menuPortalTarget={document.body}
+                      />
+                    </div>
+                    {type === TransactionType.EXPENSE && (
+                      <>
+                        <div className="form-group">
+                          <label htmlFor="new-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
                           <input
-                            id="new-exclude-avg"
-                            type="checkbox"
-                            checked={excludeFromAverageDaily}
-                            onChange={(e) => setExcludeFromAverageDaily(e.target.checked)}
+                            id="new-budget"
+                            type="text"
+                            value={budgetLimit}
+                            onChange={(e) => handleBudgetChange(e.target.value)}
+                            placeholder="Ví dụ: 5.000.000"
                           />
-                          Không tính vào chi tiêu trung bình ngày
-                        </label>
-                      </div>
-                    </>
-                  )}
-                  <div className="form-group">
-                    <label htmlFor="new-desc">Mô tả</label>
-                    <textarea
-                      id="new-desc"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Mô tả ngắn về danh mục này..."
-                      rows={3}
-                    />
+                        </div>
+                        <div className="form-group form-check">
+                          <label className="checkbox-label">
+                            <input
+                              id="new-exclude-avg"
+                              type="checkbox"
+                              checked={excludeFromAverageDaily}
+                              onChange={(e) => setExcludeFromAverageDaily(e.target.checked)}
+                            />
+                            Không tính vào chi tiêu trung bình ngày
+                          </label>
+                        </div>
+                      </>
+                    )}
+                    <div className="form-group">
+                      <label htmlFor="new-desc">Mô tả</label>
+                      <textarea
+                        id="new-desc"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Mô tả ngắn về danh mục này..."
+                        rows={3}
+                      />
+                    </div>
                   </div>
                   <div className="button-group">
                     <button type="button" className="btn btn-secondary" onClick={closeModal}>

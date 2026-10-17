@@ -25,7 +25,15 @@ const MIME_TYPES = {
   '.txt': 'text/plain',
 };
 
-const COMPRESSIBLE_EXTS = new Set(['.html', '.js', '.css', '.json', '.svg', '.webmanifest', '.txt']);
+const COMPRESSIBLE_EXTS = new Set([
+  '.html',
+  '.js',
+  '.css',
+  '.json',
+  '.svg',
+  '.webmanifest',
+  '.txt',
+]);
 // Compressed copies of static files, keyed by path + encoding. dist/ is immutable per deploy.
 const compressedCache = new Map();
 
@@ -123,7 +131,9 @@ const server = http.createServer((req, res) => {
       }
 
       let body = content;
-      const encoding = COMPRESSIBLE_EXTS.has(ext) ? pickEncoding(req.headers['accept-encoding']) : null;
+      const encoding = COMPRESSIBLE_EXTS.has(ext)
+        ? pickEncoding(req.headers['accept-encoding'])
+        : null;
       if (encoding && content.length > 1024) {
         body = compress(filePath, content, encoding);
         headers['Content-Encoding'] = encoding;

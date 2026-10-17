@@ -79,7 +79,7 @@ test('without a Supabase session the app polls every minute while visible', asyn
   await page.clock.install();
   const state = await setup(page);
   await page.goto('/');
-  await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
+  await expect(page.getByText('Tiền khả dụng thực tế', { exact: true })).toBeVisible();
   const count = () => state.requests.filter((path) => path.startsWith('/transactions?')).length;
   await page.clock.runFor(2000);
   const before = count();

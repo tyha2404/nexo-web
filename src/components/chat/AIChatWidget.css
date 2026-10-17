@@ -1956,7 +1956,8 @@ body.light-theme .message-bubble.thinking-bubble {
 /* =========================================================
    Responsive Mobile Styles for Nexo AI Copilot Bottom Sheet
    ========================================================= */
-@media (max-width: 768px) {
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   .nexo-chat-widget-fab {
     bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
     right: max(16px, calc(env(safe-area-inset-right, 0px) + 16px)) !important;
@@ -1977,10 +1978,14 @@ body.light-theme .message-bubble.thinking-bubble {
     width: 100% !important;
     min-width: 100% !important;
     max-width: 100% !important;
-    height: 85vh !important;
-    height: 85dvh !important;
-    max-height: 85vh !important;
-    max-height: 85dvh !important;
+    top: var(--chat-visible-top, 15dvh) !important;
+    bottom: auto !important;
+    height: var(--chat-visible-height, 85dvh) !important;
+    min-height: 0 !important;
+    max-height: var(--chat-visible-height, 85dvh) !important;
+    box-sizing: border-box;
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
     border-radius: 20px 20px 0 0 !important;
     border-left: none !important;
     border-right: none !important;

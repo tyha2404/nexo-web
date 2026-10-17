@@ -200,7 +200,7 @@ export default function AddTransactionModal({
         aria-modal="true"
         aria-labelledby="transaction-modal-title"
         tabIndex={-1}
-        className="modal-content animate-scale-in"
+        className="modal-content modal-form-shell animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
@@ -218,176 +218,177 @@ export default function AddTransactionModal({
           </button>
         </div>
 
-        <div className="addmodal-type-tabs-container mb-5">
-          <div className="category-tabs w-full" role="tablist" aria-label="Loại giao dịch">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeType === TransactionType.EXPENSE}
-              className={`category-tab flex flex-1 items-center gap-1.5 ${
-                activeType === TransactionType.EXPENSE ? 'active' : ''
-              }`}
-              onClick={() => {
-                if (activeType !== TransactionType.EXPENSE) {
-                  setActiveType(TransactionType.EXPENSE);
-                  setCategoryId('');
-                  setCategories([]);
-                }
-              }}
-            >
-              <ShoppingBag size={14} />
-              <span>Chi tiêu</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeType === TransactionType.INCOME}
-              className={`category-tab flex flex-1 items-center gap-1.5 ${
-                activeType === TransactionType.INCOME ? 'active' : ''
-              }`}
-              onClick={() => {
-                if (activeType !== TransactionType.INCOME) {
-                  setActiveType(TransactionType.INCOME);
-                  setCategoryId('');
-                  setCategories([]);
-                }
-              }}
-            >
-              <TrendingUp size={14} />
-              <span>Thu nhập</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeType === TransactionType.INVESTMENT}
-              className={`category-tab flex flex-1 items-center gap-1.5 ${
-                activeType === TransactionType.INVESTMENT ? 'active' : ''
-              }`}
-              onClick={() => {
-                if (activeType !== TransactionType.INVESTMENT) {
-                  setActiveType(TransactionType.INVESTMENT);
-                  setCategoryId('');
-                  setCategories([]);
-                }
-              }}
-            >
-              <Gem size={14} />
-              <span>Đầu tư</span>
-            </button>
-          </div>
-        </div>
-
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="atxn-amount">Số tiền {typeLabel} (đ)</label>
-            <input
-              id="atxn-amount"
-              type="text"
-              inputMode="numeric"
-              placeholder={
-                activeType === TransactionType.INCOME
-                  ? 'Ví dụ: 15.000.000'
-                  : activeType === TransactionType.INVESTMENT
-                    ? 'Ví dụ: 10.000.000'
-                    : 'Ví dụ: 50.000'
-              }
-              value={amount}
-              onChange={(e) => handleAmountChange(e.target.value)}
-              autoFocus={!isEditing}
-              required
-            />
-          </div>
+          <div className="modal-form-body min-h-0 overflow-y-auto overscroll-contain">
+            <div className="addmodal-type-tabs-container mb-5">
+              <div className="category-tabs w-full" role="tablist" aria-label="Loại giao dịch">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeType === TransactionType.EXPENSE}
+                  className={`category-tab flex flex-1 items-center gap-1.5 ${
+                    activeType === TransactionType.EXPENSE ? 'active' : ''
+                  }`}
+                  onClick={() => {
+                    if (activeType !== TransactionType.EXPENSE) {
+                      setActiveType(TransactionType.EXPENSE);
+                      setCategoryId('');
+                      setCategories([]);
+                    }
+                  }}
+                >
+                  <ShoppingBag size={14} />
+                  <span>Chi tiêu</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeType === TransactionType.INCOME}
+                  className={`category-tab flex flex-1 items-center gap-1.5 ${
+                    activeType === TransactionType.INCOME ? 'active' : ''
+                  }`}
+                  onClick={() => {
+                    if (activeType !== TransactionType.INCOME) {
+                      setActiveType(TransactionType.INCOME);
+                      setCategoryId('');
+                      setCategories([]);
+                    }
+                  }}
+                >
+                  <TrendingUp size={14} />
+                  <span>Thu nhập</span>
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeType === TransactionType.INVESTMENT}
+                  className={`category-tab flex flex-1 items-center gap-1.5 ${
+                    activeType === TransactionType.INVESTMENT ? 'active' : ''
+                  }`}
+                  onClick={() => {
+                    if (activeType !== TransactionType.INVESTMENT) {
+                      setActiveType(TransactionType.INVESTMENT);
+                      setCategoryId('');
+                      setCategories([]);
+                    }
+                  }}
+                >
+                  <Gem size={14} />
+                  <span>Đầu tư</span>
+                </button>
+              </div>
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="atxn-category">Danh mục</label>
-            <Select
-              inputId="atxn-category"
-              options={categories.map((cat) => ({ value: cat.id, label: cat.name }))}
-              value={
-                categories
-                  .map((c) => ({ value: c.id, label: c.name }))
-                  .find((o) => o.value === categoryId) || null
-              }
-              onChange={(option) => setCategoryId(option ? option.value : '')}
-              classNamePrefix="react-select"
-              placeholder="Chọn Danh mục"
-              isSearchable
-              menuPortalTarget={document.body}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="atxn-title">
-              Ghi chú <span className="text-muted">(không bắt buộc)</span>
-            </label>
-            <input
-              id="atxn-title"
-              type="text"
-              placeholder={
-                activeType === TransactionType.INCOME
-                  ? 'Ví dụ: Lương tháng, Thưởng dự án...'
-                  : activeType === TransactionType.INVESTMENT
-                    ? 'Ví dụ: Mua cổ phiếu Vinamilk, Gửi tiết kiệm...'
-                    : 'Ví dụ: Mua sắm tạp hóa, Ăn uống...'
-              }
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
-
-          {activeType === TransactionType.INVESTMENT && (
             <div className="form-group">
-              <label htmlFor="atxn-status">Trạng thái đầu tư</label>
+              <label htmlFor="atxn-amount">Số tiền {typeLabel} (đ)</label>
+              <input
+                id="atxn-amount"
+                type="text"
+                inputMode="numeric"
+                placeholder={
+                  activeType === TransactionType.INCOME
+                    ? 'Ví dụ: 15.000.000'
+                    : activeType === TransactionType.INVESTMENT
+                      ? 'Ví dụ: 10.000.000'
+                      : 'Ví dụ: 50.000'
+                }
+                value={amount}
+                onChange={(e) => handleAmountChange(e.target.value)}
+                autoFocus={!isEditing}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="atxn-category">Danh mục</label>
               <Select
-                inputId="atxn-status"
-                options={INVESTMENT_STATUS_OPTIONS}
-                value={INVESTMENT_STATUS_OPTIONS.find((o) => o.value === status) || null}
-                onChange={(option) => setStatus(option?.value ?? InvestmentStatus.HOLDING)}
+                inputId="atxn-category"
+                options={categories.map((cat) => ({ value: cat.id, label: cat.name }))}
+                value={
+                  categories
+                    .map((c) => ({ value: c.id, label: c.name }))
+                    .find((o) => o.value === categoryId) || null
+                }
+                onChange={(option) => setCategoryId(option ? option.value : '')}
                 classNamePrefix="react-select"
-                placeholder="Chọn Trạng thái"
-                isSearchable={false}
+                placeholder="Chọn Danh mục"
+                isSearchable
                 menuPortalTarget={document.body}
               />
             </div>
-          )}
 
-          {activeType === TransactionType.INVESTMENT && status !== InvestmentStatus.HOLDING && (
             <div className="form-group">
-              <label htmlFor="atxn-pnl">Số tiền Lãi / Lỗ thực tế (đ)</label>
+              <label htmlFor="atxn-title">
+                Ghi chú <span className="text-muted">(không bắt buộc)</span>
+              </label>
               <input
-                id="atxn-pnl"
+                id="atxn-title"
                 type="text"
-                inputMode="numeric"
-                placeholder="Dương cho Lãi (VD: 500.000), Âm cho Lỗ (VD: -200.000)"
-                value={realizedPnl}
-                onChange={(e) => handlePnlChange(e.target.value)}
+                placeholder={
+                  activeType === TransactionType.INCOME
+                    ? 'Ví dụ: Lương tháng, Thưởng dự án...'
+                    : activeType === TransactionType.INVESTMENT
+                      ? 'Ví dụ: Mua cổ phiếu Vinamilk, Gửi tiết kiệm...'
+                      : 'Ví dụ: Mua sắm tạp hóa, Ăn uống...'
+                }
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
               />
-              <small className="mt-1 block text-[0.8rem] text-muted">
-                Nhập số dương nếu có lãi, hoặc dấu trừ (-) ở đầu nếu bị lỗ.
-              </small>
             </div>
-          )}
 
-          <div className="form-group">
-            <label htmlFor="atxn-incurred">Ngày thực hiện</label>
-            <input
-              id="atxn-incurred"
-              type="date"
-              value={transactionDate}
-              onChange={(event) => setTransactionDate(event.target.value)}
-              required
-            />
+            {activeType === TransactionType.INVESTMENT && (
+              <div className="form-group">
+                <label htmlFor="atxn-status">Trạng thái đầu tư</label>
+                <Select
+                  inputId="atxn-status"
+                  options={INVESTMENT_STATUS_OPTIONS}
+                  value={INVESTMENT_STATUS_OPTIONS.find((o) => o.value === status) || null}
+                  onChange={(option) => setStatus(option?.value ?? InvestmentStatus.HOLDING)}
+                  classNamePrefix="react-select"
+                  placeholder="Chọn Trạng thái"
+                  isSearchable={false}
+                  menuPortalTarget={document.body}
+                />
+              </div>
+            )}
+
+            {activeType === TransactionType.INVESTMENT && status !== InvestmentStatus.HOLDING && (
+              <div className="form-group">
+                <label htmlFor="atxn-pnl">Số tiền Lãi / Lỗ thực tế (đ)</label>
+                <input
+                  id="atxn-pnl"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Dương cho Lãi (VD: 500.000), Âm cho Lỗ (VD: -200.000)"
+                  value={realizedPnl}
+                  onChange={(e) => handlePnlChange(e.target.value)}
+                />
+                <small className="mt-1 block text-[0.8rem] text-muted">
+                  Nhập số dương nếu có lãi, hoặc dấu trừ (-) ở đầu nếu bị lỗ.
+                </small>
+              </div>
+            )}
+
+            <div className="form-group">
+              <label htmlFor="atxn-incurred">Ngày thực hiện</label>
+              <input
+                id="atxn-incurred"
+                type="date"
+                value={transactionDate}
+                onChange={(event) => setTransactionDate(event.target.value)}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <ReceiptUploader
+                value={receiptUrl}
+                onChange={setReceiptUrl}
+                onUploadingChange={setUploading}
+                disabled={submitting}
+              />
+            </div>
           </div>
-
-          <div className="form-group">
-            <ReceiptUploader
-              value={receiptUrl}
-              onChange={setReceiptUrl}
-              onUploadingChange={setUploading}
-              disabled={submitting}
-            />
-          </div>
-
           <div className="button-group">
             <button
               type="button"

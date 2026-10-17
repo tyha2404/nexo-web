@@ -500,7 +500,7 @@ export default function Targets() {
               aria-modal="true"
               aria-labelledby="target-modal-title"
               tabIndex={-1}
-              className="modal-content animate-scale-in"
+              className="modal-content modal-form-shell animate-scale-in"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="modal-header">
@@ -515,57 +515,60 @@ export default function Targets() {
                 </button>
               </div>
               <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label htmlFor="target-type-select">Loại mục tiêu</label>
-                  <Select
-                    id="target-type-select"
-                    options={TARGET_TYPE_OPTIONS}
-                    value={TARGET_TYPE_OPTIONS.find((opt) => opt.value === targetTypeForm) || null}
-                    onChange={(option) => {
-                      if (option) {
-                        const newType = option.value;
-                        setTargetTypeForm(newType);
-                        const existing =
-                          newType === TransactionType.EXPENSE
-                            ? targetSummary?.expense?.targetAmount
-                            : targetSummary?.investment?.targetAmount;
-                        setAmount(existing ? existing.toLocaleString('vi-VN') : '');
+                <div className="modal-form-body min-h-0 overflow-y-auto overscroll-contain">
+                  <div className="form-group">
+                    <label htmlFor="target-type-select">Loại mục tiêu</label>
+                    <Select
+                      id="target-type-select"
+                      options={TARGET_TYPE_OPTIONS}
+                      value={
+                        TARGET_TYPE_OPTIONS.find((opt) => opt.value === targetTypeForm) || null
                       }
-                    }}
-                    classNamePrefix="react-select"
-                    menuPortalTarget={document.body}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="target-amount-input">Số tiền (đ)</label>
-                  <input
-                    id="target-amount-input"
-                    type="text"
-                    placeholder="Ví dụ: 10.000.000"
-                    value={amount}
-                    onChange={(e) => handleAmountChange(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="target-month">Áp dụng cho tháng</label>
-                  <div className="target-datepicker-wrapper">
-                    <DatePicker
-                      id="target-month"
-                      selected={moment(selectedMonth, 'YYYY-MM').toDate()}
-                      onChange={(date: Date | null) => {
-                        if (date) setSelectedMonth(moment(date).format('YYYY-MM'));
+                      onChange={(option) => {
+                        if (option) {
+                          const newType = option.value;
+                          setTargetTypeForm(newType);
+                          const existing =
+                            newType === TransactionType.EXPENSE
+                              ? targetSummary?.expense?.targetAmount
+                              : targetSummary?.investment?.targetAmount;
+                          setAmount(existing ? existing.toLocaleString('vi-VN') : '');
+                        }
                       }}
-                      dateFormat="MM/yyyy"
-                      showMonthYearPicker
-                      portalId="date-picker-portal"
-                      className="react-datepicker-input"
+                      classNamePrefix="react-select"
+                      menuPortalTarget={document.body}
                     />
                   </div>
-                </div>
 
+                  <div className="form-group">
+                    <label htmlFor="target-amount-input">Số tiền (đ)</label>
+                    <input
+                      id="target-amount-input"
+                      type="text"
+                      placeholder="Ví dụ: 10.000.000"
+                      value={amount}
+                      onChange={(e) => handleAmountChange(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="target-month">Áp dụng cho tháng</label>
+                    <div className="target-datepicker-wrapper">
+                      <DatePicker
+                        id="target-month"
+                        selected={moment(selectedMonth, 'YYYY-MM').toDate()}
+                        onChange={(date: Date | null) => {
+                          if (date) setSelectedMonth(moment(date).format('YYYY-MM'));
+                        }}
+                        dateFormat="MM/yyyy"
+                        showMonthYearPicker
+                        portalId="date-picker-portal"
+                        className="react-datepicker-input"
+                      />
+                    </div>
+                  </div>
+                </div>
                 <div className="button-group">
                   <button
                     type="button"

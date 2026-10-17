@@ -159,7 +159,8 @@
   font-size: 0.875rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   .monthly-trend-card {
     padding: 0.65rem 0.65rem !important;
   }

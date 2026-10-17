@@ -103,7 +103,8 @@
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   .main-desktop-header {
     display: none !important;
   }
@@ -189,7 +190,8 @@
 }
 
 /* Quick-add: raised center button in the mobile bottom nav */
-@media (max-width: 768px) {
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   .bottom-nav-item.bottom-nav-add {
     flex: 0 0 64px;
   }

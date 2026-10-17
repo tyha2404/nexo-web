@@ -1,4 +1,13 @@
-import { AlertCircle, ArrowDownRight, ArrowUpRight, ShoppingBag, Sparkles } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowDownRight,
+  ArrowUpRight,
+  CreditCard,
+  Plus,
+  ReceiptText,
+  ShoppingBag,
+  Sparkles,
+} from 'lucide-react';
 import moment from 'moment';
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
@@ -8,6 +17,7 @@ import type {
   SummaryReport,
   TargetSummaryResponse,
   Transaction,
+  Wallet as WalletModel,
 } from '../commons/types';
 import { formatCurrency, getCategoryIcon } from '../commons/utils';
 import {
@@ -16,6 +26,7 @@ import {
   reportService,
   targetService,
   transactionService,
+  walletService,
 } from '../services';
 import type { DebtSummary } from '../types/debt';
 import './Dashboard.css';
@@ -23,9 +34,8 @@ const MonthlyTrendChart = lazy(() =>
   import('./MonthlyTrendChart').then((module) => ({ default: module.MonthlyTrendChart }))
 );
 import { TransactionType } from '../commons/constants';
-import { MonthFilter } from './common';
-import { RecentTransactionsCard } from './dashboard-widgets';
 import { useOfflineQueue } from '../hooks';
+import { MonthFilter, PendingTransactionList } from './common';
 
 export { getCategoryIcon };
 
@@ -42,50 +52,93 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [categoryBreakdown, setCategoryBreakdown] = useState<CategoryBreakdownItem[]>([]);
   const [prevCategoryBreakdown, setPrevCategoryBreakdown] = useState<CategoryBreakdownItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-
+  const [wallets, setWallets] = useState<WalletModel[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
-  const pendingTransactions = useOfflineQueue();
   const [monthlyTrend, setMonthlyTrend] = useState<MonthlyTrendReport | null>(null);
   const [prevSummary, setPrevSummary] = useState<SummaryReport | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [showInsights, setShowInsights] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [loadedMonth, setLoadedMonth] = useState('');
-  const [insightsMonth, setInsightsMonth] = useState('');
-  const [insightsError, setInsightsError] = useState<string | null>(null);
   const requestNumber = useRef(0);
+  const pendingTransactions = useOfflineQueue();
 
   const fetchDashboardData = useCallback(async (monthStr: string, signal: AbortSignal) => {
     const requestId = ++requestNumber.current;
-    setLoading(true);
-    setError(null);
-    const m = moment(monthStr, 'YYYY-MM');
-    const filters = {
-      startDate: m.clone().startOf('month').format('YYYY-MM-DD'),
-      endDate: m.clone().endOf('month').format('YYYY-MM-DD'),
-    };
     const options = { signal };
     try {
-      // Daily-use data only. Analysis and charts load when expanded.
-      const [summaryData, allTimeData, targetData, debtData, transactions] = await Promise.all([
-        reportService.summary(filters, options),
+      setLoading(true);
+      setError(null);
+
+      const m = moment(monthStr, 'YYYY-MM');
+      const startOfMonth = m.startOf('month').format('YYYY-MM-DD');
+      const endOfMonth = m.endOf('month').format('YYYY-MM-DD');
+      const dateFilters = { startDate: startOfMonth, endDate: endOfMonth };
+      const targetParams = { month: m.month() + 1, year: m.year() };
+
+      const prevM = m.clone().subtract(1, 'month');
+      const prevDateFilters = {
+        startDate: prevM.startOf('month').format('YYYY-MM-DD'),
+        endDate: prevM.endOf('month').format('YYYY-MM-DD'),
+      };
+
+      const [
+        summaryData,
+        allTimeData,
+        breakdownData,
+        prevBreakdownData,
+        prevSummaryData,
+        categoriesData,
+        targetData,
+        debtData,
+        walletsData,
+        txnsData,
+        monthlyTrendData,
+      ] = await Promise.all([
+        reportService.summary(dateFilters, options),
         reportService.summary({ allTime: true }, options),
-        targetService.getSummary({ month: m.month() + 1, year: m.year() }, options),
-        debtService.getSummary(options),
-        transactionService.list({ ...filters, limit: 6, page: 1 }, options),
+        reportService.categoryBreakdown(dateFilters, options),
+        reportService
+          .categoryBreakdown(prevDateFilters, options)
+          .catch(() => ({ items: [], totalExpense: 0 })),
+        reportService
+          .summary(prevDateFilters, options)
+          .catch(() => ({ totalIncome: 0, totalExpense: 0 })),
+        categoryService.list(undefined, options),
+        targetService.getSummary(targetParams, options).catch(() => null),
+        debtService.getSummary(options).catch(() => null),
+        walletService.getWallets().catch(() => ({ wallets: [] })),
+        transactionService
+          .list(
+            {
+              startDate: startOfMonth,
+              endDate: endOfMonth,
+              limit: 6,
+              page: 1,
+            },
+            options
+          )
+          .catch(() => ({ items: [] })),
+        reportService.monthlyTrend(12, options).catch(() => null),
       ]);
+
       if (signal.aborted || requestId !== requestNumber.current) return;
+      setLoadedMonth(monthStr);
       setSummary(summaryData);
       setAllTimeSummary(allTimeData);
+      setCategoryBreakdown(breakdownData.items || []);
+      setPrevCategoryBreakdown(prevBreakdownData.items || []);
+      setPrevSummary(prevSummaryData);
+      setCategories(categoriesData.items || []);
       setTargetSummary(targetData);
       setDebtSummary(debtData);
-      setRecentTransactions(transactions.items || []);
-      setLoadedMonth(monthStr);
+      setWallets(walletsData.wallets || []);
+      setRecentTransactions(txnsData.items || []);
+      setMonthlyTrend(monthlyTrendData);
     } catch (err: unknown) {
       if (!signal.aborted && requestId === requestNumber.current)
-        setError(err instanceof Error ? err.message : 'Không thể tải tổng quan');
+        setError(err instanceof Error ? err.message : 'Không thể tải dữ liệu bảng điều khiển');
     } finally {
       if (!signal.aborted && requestId === requestNumber.current) setLoading(false);
     }
@@ -96,41 +149,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     void fetchDashboardData(selectedMonth, controller.signal);
     return () => controller.abort();
   }, [selectedMonth, refreshKey, fetchDashboardData]);
-
-  useEffect(() => {
-    if (!showInsights) return;
-    const controller = new AbortController();
-    const options = { signal: controller.signal };
-    const month = moment(selectedMonth, 'YYYY-MM');
-    const previous = month.clone().subtract(1, 'month');
-    const filters = (date: moment.Moment) => ({
-      startDate: date.clone().startOf('month').format('YYYY-MM-DD'),
-      endDate: date.clone().endOf('month').format('YYYY-MM-DD'),
-    });
-    setInsightsMonth('');
-    setInsightsError(null);
-    Promise.all([
-      reportService.categoryBreakdown(filters(month), options),
-      reportService.categoryBreakdown(filters(previous), options),
-      reportService.summary(filters(previous), options),
-      categoryService.list(undefined, options),
-      reportService.monthlyTrend(12, options),
-    ])
-      .then(([breakdown, previousBreakdown, previousSummary, categories, trend]) => {
-        if (controller.signal.aborted) return;
-        setCategoryBreakdown(breakdown.items || []);
-        setPrevCategoryBreakdown(previousBreakdown.items || []);
-        setPrevSummary(previousSummary);
-        setCategories(categories.items || []);
-        setMonthlyTrend(trend);
-        setInsightsMonth(selectedMonth);
-      })
-      .catch((err: unknown) => {
-        if (!controller.signal.aborted)
-          setInsightsError(err instanceof Error ? err.message : 'Không thể tải phân tích');
-      });
-    return () => controller.abort();
-  }, [showInsights, selectedMonth, refreshKey]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
@@ -241,12 +259,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       <div className="dashboard-header animate-fade-in">
         <div className="dashboard-title-group">
           <h2>Tổng quan Tài chính</h2>
-          <p className="subtitle">Ghi chi tiêu và theo dõi ngân sách mỗi ngày</p>
+          <p className="subtitle">Dòng tiền & phân tích thông minh thời gian thực</p>
         </div>
 
-        <div className="dashboard-primary-actions">
-          <MonthFilter value={selectedMonth} onChange={(newMonth) => setSelectedMonth(newMonth)} />
-        </div>
+        <MonthFilter value={selectedMonth} onChange={(newMonth) => setSelectedMonth(newMonth)} />
       </div>
 
       {error && (
@@ -302,30 +318,35 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             <div className="hero-top-row">
               <div className="hero-flow-info">
                 <div className="hero-pill-badge">
-                  <span>Đã chi tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}</span>
+                  <span>Dòng tiền Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}</span>
                 </div>
                 <div className="hero-main-amount-row">
-                  <span className={`hero-main-amount ${'text-expense'}`}>
-                    {formatCurrency(totalExpense)}
+                  <span
+                    className={`hero-main-amount ${
+                      monthlyNetCashFlow >= 0 ? 'text-income' : 'text-expense'
+                    }`}
+                  >
+                    {monthlyNetCashFlow > 0 ? '+' : ''}
+                    {formatCurrency(monthlyNetCashFlow)}
                   </span>
                 </div>
               </div>
 
               <div className="hero-net-assets-box">
                 <div className="net-assets-label">
-                  <span>Ngân sách còn lại</span>
+                  <span>Tiền khả dụng thực tế</span>
                 </div>
                 <div
                   className={`net-assets-value ${
-                    budgetLimit - budgetSpent >= 0 ? 'text-income' : 'text-expense'
+                    availableCash >= 0 ? 'text-income' : 'text-expense'
                   }`}
-                  title="Ngân sách chi tiêu tháng trừ số đã chi"
+                  title={`Tiền mặt khả dụng: ${formatCurrency(availableCash)}`}
                 >
-                  {budgetLimit > 0 ? formatCurrency(budgetLimit - budgetSpent) : 'Chưa đặt hạn mức'}
+                  {formatCurrency(availableCash)}
                 </div>
                 <div className="hero-total-networth-tag">
-                  <span>Dòng tiền thu − chi tháng này:</span>
-                  <strong>{formatCurrency(monthlyNetCashFlow)}</strong>
+                  <span>Tổng tài sản:</span>
+                  <strong>{formatCurrency(totalNetWorth)}</strong>
                 </div>
               </div>
             </div>
@@ -343,8 +364,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     className="submetric-number text-income"
                     title={formatCurrency(totalIncome)}
                   >
-                    {totalIncome > 0 ? '+' : ''}
-                    {formatCurrency(totalIncome)}
+                    +{formatCurrency(totalIncome)}
                   </span>
                 </div>
               </div>
@@ -360,8 +380,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                     className="submetric-number text-expense"
                     title={formatCurrency(totalExpense)}
                   >
-                    {totalExpense > 0 ? '-' : ''}
-                    {formatCurrency(totalExpense)}
+                    -{formatCurrency(totalExpense)}
                   </span>
                 </div>
               </div>
@@ -478,347 +497,413 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                   </div>
                 )}
               </div>
+
+              {/* 2. Monthly Investment Target Progress */}
+              <div className="hero-budget-progress-box hero-invest-progress-box">
+                <div className="budget-progress-header">
+                  <span className="budget-progress-title">Mục tiêu Đầu tư Tháng</span>
+                  {investmentTarget > 0 ? (
+                    <span
+                      className={`budget-status-badge ${
+                        isInvestReached
+                          ? 'badge-safe'
+                          : investPercent >= 50
+                            ? 'badge-info'
+                            : 'badge-warning'
+                      }`}
+                    >
+                      {isInvestReached
+                        ? `Đạt mục tiêu 🎉 (+${formatCurrency(investSurplus)})`
+                        : `Đã đạt ${investPercent}% (Thiếu ${formatCurrency(investRemaining)})`}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="budget-set-link link-sky"
+                      onClick={() => onNavigate?.('targets')}
+                    >
+                      + Đặt mục tiêu đầu tư ↗
+                    </button>
+                  )}
+                </div>
+
+                {investmentTarget > 0 ? (
+                  <>
+                    <div className="budget-progress-track">
+                      <div
+                        className="budget-progress-bar fill-sky"
+                        style={{ width: `${Math.min(100, investPercent)}%` }}
+                      />
+                    </div>
+                    <div className="budget-progress-footer">
+                      <span>
+                        Đã đầu tư: <strong>{formatCurrency(investedAmount)}</strong> /{' '}
+                        {formatCurrency(investmentTarget)}
+                      </span>
+                      {isInvestReached && (
+                        <span style={{ color: '#10b981', fontWeight: 600 }}>
+                          Vượt chỉ tiêu: <strong>+{formatCurrency(investSurplus)}</strong> 🎉
+                        </span>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="budget-empty-hint">
+                    <span>
+                      Chưa đặt mục tiêu tích lũy/đầu tư tháng{' '}
+                      {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}.
+                    </span>
+                    <button
+                      type="button"
+                      className="btn-link-action link-sky"
+                      onClick={() => onNavigate?.('targets')}
+                    >
+                      Thiết lập
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <RecentTransactionsCard
-            transactions={recentTransactions}
-            pending={pendingTransactions}
-            selectedMonth={selectedMonth}
-            onNavigate={onNavigate}
-          />
-          <button
-            className="btn btn-secondary dashboard-insights-toggle"
-            aria-expanded={showInsights}
-            aria-controls="dashboard-insights"
-            onClick={() => setShowInsights((value) => !value)}
-          >
-            {showInsights ? 'Thu gọn phân tích' : 'Xem phân tích, tài sản và đầu tư'}
-          </button>
-          {showInsights && (
-            <section id="dashboard-insights">
-              {insightsError && (
-                <p role="alert">
-                  {insightsError}{' '}
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setRefreshKey((key) => key + 1)}
-                  >
-                    Thử lại
-                  </button>
-                </p>
-              )}
-              {insightsMonth !== selectedMonth ? (
-                <p role="status">Đang tải phân tích...</p>
-              ) : (
-                <>
-                  {/* 2. Monthly Investment Target Progress */}
-                  <div className="hero-budget-progress-box hero-invest-progress-box">
-                    <div className="budget-progress-header">
-                      <span className="budget-progress-title">Mục tiêu Đầu tư Tháng</span>
-                      {investmentTarget > 0 ? (
-                        <span
-                          className={`budget-status-badge ${
-                            isInvestReached
-                              ? 'badge-safe'
-                              : investPercent >= 50
-                                ? 'badge-info'
-                                : 'badge-warning'
-                          }`}
-                        >
-                          {isInvestReached
-                            ? `Đạt mục tiêu 🎉 (+${formatCurrency(investSurplus)})`
-                            : `Đã đạt ${investPercent}% (Thiếu ${formatCurrency(investRemaining)})`}
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          className="budget-set-link link-sky"
-                          onClick={() => onNavigate?.('targets')}
-                        >
-                          + Đặt mục tiêu đầu tư ↗
-                        </button>
-                      )}
-                    </div>
+          {/* 2.5 Monthly Trend Chart (12 Months) */}
+          <Suspense fallback={<p role="status">Đang tải biểu đồ...</p>}>
+            <MonthlyTrendChart
+              items={monthlyTrend?.items || []}
+              averageExpense={monthlyTrend?.averageExpense || 0}
+              loading={loading}
+            />
+          </Suspense>
 
-                    {investmentTarget > 0 ? (
-                      <>
-                        <div className="budget-progress-track">
-                          <div
-                            className="budget-progress-bar fill-sky"
-                            style={{ width: `${Math.min(100, investPercent)}%` }}
-                          />
-                        </div>
-                        <div className="budget-progress-footer">
-                          <span>
-                            Đã đầu tư: <strong>{formatCurrency(investedAmount)}</strong> /{' '}
-                            {formatCurrency(investmentTarget)}
+          {/* 3. Analytics Main Grid: Category Breakdown & Recent Transactions */}
+          <div className="dashboard-main-grid animate-fade-in">
+            {/* Left: MoM Spending & Category Comparison */}
+            <div className="glass-card dashboard-card breakdown-card">
+              <div className="card-section-header">
+                <div className="card-title-wrap">
+                  <h3
+                    className="clickable-title"
+                    onClick={() => onNavigate?.('categories')}
+                    title="Quản lý Danh mục"
+                  >
+                    Biến động Chi tiêu (vs Tháng trước)
+                  </h3>
+                </div>
+              </div>
+
+              <div className="breakdown-card-body">
+                {categoryBreakdown.length > 0 ? (
+                  <>
+                    {/* MoM Quick Summary Banner */}
+                    <div className="mom-summary-banner">
+                      <div className="mom-banner-left">
+                        <span className="mom-banner-label">Tổng chi tiêu thay đổi</span>
+                        <div className="mom-banner-delta">
+                          <span
+                            className={`mom-delta-amount ${
+                              momExpenseDelta > 0
+                                ? 'text-expense'
+                                : momExpenseDelta < 0
+                                  ? 'text-income'
+                                  : 'text-muted'
+                            }`}
+                          >
+                            {momExpenseDelta > 0 ? '+' : ''}
+                            {formatCurrency(momExpenseDelta)}
                           </span>
-                          {isInvestReached && (
-                            <span style={{ color: '#10b981', fontWeight: 600 }}>
-                              Vượt chỉ tiêu: <strong>+{formatCurrency(investSurplus)}</strong> 🎉
+                          {momExpenseDeltaPercent !== null && (
+                            <span
+                              className={`mom-banner-badge ${
+                                momExpenseDeltaPercent > 0
+                                  ? 'mom-badge-increase'
+                                  : momExpenseDeltaPercent < 0
+                                    ? 'mom-badge-decrease'
+                                    : 'mom-badge-neutral'
+                              }`}
+                            >
+                              {momExpenseDeltaPercent > 0
+                                ? `+${momExpenseDeltaPercent.toFixed(1)}% ▲`
+                                : `${momExpenseDeltaPercent.toFixed(1)}% ▼`}
                             </span>
                           )}
                         </div>
-                      </>
-                    ) : (
-                      <div className="budget-empty-hint">
-                        <span>
-                          Chưa đặt mục tiêu tích lũy/đầu tư tháng{' '}
-                          {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}.
+                      </div>
+
+                      <div className="mom-prev-month-box">
+                        <span className="mom-prev-label">
+                          Tháng{' '}
+                          {moment(selectedMonth, 'YYYY-MM').subtract(1, 'month').format('MM/YYYY')}
                         </span>
-                        <button
-                          type="button"
-                          className="btn-link-action link-sky"
-                          onClick={() => onNavigate?.('targets')}
-                        >
-                          Thiết lập
-                        </button>
+                        <span className="mom-prev-value">{formatCurrency(prevTotalExpense)}</span>
                       </div>
-                    )}
-                  </div>
-                  {/* 2.5 Monthly Trend Chart (12 Months) */}
-                  <Suspense fallback={<p>Đang tải biểu đồ...</p>}>
-                    <MonthlyTrendChart
-                      items={monthlyTrend?.items || []}
-                      averageExpense={monthlyTrend?.averageExpense || 0}
-                      loading={loading}
-                    />
-                  </Suspense>
+                    </div>
 
-                  {/* 3. Analytics Main Grid: Category Breakdown & Recent Transactions */}
-                  <div className="dashboard-main-grid animate-fade-in">
-                    {/* Left: MoM Spending & Category Comparison */}
-                    <div className="glass-card dashboard-card breakdown-card">
-                      <div className="card-section-header">
-                        <div className="card-title-wrap">
-                          <h3
-                            className="clickable-title"
-                            onClick={() => onNavigate?.('categories')}
-                            title="Quản lý Danh mục"
-                          >
-                            Biến động Chi tiêu (vs Tháng trước)
-                          </h3>
-                        </div>
-                      </div>
+                    {/* Category List with MoM tags */}
+                    <div className="mom-categories-list">
+                      {momCategoryList.map((item) => {
+                        const icon = getCategoryIcon(item.categoryName, 'EXPENSE');
 
-                      <div className="breakdown-card-body">
-                        {categoryBreakdown.length > 0 ? (
-                          <>
-                            {/* MoM Quick Summary Banner */}
-                            <div className="mom-summary-banner">
-                              <div className="mom-banner-left">
-                                <span className="mom-banner-label">Tổng chi tiêu thay đổi</span>
-                                <div className="mom-banner-delta">
+                        return (
+                          <div key={item.categoryId} className="category-progress-row">
+                            <div className="cat-row-header">
+                              <div className="cat-identity">
+                                <span className="cat-emoji">{icon}</span>
+                                <span className="cat-name">{item.categoryName}</span>
+                              </div>
+                              <div className="cat-amounts">
+                                <span className="cat-amount-val">
+                                  {formatCurrency(item.totalAmount)}
+                                </span>
+                                {item.isNew ? (
+                                  <span className="mom-cat-change-tag change-new">
+                                    <Sparkles size={10} /> Mới
+                                  </span>
+                                ) : item.deltaPct !== null ? (
                                   <span
-                                    className={`mom-delta-amount ${
-                                      momExpenseDelta > 0
-                                        ? 'text-expense'
-                                        : momExpenseDelta < 0
-                                          ? 'text-income'
-                                          : 'text-muted'
+                                    className={`mom-cat-change-tag ${
+                                      item.deltaPct > 0
+                                        ? 'change-increase'
+                                        : item.deltaPct < 0
+                                          ? 'change-decrease'
+                                          : 'change-flat'
                                     }`}
                                   >
-                                    {momExpenseDelta > 0 ? '+' : ''}
-                                    {formatCurrency(momExpenseDelta)}
+                                    {item.deltaPct > 0 ? (
+                                      <ArrowUpRight size={11} />
+                                    ) : item.deltaPct < 0 ? (
+                                      <ArrowDownRight size={11} />
+                                    ) : null}
+                                    {item.deltaPct > 0 ? '+' : ''}
+                                    {item.deltaPct.toFixed(0)}%
                                   </span>
-                                  {momExpenseDeltaPercent !== null && (
-                                    <span
-                                      className={`mom-banner-badge ${
-                                        momExpenseDeltaPercent > 0
-                                          ? 'mom-badge-increase'
-                                          : momExpenseDeltaPercent < 0
-                                            ? 'mom-badge-decrease'
-                                            : 'mom-badge-neutral'
-                                      }`}
-                                    >
-                                      {momExpenseDeltaPercent > 0
-                                        ? `+${momExpenseDeltaPercent.toFixed(1)}% ▲`
-                                        : `${momExpenseDeltaPercent.toFixed(1)}% ▼`}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="mom-prev-month-box">
-                                <span className="mom-prev-label">
-                                  Tháng{' '}
-                                  {moment(selectedMonth, 'YYYY-MM')
-                                    .subtract(1, 'month')
-                                    .format('MM/YYYY')}
-                                </span>
-                                <span className="mom-prev-value">
-                                  {formatCurrency(prevTotalExpense)}
-                                </span>
+                                ) : (
+                                  <span className="mom-cat-change-tag change-flat">0%</span>
+                                )}
                               </div>
                             </div>
 
-                            {/* Category List with MoM tags */}
-                            <div className="mom-categories-list">
-                              {momCategoryList.map((item) => {
-                                const icon = getCategoryIcon(
-                                  item.categoryName,
-                                  TransactionType.EXPENSE
-                                );
-
-                                return (
-                                  <div key={item.categoryId} className="category-progress-row">
-                                    <div className="cat-row-header">
-                                      <div className="cat-identity">
-                                        <span className="cat-emoji">{icon}</span>
-                                        <span className="cat-name">{item.categoryName}</span>
-                                      </div>
-                                      <div className="cat-amounts">
-                                        <span className="cat-amount-val">
-                                          {formatCurrency(item.totalAmount)}
-                                        </span>
-                                        {item.isNew ? (
-                                          <span className="mom-cat-change-tag change-new">
-                                            <Sparkles size={10} /> Mới
-                                          </span>
-                                        ) : item.deltaPct !== null ? (
-                                          <span
-                                            className={`mom-cat-change-tag ${
-                                              item.deltaPct > 0
-                                                ? 'change-increase'
-                                                : item.deltaPct < 0
-                                                  ? 'change-decrease'
-                                                  : 'change-flat'
-                                            }`}
-                                          >
-                                            {item.deltaPct > 0 ? (
-                                              <ArrowUpRight size={11} />
-                                            ) : item.deltaPct < 0 ? (
-                                              <ArrowDownRight size={11} />
-                                            ) : null}
-                                            {item.deltaPct > 0 ? '+' : ''}
-                                            {item.deltaPct.toFixed(0)}%
-                                          </span>
-                                        ) : (
-                                          <span className="mom-cat-change-tag change-flat">0%</span>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    <div className="cat-progress-track">
-                                      <div
-                                        className="cat-progress-fill"
-                                        style={{
-                                          width: `${Math.min(100, item.percentage)}%`,
-                                          background:
-                                            item.hasBudget && item.budgetUtil > 100
-                                              ? '#f43f5e'
-                                              : undefined,
-                                        }}
-                                      />
-                                    </div>
-
-                                    {item.hasBudget && item.budgetLimit && (
-                                      <div className="cat-budget-meta">
-                                        <span
-                                          className={`cat-budget-status ${
-                                            item.budgetUtil > 100
-                                              ? 'text-danger'
-                                              : item.budgetUtil >= 80
-                                                ? 'text-warning'
-                                                : 'text-muted'
-                                          }`}
-                                        >
-                                          {item.budgetUtil > 100
-                                            ? `⚠️ Vượt hạn mức (+${formatCurrency(item.totalAmount - item.budgetLimit)})`
-                                            : `Đã dùng ${item.budgetUtil.toFixed(0)}% hạn mức (${formatCurrency(item.budgetLimit)})`}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                            <div className="cat-progress-track">
+                              <div
+                                className="cat-progress-fill"
+                                style={{
+                                  width: `${Math.min(100, item.percentage)}%`,
+                                  background:
+                                    item.hasBudget && item.budgetUtil > 100 ? '#f43f5e' : undefined,
+                                }}
+                              />
                             </div>
-                          </>
-                        ) : (
-                          <div className="empty-state-box">
-                            <div className="empty-icon-circle">
-                              <ShoppingBag size={28} className="text-muted" />
-                            </div>
-                            <p className="empty-state-title">Chưa có dữ liệu chi tiêu</p>
-                            <p className="empty-state-sub">
-                              Chưa ghi nhận khoản chi nào trong tháng{' '}
-                              {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}.
-                            </p>
+
+                            {item.hasBudget && item.budgetLimit && (
+                              <div className="cat-budget-meta">
+                                <span
+                                  className={`cat-budget-status ${
+                                    item.budgetUtil > 100
+                                      ? 'text-danger'
+                                      : item.budgetUtil >= 80
+                                        ? 'text-warning'
+                                        : 'text-muted'
+                                  }`}
+                                >
+                                  {item.budgetUtil > 100
+                                    ? `⚠️ Vượt hạn mức (+${formatCurrency(item.totalAmount - item.budgetLimit)})`
+                                    : `Đã dùng ${item.budgetUtil.toFixed(0)}% hạn mức (${formatCurrency(item.budgetLimit)})`}
+                                </span>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <div className="empty-state-box">
+                    <div className="empty-icon-circle">
+                      <ShoppingBag size={28} className="text-muted" />
+                    </div>
+                    <p className="empty-state-title">Chưa có dữ liệu chi tiêu</p>
+                    <p className="empty-state-sub">
+                      Chưa ghi nhận khoản chi nào trong tháng{' '}
+                      {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}.
+                    </p>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      onClick={() => onNavigate?.('expenses')}
+                    >
+                      <Plus size={14} /> Ghi chi tiêu mới
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Recent 5 Transactions Feed */}
+            <div className="glass-card dashboard-card recent-txns-card">
+              <div className="card-section-header">
+                <div className="card-title-wrap">
+                  <h3
+                    className="clickable-title"
+                    onClick={() => onNavigate?.('transactions')}
+                    title="Xem tất cả giao dịch"
+                  >
+                    Giao dịch Gần đây
+                  </h3>
+                </div>
+              </div>
+
+              <div className="recent-txns-body">
+                <PendingTransactionList items={pendingTransactions} />
+                {recentTransactions.length > 0 ? (
+                  <div className="txns-timeline-list">
+                    {recentTransactions.map((txn) => {
+                      const matchedWallet = wallets.find((w) => w.id === txn.walletId);
+                      const walletLabel = txn.walletName || matchedWallet?.name || 'Ví mặc định';
+
+                      return (
+                        <div
+                          key={txn.id}
+                          className="recent-txn-row clickable-card"
+                          onClick={() => onNavigate?.('transactions')}
+                          title="Bấm để xem danh sách giao dịch"
+                        >
+                          <div className="txn-left-col">
+                            <div className="txn-info-meta">
+                              <span className="txn-title">
+                                {txn.description || txn.categoryName || 'Giao dịch'}
+                              </span>
+                              <div className="txn-subtags">
+                                <span className="txn-cat-badge">
+                                  {txn.categoryName || 'Không phân loại'}
+                                </span>
+                                <span className="txn-wallet-badge">
+                                  <CreditCard size={11} /> {walletLabel}
+                                </span>
+                                <span className="txn-date-tag">
+                                  {moment(txn.transactionDate).format('DD/MM/YYYY')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="txn-right-col">
+                            <span
+                              className={`txn-amount-val ${
+                                txn.type === TransactionType.INCOME
+                                  ? 'text-income'
+                                  : txn.type === TransactionType.INVESTMENT
+                                    ? ''
+                                    : 'text-expense'
+                              }`}
+                            >
+                              {txn.type === TransactionType.INCOME
+                                ? `+${formatCurrency(txn.amount)}`
+                                : txn.type === TransactionType.INVESTMENT
+                                  ? formatCurrency(txn.amount)
+                                  : `-${formatCurrency(txn.amount)}`}
+                            </span>
+                            {txn.type === TransactionType.INVESTMENT &&
+                              txn.realizedPnl !== undefined &&
+                              txn.realizedPnl !== 0 && (
+                                <span
+                                  className={`txn-pnl-badge ${
+                                    txn.realizedPnl > 0 ? 'pnl-positive' : 'pnl-negative'
+                                  }`}
+                                >
+                                  {txn.realizedPnl > 0 ? '+' : ''}
+                                  {formatCurrency(txn.realizedPnl)}
+                                </span>
+                              )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="empty-state-box">
+                    <div className="empty-icon-circle">
+                      <ReceiptText size={28} className="text-muted" />
+                    </div>
+                    <p className="empty-state-title">Chưa có giao dịch nào</p>
+                    <p className="empty-state-sub">
+                      Chưa có giao dịch thu chi trong tháng{' '}
+                      {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}.
+                    </p>
+                    <div className="empty-actions-row">
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => onNavigate?.('expenses')}
+                      >
+                        <Plus size={14} /> Ghi giao dịch
+                      </button>
                     </div>
                   </div>
-                  {/* 6. Secondary Summary Section: Assets, Investment & Debts */}
-                  <div className="dashboard-secondary-section animate-fade-in">
-                    <div className="secondary-section-title">
-                      <span>
-                        Tài sản tích lũy: {formatCurrency(totalNetWorth)} · Tiền khả dụng:{' '}
-                        {formatCurrency(availableCash)}
-                      </span>
-                    </div>
+                )}
+              </div>
+            </div>
+          </div>
 
-                    <div className="secondary-cards-grid">
-                      {/* Investment Portfolio Card */}
-                      <div
-                        className="secondary-stat-card glass-card clickable-card"
-                        onClick={() => onNavigate?.('investment')}
-                        title="Xem chi tiết Quản lý Đầu tư"
-                      >
-                        <div className="secondary-card-head">
-                          <span className="secondary-card-label">Danh mục Đầu tư ↗</span>
-                        </div>
-                        <div className="secondary-card-value">
-                          {formatCurrency(allTimeSummary?.totalInvestment ?? 0)}
-                        </div>
-                        <div className="secondary-card-sub">
-                          <span>
-                            Tháng này:{' '}
-                            <strong>{formatCurrency(summary?.totalInvestment ?? 0)}</strong>
-                          </span>
-                        </div>
-                      </div>
+          {/* 6. Secondary Summary Section: Assets, Investment & Debts */}
+          <div className="dashboard-secondary-section animate-fade-in">
+            <div className="secondary-section-title">
+              <span>Tài sản Tích lũy, Đầu tư & Vay Nợ</span>
+            </div>
 
-                      {/* Debts Payable Card */}
-                      <div
-                        className="secondary-stat-card glass-card clickable-card"
-                        onClick={() => onNavigate?.('debts')}
-                        title="Xem chi tiết các khoản nợ phải trả"
-                      >
-                        <div className="secondary-card-head">
-                          <span className="secondary-card-label">Tôi Nợ (Phải Trả) ↗</span>
-                        </div>
-                        <div className="secondary-card-value">
-                          {formatCurrency(Math.abs(debtSummary?.totalPayable ?? 0))}
-                        </div>
-                        <div className="secondary-card-sub">
-                          <span>Đang nợ người khác / thẻ tín dụng</span>
-                        </div>
-                      </div>
+            <div className="secondary-cards-grid">
+              {/* Investment Portfolio Card */}
+              <div
+                className="secondary-stat-card glass-card clickable-card"
+                onClick={() => onNavigate?.('investment')}
+                title="Xem chi tiết Quản lý Đầu tư"
+              >
+                <div className="secondary-card-head">
+                  <span className="secondary-card-label">Danh mục Đầu tư ↗</span>
+                </div>
+                <div className="secondary-card-value">
+                  {formatCurrency(allTimeSummary?.totalInvestment ?? 0)}
+                </div>
+                <div className="secondary-card-sub">
+                  <span>
+                    Tháng này: <strong>{formatCurrency(summary?.totalInvestment ?? 0)}</strong>
+                  </span>
+                </div>
+              </div>
 
-                      {/* Debts Receivable Card */}
-                      <div
-                        className="secondary-stat-card glass-card clickable-card"
-                        onClick={() => onNavigate?.('debts')}
-                        title="Xem chi tiết các khoản cho vay / cần thu"
-                      >
-                        <div className="secondary-card-head">
-                          <span className="secondary-card-label">Người Khác Nợ (Phải Thu) ↗</span>
-                        </div>
-                        <div className="secondary-card-value">
-                          {formatCurrency(Math.abs(debtSummary?.totalReceivable ?? 0))}
-                        </div>
-                        <div className="secondary-card-sub">
-                          <span>Các khoản cho vay cần thu hồi</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </section>
-          )}
+              {/* Debts Payable Card */}
+              <div
+                className="secondary-stat-card glass-card clickable-card"
+                onClick={() => onNavigate?.('debts')}
+                title="Xem chi tiết các khoản nợ phải trả"
+              >
+                <div className="secondary-card-head">
+                  <span className="secondary-card-label">Tôi Nợ (Phải Trả) ↗</span>
+                </div>
+                <div className="secondary-card-value">
+                  {formatCurrency(Math.abs(debtSummary?.totalPayable ?? 0))}
+                </div>
+                <div className="secondary-card-sub">
+                  <span>Đang nợ người khác / thẻ tín dụng</span>
+                </div>
+              </div>
+
+              {/* Debts Receivable Card */}
+              <div
+                className="secondary-stat-card glass-card clickable-card"
+                onClick={() => onNavigate?.('debts')}
+                title="Xem chi tiết các khoản cho vay / cần thu"
+              >
+                <div className="secondary-card-head">
+                  <span className="secondary-card-label">Người Khác Nợ (Phải Thu) ↗</span>
+                </div>
+                <div className="secondary-card-value">
+                  {formatCurrency(Math.abs(debtSummary?.totalReceivable ?? 0))}
+                </div>
+                <div className="secondary-card-sub">
+                  <span>Các khoản cho vay cần thu hồi</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       )}
     </div>
