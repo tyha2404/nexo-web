@@ -6,11 +6,11 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
 import { Search, Plus, Trash2, Handshake, X, AlertTriangle, ArrowRightLeft } from 'lucide-react';
 import { formatCurrency, formatNumberInput, parseNumberInput } from '../commons/utils';
-import { debtService } from '../services/api';
+import { debtService } from '../services';
 import type { Debt, DebtType } from '../types/debt';
-import { MonthFilter } from './common';
+import { useDataEvents } from '../hooks';
+import { ConfirmModal, MonthFilter } from './common';
 import './Debts.css';
-import ConfirmModal from './common/ConfirmModal';
 
 export default function Debts() {
   const [debts, setDebts] = useState<Debt[]>([]);
@@ -58,6 +58,9 @@ export default function Debts() {
     fetchDebtData();
   }, [fetchDebtData]);
 
+  // Repayments from the AI assistant or another device arrive via realtime
+  useDataEvents(['debts-changed', 'nexo-reconnect'], fetchDebtData);
+
   const handleAmountChange = (val: string, setter: (v: string) => void) => {
     setter(formatNumberInput(val));
   };
@@ -90,8 +93,9 @@ export default function Debts() {
         type: formType,
         title: formTitle,
         totalAmount: parsedAmount,
-        startDate: formStartDate ? formStartDate.toISOString() : undefined,
-        dueDate: formDueDate ? formDueDate.toISOString() : undefined,
+        // Keep the local calendar day (UTC+7) instead of shifting to the previous UTC day
+        startDate: formStartDate ? moment(formStartDate).startOf('day').format() : undefined,
+        dueDate: formDueDate ? moment(formDueDate).startOf('day').format() : undefined,
         notes: formNotes,
       });
 

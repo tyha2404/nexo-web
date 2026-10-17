@@ -4,26 +4,47 @@ import {
   LayoutDashboard,
   LogOut,
   Moon,
+  Plus,
   Sparkles,
   Sun,
   Target,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
-import { TransactionType } from './commons/constants';
+// Page styles load eagerly, in the original import order: pages share class names
+// across these files (e.g. Debts/Planning reuse Transactions.css), so leaving them in
+// the lazy chunks made those pages unstyled until the Transactions chunk loaded.
+import './components/Auth.css';
+import './components/common/MonthFilter.css';
+import './components/MonthlyTrendChart.css';
+import './components/Dashboard.css';
+import './components/Debts.css';
+import './components/Pagination.css';
+import './components/Targets.css';
+import './components/Categories.css';
+import './components/Planning.css';
+import './components/ReloadPrompt.css';
+import './components/Transactions.css';
+import { OPEN_ADD_TRANSACTION_EVENT, TransactionType } from './commons/constants';
+import { openAddTransaction } from './commons/utils';
 import type { User } from './commons/types';
 import Auth from './components/Auth';
-import Dashboard from './components/Dashboard';
-import Debts from './components/Debts';
-import Planning, { type PlanningSubTab } from './components/Planning';
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const Debts = lazy(() => import('./components/Debts'));
+import type { PlanningSubTab } from './components/Planning';
+const Planning = lazy(() => import('./components/Planning'));
 import ReloadPrompt from './components/ReloadPrompt';
-import Transactions from './components/Transactions';
-import { AIChatWidget } from './components/chat';
-import { authService } from './services/api';
-import { useRealtimeSync } from './hooks/useRealtimeSync';
+const Transactions = lazy(() => import('./components/Transactions'));
+const AddTransactionModal = lazy(() => import('./components/AddTransactionModal'));
+const AIChatWidget = lazy(() =>
+  import('./components/chat').then((module) => ({ default: module.AIChatWidget }))
+);
+import { ApiError, authService, clearOfflineQueues, invalidateRequestCache } from './services';
+import { ConnectionStatus } from './components/common';
+import { useOfflineQueueSync, useRealtimeSync } from './hooks';
 
 export type ActiveTab = 'dashboard' | 'transactions' | 'debts' | 'planning';
 
@@ -37,13 +58,25 @@ function App() {
   const [transactionType, setTransactionType] = useState<TransactionType>(TransactionType.EXPENSE);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const authAttempt = useRef(0);
+  const [aiRequested, setAIRequested] = useState(false);
+  // Global quick-add: the most frequent action must be one tap away on every screen
+  const [quickAddType, setQuickAddType] = useState<TransactionType | null>(null);
+  const [visitedTabs, setVisitedTabs] = useState<Set<ActiveTab>>(new Set());
+  useEffect(() => {
+    setVisitedTabs((tabs) => new Set([...tabs, activeTab]));
+  }, [activeTab]);
   const [theme, setTheme] = useState<'dark' | 'light'>(
     (localStorage.getItem('theme') as 'dark' | 'light') || 'dark'
   );
 
   useRealtimeSync({ userId: user?.id });
+  useOfflineQueueSync(Boolean(user));
 
   const checkAuth = async () => {
+    const attempt = ++authAttempt.current;
+    setAuthError(null);
     const token = localStorage.getItem('token');
     if (!token) {
       setUser(null);
@@ -52,13 +85,23 @@ function App() {
     }
     try {
       const userData = await authService.whoami();
+      if (attempt !== authAttempt.current || token !== localStorage.getItem('token')) return;
+      localStorage.setItem('nexo-user-id', userData.id);
       setUser(userData);
     } catch (err) {
       console.error('Failed to verify token', err);
-      localStorage.removeItem('token');
-      setUser(null);
+      if (attempt !== authAttempt.current || token !== localStorage.getItem('token')) return;
+      if (err instanceof ApiError && err.status === 401) {
+        localStorage.removeItem('token');
+        invalidateRequestCache();
+        setUser(null);
+      } else {
+        setAuthError(
+          'Chưa thể kết nối để xác minh phiên. Thông tin đăng nhập vẫn được giữ, hãy thử lại khi có mạng.'
+        );
+      }
     } finally {
-      setAuthLoading(false);
+      if (attempt === authAttempt.current) setAuthLoading(false);
     }
   };
 
@@ -69,9 +112,11 @@ function App() {
       checkAuth();
     };
     window.addEventListener('auth-changed', handleAuthChange);
+    window.addEventListener('online', handleAuthChange);
 
     return () => {
       window.removeEventListener('auth-changed', handleAuthChange);
+      window.removeEventListener('online', handleAuthChange);
     };
   }, []);
 
@@ -85,13 +130,52 @@ function App() {
   }, [theme]);
 
   const handleOpenAIChat = () => {
+    setAIRequested(true);
     window.dispatchEvent(new CustomEvent('open-ai-chat'));
   };
 
+  const handleLogoutRef = useRef<() => void>(() => undefined);
   const handleLogout = () => {
+    authAttempt.current++;
     localStorage.removeItem('token');
+    localStorage.removeItem('nexo-user-id');
+    for (const key of Object.keys(localStorage))
+      if (key.startsWith('nexo-draft:')) localStorage.removeItem(key);
+    clearOfflineQueues();
+    invalidateRequestCache();
     setUser(null);
+    setAuthError(null);
+    setAIRequested(false);
+    void authService.logout().catch(() => undefined);
   };
+  useEffect(() => {
+    handleLogoutRef.current = handleLogout;
+  });
+
+  useEffect(() => {
+    const handleOpenAdd = (event: Event) => {
+      const type = (event as CustomEvent<TransactionType>).detail;
+      setQuickAddType(type in TransactionType ? type : TransactionType.EXPENSE);
+    };
+    window.addEventListener(OPEN_ADD_TRANSACTION_EVENT, handleOpenAdd);
+    return () => window.removeEventListener(OPEN_ADD_TRANSACTION_EVENT, handleOpenAdd);
+  }, []);
+
+  // Any API call rejected with 401 means the session is gone (expired or revoked)
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      if (!localStorage.getItem('token')) return;
+      toast.info('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.', {
+        toastId: 'auth-expired',
+      });
+      handleLogoutRef.current();
+    };
+    window.addEventListener('auth-expired', handleAuthExpired);
+    return () => window.removeEventListener('auth-expired', handleAuthExpired);
+  }, []);
+
+  const quickAddDefaultType =
+    activeTab === 'transactions' ? transactionType : TransactionType.EXPENSE;
 
   const getPathForTab = (
     tab: ActiveTab,
@@ -208,10 +292,30 @@ function App() {
     );
   }
 
+  if (!user && authError) {
+    return (
+      <div className="loading-screen" role="alert">
+        <p>{authError}</p>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            setAuthLoading(true);
+            void checkAuth();
+          }}
+        >
+          Thử kết nối lại
+        </button>
+        <button className="btn btn-secondary" onClick={handleLogout}>
+          Đăng xuất
+        </button>
+      </div>
+    );
+  }
   if (!user) {
     return (
       <div className="auth-outer-container animate-fade-in">
-        <Auth onSuccess={checkAuth} />
+        {/* Auth fires 'auth-changed', which already re-runs checkAuth */}
+        <Auth />
       </div>
     );
   }
@@ -247,7 +351,7 @@ function App() {
           <button
             className="mobile-header-btn"
             onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-            aria-label="Toggle Theme"
+            aria-label="Đổi giao diện sáng/tối"
             title="Đổi giao diện"
           >
             {theme === 'light' ? <Sun size={16} /> : <Moon size={16} />}
@@ -342,7 +446,7 @@ function App() {
               <button
                 className="theme-toggle-btn"
                 onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-                aria-label="Toggle Theme"
+                aria-label="Đổi giao diện sáng/tối"
                 title="Đổi giao diện"
               >
                 {theme === 'light' ? <Sun size={16} /> : <Moon size={16} />}
@@ -362,6 +466,7 @@ function App() {
 
       {/* Main Content Area */}
       <main className="main-content">
+        <ConnectionStatus />
         {/* Desktop Top Header with Sleek AI Action Button */}
         <header className="main-desktop-header">
           <div className="header-page-info">
@@ -374,6 +479,13 @@ function App() {
           </div>
 
           <div className="header-actions">
+            <button
+              type="button"
+              className="btn btn-primary header-add-btn"
+              onClick={() => openAddTransaction(quickAddDefaultType)}
+            >
+              <Plus size={16} /> Ghi giao dịch
+            </button>
             <button
               className="header-ai-btn"
               onClick={handleOpenAIChat}
@@ -390,7 +502,7 @@ function App() {
             <button
               className="theme-toggle-btn"
               onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-              aria-label="Toggle Theme"
+              aria-label="Đổi giao diện sáng/tối"
               title="Đổi giao diện"
             >
               {theme === 'light' ? <Sun size={18} /> : <Moon size={18} />}
@@ -403,29 +515,45 @@ function App() {
           className="content-view animate-fade-in"
           style={{ display: activeTab === 'dashboard' ? 'block' : 'none' }}
         >
-          <Dashboard onNavigate={handleNavigate} />
+          {visitedTabs.has('dashboard') && (
+            <Suspense fallback={<p role="status">Đang tải tổng quan...</p>}>
+              <Dashboard onNavigate={handleNavigate} />
+            </Suspense>
+          )}
         </div>
         <div
           className="content-view animate-fade-in"
           style={{ display: activeTab === 'transactions' ? 'block' : 'none' }}
         >
-          <Transactions type={transactionType} />
+          {visitedTabs.has('transactions') && (
+            <Suspense fallback={<p role="status">Đang tải giao dịch...</p>}>
+              <Transactions type={transactionType} />
+            </Suspense>
+          )}
         </div>
         <div
           className="content-view animate-fade-in"
           style={{ display: activeTab === 'debts' ? 'block' : 'none' }}
         >
-          <Debts />
+          {visitedTabs.has('debts') && (
+            <Suspense fallback={<p role="status">Đang tải sổ nợ...</p>}>
+              <Debts />
+            </Suspense>
+          )}
         </div>
         <div
           className="content-view animate-fade-in"
           style={{ display: activeTab === 'planning' ? 'block' : 'none' }}
         >
-          <Planning
-            initialSubTab={planningSubTab}
-            onSubTabChange={setPlanningSubTab}
-            onNavigate={handleNavigate}
-          />
+          {visitedTabs.has('planning') && (
+            <Suspense fallback={<p role="status">Đang tải kế hoạch...</p>}>
+              <Planning
+                initialSubTab={planningSubTab}
+                onSubTabChange={setPlanningSubTab}
+                onNavigate={handleNavigate}
+              />
+            </Suspense>
+          )}
         </div>
       </main>
 
@@ -457,6 +585,17 @@ function App() {
 
         <button
           type="button"
+          className="bottom-nav-item bottom-nav-add"
+          onClick={() => openAddTransaction(quickAddDefaultType)}
+          aria-label="Ghi giao dịch mới"
+        >
+          <div className="bottom-nav-add-icon">
+            <Plus size={24} strokeWidth={2.5} />
+          </div>
+        </button>
+
+        <button
+          type="button"
           className={`bottom-nav-item ${activeTab === 'debts' ? 'active' : ''}`}
           onClick={() => handleNavigate('debts')}
           aria-label="Sổ Vay & Nợ"
@@ -480,9 +619,28 @@ function App() {
         </button>
       </nav>
 
+      {quickAddType && (
+        <Suspense fallback={null}>
+          <AddTransactionModal
+            open
+            initialType={quickAddType}
+            onClose={() => setQuickAddType(null)}
+          />
+        </Suspense>
+      )}
       <ReloadPrompt />
-      <AIChatWidget user={user} />
-      <ToastContainer theme="dark" position="bottom-right" autoClose={3000} />
+      {aiRequested && (
+        <Suspense
+          fallback={
+            <p className="pwa-toast" role="status">
+              Đang mở trợ lý...
+            </p>
+          }
+        >
+          <AIChatWidget user={user} initiallyOpen />
+        </Suspense>
+      )}
+      <ToastContainer theme={theme} position="bottom-right" autoClose={3000} />
     </div>
   );
 }

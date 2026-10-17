@@ -1,23 +1,35 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   plugins: [
     react(),
+    tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
-      injectRegister: 'script',
-      includeAssets: ['favicon.svg', 'logo-transparent.svg', 'robots.txt', 'apple-touch-icon.png'],
+      registerType: 'prompt',
+      injectRegister: null,
+      includeAssets: [
+        'favicon.svg',
+        'logo-transparent.svg',
+        'robots.txt',
+        'apple-touch-icon.png',
+        'icon-maskable-512.png',
+      ],
       workbox: {
         clientsClaim: true,
-        skipWaiting: true,
+        skipWaiting: false,
         cleanupOutdatedCaches: true,
       },
       manifest: {
-        name: 'Nexo Web App',
-        short_name: 'Nexo Web',
-        description: 'A premium progressive web application for the Nexo platform.',
+        id: '/',
+        name: 'Nexo - Quản lý tài chính cá nhân',
+        short_name: 'Nexo',
+        lang: 'vi',
+        start_url: '/',
+        scope: '/',
+        description: 'Theo dõi chi tiêu, ngân sách và tài chính cá nhân.',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
@@ -34,10 +46,10 @@ export default defineConfig({
             type: 'image/png',
           },
           {
-            src: 'icon-512.png',
+            src: 'icon-maskable-512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable',
+            purpose: 'maskable',
           },
         ],
       },

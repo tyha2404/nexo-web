@@ -76,7 +76,7 @@ export const statementService = {
   },
 
   async delete(id: string): Promise<void> {
-    await request<any>(`/credit-card-statements/${id}`, {
+    await request<void>(`/credit-card-statements/${id}`, {
       method: 'DELETE',
     });
   },

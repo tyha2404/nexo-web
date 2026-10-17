@@ -1,0 +1,26 @@
+/*
+ * Tailwind v4 without Preflight: only the theme variables and utilities are
+ * loaded so the existing hand-written CSS keeps its own base styles. Utilities
+ * live in a cascade layer, so unlayered component CSS still wins on conflicts.
+ */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* Map Tailwind colors to the app's theme tokens so utilities follow light/dark mode. */
+@theme inline {
+  --color-main: var(--text-main);
+  --color-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-income: var(--income);
+  --color-expense: var(--expense);
+  --color-investment: var(--investment);
+  --color-warning: var(--warning);
+  --color-app: var(--bg-app);
+  --color-card: var(--bg-card);
+  --color-input: var(--bg-input);
+  --color-line: var(--border);
+}
+
+/* The app is dark by default; light mode is a `light-theme` class on <body>. */
+@custom-variant dark (&:where(body:not(.light-theme) *));

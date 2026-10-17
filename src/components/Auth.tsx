@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { authService } from '../services/api';
+import { authService } from '../services';
 import { toast } from 'react-toastify';
 import './Auth.css';
+import { getErrorMessage } from '../commons/utils';
 
 interface AuthProps {
   onSuccess?: () => void;
@@ -57,8 +58,9 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
         // Go backend requires username, email, password.
         await authService.register(username, email, password);
 
-        // Auto-login the user after registration to get the token
-        const loginResponse = await authService.login(username, password);
+        // Auto-login with the email: the account lives in Supabase Auth, which the
+        // username-based Go login can't see until the sync trigger has run.
+        const loginResponse = await authService.login(email, password);
         localStorage.setItem('token', loginResponse.token);
 
         toast.success('Tạo tài khoản và đăng nhập thành công!');
@@ -67,8 +69,8 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
           onSuccess();
         }
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Đã xảy ra lỗi trong quá trình xác thực.');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Đã xảy ra lỗi trong quá trình xác thực.'));
     } finally {
       setIsLoading(false);
     }

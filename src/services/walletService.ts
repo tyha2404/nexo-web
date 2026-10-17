@@ -83,8 +83,8 @@ export const walletService = {
     });
   },
 
-  transferMoney: async (data: TransferMoneyRequest): Promise<any> => {
-    return request<any>('/wallets/transfer', {
+  transferMoney: async (data: TransferMoneyRequest): Promise<unknown> => {
+    return request<unknown>('/wallets/transfer', {
       method: 'POST',
       body: JSON.stringify(data),
     });

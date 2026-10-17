@@ -9,9 +9,10 @@ import type {
 import { request } from './client';
 
 export const debtService = {
-  getSummary: async (): Promise<DebtSummary> => {
+  getSummary: async (options: RequestInit = {}): Promise<DebtSummary> => {
     return request<DebtSummary>('/debts/summary', {
       method: 'GET',
+      ...options,
     });
   },
 

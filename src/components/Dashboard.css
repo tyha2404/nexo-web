@@ -436,7 +436,7 @@
   background: transparent;
   border: none;
   color: var(--primary);
-  font-size: 0.775rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   padding: 0;
@@ -473,7 +473,7 @@
 }
 
 .fill-emerald {
-  background: #10b981;
+  background: var(--income);
 }
 
 .fill-sky {
@@ -481,11 +481,11 @@
 }
 
 .fill-warning {
-  background: #f59e0b;
+  background: var(--warning);
 }
 
 .fill-danger {
-  background: #ef4444;
+  background: var(--expense);
 }
 
 .btn-link-action.link-sky {
@@ -498,7 +498,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
-  font-size: 0.775rem;
+  font-size: 0.875rem;
   color: var(--text-muted);
 }
 
@@ -626,7 +626,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.775rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--text-muted);
   white-space: nowrap;
@@ -750,7 +750,7 @@
 }
 
 .top-categories-title {
-  font-size: 0.775rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -944,17 +944,17 @@
 }
 
 .change-increase {
-  color: #f43f5e;
+  color: var(--expense);
   background: rgba(244, 63, 94, 0.1);
 }
 
 .change-decrease {
-  color: #10b981;
+  color: var(--income);
   background: rgba(16, 185, 129, 0.1);
 }
 
 .change-new {
-  color: #6366f1;
+  color: var(--primary);
   background: rgba(99, 102, 241, 0.1);
 }
 
@@ -1434,7 +1434,9 @@
   }
 
   .txn-title {
-    max-width: 130px;
+    max-width: none;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .recent-txn-row {
@@ -1457,11 +1459,11 @@
   }
 
   .mom-prev-label {
-    font-size: 0.65rem;
+    font-size: 0.8125rem;
   }
 
   .mom-prev-value {
-    font-size: 0.775rem;
+    font-size: 0.875rem;
   }
 
   .cat-amounts {
@@ -1471,4 +1473,62 @@
   .cat-amount-val {
     font-size: 0.8rem;
   }
+}
+
+.dashboard-primary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.dashboard-recent-section {
+  margin: 16px 0;
+}
+.dashboard-insights-toggle {
+  width: 100%;
+  min-height: 48px;
+  margin: 8px 0 16px;
+}
+#dashboard-insights .dashboard-main-grid {
+  grid-template-columns: 1fr;
+}
+@media (max-width: 768px) {
+  .dashboard-primary-actions {
+    width: 100%;
+  }
+  .dashboard-primary-actions > .btn {
+    flex: 1;
+    min-height: 48px;
+  }
+  .hero-submetrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .hero-submetric-item.metric-invest {
+    display: none;
+  }
+  .hero-targets-dual-grid {
+    grid-template-columns: 1fr;
+  }
+  .txn-info-meta {
+    min-width: 0;
+  }
+  .txn-title {
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+  .recent-txn-row {
+    align-items: flex-start;
+    padding: 12px;
+    gap: 10px;
+  }
+  .txn-subtags {
+    flex-wrap: wrap;
+  }
+}
+
+.hero-targets-dual-grid {
+  grid-template-columns: 1fr;
+}
+#dashboard-insights .hero-invest-progress-box {
+  margin-bottom: 16px;
 }

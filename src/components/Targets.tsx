@@ -1,40 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import moment from 'moment';
+import { createPortal } from 'react-dom';
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { Plus, Pencil, X, AlertTriangle, Target as TargetIcon } from 'lucide-react';
-import { targetService } from '../services/api';
-import type { TargetSummaryResponse } from '../commons/types';
-import { formatCurrency, formatNumberInput, parseNumberInput } from '../commons/utils';
+import { targetService } from '../services';
+import { TransactionType } from '../commons/constants';
+import type { TargetSummaryResponse, TargetType } from '../commons/types';
+import {
+  formatCurrency,
+  formatNumberInput,
+  parseNumberInput,
+  getErrorMessage,
+} from '../commons/utils';
 import { toast } from 'react-toastify';
+import { useModal } from '../hooks';
 import { MonthFilter } from './common';
 import './Targets.css';
 
+const TARGET_TYPE_OPTIONS: { value: TargetType; label: string }[] = [
+  { value: TransactionType.EXPENSE, label: 'Hạn mức Chi tiêu' },
+  { value: TransactionType.INVESTMENT, label: 'Mục tiêu Đầu tư' },
+];
+
 export default function Targets() {
-  const [selectedMonth, setSelectedMonth] = useState<Date>(() => moment().toDate());
+  // Month in 'YYYY-MM' format
+  const [selectedMonth, setSelectedMonth] = useState<string>(() => moment().format('YYYY-MM'));
   const [targetSummary, setTargetSummary] = useState<TargetSummaryResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter tab / type in list table ('ALL' | 'EXPENSE' | 'INVESTMENT')
-  const [filterType, setFilterType] = useState<string>('');
+  // Filter by target type ('' = all)
+  const [filterType, setFilterType] = useState<TargetType | ''>('');
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [targetTypeForm, setTargetTypeForm] = useState<'EXPENSE' | 'INVESTMENT'>('EXPENSE');
+  const targetDialogRef = useModal(isModalOpen, () => setIsModalOpen(false));
+  const [targetTypeForm, setTargetTypeForm] = useState<TargetType>(TransactionType.EXPENSE);
   const [amount, setAmount] = useState<string>('');
 
-  const fetchTargetData = async (date: Date) => {
+  const fetchTargetData = async (month: string) => {
     try {
       setLoading(true);
       setError(null);
-      const m = moment(date);
+      const m = moment(month, 'YYYY-MM');
       const targetParams = { month: m.month() + 1, year: m.year() };
       const data = await targetService.getSummary(targetParams);
       setTargetSummary(data);
-    } catch (err: any) {
-      setError(err.message || 'Không thể tải dữ liệu mục tiêu tài chính');
+    } catch (err) {
+      setError(getErrorMessage(err, 'Không thể tải dữ liệu mục tiêu tài chính'));
     } finally {
       setLoading(false);
     }
@@ -48,17 +63,20 @@ export default function Targets() {
     setAmount(formatNumberInput(val));
   };
 
-  const openAddModal = (defaultType: 'EXPENSE' | 'INVESTMENT' = 'EXPENSE') => {
-    setTargetTypeForm(defaultType);
+  const openAddModal = useCallback(
+    (defaultType: TargetType = TransactionType.EXPENSE) => {
+      setTargetTypeForm(defaultType);
 
-    const existingAmount =
-      defaultType === 'EXPENSE'
-        ? targetSummary?.expense?.targetAmount
-        : targetSummary?.investment?.targetAmount;
+      const existingAmount =
+        defaultType === TransactionType.EXPENSE
+          ? targetSummary?.expense?.targetAmount
+          : targetSummary?.investment?.targetAmount;
 
-    setAmount(existingAmount ? formatNumberInput(existingAmount) : '');
-    setIsModalOpen(true);
-  };
+      setAmount(existingAmount ? formatNumberInput(existingAmount) : '');
+      setIsModalOpen(true);
+    },
+    [targetSummary]
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +87,7 @@ export default function Targets() {
     }
 
     try {
-      const m = moment(selectedMonth);
+      const m = moment(selectedMonth, 'YYYY-MM');
       await targetService.upsertTarget({
         targetType: targetTypeForm,
         targetAmount: parsedAmount,
@@ -78,21 +96,29 @@ export default function Targets() {
       });
 
       toast.success(
-        `Đã thiết lập ${targetTypeForm === 'EXPENSE' ? 'hạn mức chi tiêu' : 'mục tiêu đầu tư'} thành công!`
+        `Đã thiết lập ${targetTypeForm === TransactionType.EXPENSE ? 'hạn mức chi tiêu' : 'mục tiêu đầu tư'} thành công!`
       );
       setIsModalOpen(false);
       fetchTargetData(selectedMonth);
-    } catch (err: any) {
-      toast.error(err.message || 'Lỗi khi lưu mục tiêu tài chính');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Lỗi khi lưu mục tiêu tài chính'));
     }
   };
 
   // Prepare table rows from targetSummary
-  const targetRows = [];
+  const targetRows: {
+    id: TargetType;
+    type: TargetType;
+    title: string;
+    targetAmount: number;
+    currentAmount: number;
+    remainingAmount: number;
+    status: 'OVER_BUDGET' | 'COMPLETED' | 'NORMAL' | 'NOT_SET';
+  }[] = [];
   if (targetSummary?.expense) {
     targetRows.push({
-      id: 'EXPENSE',
-      type: 'EXPENSE',
+      id: TransactionType.EXPENSE,
+      type: TransactionType.EXPENSE,
       title: 'Hạn mức Chi tiêu Tháng',
       targetAmount: targetSummary.expense.targetAmount,
       currentAmount: targetSummary.expense.spentAmount,
@@ -101,8 +127,8 @@ export default function Targets() {
     });
   } else {
     targetRows.push({
-      id: 'EXPENSE',
-      type: 'EXPENSE',
+      id: TransactionType.EXPENSE,
+      type: TransactionType.EXPENSE,
       title: 'Hạn mức Chi tiêu Tháng',
       targetAmount: 0,
       currentAmount: 0,
@@ -113,8 +139,8 @@ export default function Targets() {
 
   if (targetSummary?.investment) {
     targetRows.push({
-      id: 'INVESTMENT',
-      type: 'INVESTMENT',
+      id: TransactionType.INVESTMENT,
+      type: TransactionType.INVESTMENT,
       title: 'Mục tiêu Đầu tư Tháng',
       targetAmount: targetSummary.investment.targetAmount,
       currentAmount: targetSummary.investment.investedAmount,
@@ -123,8 +149,8 @@ export default function Targets() {
     });
   } else {
     targetRows.push({
-      id: 'INVESTMENT',
-      type: 'INVESTMENT',
+      id: TransactionType.INVESTMENT,
+      type: TransactionType.INVESTMENT,
       title: 'Mục tiêu Đầu tư Tháng',
       targetAmount: 0,
       currentAmount: 0,
@@ -133,15 +159,17 @@ export default function Targets() {
     });
   }
 
+  const openAddModalRef = useRef(openAddModal);
   useEffect(() => {
-    const handleOpenModal = () => {
-      openAddModal('EXPENSE');
-    };
+    openAddModalRef.current = openAddModal;
+  }, [openAddModal]);
+  useEffect(() => {
+    const handleOpenModal = () => openAddModalRef.current(TransactionType.EXPENSE);
     window.addEventListener('open-add-target-modal', handleOpenModal);
     return () => {
       window.removeEventListener('open-add-target-modal', handleOpenModal);
     };
-  }, [targetSummary]);
+  }, []);
 
   const filteredRows = targetRows.filter((row) => {
     if (!filterType) return true;
@@ -215,17 +243,11 @@ export default function Targets() {
       <div className="filter-bar animate-fade-in">
         <div className="category-select-wrapper" style={{ minWidth: '220px' }}>
           <Select
-            options={[
-              { value: '', label: 'Tất cả Mục tiêu' },
-              { value: 'EXPENSE', label: 'Hạn mức Chi tiêu' },
-              { value: 'INVESTMENT', label: 'Mục tiêu Đầu tư' },
-            ]}
+            options={[{ value: '', label: 'Tất cả Mục tiêu' }, ...TARGET_TYPE_OPTIONS]}
             value={
-              [
-                { value: '', label: 'Tất cả Mục tiêu' },
-                { value: 'EXPENSE', label: 'Hạn mức Chi tiêu' },
-                { value: 'INVESTMENT', label: 'Mục tiêu Đầu tư' },
-              ].find((opt) => opt.value === filterType) || null
+              [{ value: '' as const, label: 'Tất cả Mục tiêu' }, ...TARGET_TYPE_OPTIONS].find(
+                (opt) => opt.value === filterType
+              ) || null
             }
             onChange={(option) => setFilterType(option ? option.value : '')}
             classNamePrefix="react-select"
@@ -234,10 +256,7 @@ export default function Targets() {
           />
         </div>
         <div className="date-range-filter-col">
-          <MonthFilter
-            value={moment(selectedMonth).format('YYYY-MM')}
-            onChange={(monthStr) => setSelectedMonth(moment(monthStr, 'YYYY-MM').toDate())}
-          />
+          <MonthFilter value={selectedMonth} onChange={setSelectedMonth} />
         </div>
       </div>
 
@@ -282,7 +301,7 @@ export default function Targets() {
             Đặt hạn mức chi tiêu hoặc mục tiêu tích lũy để quản lý ngân sách tháng hiệu quả.
           </p>
           <button
-            onClick={() => openAddModal('EXPENSE')}
+            onClick={() => openAddModal(TransactionType.EXPENSE)}
             className="btn btn-primary"
             style={{ padding: '0.65rem 1.5rem', minHeight: '42px', fontWeight: 600 }}
           >
@@ -364,7 +383,7 @@ export default function Targets() {
                       </td>
                       <td className="txn-actions-cell">
                         <button
-                          onClick={() => openAddModal(row.type as 'EXPENSE' | 'INVESTMENT')}
+                          onClick={() => openAddModal(row.type)}
                           className="action-btn edit-btn"
                           aria-label={`Chỉnh sửa ${row.title}`}
                           title={`Chỉnh sửa ${row.title}`}
@@ -386,7 +405,7 @@ export default function Targets() {
                 row.targetAmount > 0
                   ? Math.min(100, Math.round((row.currentAmount / row.targetAmount) * 100))
                   : 0;
-              const isExpense = row.type === 'EXPENSE';
+              const isExpense = row.type === TransactionType.EXPENSE;
 
               return (
                 <div key={`m-target-${row.id}`} className="transaction-mobile-card">
@@ -456,7 +475,7 @@ export default function Targets() {
                   <div className="mobile-card-actions">
                     <button
                       type="button"
-                      onClick={() => openAddModal(row.type as 'EXPENSE' | 'INVESTMENT')}
+                      onClick={() => openAddModal(row.type)}
                       className="mobile-action-btn edit-btn"
                       title="Thiết lập / Chỉnh sửa mục tiêu"
                     >
@@ -471,91 +490,99 @@ export default function Targets() {
       )}
 
       {/* Form Modal overlay (100% cloned from Transactions modal) */}
-      {isModalOpen && (
-        <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Thêm mục tiêu</h3>
-              <button className="close-btn" onClick={() => setIsModalOpen(false)} aria-label="Đóng">
-                <X size={18} />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label htmlFor="target-type-select">Loại mục tiêu</label>
-                <Select
-                  id="target-type-select"
-                  options={[
-                    { value: 'EXPENSE', label: 'Hạn mức Chi tiêu' },
-                    { value: 'INVESTMENT', label: 'Mục tiêu Đầu tư' },
-                  ]}
-                  value={
-                    [
-                      { value: 'EXPENSE', label: 'Hạn mức Chi tiêu' },
-                      { value: 'INVESTMENT', label: 'Mục tiêu Đầu tư' },
-                    ].find((opt) => opt.value === targetTypeForm) || null
-                  }
-                  onChange={(option) => {
-                    if (option) {
-                      const newType = option.value as 'EXPENSE' | 'INVESTMENT';
-                      setTargetTypeForm(newType);
-                      const existing =
-                        newType === 'EXPENSE'
-                          ? targetSummary?.expense?.targetAmount
-                          : targetSummary?.investment?.targetAmount;
-                      setAmount(existing ? existing.toLocaleString('vi-VN') : '');
-                    }
-                  }}
-                  classNamePrefix="react-select"
-                  menuPortalTarget={document.body}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="target-amount-input">Số tiền (đ)</label>
-                <input
-                  id="target-amount-input"
-                  type="text"
-                  placeholder="Ví dụ: 10.000.000"
-                  value={amount}
-                  onChange={(e) => handleAmountChange(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="target-month">Áp dụng cho tháng</label>
-                <div className="target-datepicker-wrapper">
-                  <DatePicker
-                    id="target-month"
-                    selected={selectedMonth}
-                    onChange={(date: Date | null) => {
-                      if (date) setSelectedMonth(date);
-                    }}
-                    dateFormat="MM/yyyy"
-                    showMonthYearPicker
-                    portalId="date-picker-portal"
-                    className="react-datepicker-input"
-                  />
-                </div>
-              </div>
-
-              <div className="button-group">
+      {isModalOpen &&
+        // Portal: the tab container is animated (transform), which would trap position: fixed
+        createPortal(
+          <div className="modal-backdrop app-modal-backdrop" onClick={() => setIsModalOpen(false)}>
+            <div
+              ref={targetDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="target-modal-title"
+              tabIndex={-1}
+              className="modal-content animate-scale-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h3 id="target-modal-title">Thêm mục tiêu</h3>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="close-btn"
                   onClick={() => setIsModalOpen(false)}
+                  aria-label="Đóng"
                 >
-                  Hủy
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Lưu mục tiêu
+                  <X size={18} />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+              <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                  <label htmlFor="target-type-select">Loại mục tiêu</label>
+                  <Select
+                    id="target-type-select"
+                    options={TARGET_TYPE_OPTIONS}
+                    value={TARGET_TYPE_OPTIONS.find((opt) => opt.value === targetTypeForm) || null}
+                    onChange={(option) => {
+                      if (option) {
+                        const newType = option.value;
+                        setTargetTypeForm(newType);
+                        const existing =
+                          newType === TransactionType.EXPENSE
+                            ? targetSummary?.expense?.targetAmount
+                            : targetSummary?.investment?.targetAmount;
+                        setAmount(existing ? existing.toLocaleString('vi-VN') : '');
+                      }
+                    }}
+                    classNamePrefix="react-select"
+                    menuPortalTarget={document.body}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="target-amount-input">Số tiền (đ)</label>
+                  <input
+                    id="target-amount-input"
+                    type="text"
+                    placeholder="Ví dụ: 10.000.000"
+                    value={amount}
+                    onChange={(e) => handleAmountChange(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="target-month">Áp dụng cho tháng</label>
+                  <div className="target-datepicker-wrapper">
+                    <DatePicker
+                      id="target-month"
+                      selected={moment(selectedMonth, 'YYYY-MM').toDate()}
+                      onChange={(date: Date | null) => {
+                        if (date) setSelectedMonth(moment(date).format('YYYY-MM'));
+                      }}
+                      dateFormat="MM/yyyy"
+                      showMonthYearPicker
+                      portalId="date-picker-portal"
+                      className="react-datepicker-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="button-group">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    Hủy
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Lưu mục tiêu
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

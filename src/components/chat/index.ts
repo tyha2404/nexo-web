@@ -1,1 +1,2 @@
-export * from './AIChatWidget';
+export { AIChatWidget } from './AIChatWidget';
+export * from './toolsCatalog';

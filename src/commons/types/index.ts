@@ -1,3 +1,5 @@
+import type { InvestmentStatus, TransactionType } from '../constants';
+
 export interface User {
   id: string;
   username: string;
@@ -15,15 +17,13 @@ export interface Category {
   id: string;
   userId: string;
   name: string;
-  type: 'INCOME' | 'EXPENSE' | 'INVESTMENT';
+  type: TransactionType;
   description?: string;
   budgetLimit?: number;
   excludeFromAverageDaily?: boolean;
   createdAt: string;
   updatedAt: string;
 }
-
-export type InvestmentStatus = 'HOLDING' | 'SOLD' | 'MATURED' | 'CANCELLED';
 
 export interface Transaction {
   id: string;
@@ -34,7 +34,7 @@ export interface Transaction {
   walletName?: string;
   amount: number;
   description?: string;
-  type: 'INCOME' | 'EXPENSE' | 'INVESTMENT';
+  type: TransactionType;
   status?: InvestmentStatus;
   realizedPnl?: number;
   receiptUrl?: string;
@@ -92,7 +92,7 @@ export interface PaginatedResult<T> {
   summary?: TransactionSummary;
 }
 
-export type TargetType = 'EXPENSE' | 'INVESTMENT';
+export type TargetType = TransactionType.EXPENSE | TransactionType.INVESTMENT;
 
 export interface UpsertTargetRequest {
   targetType: TargetType;

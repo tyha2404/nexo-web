@@ -187,3 +187,35 @@
     padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
+
+/* Quick-add: raised center button in the mobile bottom nav */
+@media (max-width: 768px) {
+  .bottom-nav-item.bottom-nav-add {
+    flex: 0 0 64px;
+  }
+
+  .bottom-nav-add-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.45);
+    transform: translateY(-10px);
+    transition: transform 0.15s ease;
+  }
+
+  .bottom-nav-add:active .bottom-nav-add-icon {
+    transform: translateY(-10px) scale(0.94);
+  }
+}
+
+.header-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}

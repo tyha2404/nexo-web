@@ -2,6 +2,7 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 
 const PORT = process.env.PORT || 5173;
 const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://127.0.0.1:3001';
@@ -21,7 +22,32 @@ const MIME_TYPES = {
   '.woff2': 'font/woff2',
   '.ttf': 'font/ttf',
   '.webmanifest': 'application/manifest+json',
+  '.txt': 'text/plain',
 };
+
+const COMPRESSIBLE_EXTS = new Set(['.html', '.js', '.css', '.json', '.svg', '.webmanifest', '.txt']);
+// Compressed copies of static files, keyed by path + encoding. dist/ is immutable per deploy.
+const compressedCache = new Map();
+
+function pickEncoding(acceptEncoding = '') {
+  if (/\bbr\b/.test(acceptEncoding)) return 'br';
+  if (/\bgzip\b/.test(acceptEncoding)) return 'gzip';
+  return null;
+}
+
+function compress(filePath, content, encoding) {
+  const key = `${filePath}:${encoding}`;
+  if (!compressedCache.has(key)) {
+    const compressed =
+      encoding === 'br'
+        ? zlib.brotliCompressSync(content, {
+            params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 9 },
+          })
+        : zlib.gzipSync(content, { level: 9 });
+    compressedCache.set(key, compressed);
+  }
+  return compressedCache.get(key);
+}
 
 const server = http.createServer((req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
@@ -72,6 +98,11 @@ const server = http.createServer((req, res) => {
 
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
+      // Missing hashed assets must 404, otherwise index.html gets cached as JS for a year
+      if (reqPath.startsWith('/assets/')) {
+        res.writeHead(404, { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' });
+        return res.end('Not Found');
+      }
       filePath = path.join(DIST_DIR, 'index.html');
     }
 
@@ -84,15 +115,23 @@ const server = http.createServer((req, res) => {
         return res.end('Server Error');
       }
 
-      const headers = { 'Content-Type': contentType };
+      const headers = { 'Content-Type': contentType, Vary: 'Accept-Encoding' };
       if (reqPath.startsWith('/assets/')) {
         headers['Cache-Control'] = 'public, max-age=31536000, immutable';
       } else {
         headers['Cache-Control'] = 'no-cache';
       }
 
+      let body = content;
+      const encoding = COMPRESSIBLE_EXTS.has(ext) ? pickEncoding(req.headers['accept-encoding']) : null;
+      if (encoding && content.length > 1024) {
+        body = compress(filePath, content, encoding);
+        headers['Content-Encoding'] = encoding;
+      }
+      headers['Content-Length'] = body.length;
+
       res.writeHead(200, headers);
-      res.end(content);
+      res.end(req.method === 'HEAD' ? undefined : body);
     });
   });
 });

@@ -19,7 +19,9 @@ export default function Pagination({
   totalItems,
   itemsPerPageOptions = [5, 10, 20, 50],
 }: PaginationProps) {
-  if (totalPages <= 1 && !onItemsPerPageChange) {
+  // A single page only needs the size picker when a smaller page size could split it
+  const fitsSmallestPage = (totalItems ?? 0) <= Math.min(...itemsPerPageOptions);
+  if (totalPages <= 1 && (!onItemsPerPageChange || fitsSmallestPage)) {
     return null;
   }
 

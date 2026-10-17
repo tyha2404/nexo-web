@@ -1,8 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import './ReloadPrompt.css';
 
 const ReloadPrompt: React.FC = () => {
+  const [dirty, setDirty] = useState(false);
+  useEffect(() => {
+    const handleDirty = (event: Event) => setDirty(Boolean((event as CustomEvent).detail));
+    window.addEventListener('nexo-form-dirty', handleDirty);
+    return () => window.removeEventListener('nexo-form-dirty', handleDirty);
+  }, []);
   const {
     offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
@@ -27,14 +33,21 @@ const ReloadPrompt: React.FC = () => {
     <div className="pwa-toast" role="alert">
       <div className="pwa-message">
         {offlineReady ? (
-          <span>Ứng dụng đã sẵn sàng hoạt động ngoại tuyến</span>
+          <span>
+            Đã lưu giao diện để mở ngoại tuyến. Bạn có thể xem dữ liệu đã tải; giao dịch mới sẽ tự
+            đồng bộ khi có mạng.
+          </span>
         ) : (
-          <span>Có nội dung mới, nhấp vào nút tải lại để cập nhật.</span>
+          <span>Có phiên bản mới. Lưu hoặc đóng biểu mẫu trước khi cập nhật.</span>
         )}
       </div>
       <div className="pwa-actions">
         {needRefresh && (
-          <button className="pwa-button-reload" onClick={() => updateServiceWorker(true)}>
+          <button
+            className="pwa-button-reload"
+            disabled={dirty}
+            onClick={() => updateServiceWorker(true)}
+          >
             Tải lại
           </button>
         )}

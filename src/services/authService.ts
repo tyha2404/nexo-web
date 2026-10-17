@@ -27,7 +27,9 @@ export const authService = {
       }
     }
 
-    // 2. Call Go API login (supports username or email)
+    // 2. Call Go API login (supports username or email). Drop any leftover Supabase
+    // session first so its token refresh can't replace this account's API token.
+    await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
     return request<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({
@@ -76,7 +78,7 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
-    await supabase.auth.signOut();
     localStorage.removeItem('token');
+    await supabase.auth.signOut();
   },
 };

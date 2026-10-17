@@ -17,7 +17,7 @@ Tài liệu này chứa các quy tắc thiết kế, kiến trúc và quy địn
 ### Cấu trúc thư mục
 
 - `src/components/`: Chứa các view/components của hệ thống (Dashboard, Categories, Transactions).
-- `src/services/api.ts`: Nơi chứa toàn bộ tầng giao tiếp HTTP API, định nghĩa các interfaces và endpoints như `transactionService`, `categoryService`, `authService`.
+- `src/services/` (barrel `src/services/index.ts`): Nơi chứa toàn bộ tầng giao tiếp HTTP API, định nghĩa các interfaces và endpoints như `transactionService`, `categoryService`, `authService`.
 - `src/index.css` & `src/App.css`: Quản lý styles toàn cục và cấu hình giao diện.
 
 ### Quản lý Giao dịch & Danh mục

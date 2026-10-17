@@ -1,17 +1,21 @@
+import moment from 'moment';
 import React, { useState, useRef } from 'react';
 import { Upload, X, Loader2 } from 'lucide-react';
-import { supabase } from '../../services/supabase';
+import { supabase } from '../../services';
+import { getErrorMessage } from '../../commons/utils';
 
 interface ReceiptUploaderProps {
   value?: string;
   onChange: (url: string | undefined) => void;
   disabled?: boolean;
+  onUploadingChange?: (uploading: boolean) => void;
 }
 
 export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
   value,
   onChange,
   disabled = false,
+  onUploadingChange,
 }) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,12 +37,13 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
 
     setError(null);
     setUploading(true);
+    onUploadingChange?.(true);
 
     try {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData?.user?.id || 'public';
       const fileExt = file.name.split('.').pop() || 'jpg';
-      const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+      const fileName = `${userId}/${moment().valueOf()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
 
       const { data, error: uploadError } = await supabase.storage
         .from('receipts')
@@ -54,11 +59,12 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
       const { data: publicData } = supabase.storage.from('receipts').getPublicUrl(data.path);
 
       onChange(publicData.publicUrl);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error uploading receipt:', err);
-      setError(err.message || 'Tải ảnh hóa đơn thất bại');
+      setError(getErrorMessage(err, 'Tải ảnh hóa đơn thất bại'));
     } finally {
       setUploading(false);
+      onUploadingChange?.(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }

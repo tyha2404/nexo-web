@@ -1,10 +1,12 @@
+import { TransactionType } from '../constants';
+
 /**
  * Automatically determine the most fitting emoji icon for a category based on its name and type
  */
 export function getCategoryIcon(name?: string, type?: string): string {
   if (!name) {
-    if (type === 'INCOME') return '💰';
-    if (type === 'INVESTMENT') return '📈';
+    if (type === TransactionType.INCOME) return '💰';
+    if (type === TransactionType.INVESTMENT) return '📈';
     return '💸';
   }
   const n = name.toLowerCase();
@@ -86,7 +88,7 @@ export function getCategoryIcon(name?: string, type?: string): string {
   if (n.includes('quà') || n.includes('biếu') || n.includes('tặng') || n.includes('mừng'))
     return '🎁';
   if (n.includes('hóa đơn') || n.includes('phí') || n.includes('dịch vụ')) return '📄';
-  if (type === 'INCOME') return '💰';
-  if (type === 'INVESTMENT') return '📈';
+  if (type === TransactionType.INCOME) return '💰';
+  if (type === TransactionType.INVESTMENT) return '📈';
   return '💸';
 }

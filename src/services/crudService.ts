@@ -8,7 +8,10 @@ export class CRUDService<T, CreateDTO = Partial<T>, UpdateDTO = Partial<T>> {
     this.basePath = basePath;
   }
 
-  async list(filters?: Record<string, any>): Promise<PaginatedResult<T>> {
+  async list(
+    filters?: Record<string, string | number | boolean | undefined>,
+    options: RequestInit = {}
+  ): Promise<PaginatedResult<T>> {
     let query = '';
     if (filters) {
       const params = new URLSearchParams();
@@ -25,6 +28,7 @@ export class CRUDService<T, CreateDTO = Partial<T>, UpdateDTO = Partial<T>> {
 
     const res = await request<PaginatedResult<T> | T[]>(`${this.basePath}${query}`, {
       method: 'GET',
+      ...options,
     });
 
     if (Array.isArray(res)) {

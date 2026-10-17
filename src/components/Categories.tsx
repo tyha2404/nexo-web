@@ -9,16 +9,23 @@ import {
   Wallet,
   X,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 import { TransactionType } from '../commons/constants';
 import type { Category } from '../commons/types';
-import { formatNumberInput, parseNumberInput } from '../commons/utils';
-import { categoryService } from '../services/api';
+import {
+  formatCurrency,
+  formatNumberInput,
+  parseNumberInput,
+  getErrorMessage,
+} from '../commons/utils';
+import { useDataEvents, useModal } from '../hooks';
+import { categoryService } from '../services';
 import './Categories.css';
 import Pagination from './Pagination';
-import ConfirmModal from './common/ConfirmModal';
+import { ConfirmModal } from './common';
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -59,27 +66,31 @@ export default function Categories() {
     }
   };
 
-  const fetchCategories = async (
-    selectedType: TransactionType,
-    page: number = currentPage,
-    limit: number = itemsPerPage
-  ) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await categoryService.list({ type: selectedType, page, limit });
-      setCategories(res.items || []);
-      setTotalItems(res.total || 0);
-    } catch (err: any) {
-      setError(err.message || 'Lấy danh mục thất bại');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const fetchCategories = useCallback(
+    async (selectedType: TransactionType, page: number, limit: number) => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await categoryService.list({ type: selectedType, page, limit });
+        setCategories(res.items || []);
+        setTotalItems(res.total || 0);
+      } catch (err) {
+        setError(getErrorMessage(err, 'Lấy danh mục thất bại'));
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     fetchCategories(activeTab, currentPage, itemsPerPage);
-  }, [activeTab, currentPage, itemsPerPage]);
+  }, [fetchCategories, activeTab, currentPage, itemsPerPage]);
+
+  // Categories created by the AI assistant or another device; budgets affect usage bars
+  useDataEvents(['categories-changed', 'budgets-changed', 'nexo-reconnect'], () =>
+    fetchCategories(activeTab, currentPage, itemsPerPage)
+  );
 
   const handleBudgetChange = (val: string) => {
     setBudgetLimit(formatNumberInput(val));
@@ -115,8 +126,8 @@ export default function Categories() {
       setExcludeFromAverageDaily(false);
       setIsModalOpen(false);
       showFeedback('Tạo danh mục thành công!', 'success');
-    } catch (err: any) {
-      showFeedback(err.message || 'Tạo danh mục thất bại', 'error');
+    } catch (err) {
+      showFeedback(getErrorMessage(err, 'Tạo danh mục thất bại'), 'error');
     }
   };
 
@@ -151,8 +162,8 @@ export default function Categories() {
       setEditExcludeFromAverageDaily(false);
       setIsModalOpen(false);
       showFeedback('Cập nhật danh mục thành công!', 'success');
-    } catch (err: any) {
-      showFeedback(err.message || 'Cập nhật danh mục thất bại', 'error');
+    } catch (err) {
+      showFeedback(getErrorMessage(err, 'Cập nhật danh mục thất bại'), 'error');
     }
   };
 
@@ -177,8 +188,8 @@ export default function Categories() {
       await categoryService.delete(id);
       setCategories((prev) => prev.filter((cat) => cat.id !== id));
       showFeedback(`Đã xóa danh mục "${name}"!`, 'success');
-    } catch (err: any) {
-      showFeedback(err.message || 'Xóa danh mục thất bại', 'error');
+    } catch (err) {
+      showFeedback(getErrorMessage(err, 'Xóa danh mục thất bại'), 'error');
     }
   };
 
@@ -210,6 +221,7 @@ export default function Categories() {
     setIsModalOpen(false);
     setEditingCategory(null);
   };
+  const categoryDialogRef = useModal(isModalOpen, closeModal);
 
   const getTabTypeName = (tab: TransactionType) => {
     if (tab === TransactionType.INCOME) return 'thu nhập';
@@ -217,15 +229,17 @@ export default function Categories() {
     return 'chi tiêu';
   };
 
+  const openCreateModalRef = useRef(openCreateModal);
   useEffect(() => {
-    const handleOpenModal = () => {
-      openCreateModal();
-    };
+    openCreateModalRef.current = openCreateModal;
+  });
+  useEffect(() => {
+    const handleOpenModal = () => openCreateModalRef.current();
     window.addEventListener('open-add-category-modal', handleOpenModal);
     return () => {
       window.removeEventListener('open-add-category-modal', handleOpenModal);
     };
-  }, [activeTab]);
+  }, []);
 
   return (
     <div className="categories-subview">
@@ -342,7 +356,7 @@ export default function Categories() {
                           <div className="category-meta-tags">
                             {cat.budgetLimit !== undefined && (
                               <span className="category-limit-tag">
-                                Hạn mức: {cat.budgetLimit.toLocaleString('vi-VN')}đ
+                                Hạn mức: {formatCurrency(cat.budgetLimit)}
                               </span>
                             )}
                             {cat.excludeFromAverageDaily && (
@@ -400,163 +414,178 @@ export default function Categories() {
       </div>
 
       {/* Modal Popup for Create / Edit Category */}
-      {isModalOpen && (
-        <div className="modal-backdrop" onClick={closeModal}>
-          <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>{editingCategory ? 'Sửa danh mục' : 'Thêm danh mục'}</h3>
-              <button type="button" className="close-btn" onClick={closeModal} aria-label="Đóng">
-                <X size={18} />
-              </button>
+      {isModalOpen &&
+        // Portal: the tab container is animated (transform), which would trap position: fixed
+        createPortal(
+          <div className="modal-backdrop app-modal-backdrop" onClick={closeModal}>
+            <div
+              ref={categoryDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="category-modal-title"
+              tabIndex={-1}
+              className="modal-content animate-scale-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h3 id="category-modal-title">
+                  {editingCategory ? 'Sửa danh mục' : 'Thêm danh mục'}
+                </h3>
+                <button type="button" className="close-btn" onClick={closeModal} aria-label="Đóng">
+                  <X size={18} />
+                </button>
+              </div>
+              {editingCategory ? (
+                <form onSubmit={handleUpdate}>
+                  <div className="form-group">
+                    <label htmlFor="edit-name">Tên danh mục</label>
+                    <input
+                      id="edit-name"
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="edit-type">Loại danh mục</label>
+                    <Select
+                      id="edit-type"
+                      options={typeOptions}
+                      value={typeOptions.find((opt) => opt.value === editType) || null}
+                      onChange={(option) =>
+                        setEditType(
+                          (option ? option.value : TransactionType.EXPENSE) as TransactionType
+                        )
+                      }
+                      classNamePrefix="react-select"
+                      placeholder="Chọn Loại danh mục"
+                      menuPortalTarget={document.body}
+                    />
+                  </div>
+                  {editType === TransactionType.EXPENSE && (
+                    <>
+                      <div className="form-group">
+                        <label htmlFor="edit-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
+                        <input
+                          id="edit-budget"
+                          type="text"
+                          value={editBudgetLimit}
+                          onChange={(e) => handleEditBudgetChange(e.target.value)}
+                          placeholder="Ví dụ: 5.000.000"
+                        />
+                      </div>
+                      <div className="form-group form-check">
+                        <label className="checkbox-label">
+                          <input
+                            id="edit-exclude-avg"
+                            type="checkbox"
+                            checked={editExcludeFromAverageDaily}
+                            onChange={(e) => setEditExcludeFromAverageDaily(e.target.checked)}
+                          />
+                          Không tính vào chi tiêu trung bình ngày
+                        </label>
+                      </div>
+                    </>
+                  )}
+                  <div className="form-group">
+                    <label htmlFor="edit-desc">Mô tả</label>
+                    <textarea
+                      id="edit-desc"
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      placeholder="Mô tả ngắn về danh mục này..."
+                      rows={3}
+                    />
+                  </div>
+                  <div className="button-group">
+                    <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                      Hủy
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      Lưu danh mục
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleCreate}>
+                  <div className="form-group">
+                    <label htmlFor="new-name">Tên danh mục</label>
+                    <input
+                      id="new-name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="new-type">Loại danh mục</label>
+                    <Select
+                      id="new-type"
+                      options={typeOptions}
+                      value={typeOptions.find((opt) => opt.value === type) || null}
+                      onChange={(option) =>
+                        setType(
+                          (option ? option.value : TransactionType.EXPENSE) as TransactionType
+                        )
+                      }
+                      classNamePrefix="react-select"
+                      placeholder="Chọn Loại danh mục"
+                      menuPortalTarget={document.body}
+                    />
+                  </div>
+                  {type === TransactionType.EXPENSE && (
+                    <>
+                      <div className="form-group">
+                        <label htmlFor="new-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
+                        <input
+                          id="new-budget"
+                          type="text"
+                          value={budgetLimit}
+                          onChange={(e) => handleBudgetChange(e.target.value)}
+                          placeholder="Ví dụ: 5.000.000"
+                        />
+                      </div>
+                      <div className="form-group form-check">
+                        <label className="checkbox-label">
+                          <input
+                            id="new-exclude-avg"
+                            type="checkbox"
+                            checked={excludeFromAverageDaily}
+                            onChange={(e) => setExcludeFromAverageDaily(e.target.checked)}
+                          />
+                          Không tính vào chi tiêu trung bình ngày
+                        </label>
+                      </div>
+                    </>
+                  )}
+                  <div className="form-group">
+                    <label htmlFor="new-desc">Mô tả</label>
+                    <textarea
+                      id="new-desc"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Mô tả ngắn về danh mục này..."
+                      rows={3}
+                    />
+                  </div>
+                  <div className="button-group">
+                    <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                      Hủy
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      Thêm danh mục
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
-            {editingCategory ? (
-              <form onSubmit={handleUpdate}>
-                <div className="form-group">
-                  <label htmlFor="edit-name">Tên danh mục</label>
-                  <input
-                    id="edit-name"
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="edit-type">Loại danh mục</label>
-                  <Select
-                    id="edit-type"
-                    options={typeOptions}
-                    value={typeOptions.find((opt) => opt.value === editType) || null}
-                    onChange={(option) =>
-                      setEditType(
-                        (option ? option.value : TransactionType.EXPENSE) as TransactionType
-                      )
-                    }
-                    classNamePrefix="react-select"
-                    placeholder="Chọn Loại danh mục"
-                    menuPortalTarget={document.body}
-                  />
-                </div>
-                {editType === TransactionType.EXPENSE && (
-                  <>
-                    <div className="form-group">
-                      <label htmlFor="edit-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
-                      <input
-                        id="edit-budget"
-                        type="text"
-                        value={editBudgetLimit}
-                        onChange={(e) => handleEditBudgetChange(e.target.value)}
-                        placeholder="Ví dụ: 5.000.000"
-                      />
-                    </div>
-                    <div className="form-group form-check">
-                      <label className="checkbox-label">
-                        <input
-                          id="edit-exclude-avg"
-                          type="checkbox"
-                          checked={editExcludeFromAverageDaily}
-                          onChange={(e) => setEditExcludeFromAverageDaily(e.target.checked)}
-                        />
-                        Không tính vào chi tiêu trung bình ngày
-                      </label>
-                    </div>
-                  </>
-                )}
-                <div className="form-group">
-                  <label htmlFor="edit-desc">Mô tả</label>
-                  <textarea
-                    id="edit-desc"
-                    value={editDescription}
-                    onChange={(e) => setEditDescription(e.target.value)}
-                    placeholder="Mô tả ngắn về danh mục này..."
-                    rows={3}
-                  />
-                </div>
-                <div className="button-group">
-                  <button type="button" className="btn btn-secondary" onClick={closeModal}>
-                    Hủy
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    Lưu danh mục
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={handleCreate}>
-                <div className="form-group">
-                  <label htmlFor="new-name">Tên danh mục</label>
-                  <input
-                    id="new-name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="new-type">Loại danh mục</label>
-                  <Select
-                    id="new-type"
-                    options={typeOptions}
-                    value={typeOptions.find((opt) => opt.value === type) || null}
-                    onChange={(option) =>
-                      setType((option ? option.value : TransactionType.EXPENSE) as TransactionType)
-                    }
-                    classNamePrefix="react-select"
-                    placeholder="Chọn Loại danh mục"
-                    menuPortalTarget={document.body}
-                  />
-                </div>
-                {type === TransactionType.EXPENSE && (
-                  <>
-                    <div className="form-group">
-                      <label htmlFor="new-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
-                      <input
-                        id="new-budget"
-                        type="text"
-                        value={budgetLimit}
-                        onChange={(e) => handleBudgetChange(e.target.value)}
-                        placeholder="Ví dụ: 5.000.000"
-                      />
-                    </div>
-                    <div className="form-group form-check">
-                      <label className="checkbox-label">
-                        <input
-                          id="new-exclude-avg"
-                          type="checkbox"
-                          checked={excludeFromAverageDaily}
-                          onChange={(e) => setExcludeFromAverageDaily(e.target.checked)}
-                        />
-                        Không tính vào chi tiêu trung bình ngày
-                      </label>
-                    </div>
-                  </>
-                )}
-                <div className="form-group">
-                  <label htmlFor="new-desc">Mô tả</label>
-                  <textarea
-                    id="new-desc"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Mô tả ngắn về danh mục này..."
-                    rows={3}
-                  />
-                </div>
-                <div className="button-group">
-                  <button type="button" className="btn btn-secondary" onClick={closeModal}>
-                    Hủy
-                  </button>
-                  <button type="submit" className="btn btn-primary">
-                    Thêm danh mục
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       {/* Delete Category Confirm Modal */}
       <ConfirmModal

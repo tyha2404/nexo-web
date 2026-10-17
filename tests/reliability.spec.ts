@@ -1,0 +1,153 @@
+import { test, expect } from '@playwright/test';
+import { setup, openTransactionForm, TOKEN, INCOME } from './fixtures';
+
+test('dashboard prioritizes spending, stays within viewport and defers analysis', async ({
+  page,
+}) => {
+  const state = await setup(page);
+  await page.goto('/');
+  await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
+  expect(state.requests.filter((path) => path.startsWith('/reports/monthly-trend'))).toHaveLength(
+    0
+  );
+  expect(
+    state.requests.filter((path) => path.startsWith('/reports/category-breakdown'))
+  ).toHaveLength(0);
+  expect(state.requests.filter((path) => path.startsWith('/debts?'))).toHaveLength(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true
+  );
+  await page.screenshot({
+    path: `test-results/dashboard-${test.info().project.name}.png`,
+    fullPage: true,
+  });
+  await page.getByRole('button', { name: 'Xem phân tích, tài sản và đầu tư' }).click();
+  await expect
+    .poll(() => state.requests.some((path) => path.startsWith('/reports/monthly-trend')))
+    .toBe(true);
+  await expect(page.getByText('Mục tiêu Đầu tư Tháng', { exact: true })).toBeVisible();
+});
+
+test('switching type clears the previous category; closing never asks about drafts', async ({
+  page,
+}) => {
+  const state = await setup(page);
+  await page.goto('/');
+  const dialog = await openTransactionForm(page);
+  await dialog.getByLabel('Số tiền chi tiêu (đ)').fill('50000');
+  await dialog.getByLabel('Danh mục').fill('Ăn uống');
+  await page.getByRole('option', { name: 'Ăn uống', exact: true }).click();
+  await dialog.getByRole('tab', { name: 'Thu nhập', exact: true }).click();
+  await expect(dialog.getByText('Chọn Danh mục', { exact: true })).toBeVisible();
+  await dialog.getByLabel('Danh mục').fill('Lương');
+  await page.getByRole('option', { name: 'Lương', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Thêm giao dịch', exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  expect(state.writes[0].categoryId).toBe(INCOME);
+  const again = await openTransactionForm(page);
+  await again.getByLabel('Số tiền chi tiêu (đ)').fill('1000');
+  await again.getByRole('button', { name: 'Đóng', exact: true }).first().click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect(
+    await page.evaluate(() =>
+      Object.keys(localStorage).some((key) => key.startsWith('nexo-draft:'))
+    )
+  ).toBe(false);
+});
+
+test('search reaches a transaction beyond the first page and realtime refreshes the list', async ({
+  page,
+}) => {
+  const state = await setup(page);
+  await page.goto('/#/transactions/expense');
+  await page.getByPlaceholder('Tìm kiếm theo tiêu đề...').fill('đặc biệt');
+  await expect.poll(() => state.requests.some((path) => path.includes('keyword='))).toBe(true);
+  await expect(
+    page.getByText('Hóa đơn đặc biệt', { exact: true }).filter({ visible: true })
+  ).toBeVisible();
+  state.transactions[25].description = 'Hóa đơn đặc biệt mới';
+  await page.evaluate(() => window.dispatchEvent(new Event('transactions-changed')));
+  await expect(
+    page.getByText('Hóa đơn đặc biệt mới', { exact: true }).filter({ visible: true })
+  ).toBeVisible();
+});
+
+test('a network error on startup retains the token and offers retry', async ({ page }) => {
+  const state = await setup(page);
+  state.offline = true;
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Thử kết nối lại' })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('token'))).toBe(TOKEN);
+  state.offline = false;
+  await page.getByRole('button', { name: 'Thử kết nối lại' }).click();
+  await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
+});
+
+test('an explicit 401 clears the expired token', async ({ page }) => {
+  const state = await setup(page);
+  state.unauthorized = true;
+  await page.goto('/');
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('token'))).toBe(null);
+});
+
+test('a failed save keeps the form open with its values', async ({ page }) => {
+  const state = await setup(page);
+  await page.goto('/');
+  const dialog = await openTransactionForm(page);
+  await dialog.getByLabel('Ghi chú (không bắt buộc)').fill('Chưa gửi');
+  await dialog.getByLabel('Số tiền chi tiêu (đ)').fill('10000');
+  await dialog.getByLabel('Danh mục').fill('Ăn uống');
+  await page.getByRole('option', { name: 'Ăn uống', exact: true }).click();
+  state.failSave = true;
+  await dialog.getByRole('button', { name: 'Thêm giao dịch', exact: true }).click();
+  await expect(page.getByText('Không lưu được', { exact: true })).toBeVisible();
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel('Ghi chú (không bắt buộc)')).toHaveValue('Chưa gửi');
+});
+
+test.describe('installed PWA cache', () => {
+  test.use({ serviceWorkers: 'allow' });
+  test('offline PWA reopens cached data without logging out', async ({
+    page,
+    context,
+    browserName,
+  }) => {
+    test.skip(
+      browserName === 'webkit',
+      'Playwright WebKit does not expose service worker control; covered in Chromium.'
+    );
+    const state = await setup(page);
+    await page.goto('/');
+    await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.ready;
+    });
+    await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
+    state.offline = true;
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page.getByText('Ngân sách còn lại', { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => localStorage.getItem('token'))).toBe(TOKEN);
+    await expect(page.locator('.connection-status')).toBeVisible();
+  });
+});
+
+test('quick add from the bottom nav saves with only amount and category', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'The raised + button lives in the mobile bottom nav.');
+  const state = await setup(page);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Ghi giao dịch mới' }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByLabel('Số tiền chi tiêu (đ)')).toBeVisible();
+  await dialog.getByLabel('Số tiền chi tiêu (đ)').fill('45000');
+  await dialog.getByLabel('Danh mục').fill('Ăn uống');
+  await page.getByRole('option', { name: 'Ăn uống', exact: true }).click();
+  await dialog.getByRole('button', { name: /Thêm giao dịch/ }).click();
+  await expect(dialog).toBeHidden();
+  const saved = state.writes.at(-1) as { amount: number; description: string };
+  expect(saved.amount).toBe(45000);
+  expect(saved.description).toBe('Ăn uống');
+});

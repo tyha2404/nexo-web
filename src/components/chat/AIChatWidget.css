@@ -135,7 +135,7 @@
 
 .chat-resize-handle-nw:hover,
 .nexo-chat-window.resizing .chat-resize-handle-nw {
-  color: #a5b4fc;
+  color: var(--primary);
   background: rgba(99, 102, 241, 0.2);
   border-bottom-right-radius: 8px;
 }
@@ -239,7 +239,7 @@
   align-items: center;
   gap: 5px;
   font-size: 11px;
-  color: #10b981;
+  color: var(--income);
   font-weight: 500;
 }
 
@@ -247,8 +247,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
+  background: var(--income);
+  box-shadow: 0 0 8px var(--income);
   animation: pulseDot 2s infinite ease-in-out;
 }
 
@@ -463,7 +463,7 @@
 .sessions-clear-btn {
   background: none;
   border: none;
-  color: #f87171;
+  color: var(--expense);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -474,13 +474,13 @@
 
 .sessions-clear-btn:hover {
   background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  color: var(--expense);
 }
 
 .sessions-empty {
   padding: 24px 14px;
   text-align: center;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 12px;
 }
 
@@ -729,7 +729,7 @@
   justify-content: center;
   text-align: center;
   padding: 20px 8px;
-  color: #94a3b8;
+  color: var(--text-muted);
   height: 100%;
 }
 
@@ -738,7 +738,7 @@
   height: 52px;
   border-radius: 50%;
   background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -775,7 +775,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #94a3b8;
+  color: var(--text-muted);
   text-align: left;
   padding-left: 2px;
 }
@@ -1023,10 +1023,10 @@
 .chat-md-blockquote {
   margin: 6px 0;
   padding: 6px 12px;
-  border-left: 3px solid #6366f1;
+  border-left: 3px solid var(--primary);
   background: rgba(99, 102, 241, 0.08);
   border-radius: 0 8px 8px 0;
-  color: #cbd5e1;
+  color: var(--text-muted);
   font-style: italic;
 }
 .chat-inline-code {
@@ -1186,7 +1186,7 @@
   border: 1px solid rgba(99, 102, 241, 0.25);
   border-radius: 8px;
   font-size: 11px;
-  color: #a5b4fc;
+  color: var(--primary);
   margin-bottom: 8px;
   animation: pulse 1.5s infinite;
 }
@@ -1218,39 +1218,39 @@
 .chat-action-card.TRANSACTION_CREATED,
 .chat-action-card.TRANSACTION_PROPOSED,
 .chat-action-card.PENDING_CONFIRMATION {
-  border-left-color: #10b981;
+  border-left-color: var(--income);
 }
 
 .chat-action-card.CATEGORY_CREATED {
-  border-left-color: #8b5cf6;
+  border-left-color: var(--purple);
 }
 
 .chat-action-card.WALLET_TRANSFER {
-  border-left-color: #6366f1;
+  border-left-color: var(--primary);
 }
 
 .chat-action-card.DEBT_CREATED {
-  border-left-color: #f59e0b;
+  border-left-color: var(--warning);
 }
 
 .chat-action-card.DEBT_REPAID {
-  border-left-color: #10b981;
+  border-left-color: var(--income);
 }
 
 .chat-action-card.BUDGET_SET {
-  border-left-color: #a855f7;
+  border-left-color: var(--purple);
 }
 
 .chat-action-card.BUDGET_ALERT {
-  border-left-color: #f59e0b;
+  border-left-color: var(--warning);
 }
 
 .chat-action-card.KNOWLEDGE_SOURCE {
-  border-left-color: #a855f7;
+  border-left-color: var(--purple);
 }
 
 .chat-action-card.FINANCIAL_SUMMARY {
-  border-left-color: #6366f1;
+  border-left-color: var(--primary);
 }
 
 .action-card-top-bar {
@@ -1269,7 +1269,7 @@
 
 .action-card-timestamp {
   font-size: 10px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .action-card-title {
@@ -1313,18 +1313,18 @@
 }
 
 .meta-value.income {
-  color: #34d399;
+  color: var(--income);
   font-weight: 700;
 }
 
 .meta-value.expense {
-  color: #f87171;
+  color: var(--expense);
   font-weight: 700;
 }
 
 .meta-value.tag {
   background: rgba(99, 102, 241, 0.15);
-  color: #c7d2fe;
+  color: var(--primary);
   padding: 1px 6px;
   border-radius: 4px;
   font-size: 10.5px;
@@ -1473,7 +1473,7 @@
 }
 
 .chat-input-textarea:focus {
-  border-color: #6366f1;
+  border-color: var(--primary);
 }
 
 .chat-send-btn {
@@ -1907,7 +1907,7 @@ body.light-theme .message-bubble.thinking-bubble {
   background: rgba(239, 68, 68, 0.15);
   border: 1px solid rgba(239, 68, 68, 0.35);
   border-radius: 8px;
-  color: #fca5a5;
+  color: var(--expense);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -1916,7 +1916,7 @@ body.light-theme .message-bubble.thinking-bubble {
 
 .chat-retry-btn:hover {
   background: rgba(239, 68, 68, 0.28);
-  border-color: #ef4444;
+  border-color: var(--expense);
   color: #ffffff;
   transform: translateY(-1px);
 }
@@ -1943,13 +1943,13 @@ body.light-theme .message-bubble.thinking-bubble {
 
 .message-status-tag.error {
   background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
+  color: var(--expense);
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .message-status-tag.streaming {
   background: rgba(99, 102, 241, 0.2);
-  color: #a5b4fc;
+  color: var(--primary);
   border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
