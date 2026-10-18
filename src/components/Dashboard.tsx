@@ -34,8 +34,7 @@ const MonthlyTrendChart = lazy(() =>
   import('./MonthlyTrendChart').then((module) => ({ default: module.MonthlyTrendChart }))
 );
 import { TransactionType } from '../commons/constants';
-import { useOfflineQueue } from '../hooks';
-import { MonthFilter, PendingTransactionList } from './common';
+import { MonthFilter } from './common';
 
 export { getCategoryIcon };
 
@@ -62,7 +61,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [refreshKey, setRefreshKey] = useState(0);
   const [loadedMonth, setLoadedMonth] = useState('');
   const requestNumber = useRef(0);
-  const pendingTransactions = useOfflineQueue();
 
   const fetchDashboardData = useCallback(async (monthStr: string, signal: AbortSignal) => {
     const requestId = ++requestNumber.current;
@@ -164,7 +162,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       'debts-changed',
       'wallets-changed',
       'online',
-      'nexo-reconnect',
     ];
     const resume = () => {
       if (document.visibilityState === 'visible') refresh();
@@ -752,7 +749,6 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               </div>
 
               <div className="recent-txns-body">
-                <PendingTransactionList items={pendingTransactions} />
                 {recentTransactions.length > 0 ? (
                   <div className="txns-timeline-list">
                     {recentTransactions.map((txn) => {

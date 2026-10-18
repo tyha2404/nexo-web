@@ -88,7 +88,7 @@ export default function Categories() {
   }, [fetchCategories, activeTab, currentPage, itemsPerPage]);
 
   // Categories created by the AI assistant or another device; budgets affect usage bars
-  useDataEvents(['categories-changed', 'budgets-changed', 'nexo-reconnect'], () =>
+  useDataEvents(['categories-changed', 'budgets-changed'], () =>
     fetchCategories(activeTab, currentPage, itemsPerPage)
   );
 

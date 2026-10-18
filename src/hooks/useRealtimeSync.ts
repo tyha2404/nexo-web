@@ -1,6 +1,6 @@
 import moment from 'moment';
 import { useEffect, useState } from 'react';
-import { invalidateRequestCache, supabase } from '../services';
+import { supabase } from '../services';
 
 export interface UseRealtimeSyncProps {
   userId?: string;
@@ -29,8 +29,7 @@ const RESUME_REFRESH_AFTER_MS = 30_000;
 export const REALTIME_POLL_INTERVAL_MS = 60_000;
 
 const refreshAllTables = () => {
-  for (const { table, event } of SYNCED_TABLES) {
-    invalidateRequestCache(table);
+  for (const { event } of SYNCED_TABLES) {
     window.dispatchEvent(new Event(event));
   }
 };
@@ -97,7 +96,6 @@ export function useRealtimeSync(props?: UseRealtimeSyncProps) {
         'postgres_changes',
         { event: '*', schema: 'public', table, filter: `user_id=eq.${userId}` },
         () => {
-          invalidateRequestCache(table);
           window.dispatchEvent(new Event(event));
           callbacks[table]?.();
         }

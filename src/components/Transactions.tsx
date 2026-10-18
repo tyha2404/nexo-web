@@ -6,16 +6,14 @@ import { toast } from 'react-toastify';
 import { InvestmentStatus, TransactionType } from '../commons/constants';
 import type { Category, Transaction, TransactionSummary, Wallet } from '../commons/types';
 import { getErrorMessage, toISODateString } from '../commons/utils';
-import { useOfflineQueue } from '../hooks';
 import {
   categoryService,
-  invalidateRequestCache,
   transactionService,
   walletService,
   type CreateTransactionDTO,
 } from '../services';
 import AddTransactionModal from './AddTransactionModal';
-import { ConfirmModal, MonthFilter, PendingTransactionList, ReceiptModal } from './common';
+import { ConfirmModal, MonthFilter, ReceiptModal } from './common';
 import Pagination from './Pagination';
 import {
   getTypeLabel,
@@ -174,13 +172,11 @@ export default function Transactions({
     const refresh = () => {
       clearTimeout(timer);
       timer = setTimeout(() => {
-        invalidateRequestCache('transactions');
         setRefreshKey((key) => key + 1);
       }, 150);
     };
     window.addEventListener('transactions-changed', refresh);
     window.addEventListener('online', refresh);
-    window.addEventListener('nexo-reconnect', refresh);
     const resume = () => {
       if (document.visibilityState === 'visible') refresh();
     };
@@ -189,7 +185,6 @@ export default function Transactions({
       clearTimeout(timer);
       window.removeEventListener('transactions-changed', refresh);
       window.removeEventListener('online', refresh);
-      window.removeEventListener('nexo-reconnect', refresh);
       document.removeEventListener('visibilitychange', resume);
     };
   }, []);
@@ -314,13 +309,6 @@ export default function Transactions({
     onDelete: handleDelete,
     onViewReceipt: setSelectedReceiptUrl,
   };
-
-  // Offline-queued transactions for this tab and month, shown until they sync
-  const queued = useOfflineQueue();
-  const pendingItems = queued.filter(
-    (item) =>
-      item.payload.type === activeType && item.payload.transactionDate.startsWith(selectedMonth)
-  );
 
   // Calculate total pages from totalItems from server
   const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -478,11 +466,6 @@ export default function Transactions({
           />
         </div>
       </div>
-
-      <PendingTransactionList
-        items={pendingItems}
-        getCategoryName={(id) => categories.find((c) => c.id === id)?.name}
-      />
 
       {/* 5. Transactions Table (Desktop) & Cards (Mobile) */}
       {loading ? (

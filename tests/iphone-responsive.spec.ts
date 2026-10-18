@@ -23,6 +23,9 @@ test('form scrolls independently above the save actions, including a short viewp
     const actions = await footer.boundingBox();
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(actions!.y + 1);
     expect(actions!.y + actions!.height).toBeLessThanOrEqual(height);
+    expect(await footer.evaluate((el) => getComputedStyle(el).paddingBottom)).toBe('8px');
+    expect(await body.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+    expect(await body.evaluate((el) => getComputedStyle(el).overflowX)).toBe('hidden');
   }
   await page.screenshot({ path: 'test-results/iphone-form-short.png' });
 });
@@ -57,6 +60,15 @@ test('chat follows the visible keyboard viewport and resets after closing', asyn
   await expect.poll(async () => Math.round((await chat.boundingBox())!.height)).toBe(320);
   const input = page.locator('.chat-input-textarea');
   await input.fill('Kiểm tra bàn phím');
+  // Measure after the sheet's slide-up entrance animation (finite) has finished
+  await chat.evaluate((el) =>
+    Promise.all(
+      el
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished)
+    )
+  );
   const bounds = await input.boundingBox();
   expect(bounds!.y).toBeGreaterThanOrEqual(40);
   expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(360);
@@ -86,4 +98,34 @@ test('login uses compact spacing and fits phone width', async ({ page }) => {
   expect(await card.evaluate((el) => getComputedStyle(el).paddingLeft)).toBe('20px');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: 'test-results/iphone-login.png', fullPage: true });
+});
+
+test('month filter shows the year and navigates across year boundaries', async ({ page }) => {
+  await page.goto('/');
+  const month = page.getByLabel('Tháng hiển thị');
+  await month.fill('2026-12');
+  await expect(page.locator('.month-picker-display')).toHaveText('12/2026');
+  await page.getByRole('button', { name: 'Tháng kế tiếp' }).click();
+  await expect(month).toHaveValue('2027-01');
+  await expect(page.locator('.month-picker-display')).toHaveText('01/2027');
+  await page.getByRole('button', { name: 'Tháng trước' }).click();
+  await expect(month).toHaveValue('2026-12');
+  const arrow = await page.getByRole('button', { name: 'Tháng trước' }).boundingBox();
+  expect(arrow!.width).toBeGreaterThanOrEqual(44);
+  expect(arrow!.height).toBeGreaterThanOrEqual(44);
+  await page.screenshot({ path: 'test-results/iphone-month-filter.png' });
+});
+
+test('date inputs remain inside a vertically scrolling transaction modal', async ({ page }) => {
+  await page.goto('/');
+  const dialog = await openTransactionForm(page);
+  const date = dialog.getByLabel('Ngày thực hiện');
+  await date.fill('2026-12-31');
+  await expect(date).toHaveValue('2026-12-31');
+  await date.scrollIntoViewIfNeeded();
+  const bounds = await date.boundingBox();
+  const modal = await dialog.boundingBox();
+  expect(bounds!.x).toBeGreaterThanOrEqual(modal!.x);
+  expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(modal!.x + modal!.width);
+  await page.screenshot({ path: 'test-results/iphone-date-modal.png' });
 });

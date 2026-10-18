@@ -2,8 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import moment from 'moment';
 import { createPortal } from 'react-dom';
 import Select from 'react-select';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 import { Plus, Pencil, X, AlertTriangle, Target as TargetIcon } from 'lucide-react';
 import { targetService } from '../services';
 import { TransactionType } from '../commons/constants';
@@ -555,16 +553,15 @@ export default function Targets() {
                   <div className="form-group">
                     <label htmlFor="target-month">Áp dụng cho tháng</label>
                     <div className="target-datepicker-wrapper">
-                      <DatePicker
+                      <input
                         id="target-month"
-                        selected={moment(selectedMonth, 'YYYY-MM').toDate()}
-                        onChange={(date: Date | null) => {
-                          if (date) setSelectedMonth(moment(date).format('YYYY-MM'));
+                        type="month"
+                        value={selectedMonth}
+                        onChange={(event) => {
+                          if (moment(event.target.value, 'YYYY-MM', true).isValid())
+                            setSelectedMonth(event.target.value);
                         }}
-                        dateFormat="MM/yyyy"
-                        showMonthYearPicker
-                        portalId="date-picker-portal"
-                        className="react-datepicker-input"
+                        required
                       />
                     </div>
                   </div>

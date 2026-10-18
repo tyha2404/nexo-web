@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import moment from 'moment';
 import Select from 'react-select';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 import { toast } from 'react-toastify';
 import { Search, Plus, Trash2, Handshake, X, AlertTriangle, ArrowRightLeft } from 'lucide-react';
 import { formatCurrency, formatNumberInput, parseNumberInput } from '../commons/utils';
@@ -59,7 +57,7 @@ export default function Debts() {
   }, [fetchDebtData]);
 
   // Repayments from the AI assistant or another device arrive via realtime
-  useDataEvents(['debts-changed', 'nexo-reconnect'], fetchDebtData);
+  useDataEvents(['debts-changed'], fetchDebtData);
 
   const handleAmountChange = (val: string, setter: (v: string) => void) => {
     setter(formatNumberInput(val));
@@ -594,26 +592,27 @@ export default function Debts() {
               <div className="form-row-2col">
                 <div className="form-group">
                   <label htmlFor="debt-startdate">Ngày bắt đầu vay / cho vay</label>
-                  <DatePicker
+                  <input
                     id="debt-startdate"
-                    selected={formStartDate}
-                    onChange={(date: Date | null) => setFormStartDate(date)}
-                    dateFormat="dd/MM/yyyy"
-                    portalId="date-picker-portal"
-                    placeholderText="Chọn ngày bắt đầu"
+                    type="date"
+                    value={formStartDate ? moment(formStartDate).format('YYYY-MM-DD') : ''}
+                    onChange={(event) => {
+                      const date = moment(event.target.value, 'YYYY-MM-DD', true);
+                      setFormStartDate(date.isValid() ? date.toDate() : null);
+                    }}
                   />
                 </div>
 
                 <div className="form-group">
                   <label htmlFor="debt-duedate">Hạn thanh toán</label>
-                  <DatePicker
+                  <input
                     id="debt-duedate"
-                    selected={formDueDate}
-                    onChange={(date: Date | null) => setFormDueDate(date)}
-                    dateFormat="dd/MM/yyyy"
-                    portalId="date-picker-portal"
-                    isClearable={true}
-                    placeholderText="Chọn ngày hạn chót (nếu có)"
+                    type="date"
+                    value={formDueDate ? moment(formDueDate).format('YYYY-MM-DD') : ''}
+                    onChange={(event) => {
+                      const date = moment(event.target.value, 'YYYY-MM-DD', true);
+                      setFormDueDate(date.isValid() ? date.toDate() : null);
+                    }}
                   />
                 </div>
               </div>

@@ -11,6 +11,3 @@ export * from './targetService';
 export * from './transactionService';
 export * from './walletService';
 export { supabase, syncSupabaseToken } from './supabase';
-
-export { invalidateRequestCache } from './requestCache';
-export * from './offlineQueue';

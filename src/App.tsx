@@ -42,8 +42,8 @@ const AddTransactionModal = lazy(() => import('./components/AddTransactionModal'
 const AIChatWidget = lazy(() =>
   import('./components/chat').then((module) => ({ default: module.AIChatWidget }))
 );
-import { ApiError, authService, clearOfflineQueues, invalidateRequestCache } from './services';
-import { useOfflineQueueSync, useRealtimeSync } from './hooks';
+import { ApiError, authService } from './services';
+import { useRealtimeSync } from './hooks';
 
 export type ActiveTab = 'dashboard' | 'transactions' | 'debts' | 'planning';
 
@@ -71,7 +71,6 @@ function App() {
   );
 
   useRealtimeSync({ userId: user?.id });
-  useOfflineQueueSync(Boolean(user));
 
   const checkAuth = async () => {
     const attempt = ++authAttempt.current;
@@ -92,12 +91,9 @@ function App() {
       if (attempt !== authAttempt.current || token !== localStorage.getItem('token')) return;
       if (err instanceof ApiError && err.status === 401) {
         localStorage.removeItem('token');
-        invalidateRequestCache();
         setUser(null);
       } else {
-        setAuthError(
-          'Không thể xác minh phiên đăng nhập. Vui lòng thử lại hoặc đăng nhập bên dưới.'
-        );
+        setAuthError('Không kết nối được máy chủ Nexo. Kiểm tra API đang chạy rồi bấm Thử lại.');
       }
     } finally {
       if (attempt === authAttempt.current) setAuthLoading(false);
@@ -140,8 +136,6 @@ function App() {
     localStorage.removeItem('nexo-user-id');
     for (const key of Object.keys(localStorage))
       if (key.startsWith('nexo-draft:')) localStorage.removeItem(key);
-    clearOfflineQueues();
-    invalidateRequestCache();
     setUser(null);
     setAuthError(null);
     setAIRequested(false);
