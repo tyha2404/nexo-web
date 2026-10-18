@@ -84,11 +84,20 @@ test('calendar stays within a short landscape viewport and follows light mode', 
   await setup(page);
   await page.setViewportSize({ width: 852, height: 393 });
   await page.goto('/');
-  await page
-    .getByRole('button', { name: 'Đổi giao diện sáng/tối' })
-    .filter({ visible: true })
-    .first()
-    .click();
+  // On the mobile layout the theme toggle lives in the account menu
+  const account = page.getByRole('button', { name: 'Tài khoản' });
+  await expect(page.getByRole('button', { name: 'Tháng hiển thị' })).toBeVisible();
+  if (await account.isVisible()) {
+    await account.click();
+    await page.getByRole('menuitem', { name: 'Giao diện sáng' }).click();
+    await account.click();
+  } else {
+    await page
+      .getByRole('button', { name: 'Đổi giao diện sáng/tối' })
+      .filter({ visible: true })
+      .first()
+      .click();
+  }
   await page.getByRole('button', { name: 'Tháng hiển thị' }).click();
   const calendar = page.locator('.date-picker-panel');
   await expect(calendar).toBeVisible();

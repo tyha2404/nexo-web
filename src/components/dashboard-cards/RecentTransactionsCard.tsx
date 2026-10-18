@@ -54,9 +54,11 @@ export function RecentTransactionsCard({
                         <span className="txn-cat-badge">
                           {txn.categoryName || 'Không phân loại'}
                         </span>
-                        <span className="txn-wallet-badge">
-                          <CreditCard size={11} /> {walletLabel}
-                        </span>
+                        {wallets.length > 1 && (
+                          <span className="txn-wallet-badge">
+                            <CreditCard size={11} /> {walletLabel}
+                          </span>
+                        )}
                         <span className="txn-date-tag">
                           {moment(txn.transactionDate).format('DD/MM/YYYY')}
                         </span>

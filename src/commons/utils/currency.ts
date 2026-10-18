@@ -2,10 +2,12 @@
  * Format a number into localized currency format
  */
 export const formatCurrency = (amount: number, currency = 'VND', locale = 'vi-VN'): string => {
-  return new Intl.NumberFormat(locale, {
+  const formatted = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency,
   }).format(amount);
+  // The ₫ glyph has a built-in underline that reads as a link; use đ instead
+  return currency === 'VND' ? formatted.replace('₫', 'đ') : formatted;
 };
 
 /**

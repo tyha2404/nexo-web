@@ -10,9 +10,10 @@ test('dashboard shows the original sections without expanding analysis and fits 
   await expect(page.getByText('Tổng tài sản:', { exact: true })).toBeVisible();
   await expect(page.getByText('Tổng Đầu tư ↗', { exact: true })).toBeVisible();
   await expect(page.getByText('Mục tiêu Đầu tư Tháng', { exact: true })).toBeVisible();
+  // The mocked monthly trend is empty, and an empty trend chart is hidden
   await expect(
     page.getByText('Xu hướng Chi tiêu & Thu nhập (12 Tháng)', { exact: true })
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(page.locator('.dashboard-main-grid .recent-txns-card')).toBeVisible();
   await expect(page.locator('.dashboard-secondary-section')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Xem phân tích, tài sản và đầu tư' })).toHaveCount(

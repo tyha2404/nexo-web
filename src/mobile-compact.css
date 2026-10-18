@@ -1,0 +1,273 @@
+/* =========================================================
+   Compact layout overrides. main.tsx loads index.css and motion.css
+   after App.tsx's imports, so these rules win through the .app-shell /
+   body prefixes, not through load order.
+   ========================================================= */
+
+/* Planning hub tabs are a level above the segmented type tabs, so give
+   them an underline style to tell the two rows apart. */
+.planning-hub-nav .category-tabs {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0;
+  gap: 1.25rem;
+}
+
+.planning-hub-nav .category-tab,
+.planning-hub-nav .category-tab:hover {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  margin-bottom: -1px;
+  padding: 0.5rem 0.1rem;
+}
+
+.planning-hub-nav .category-tab.active {
+  background: transparent;
+  color: var(--text-main) !important;
+  border-bottom-color: var(--primary);
+  box-shadow: none;
+}
+
+/* Mobile account menu (theme + logout live here instead of the header) */
+.mobile-account {
+  position: relative;
+}
+
+.mobile-avatar-btn {
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: var(--primary-gradient) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+
+.mobile-account-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  min-width: 200px;
+  max-width: calc(100vw - 2rem);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0.35rem;
+  z-index: 100;
+}
+
+.mobile-account-info {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0.6rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.25rem;
+  min-width: 0;
+}
+
+.mobile-account-info .username {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.mobile-account-info .user-email {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-account-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem;
+  min-height: 40px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.mobile-account-item:active,
+.mobile-account-item:hover {
+  background: var(--bg-hover);
+}
+
+.mobile-account-logout {
+  color: var(--expense);
+}
+
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
+  /* Page headers: drop the descriptive subtitle, keep title and action on one row */
+  .app-shell .dashboard-title-group .subtitle,
+  .app-shell .transactions-title .subtitle,
+  .app-shell .debts-title .subtitle,
+  .app-shell .targets-title .subtitle,
+  .app-shell .categories-header .subtitle {
+    display: none !important;
+  }
+
+  .app-shell .dashboard-title-group h2,
+  .app-shell .transactions-title h2 {
+    font-size: 1.15rem !important;
+    margin: 0 !important;
+  }
+
+  .app-shell .transactions-header {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  .app-shell .transactions-title {
+    min-width: 0;
+  }
+
+  .app-shell .transactions-header .header-actions {
+    width: auto !important;
+    flex: 0 0 auto;
+    flex-wrap: nowrap !important;
+  }
+
+  /* In-page create buttons are secondary to the bottom-nav "Ghi mới" button */
+  .app-shell .transactions-header .btn-primary {
+    width: auto !important;
+    min-height: 34px !important;
+    padding: 0 0.75rem !important;
+    font-size: 0.8rem !important;
+    background: transparent !important;
+    color: var(--primary) !important;
+    border: 1px solid var(--primary) !important;
+    box-shadow: none !important;
+  }
+
+  /* Planning hub tabs: natural width, left aligned */
+  .app-shell .planning-hub-nav .category-tabs {
+    justify-content: flex-start !important;
+    padding: 0 !important;
+    gap: 1.25rem !important;
+    border-radius: 0 !important;
+  }
+
+  .app-shell .planning-hub-nav .category-tab {
+    flex: 0 0 auto !important;
+    padding: 0.5rem 0.1rem !important;
+  }
+
+  /* Summary cards: one swipeable row instead of a 2x2 grid */
+  .app-shell .summary-cards-grid {
+    grid-template-columns: none !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: minmax(150px, 46%) !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    margin-left: -0.65rem !important;
+    margin-right: -0.65rem !important;
+    padding: 0 0.65rem !important;
+    scroll-padding: 0 0.65rem;
+  }
+
+  .app-shell .summary-cards-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-shell .summary-cards-grid > div {
+    grid-column: auto !important;
+    scroll-snap-align: start;
+    min-height: 0 !important;
+  }
+
+  .app-shell .transactions-view .summary-stat-subtitle {
+    display: none !important;
+  }
+
+  /* Filter bar: search on its own row, the selects and month side by side */
+  .app-shell .filter-bar {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .app-shell .filter-bar .search-input-wrapper,
+  .app-shell .filter-bar:has(.status-select-wrapper) .date-range-filter-col {
+    grid-column: 1 / -1;
+  }
+
+  .app-shell .filter-bar > * {
+    min-width: 0 !important;
+  }
+
+  /* Dashboard: recent transactions before the month-over-month card, fewer rows */
+  .app-shell .dashboard-main-grid .recent-txns-card {
+    order: -1;
+  }
+
+  .app-shell .txns-timeline-list > :nth-child(n + 5) {
+    display: none;
+  }
+}
+
+/* Bottom nav docked to the screen edge. It used to float at the safe-area
+   inset, which left an empty strip under it in the home-screen (standalone) app. */
+@media (max-width: 768px),
+  (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
+  body .app-shell .bottom-nav {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding: 5px max(6px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px)
+      max(6px, env(safe-area-inset-left, 0px));
+    border: none;
+    border-top: 1px solid var(--border);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+
+  body .app-shell .main-content {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  body .Toastify__toast-container,
+  body .nexo-chat-widget-fab {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Form modals fill the phone screen; only the confirm dialog stays a centered card */
+  body .modal-backdrop:not(:has(.confirm-modal-content)) {
+    padding: 0 !important;
+    align-items: stretch !important;
+  }
+
+  body .modal-backdrop .modal-content:not(.confirm-modal-content) {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  body .modal-backdrop .modal-content:not(.confirm-modal-content):not(.modal-form-shell) {
+    padding-top: max(1.25rem, env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  body .app-modal-backdrop .modal-form-shell .modal-header {
+    padding-top: max(12px, env(safe-area-inset-top, 0px)) !important;
+  }
+
+  body .app-modal-backdrop .modal-form-shell .button-group {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+}

@@ -215,13 +215,15 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           />
 
           {/* 2.5 Monthly Trend Chart (12 Months) */}
-          <Suspense fallback={<p role="status">Đang tải biểu đồ...</p>}>
-            <MonthlyTrendChart
-              items={monthlyTrend?.items || []}
-              averageExpense={monthlyTrend?.averageExpense || 0}
-              loading={loading}
-            />
-          </Suspense>
+          {(loading || (monthlyTrend?.items?.length ?? 0) > 0) && (
+            <Suspense fallback={<p role="status">Đang tải biểu đồ...</p>}>
+              <MonthlyTrendChart
+                items={monthlyTrend?.items || []}
+                averageExpense={monthlyTrend?.averageExpense || 0}
+                loading={loading}
+              />
+            </Suspense>
+          )}
 
           {/* 3. Analytics Main Grid: Category Breakdown & Recent Transactions */}
           <div className="dashboard-main-grid animate-fade-in">

@@ -209,7 +209,7 @@ export default function Debts() {
       <div className="summary-cards-grid animate-fade-in">
         <div className="summary-stat-card accent-expense">
           <div className="summary-stat-header">
-            <span className="summary-stat-title">Tôi Nợ (Payable)</span>
+            <span className="summary-stat-title">Tôi nợ</span>
           </div>
           <div className="summary-stat-value value-payable">
             {formatCurrency(Math.abs(displayPayable))}
@@ -221,7 +221,7 @@ export default function Debts() {
 
         <div className="summary-stat-card accent-income">
           <div className="summary-stat-header">
-            <span className="summary-stat-title">Người Khác Nợ (Receivable)</span>
+            <span className="summary-stat-title">Người khác nợ tôi</span>
           </div>
           <div className="summary-stat-value value-receivable">
             {formatCurrency(Math.abs(displayReceivable))}

@@ -94,7 +94,7 @@
 }
 
 .trend-dot-indicator.bar-dot {
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
 }
 
 .trend-chart-container {

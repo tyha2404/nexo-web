@@ -188,7 +188,7 @@ input[class*='dummyInput'] {
 .txn-category-badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   font-size: 0.8rem;
   font-weight: 500;
   background: var(--primary-glow);
@@ -201,7 +201,7 @@ input[class*='dummyInput'] {
   align-items: center;
   gap: 0.35rem;
   padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   font-size: 0.8rem;
   font-weight: 500;
   background: rgba(148, 163, 184, 0.12);
@@ -212,7 +212,7 @@ input[class*='dummyInput'] {
 .txn-pnl-badge {
   display: inline-block;
   padding: 0.25rem 0.65rem;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   font-size: 0.8rem;
   font-weight: 600;
 }
@@ -232,7 +232,7 @@ input[class*='dummyInput'] {
 .txn-status-badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   font-size: 0.8rem;
   font-weight: 600;
 }

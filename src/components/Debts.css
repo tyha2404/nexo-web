@@ -138,7 +138,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.2rem 0.5rem;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -160,7 +160,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.25rem 0.6rem;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
 }
 
 .badge-paid-status {
@@ -200,7 +200,7 @@
 .repay-info-box {
   background: var(--bg-input);
   padding: 0.8rem;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   margin-bottom: 1rem;
   border: 1px solid var(--border);
 }
@@ -219,7 +219,7 @@
 .react-select__control {
   background: var(--bg-input) !important;
   border-color: var(--border) !important;
-  border-radius: 10px !important;
+  border-radius: var(--radius-md) !important;
   color: var(--text-main) !important;
   min-height: 42px !important;
   box-shadow: none !important;
@@ -238,7 +238,7 @@
 .react-select__menu {
   background: var(--bg-card) !important;
   border: 1px solid var(--border) !important;
-  border-radius: 10px !important;
+  border-radius: var(--radius-md) !important;
   overflow: hidden !important;
   z-index: 999999 !important;
 }

@@ -38,10 +38,11 @@
   --purple: #8b5cf6;
   --purple-glow: rgba(139, 92, 246, 0.1);
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
   --radius-full: 9999px;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
@@ -272,7 +273,7 @@ button.btn,
 .icon-only-btn,
 .theme-toggle-btn,
 .modal-header .close-btn {
-  border-radius: 10px !important;
+  border-radius: var(--radius-md) !important;
 }
 
 /* Global Button Icon & Text Alignment & Spacing */
@@ -323,7 +324,7 @@ button svg,
 /* Global Button Base & Variants */
 .btn {
   padding: 0.65rem 1.15rem;
-  border-radius: var(--radius-md, 10px);
+  border-radius: var(--radius-md);
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
@@ -400,7 +401,7 @@ input[class*='dummyInput'] {
   border: 1px solid transparent;
   color: var(--text-muted);
   padding: 0.55rem 0.85rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -488,7 +489,7 @@ input[class*='dummyInput'] {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   box-shadow: 0 1px 4px var(--primary-glow);
   flex-shrink: 0;
 }
@@ -636,7 +637,7 @@ input[class*='dummyInput'] {
   padding: 0.35rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 600;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -668,7 +669,7 @@ input[class*='dummyInput'] {
   padding: 0.5rem 1rem;
   font-size: 0.85rem;
   font-weight: 600;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   cursor: pointer;
   box-shadow: 0 2px 8px var(--primary-glow);
   transition: all 0.2s ease;
@@ -800,7 +801,7 @@ input[class*='dummyInput'] {
     height: 36px;
     min-width: 36px;
     min-height: 36px;
-    border-radius: 9px;
+    border-radius: var(--radius-sm);
     background: var(--bg-input);
     border: 1px solid var(--border);
     color: var(--text-main);
@@ -1118,7 +1119,7 @@ table tbody tr {
 .react-select__control {
   background: var(--bg-input) !important;
   border-color: var(--border) !important;
-  border-radius: 10px !important;
+  border-radius: var(--radius-md) !important;
   color: var(--text-main) !important;
   min-height: 42px !important;
   box-shadow: none !important;
@@ -1137,7 +1138,7 @@ table tbody tr {
 .react-select__menu {
   background: var(--bg-card) !important;
   border: 1px solid var(--border) !important;
-  border-radius: 10px !important;
+  border-radius: var(--radius-md) !important;
   overflow: hidden !important;
   z-index: 999999 !important;
 }
@@ -1497,7 +1498,7 @@ table tbody tr {
   height: 38px !important;
   min-width: 38px !important;
   min-height: 38px !important;
-  border-radius: 8px !important;
+  border-radius: var(--radius-sm) !important;
   font-size: 1.5rem !important;
   line-height: 1 !important;
   color: var(--text-muted) !important;
@@ -1642,7 +1643,7 @@ input[type='checkbox'] {
 .summary-stat-icon {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1959,7 +1960,7 @@ body.light-theme .kpi-badge-neutral,
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   padding: 4px;
-  border-radius: var(--radius-md, 12px);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
   gap: 4px;
   min-height: 40px;
@@ -1973,7 +1974,7 @@ body.light-theme .kpi-badge-neutral,
   justify-content: center;
   gap: 0.5rem;
   padding: 0.45rem 1rem;
-  border-radius: var(--radius-sm, 8px);
+  border-radius: var(--radius-sm);
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -2072,7 +2073,7 @@ body.light-theme .kpi-badge-neutral,
   gap: 0.3rem;
   padding: 0.25rem;
   background: var(--bg-input, rgba(255, 255, 255, 0.05));
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
 }
 
 .addmodal-type-tab {
@@ -2084,7 +2085,7 @@ body.light-theme .kpi-badge-neutral,
   font-size: 0.85rem;
   font-weight: 600;
   padding: 0.45rem 0.8rem;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -2147,7 +2148,7 @@ body.light-theme .kpi-badge-neutral,
   margin-left: 0.6rem;
   padding: 0.2rem 0.6rem;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--primary, #6366f1);
   color: #ffffff;
   font-size: 0.78rem;
@@ -2165,7 +2166,7 @@ body.light-theme .kpi-badge-neutral,
   position: relative;
   overflow: hidden;
   background: var(--bg-input, rgba(255, 255, 255, 0.06));
-  border-radius: var(--radius-md, 10px);
+  border-radius: var(--radius-md);
 }
 
 .skeleton::after {
@@ -2195,7 +2196,7 @@ body.light-theme .kpi-badge-neutral,
 }
 
 .skeleton-card {
-  border-radius: var(--radius-lg, 16px);
+  border-radius: var(--radius-lg);
   background: var(--bg-card);
   padding: 1.25rem;
 }
@@ -2206,7 +2207,7 @@ body.light-theme .kpi-badge-neutral,
 .confirm-icon-badge {
   width: 40px;
   height: 40px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2286,7 +2287,7 @@ select:focus-visible,
   background: var(--bg-card) !important;
   color: var(--text-main) !important;
   border: 1px solid var(--border) !important;
-  border-radius: var(--radius-md, 12px) !important;
+  border-radius: var(--radius-md) !important;
   box-shadow:
     0 10px 30px -5px rgba(0, 0, 0, 0.45),
     0 0 0 1px rgba(255, 255, 255, 0.05) !important;
@@ -2354,7 +2355,7 @@ select:focus-visible,
 .toast-undo-btn {
   margin-left: 0.75rem;
   padding: 0.2rem 0.6rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--primary);
   color: #ffffff;
   border: none;
@@ -2386,7 +2387,7 @@ select:focus-visible,
   .Toastify__toast {
     pointer-events: auto;
     margin-bottom: 0.5rem !important;
-    border-radius: 12px !important;
+    border-radius: var(--radius-md) !important;
   }
 }
 

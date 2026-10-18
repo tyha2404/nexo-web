@@ -28,6 +28,7 @@ import './components/Categories.css';
 import './components/Planning.css';
 import './components/ReloadPrompt.css';
 import './components/Transactions.css';
+import './mobile-compact.css';
 import { OPEN_ADD_TRANSACTION_EVENT, TransactionType } from './commons/constants';
 import { openAddTransaction } from './commons/utils';
 import type { User } from './commons/types';
@@ -63,6 +64,17 @@ function App() {
   // Global quick-add: the most frequent action must be one tap away on every screen
   const [quickAddType, setQuickAddType] = useState<TransactionType | null>(null);
   const [visitedTabs, setVisitedTabs] = useState<Set<ActiveTab>>(new Set());
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const close = (e: PointerEvent) => {
+      if (!accountMenuRef.current?.contains(e.target as Node)) setAccountMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [accountMenuOpen]);
   useEffect(() => {
     setVisitedTabs((tabs) => new Set([...tabs, activeTab]));
   }, [activeTab]);
@@ -330,22 +342,45 @@ function App() {
           >
             <Sparkles size={16} color="var(--primary)" />
           </button>
-          <button
-            className="mobile-header-btn"
-            onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-            aria-label="Đổi giao diện sáng/tối"
-            title="Đổi giao diện"
-          >
-            {theme === 'light' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-          <button
-            className="mobile-header-btn mobile-logout-btn"
-            onClick={handleLogout}
-            aria-label="Đăng xuất"
-            title={`Đăng xuất (${user.username || ''})`}
-          >
-            <LogOut size={16} />
-          </button>
+          <div className="mobile-account" ref={accountMenuRef}>
+            <button
+              className="mobile-header-btn mobile-avatar-btn"
+              onClick={() => setAccountMenuOpen((open) => !open)}
+              aria-label="Tài khoản"
+              aria-haspopup="menu"
+              aria-expanded={accountMenuOpen}
+            >
+              {user.username ? user.username[0].toUpperCase() : 'U'}
+            </button>
+            {accountMenuOpen && (
+              <div className="mobile-account-menu" role="menu">
+                <div className="mobile-account-info">
+                  <span className="username">{user.username}</span>
+                  <span className="user-email">{user.email}</span>
+                </div>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="mobile-account-item"
+                  onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+                >
+                  {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+                  {theme === 'light' ? 'Giao diện tối' : 'Giao diện sáng'}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="mobile-account-item mobile-account-logout"
+                  onClick={() => {
+                    setAccountMenuOpen(false);
+                    handleLogout();
+                  }}
+                >
+                  <LogOut size={16} /> Đăng xuất
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

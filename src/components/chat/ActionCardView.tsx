@@ -58,7 +58,7 @@ export function ActionCardView({
               <span className="meta-label">Số tiền:</span>
               <span className={`meta-value ${isIncome ? 'income' : 'expense'}`}>
                 {isIncome ? '+' : '-'}
-                {new Intl.NumberFormat('vi-VN').format(Math.abs(Number(data.amount)))} ₫
+                {new Intl.NumberFormat('vi-VN').format(Math.abs(Number(data.amount)))} đ
               </span>
             </div>
           )}

@@ -221,7 +221,7 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-sm)',
                   transition: 'all 0.2s ease',
                   padding: 0,
                 }}
