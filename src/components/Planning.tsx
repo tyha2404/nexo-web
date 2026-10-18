@@ -1,13 +1,9 @@
+import { SlidingTabs } from './ui';
 import { Tags, Target } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Categories from './Categories';
 import Targets from './Targets';
-import {
-  PAGE_HEADER,
-  PAGE_SUBTITLE,
-  PAGE_TITLE,
-  PAGE_TITLE_H2,
-} from './transaction-list/listStyles';
+import { PAGE_HEADER, PAGE_TITLE, PAGE_TITLE_H2 } from './transaction-list/listStyles';
 import { HEADER_ACTIONS, PAGE_HEADER_BTN, TABS_NAV, TABS_UNDERLINE, tabClass } from './ui';
 
 export type PlanningSubTab = 'targets' | 'categories';
@@ -40,10 +36,7 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
       {/* 1. Planning Page Header with Action Button */}
       <header className={`${PAGE_HEADER} animate-fade-in`}>
         <div className={PAGE_TITLE}>
-          <h2 className={PAGE_TITLE_H2}>Kế hoạch & Mục tiêu</h2>
-          <p className={PAGE_SUBTITLE}>
-            Thiết lập hạn mức ngân sách, mục tiêu đầu tư và danh mục thu chi tài chính
-          </p>
+          <h2 className={PAGE_TITLE_H2}>Kế hoạch</h2>
         </div>
         <div className={HEADER_ACTIONS}>
           {activeSubTab === 'targets' ? (
@@ -68,7 +61,12 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
 
       {/* 2. Hub Navigation Segmented Tabs (Below Page Title) */}
       <div className={`${TABS_NAV} animate-fade-in`}>
-        <div className={TABS_UNDERLINE} role="tablist" aria-label="Phân mục Kế hoạch">
+        <SlidingTabs
+          variant="underline"
+          className={TABS_UNDERLINE}
+          role="tablist"
+          aria-label="Phân mục Kế hoạch"
+        >
           <button
             type="button"
             role="tab"
@@ -90,7 +88,7 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
             <Tags size={14} />
             <span>Danh mục thu chi</span>
           </button>
-        </div>
+        </SlidingTabs>
       </div>
 
       {/* 3. Sub-view Content Area */}

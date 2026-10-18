@@ -8,6 +8,8 @@
  * `hover:` only where the old rule was inside `@media (hover: hover)`.
  */
 import { cx } from './styles';
+import { CONTROL_FRAME } from './controlStyles';
+import { MOTION_ENTER, STAGGER_CHILDREN } from './motionStyles';
 
 /* ---------- Cards ---------- */
 
@@ -21,7 +23,7 @@ export const GLASS_CARD = cx(
 );
 
 const CLICKABLE_BASE =
-  'cursor-pointer transition-[transform,box-shadow,border-color] duration-200 ease-[ease] [&:hover]:[transform:translateY(-2px)] [&:hover]:border-primary!';
+  'cursor-pointer transition-[transform,box-shadow,border-color] duration-200 ease-[ease] motion-safe:hover:-translate-y-0.5 [&:hover]:border-primary!';
 
 /** Lift + primary border on hover; add to any clickable tile (for a glass card use CLICKABLE_GLASS_CARD). */
 export const CLICKABLE_CARD = cx(
@@ -46,10 +48,6 @@ export const CARD_TITLE =
 
 /* ---------- Summary stat tiles ---------- */
 
-/** Staggered entrance for list/grid children (prefers-reduced-motion: no-preference). */
-export const STAGGER_CHILDREN =
-  'motion-safe:[&>*]:animate-[nexo-item-enter_280ms_var(--motion-ease)_both] motion-safe:[&>:nth-child(2)]:[animation-delay:25ms] motion-safe:[&>:nth-child(3)]:[animation-delay:50ms] motion-safe:[&>:nth-child(4)]:[animation-delay:75ms] motion-safe:[&>:nth-child(5)]:[animation-delay:100ms] motion-safe:[&>:nth-child(6)]:[animation-delay:125ms]';
-
 /** Grid of stat tiles; a horizontal swipe row on phones. */
 export const SUMMARY_GRID = cx(
   'mb-[0.85rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3',
@@ -59,7 +57,7 @@ export const SUMMARY_GRID = cx(
 );
 
 export const SUMMARY_STAT_CARD =
-  'relative flex min-h-[84px] flex-col justify-between overflow-hidden rounded-md border border-line bg-card px-4 py-[0.85rem] shadow-app-sm [-webkit-backdrop-filter:var(--glass-blur)] [backdrop-filter:var(--glass-blur)] transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] [&:hover]:[transform:translateY(-2px)] [&:hover]:border-line-hover [&:hover]:shadow-app-md mobile:min-h-[72px] mobile:px-3 mobile:py-[0.65rem]';
+  'relative flex min-h-[84px] flex-col justify-between overflow-hidden rounded-md border border-line bg-card px-4 py-[0.85rem] shadow-app-sm [-webkit-backdrop-filter:var(--glass-blur)] [backdrop-filter:var(--glass-blur)] transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] motion-safe:hover:-translate-y-0.5 [&:hover]:border-line-hover [&:hover]:shadow-app-md mobile:min-h-[72px] mobile:px-3 mobile:py-[0.65rem]';
 export const SUMMARY_STAT_HEADER =
   'mb-2 flex items-center justify-between align-middle leading-[1.2] [&_svg]:block [&_svg]:shrink-0 mobile:mb-1';
 export const SUMMARY_STAT_TITLE = 'text-[0.75rem] font-bold tracking-[0.05em] text-muted uppercase';
@@ -113,8 +111,7 @@ export const TXN_DATE = 'text-[0.875rem] text-muted';
 /* ---------- Dashboard ---------- */
 
 /** Category breakdown + recent transactions; `dashboard-main-grid` is a test locator. */
-export const DASHBOARD_MAIN_GRID =
-  'dashboard-main-grid mb-3 grid grid-cols-[1fr_1fr] items-stretch gap-3 max-[1025px]:grid-cols-[1fr] mobile:mb-2 mobile:w-full mobile:gap-2';
+export const DASHBOARD_MAIN_GRID = `${STAGGER_CHILDREN} dashboard-main-grid mb-3 grid grid-cols-[1fr_1fr] items-stretch gap-3 max-[1025px]:grid-cols-[1fr] mobile:mb-2 mobile:w-full mobile:gap-2`;
 
 export const TIMELINE_LIST = cx(
   'flex flex-1 flex-col gap-[0.45rem] mobile:[&>:nth-child(n+5)]:hidden',
@@ -129,8 +126,8 @@ export const TXN_TITLE =
 
 /* ---------- Empty / loading states ---------- */
 
-export const EMPTY_STATE = 'px-6 py-12 text-center text-muted';
-export const EMPTY_BOX = 'flex flex-col items-center justify-center px-3 py-5 text-center';
+export const EMPTY_STATE = `${MOTION_ENTER} px-6 py-12 text-center text-muted`;
+export const EMPTY_BOX = `${MOTION_ENTER} flex flex-col items-center justify-center px-3 py-5 text-center`;
 export const EMPTY_ICON_CIRCLE =
   'mb-2 flex size-11 items-center justify-center rounded-full bg-hover';
 export const EMPTY_TITLE = 'mb-[0.2rem] text-[0.9rem] font-bold text-main';
@@ -181,7 +178,9 @@ export const SEARCH_WRAPPER = cx('relative w-full', FILTER_FULL_ROW);
 export const SEARCH_ICON =
   'pointer-events-none absolute top-1/2 left-[0.85rem] z-2 -translate-y-1/2 text-muted';
 /** `!` beats the unlayered vendor.css `.filter-bar input` padding. */
-export const SEARCH_INPUT = 'h-[42px]! pl-[2.65rem]!';
+export const SEARCH_INPUT = cx(
+  CONTROL_FRAME,
+  'w-full h-(--control-height)! min-h-(--control-height)! pl-[2.65rem]! py-0! text-[16px]! placeholder:text-muted'
+);
 
-export const CATEGORIES_LIST =
-  'grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-4 pr-1 mobile:grid-cols-[1fr] mobile:gap-2';
+export const CATEGORIES_LIST = `${STAGGER_CHILDREN} grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-4 pr-1 mobile:grid-cols-[1fr] mobile:gap-2`;

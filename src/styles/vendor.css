@@ -7,14 +7,19 @@
   border-color: var(--border) !important;
   border-radius: var(--radius-md) !important;
   color: var(--text-main) !important;
-  min-height: 42px !important;
+  min-height: var(--control-height) !important;
+  height: var(--control-height) !important;
+  box-sizing: border-box !important;
+  font-size: 16px !important;
+  line-height: 20px !important;
   box-shadow: none !important;
   transition: all 0.2s ease !important;
 }
 .react-select__control:hover {
   border-color: var(--border-hover) !important;
 }
-.react-select__control--is-focused {
+.react-select__control--is-focused,
+.react-select__control--is-focused:hover {
   border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px var(--primary-glow) !important;
 }
@@ -89,8 +94,8 @@ input[class*='dummyInput'] {
 }
 .category-select-wrapper .react-select__control,
 .status-select-wrapper .react-select__control {
-  min-height: 42px !important;
-  height: 42px !important;
+  min-height: var(--control-height) !important;
+  height: var(--control-height) !important;
 }
 .react-datepicker-wrapper {
   width: 100%;
@@ -280,14 +285,19 @@ input[class*='dummyInput'] {
   border-color: var(--border) !important;
   border-radius: var(--radius-md) !important;
   color: var(--text-main) !important;
-  min-height: 42px !important;
+  min-height: var(--control-height) !important;
+  height: var(--control-height) !important;
+  box-sizing: border-box !important;
+  font-size: 16px !important;
+  line-height: 20px !important;
   box-shadow: none !important;
   transition: all 0.2s ease !important;
 }
 .react-select__control:hover {
   border-color: var(--border-hover) !important;
 }
-.react-select__control--is-focused {
+.react-select__control--is-focused,
+.react-select__control--is-focused:hover {
   border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px var(--primary-glow) !important;
 }
@@ -345,11 +355,11 @@ input[class*='dummyInput'] {
   input:not([type='checkbox']):not([type='radio']):not([class*='dummyInput']):not(
     .react-select__input
   ) {
-  height: 42px !important;
-  min-height: 42px !important;
+  height: var(--control-height) !important;
+  min-height: var(--control-height) !important;
   box-sizing: border-box !important;
   padding: 0.65rem 1rem !important;
-  font-size: var(--input-font-size, 0.95rem) !important;
+  font-size: 16px !important;
 }
 @media screen and (max-width: 1024px) {
   .react-select__input input,
@@ -365,7 +375,7 @@ input[class*='dummyInput'] {
 }
 .react-datepicker__input-container input {
   width: 100% !important;
-  height: 42px !important;
+  height: var(--control-height) !important;
   box-sizing: border-box !important;
 }
 .react-datepicker-popper {

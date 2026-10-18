@@ -1,3 +1,4 @@
+import { SlidingTabs } from './ui';
 import { Gem, ShoppingBag, TrendingUp, X } from 'lucide-react';
 import moment from 'moment';
 import { useEffect, useRef, useState } from 'react';
@@ -236,7 +237,11 @@ export default function AddTransactionModal({
         <form onSubmit={handleSubmit}>
           <div className={MODAL_FORM_BODY}>
             <div className="mb-5 flex">
-              <div className={cx(TABS, 'w-full')} role="tablist" aria-label="Loại giao dịch">
+              <SlidingTabs
+                className={cx(TABS, 'w-full')}
+                role="tablist"
+                aria-label="Loại giao dịch"
+              >
                 <button
                   type="button"
                   role="tab"
@@ -294,11 +299,11 @@ export default function AddTransactionModal({
                   <Gem size={14} />
                   <span>Đầu tư</span>
                 </button>
-              </div>
+              </SlidingTabs>
             </div>
 
             <div className={FORM_GROUP}>
-              <label htmlFor="atxn-amount">Số tiền {typeLabel} (đ)</label>
+              <label htmlFor="atxn-amount">Số tiền (đ)</label>
               <input
                 id="atxn-amount"
                 type="text"
@@ -337,7 +342,7 @@ export default function AddTransactionModal({
 
             <div className={FORM_GROUP}>
               <label htmlFor="atxn-title">
-                Ghi chú <span className="text-muted">(không bắt buộc)</span>
+                Ghi chú <span className="text-muted">(tùy chọn)</span>
               </label>
               <input
                 id="atxn-title"
@@ -372,12 +377,12 @@ export default function AddTransactionModal({
 
             {activeType === TransactionType.INVESTMENT && status !== InvestmentStatus.HOLDING && (
               <div className={FORM_GROUP}>
-                <label htmlFor="atxn-pnl">Số tiền Lãi / Lỗ thực tế (đ)</label>
+                <label htmlFor="atxn-pnl">Lãi / lỗ thực tế (đ)</label>
                 <input
                   id="atxn-pnl"
                   type="text"
                   inputMode="numeric"
-                  placeholder="Dương cho Lãi (VD: 500.000), Âm cho Lỗ (VD: -200.000)"
+                  placeholder="Lãi: 500.000 · Lỗ: -200.000"
                   value={realizedPnl}
                   onChange={(e) => handlePnlChange(e.target.value)}
                 />

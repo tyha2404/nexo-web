@@ -4,7 +4,7 @@
  * (`transactions-header`, `transactions-table-container`, `transactions-mobile-cards`, ...)
  * are markers for tests.
  */
-import { NO_WRAP_BADGE, STAGGER_CHILDREN } from '../ui/cardStyles';
+import { NO_WRAP_BADGE, STAGGER_CHILDREN, MOTION_TABLE_ROWS } from '../ui';
 
 export const PAGE_HEADER =
   'transactions-header mb-[0.85rem] flex flex-wrap items-center justify-between gap-2 mobile:mb-3 mobile:gap-[0.65rem]';
@@ -17,7 +17,7 @@ export const PAGE_VIEW = 'transactions-view mx-auto w-full max-w-full p-0';
 export const TABLE_CONTAINER =
   'transactions-table-container overflow-x-auto rounded-lg border border-line bg-card shadow-app-md backdrop-blur-[16px] transition-[box-shadow,border-color] duration-[250ms] ease-[ease] mobile:hidden';
 export const TABLE =
-  'transactions-table w-full min-w-[600px] border-collapse text-left text-[0.95rem] ' +
+  `${MOTION_TABLE_ROWS} transactions-table w-full min-w-[600px] border-collapse text-left text-[0.95rem] ` +
   '[&_th]:border-b [&_th]:border-line [&_th]:bg-input [&_th]:px-6 [&_th]:py-4 [&_th]:font-semibold [&_th]:text-muted ' +
   '[&_td]:border-b [&_td]:border-line [&_td]:px-6 [&_td]:py-[1.2rem] [&_td]:align-middle [&_td]:text-muted ' +
   '[&_tr:last-child_td]:border-b-0 [&_tr:hover_td]:bg-hover [&_tr:hover_td]:text-main';

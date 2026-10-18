@@ -178,11 +178,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       <div className="animate-fade-in mb-[0.85rem] flex flex-wrap items-center justify-between gap-3 text-left mobile:mb-3 mobile:flex-col mobile:items-stretch mobile:gap-[0.65rem]">
         <div className="dashboard-title-group">
           <h2 className="m-0 mb-[0.15rem] text-[1.5rem] font-bold tracking-[-0.025em] text-main mobile:mb-0 mobile:text-[1.15rem]">
-            Tổng quan Tài chính
+            Tổng quan
           </h2>
-          <p className="subtitle m-0 text-[0.85rem] font-normal text-muted mobile:hidden">
-            Dòng tiền & phân tích thông minh thời gian thực
-          </p>
         </div>
 
         <MonthFilter value={selectedMonth} onChange={(newMonth) => setSelectedMonth(newMonth)} />

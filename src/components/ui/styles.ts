@@ -7,14 +7,15 @@
  * `close-btn` is a marker; the modal close button is MODAL_CLOSE_BTN in modalStyles.ts.
  */
 
+import { MOTION_PRESS } from './motionStyles';
+
 /** Joins the truthy class strings. */
 export const cx = (...parts: Array<string | false | null | undefined>) =>
   parts.filter(Boolean).join(' ');
 
 /* ---------- Buttons ---------- */
 
-export const BTN_BASE =
-  'inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md align-middle leading-[1.2] font-semibold whitespace-nowrap [word-break:keep-all] select-none [-webkit-tap-highlight-color:transparent] transition-[background-color,border-color,color,box-shadow,transform] duration-[180ms] ease-out active:[transform:scale(0.98)] motion-safe:enabled:active:[transform:scale(0.97)]';
+export const BTN_BASE = `${MOTION_PRESS} inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-md align-middle leading-[1.2] font-semibold whitespace-nowrap [word-break:keep-all] select-none [-webkit-tap-highlight-color:transparent] transition-[background-color,border-color,color,box-shadow,transform] duration-[180ms] ease-out`;
 
 /** Default button size; pass another size to `btnClass` instead of fighting it with `!`. */
 export const BTN_MD = 'px-[1.15rem] py-[0.65rem] text-[0.9rem]';
@@ -51,8 +52,7 @@ export const HEADER_ACTIONS =
   'inline-flex flex-wrap items-center gap-3 mobile:w-auto mobile:flex-none mobile:flex-nowrap';
 
 /* Icon-only row actions (desktop tables, category cards). */
-const ACTION_BTN_BASE =
-  'inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-0 align-middle text-[1rem] leading-[1.2] whitespace-nowrap [word-break:keep-all] shadow-none transition-all duration-200 ease-[ease] hover:-translate-y-px mobile:min-h-11 mobile:min-w-11 pointer-coarse:min-h-11 pointer-coarse:min-w-11';
+const ACTION_BTN_BASE = `${MOTION_PRESS} inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-0 align-middle text-[1rem] leading-[1.2] whitespace-nowrap [word-break:keep-all] shadow-none transition-all duration-200 ease-[ease] hover:-translate-y-px mobile:min-h-11 mobile:min-w-11 pointer-coarse:min-h-11 pointer-coarse:min-w-11`;
 export const ACTION_BTN_EDIT = cx(
   ACTION_BTN_BASE,
   'text-(--text-muted) hover:bg-hover hover:text-primary'
@@ -109,19 +109,18 @@ export const TABS = cx(
   'gap-1 rounded-md border border-line bg-card p-1 [-webkit-backdrop-filter:var(--glass-blur)] [backdrop-filter:var(--glass-blur)] mobile:justify-between mobile:gap-[3px] mobile:p-[3px]'
 );
 /** Underlined section nav (Planning hub). */
-export const TABS_UNDERLINE = cx(TABS_BASE, 'gap-5 border-b border-line p-0 mobile:justify-start');
+export const TABS_UNDERLINE = cx(TABS_BASE, 'gap-5 p-0 mobile:justify-start');
 
-const TAB_BASE =
-  'inline-flex min-h-[34px] shrink-0 cursor-pointer items-center justify-center align-middle text-[0.85rem] leading-[1.2] font-semibold whitespace-nowrap [word-break:keep-all] select-none [-webkit-tap-highlight-color:transparent] transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] [&_svg]:size-[14px] [&_svg]:shrink-0 mobile:min-w-0 mobile:gap-[0.35rem] mobile:overflow-hidden mobile:text-center mobile:text-[0.78rem] mobile:text-ellipsis';
+const TAB_BASE = `${MOTION_PRESS} inline-flex min-h-[34px] shrink-0 cursor-pointer items-center justify-center align-middle text-[0.85rem] leading-[1.2] font-semibold whitespace-nowrap [word-break:keep-all] select-none [-webkit-tap-highlight-color:transparent] transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] [&_svg]:size-[14px] [&_svg]:shrink-0 mobile:min-w-0 mobile:gap-[0.35rem] mobile:overflow-hidden mobile:text-center mobile:text-[0.78rem] mobile:text-ellipsis`;
 const TAB_PILL =
   'rounded-sm border border-transparent px-4 py-[0.45rem] mobile:flex-[1_1_0] mobile:px-[0.35rem]';
 const TAB_PILL_IDLE =
   'bg-transparent text-(--text-muted) hover:border-line-hover hover:bg-hover hover:text-main';
-const TAB_PILL_ACTIVE = 'bg-(--primary-gradient) text-white shadow-[0_2px_8px_var(--primary-glow)]';
+const TAB_PILL_ACTIVE = 'bg-transparent text-white';
 const TAB_LINE =
   '-mb-px rounded-none border-0 border-b-2 bg-transparent px-[0.1rem] py-2 mobile:flex-none';
 const TAB_LINE_IDLE = 'border-b-transparent text-(--text-muted) hover:text-main';
-const TAB_LINE_ACTIVE = 'border-b-primary text-main';
+const TAB_LINE_ACTIVE = 'border-b-transparent text-main';
 
 /**
  * One tab of `TABS` (pill) or `TABS_UNDERLINE` (underline).

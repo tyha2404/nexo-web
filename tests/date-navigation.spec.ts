@@ -47,7 +47,7 @@ test('month pickers use the same calendar panel in filters and target forms', as
     .first()
     .click();
   const modal = page.getByRole('dialog');
-  await modal.getByRole('button', { name: 'Áp dụng cho tháng' }).click();
+  await modal.getByRole('button', { name: 'Tháng áp dụng' }).click();
   calendar = page.locator('.date-picker-panel');
   await expect(calendar).toBeVisible();
   await expect(calendar.getByLabel('Chọn năm')).toHaveValue('2027');
@@ -74,7 +74,7 @@ test('navigation marks the active tab and reduced motion disables view entrances
     .filter({ visible: true })
     .evaluate((el) => parseFloat(getComputedStyle(el).animationDuration));
   expect(duration).toBeLessThanOrEqual(0.01);
-  await expect(page.getByPlaceholder('Tìm kiếm theo tiêu đề...')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Tìm giao dịch' })).toBeVisible();
   await page.screenshot({ path: `test-results/navigation-${test.info().project.name}.png` });
 });
 

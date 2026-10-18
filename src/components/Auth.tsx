@@ -1,3 +1,4 @@
+import { SlidingTabs } from './ui';
 import React, { useState } from 'react';
 import { authService } from '../services';
 import { toast } from 'react-toastify';
@@ -15,7 +16,7 @@ const INPUT_FIELD =
   'box-border w-full rounded-md border border-line bg-input px-4 py-3 text-[0.95rem] text-main transition-all duration-200 ease-[ease] focus:border-primary focus:shadow-[0_0_0_3px_var(--primary-glow)] focus:outline-none';
 const TOGGLE_BTN =
   'flex-1 cursor-pointer rounded-sm border-none p-2.5 text-[0.95rem] font-semibold';
-const TOGGLE_ACTIVE = 'bg-primary text-white shadow-[0_2px_8px_var(--primary-glow)]';
+const TOGGLE_ACTIVE = 'bg-transparent text-white';
 const TOGGLE_IDLE = 'bg-transparent text-muted';
 
 export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
@@ -108,9 +109,10 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
           </p>
         </div>
 
-        <div className="mb-8 flex rounded-md border border-line bg-input p-1">
+        <SlidingTabs className="mb-8 flex rounded-md border border-line bg-input p-1">
           <button
             type="button"
+            aria-pressed={isLogin}
             className={`${TOGGLE_BTN} ${isLogin ? TOGGLE_ACTIVE : TOGGLE_IDLE}`}
             onClick={() => toggleMode(true)}
           >
@@ -118,12 +120,13 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
           </button>
           <button
             type="button"
+            aria-pressed={!isLogin}
             className={`${TOGGLE_BTN} ${!isLogin ? TOGGLE_ACTIVE : TOGGLE_IDLE}`}
             onClick={() => toggleMode(false)}
           >
             Đăng ký
           </button>
-        </div>
+        </SlidingTabs>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
           {isLogin ? (

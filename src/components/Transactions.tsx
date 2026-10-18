@@ -1,3 +1,4 @@
+import { SlidingTabs } from './ui';
 import { AlertTriangle, Plus, Receipt, Search } from 'lucide-react';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
@@ -24,13 +25,7 @@ import {
   TransactionTypeIcon,
   type TransactionListProps,
 } from './transaction-list';
-import {
-  PAGE_HEADER,
-  PAGE_SUBTITLE,
-  PAGE_TITLE,
-  PAGE_TITLE_H2,
-  PAGE_VIEW,
-} from './transaction-list/listStyles';
+import { PAGE_HEADER, PAGE_TITLE, PAGE_TITLE_H2, PAGE_VIEW } from './transaction-list/listStyles';
 import {
   btnClass,
   cx,
@@ -351,20 +346,17 @@ export default function Transactions({
         <div className={PAGE_TITLE}>
           <h2 className={PAGE_TITLE_H2}>
             {activeType === TransactionType.INCOME
-              ? 'Quản lý Thu nhập'
+              ? 'Thu nhập'
               : activeType === TransactionType.INVESTMENT
-                ? 'Quản lý Đầu tư'
-                : 'Quản lý Chi tiêu'}
+                ? 'Đầu tư'
+                : 'Chi tiêu'}
           </h2>
-          <p className={PAGE_SUBTITLE}>
-            Theo dõi và quản lý các khoản {getTypeLabel(activeType)} của bạn
-          </p>
         </div>
       </header>
 
       {/* 2. Transaction Type Segmented Tabs Switcher (Below Page Title) */}
       <div className={`${TABS_NAV} animate-fade-in`}>
-        <div
+        <SlidingTabs
           className={TABS}
           role="tablist"
           aria-label="Phân loại giao dịch (Chi tiêu, Thu nhập, Đầu tư)"
@@ -401,7 +393,7 @@ export default function Transactions({
             <TransactionTypeIcon type={TransactionType.INVESTMENT} size={14} />
             <span>Đầu tư</span>
           </button>
-        </div>
+        </SlidingTabs>
       </div>
 
       {error && (
@@ -424,7 +416,8 @@ export default function Transactions({
           <input
             className={SEARCH_INPUT}
             type="text"
-            placeholder="Tìm kiếm theo tiêu đề..."
+            aria-label="Tìm giao dịch"
+            placeholder="Tìm kiếm..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -500,11 +493,10 @@ export default function Transactions({
             <Receipt size={44} className="empty-icon" />
           </div>
           <h4 className="mx-0 mt-0 mb-2 text-[1.15rem] font-semibold text-main">
-            Không tìm thấy giao dịch nào
+            Chưa có giao dịch
           </h4>
           <p className="mx-auto mt-0 mb-5 max-w-[400px] text-[0.9rem] text-muted">
-            Hãy thử điều chỉnh bộ lọc tìm kiếm hoặc thêm giao dịch mới để theo dõi tài chính chính
-            xác hơn!
+            Đổi bộ lọc hoặc thêm giao dịch.
           </p>
           <button
             type="button"

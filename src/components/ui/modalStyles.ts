@@ -13,9 +13,10 @@
  *
  * Plain marker classes (modal-backdrop, app-modal-backdrop, modal-content, modal-header,
  * modal-form-body, button-group, close-btn, confirm-modal-content) stay for tests and
- * styles/vendor.css (42px inputs inside .modal-content).
+ * styles/vendor.css (shared control height inside .modal-content).
  */
 import { cx } from './styles';
+import { MOTION_FADE } from './motionStyles';
 
 // Class strings are written out in full (no interpolation) so Tailwind's scanner sees them.
 
@@ -23,6 +24,7 @@ import { cx } from './styles';
 
 const BACKDROP_BASE = cx(
   'modal-backdrop app-modal-backdrop',
+  MOTION_FADE,
   'fixed inset-0 z-[999999] box-border flex h-auto w-auto items-center justify-center overflow-x-hidden overflow-y-auto [-webkit-overflow-scrolling:touch]',
   'bg-[rgba(11,15,25,0.75)] backdrop-blur-[10px]',
   'pt-[calc(var(--modal-viewport-top,0px)+max(12px,env(safe-area-inset-top,0px)))] pr-[max(12px,env(safe-area-inset-right,0px))] pb-[calc(var(--modal-viewport-bottom,0px)+max(12px,env(safe-area-inset-bottom,0px)))] pl-[max(12px,env(safe-area-inset-left,0px))]',

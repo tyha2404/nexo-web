@@ -1,6 +1,7 @@
 /* Design tokens. Colors and shadows switch with the `light-theme` class on <body>;
    tailwind.css maps them to utilities (bg-card, text-muted, rounded-md, ...). */
 :root {
+  --control-height: 44px;
   --font-sans:
     'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Roboto,
     sans-serif;

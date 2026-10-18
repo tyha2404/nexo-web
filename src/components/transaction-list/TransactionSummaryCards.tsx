@@ -29,7 +29,7 @@ function StatCard({
 }: {
   title: string;
   value: ReactNode;
-  subtitle: ReactNode;
+  subtitle?: ReactNode;
   tone?: StatTone;
 }) {
   return (
@@ -38,7 +38,7 @@ function StatCard({
         <span className={SUMMARY_STAT_TITLE}>{title}</span>
       </div>
       <div className={statValueClass(tone)}>{value}</div>
-      <div className={SUMMARY_STAT_SUBTITLE}>{subtitle}</div>
+      {subtitle && <div className={SUMMARY_STAT_SUBTITLE}>{subtitle}</div>}
     </div>
   );
 }
@@ -55,22 +55,9 @@ export function TransactionSummaryCards({
   if (activeType === TransactionType.INCOME) {
     return (
       <div className={cx(SUMMARY_GRID, 'animate-fade-in')}>
-        <StatCard
-          title="Tổng Thu Nhập"
-          tone="income"
-          value={formatCurrency(Math.abs(sumAmount))}
-          subtitle="Tổng khoản thu nhập trong kỳ"
-        />
-        <StatCard
-          title="Số Giao Dịch Thu"
-          value={`${count} khoản`}
-          subtitle="Tổng số đợt nhận thu nhập"
-        />
-        <StatCard
-          title="Trung Bình / Khoản"
-          value={formatCurrency(Math.abs(avg))}
-          subtitle="Giá trị thu nhập trung bình"
-        />
+        <StatCard title="Tổng thu" tone="income" value={formatCurrency(Math.abs(sumAmount))} />
+        <StatCard title="Số khoản thu" value={`${count} khoản`} />
+        <StatCard title="TB / khoản" value={formatCurrency(Math.abs(avg))} />
       </div>
     );
   }
@@ -83,20 +70,19 @@ export function TransactionSummaryCards({
     return (
       <div className={cx(SUMMARY_GRID, 'animate-fade-in')}>
         <StatCard
-          title="Tiền Đang Đầu Tư (Holding)"
+          title="Vốn đang giữ"
           value={formatCurrency(holdingAmount)}
-          subtitle={`Giá trị các khoản đang giữ vốn (${holdingCount} mục)`}
+          subtitle={`${holdingCount} khoản đang giữ`}
         />
         <StatCard
-          title="Lãi / Lỗ Đã Thực Hiện"
+          title="Lãi / lỗ đã chốt"
           tone={profit ? 'income' : 'expense'}
           value={formatCurrency(totalRealizedPnl)}
-          subtitle="Tổng tiền lời / lỗ từ khoản đã bán/đáo hạn"
         />
         <StatCard
-          title="Tổng Vốn Tích Lũy"
+          title="Vốn tích lũy"
           value={formatCurrency(sumAmount)}
-          subtitle={`Tổng ${count} đợt rót vốn đầu tư trong kỳ`}
+          subtitle={`${count} lần góp vốn`}
         />
       </div>
     );
@@ -112,34 +98,21 @@ export function TransactionSummaryCards({
 
   return (
     <div className={cx(SUMMARY_GRID, 'animate-fade-in')}>
+      <StatCard title="Tổng chi" tone="expense" value={formatCurrency(Math.abs(sumAmount))} />
       <StatCard
-        title="Tổng Chi Tiêu"
-        tone="expense"
-        value={formatCurrency(Math.abs(sumAmount))}
-        subtitle="Tổng tiền đã chi trong kỳ"
-      />
-      <StatCard
-        title="Trung Bình / Ngày"
+        title="TB / ngày"
         value={formatCurrency(Math.abs(dailyAvg))}
         subtitle={
           <>
-            Chi tiêu bình quân trong {daysCount} ngày (tới hôm nay)
+            {daysCount} ngày
             {summary.sumAmountForAverage !== undefined &&
               summary.sumAmountForAverage !== summary.sumAmount &&
-              ' - không tính danh mục đã loại trừ'}
+              ' · Đã loại trừ danh mục'}
           </>
         }
       />
-      <StatCard
-        title="Trung Bình / Lần Chi"
-        value={formatCurrency(Math.abs(avg))}
-        subtitle="Mức chi trung bình mỗi giao dịch"
-      />
-      <StatCard
-        title="Số Lần Chi Tiêu"
-        value={`${count} giao dịch`}
-        subtitle="Tổng số hóa đơn / giao dịch chi"
-      />
+      <StatCard title="TB / giao dịch" value={formatCurrency(Math.abs(avg))} />
+      <StatCard title="Số giao dịch" value={`${count} giao dịch`} />
     </div>
   );
 }

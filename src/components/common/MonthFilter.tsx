@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import moment from 'moment';
 import { DatePickerField } from './DatePickerField';
+import { CONTROL_FRAME, cx } from '../ui';
 
 export interface MonthFilterProps {
   /** Month in 'YYYY-MM' format (e.g. '2026-09') */
@@ -23,8 +24,13 @@ export default function MonthFilter({ value, onChange }: MonthFilterProps) {
   };
 
   return (
-    <div className="inline-flex items-center mobile:w-full">
-      <div className="box-border inline-flex h-12 w-full items-center justify-between gap-[0.35rem] rounded-md border border-line bg-card px-[0.35rem] shadow-app-sm backdrop-blur-md transition-all duration-200 ease-[ease] hover:border-primary hover:shadow-[0_0_12px_var(--primary-glow)]">
+    <div className="flex w-full min-w-0 items-center">
+      <div
+        className={cx(
+          CONTROL_FRAME,
+          'month-filter-control inline-flex w-full min-w-0 items-center justify-between gap-0 px-px'
+        )}
+      >
         <button
           type="button"
           className={NAV_ARROW}
@@ -35,7 +41,7 @@ export default function MonthFilter({ value, onChange }: MonthFilterProps) {
           <ChevronLeft size={16} />
         </button>
 
-        <div className="relative flex min-h-11 min-w-0 flex-1 items-center justify-center gap-[0.3rem] rounded-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary">
+        <div className="relative flex h-10 min-w-0 flex-1 items-center justify-center gap-1">
           <DatePickerField
             label="Tháng hiển thị"
             value={value}

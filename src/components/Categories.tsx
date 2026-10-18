@@ -1,3 +1,4 @@
+import { SlidingTabs } from './ui';
 import {
   AlertTriangle,
   FolderPlus,
@@ -270,7 +271,7 @@ export default function Categories() {
     <div className="categories-subview mx-auto w-full max-w-full p-0">
       {/* Category Type Tabs Switcher (Below Page Title) */}
       <div className={`${TABS_NAV} animate-fade-in`}>
-        <div className={TABS} role="tablist" aria-label="Loại danh mục">
+        <SlidingTabs className={TABS} role="tablist" aria-label="Loại danh mục">
           <button
             type="button"
             role="tab"
@@ -301,7 +302,7 @@ export default function Categories() {
             <TrendingUp size={14} />
             <span>Đầu tư</span>
           </button>
-        </div>
+        </SlidingTabs>
       </div>
 
       {error && (
@@ -313,9 +314,9 @@ export default function Categories() {
       {/* Main List Section */}
       <div className="categories-single-column animate-fade-in">
         <div className={GLASS_CARD}>
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 pb-3">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <h3 className="m-0 mobile:mb-2 mobile:text-[1.05rem]">
-              Danh mục hiện có ({categories.length})
+              Danh mục ({categories.length})
             </h3>
           </div>
 
@@ -402,13 +403,9 @@ export default function Categories() {
                           </div>
                         )}
                       </div>
-                      {cat.description ? (
+                      {cat.description && (
                         <p className="m-0 line-clamp-2 text-[0.875rem] text-muted mobile:hidden">
                           {cat.description}
-                        </p>
-                      ) : (
-                        <p className="m-0 line-clamp-2 text-[0.875rem] italic text-muted opacity-50 mobile:hidden">
-                          Không có mô tả
                         </p>
                       )}
                     </div>
@@ -509,7 +506,7 @@ export default function Categories() {
                     {editType === TransactionType.EXPENSE && (
                       <>
                         <div className={FORM_GROUP}>
-                          <label htmlFor="edit-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
+                          <label htmlFor="edit-budget">Hạn mức tháng (đ)</label>
                           <input
                             id="edit-budget"
                             type="text"
@@ -538,7 +535,7 @@ export default function Categories() {
                         id="edit-desc"
                         value={editDescription}
                         onChange={(e) => setEditDescription(e.target.value)}
-                        placeholder="Mô tả ngắn về danh mục này..."
+                        placeholder="Mô tả..."
                         rows={3}
                       />
                     </div>
@@ -589,7 +586,7 @@ export default function Categories() {
                     {type === TransactionType.EXPENSE && (
                       <>
                         <div className={FORM_GROUP}>
-                          <label htmlFor="new-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
+                          <label htmlFor="new-budget">Hạn mức tháng (đ)</label>
                           <input
                             id="new-budget"
                             type="text"
@@ -618,7 +615,7 @@ export default function Categories() {
                         id="new-desc"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Mô tả ngắn về danh mục này..."
+                        placeholder="Mô tả..."
                         rows={3}
                       />
                     </div>

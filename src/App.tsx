@@ -1,3 +1,4 @@
+import { SlidingTabs } from './components/ui';
 import {
   ArrowLeftRight,
   Handshake,
@@ -36,7 +37,7 @@ const AIChatWidget = lazy(() =>
 );
 import { ApiError, authService } from './services';
 import { useRealtimeSync } from './hooks';
-import { BTN_PRIMARY, BTN_SECONDARY, PWA_TOAST, SPINNER_PAGE } from './components/ui';
+import { BTN_PRIMARY, BTN_SECONDARY, PWA_TOAST, SPINNER_PAGE, MOTION_MENU } from './components/ui';
 
 export type ActiveTab = 'dashboard' | 'transactions' | 'debts' | 'planning';
 
@@ -60,7 +61,7 @@ const NAV_ITEMS = [
   { tab: 'planning', label: 'Kế hoạch & Mục tiêu', short: 'Kế hoạch', Icon: Target },
 ] as const;
 const CONTENT_VIEW =
-  'content-view mx-auto w-full max-w-[1400px] grow px-6 pt-5 pb-10 animate-[fadeIn_0.2s_cubic-bezier(0.16,1,0.3,1)_forwards] motion-safe:animate-[nexo-view-enter_240ms_var(--motion-ease)_both] mobile:max-w-full mobile:overflow-x-hidden mobile:p-[0.65rem] mobile:pb-6';
+  'content-view mx-auto w-full max-w-[1400px] grow px-6 pt-5 pb-10 motion-safe:animate-[nexo-view-enter_240ms_var(--motion-ease)_backwards] mobile:max-w-full mobile:overflow-x-hidden mobile:p-[0.65rem] mobile:pb-6';
 
 function App() {
   const navigate = useNavigate();
@@ -348,7 +349,7 @@ function App() {
         aria-label={label}
       >
         <div
-          className={`flex h-[30px] w-[38px] items-center justify-center rounded-md [transition:background-color_200ms_ease,color_200ms_ease,transform_200ms_var(--motion-ease)] motion-reduce:[transition-duration:0.01ms] ${active ? 'bg-primary-glow text-primary' : 'bg-transparent group-active:[transform:scale(0.9)]'}`}
+          className={`flex h-[30px] w-[38px] items-center justify-center rounded-md [transition:background-color_200ms_ease,color_200ms_ease,transform_200ms_var(--motion-ease)] motion-reduce:[transition-duration:0.01ms] ${active ? 'bg-transparent text-primary' : 'bg-transparent group-active:[transform:scale(0.9)]'}`}
         >
           <Icon size={20} />
         </div>
@@ -401,7 +402,7 @@ function App() {
             </button>
             {accountMenuOpen && (
               <div
-                className="absolute top-[calc(100%+0.4rem)] right-0 z-100 max-w-[calc(100vw-2rem)] min-w-[200px] rounded-md border border-line bg-card p-[0.35rem] shadow-app-lg"
+                className={`${MOTION_MENU} absolute top-[calc(100%+0.4rem)] right-0 z-100 max-w-[calc(100vw-2rem)] min-w-[200px] rounded-md border border-line bg-card p-[0.35rem] shadow-app-lg`}
                 role="menu"
               >
                 <div className="mb-1 flex min-w-0 flex-col border-b border-line px-[0.6rem] pt-2 pb-[0.6rem]">
@@ -459,14 +460,14 @@ function App() {
         </div>
 
         {/* 4 Primary Navigation Hubs */}
-        <nav className="nav-menu flex grow flex-col gap-1">
+        <SlidingTabs as="nav" variant="navigation" className="nav-menu flex grow flex-col gap-1">
           {NAV_ITEMS.map(({ tab, label, Icon }) => {
             const active = activeTab === tab;
             return (
               <button
                 key={tab}
                 onClick={() => handleNavigate(tab)}
-                className={`relative inline-flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-md border border-solid px-[0.85rem] py-[0.55rem] text-left align-middle text-[0.9rem] leading-[1.2] ${active ? 'border-[rgba(99,102,241,0.3)] bg-primary-glow font-semibold text-main shadow-[0_0_14px_var(--primary-glow)]' : 'border-transparent bg-transparent font-medium text-muted hover:bg-hover hover:text-main'}`}
+                className={`relative inline-flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-md border border-solid px-[0.85rem] py-[0.55rem] text-left align-middle text-[0.9rem] leading-[1.2] ${active ? 'border-transparent bg-transparent font-semibold text-main' : 'border-transparent bg-transparent font-medium text-muted hover:bg-hover hover:text-main'}`}
                 aria-current={active ? 'page' : undefined}
               >
                 <span
@@ -478,7 +479,7 @@ function App() {
               </button>
             );
           })}
-        </nav>
+        </SlidingTabs>
 
         {/* Sidebar Footer */}
         <div className="mt-auto border-t border-line pt-3">
@@ -613,7 +614,9 @@ function App() {
       </main>
 
       {/* Mobile PWA Bottom Navigation Bar */}
-      <nav
+      <SlidingTabs
+        as="nav"
+        variant="icon"
         className={`bottom-nav fixed inset-x-0 bottom-0 z-[9990] hidden h-[calc(64px+env(safe-area-inset-bottom,0px))] items-center justify-around rounded-t-xl border-t border-line bg-card pt-[5px] pr-[max(6px,env(safe-area-inset-right,0px))] pb-[env(safe-area-inset-bottom,0px)] pl-[max(6px,env(safe-area-inset-left,0px))] shadow-[0_8px_32px_rgb(0_0_0/18%),inset_0_1px_0_rgb(255_255_255/4%)] ${GLASS} mobile:flex`}
         aria-label="Điều hướng chính"
       >
@@ -634,7 +637,7 @@ function App() {
         </button>
 
         {NAV_ITEMS.slice(2).map(renderBottomNavItem)}
-      </nav>
+      </SlidingTabs>
       {quickAddType && (
         <Suspense fallback={null}>
           <AddTransactionModal

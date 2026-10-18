@@ -5,16 +5,16 @@ import { createPortal } from 'react-dom';
 import DatePicker from 'react-datepicker';
 import { DATE_FORMAT_DISPLAY, DATE_FORMAT_INPUT } from '../../commons/constants';
 import { useModal } from '../../hooks';
+import { CONTROL_FRAME } from '../ui';
 
 type PickerMode = 'date' | 'month';
 
 // `font: inherit` split into longhands so the font-size utility always wins.
 const INHERIT_FONT = 'font-[inherit] [font-style:inherit] leading-[inherit]';
-const TRIGGER = `box-border flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm text-main ${INHERIT_FONT} text-[16px] tabular-nums transition-[border-color,background-color] duration-[160ms] ease-[ease] hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&_svg]:shrink-0 [&_svg]:text-muted`;
-const TRIGGER_DEFAULT =
-  'justify-between border border-line bg-input px-3.5 py-2.5 [font-weight:inherit]';
+const TRIGGER = `date-picker-trigger box-border flex w-full cursor-pointer items-center gap-3 text-main ${INHERIT_FONT} text-[16px] tabular-nums transition-[border-color,background-color] duration-[160ms] ease-[ease] focus-visible:outline-none [&_svg]:shrink-0 [&_svg]:text-muted`;
+const TRIGGER_DEFAULT = `${CONTROL_FRAME} justify-between px-3.5 py-0 [font-weight:inherit]`;
 const TRIGGER_COMPACT =
-  'flex-row-reverse justify-center border-none bg-transparent px-2 py-0 font-semibold';
+  'h-10 min-h-0 flex-row-reverse justify-center gap-1 rounded-sm border-none bg-transparent px-0 py-0 font-semibold focus-visible:ring-2 focus-visible:ring-primary';
 // Marker classes kept for tests/selectors.
 const PRESS = 'motion-safe:enabled:active:[transform:scale(0.97)]';
 const ICON_BUTTON = `date-picker-icon-button inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-muted hover:bg-hover hover:text-primary ${PRESS}`;

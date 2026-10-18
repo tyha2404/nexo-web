@@ -2,7 +2,7 @@ import moment from 'moment';
 import type { SummaryReport, TargetSummaryResponse } from '../../commons/types';
 import { formatCurrency } from '../../commons/utils';
 import type { DebtSummary } from '../../types/debt';
-import { CLICKABLE_CARD, cx, GLASS_CARD } from '../ui';
+import { CLICKABLE_CARD, cx, GLASS_CARD, MOTION_ENTER } from '../ui';
 
 const submetricCls =
   'flex items-center gap-2 rounded-md border border-line bg-input px-[0.65rem] py-2 hover:border-line-hover hover:bg-hover mobile:px-[0.6rem] mobile:py-[0.45rem] light:border-[#e2e8f0] light:bg-[#f8fafc]';
@@ -19,7 +19,7 @@ const setLinkCls =
 const trackCls =
   'mb-2 h-[7px] w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)] light:bg-[rgba(0,0,0,0.06)]';
 const barCls =
-  'h-full rounded-full transition-[width] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]';
+  'origin-left motion-safe:animate-[nexo-progress-enter_480ms_var(--motion-ease)_backwards] h-full rounded-full transition-[width] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]';
 const linkActionCls =
   'cursor-pointer border-none bg-transparent p-0 text-[0.8rem] font-semibold text-primary underline underline-offset-2 hover:text-primary-hover';
 
@@ -84,7 +84,8 @@ export function HeroCashflowCard({
     <div
       className={cx(
         GLASS_CARD,
-        'animate-fade-in relative mb-[0.85rem] overflow-hidden mobile:mb-2 light:border-[#e2e8f0] light:bg-white light:[&:hover]:border-[#e2e8f0]'
+        MOTION_ENTER,
+        'relative mb-[0.85rem] overflow-hidden mobile:mb-2 light:border-[#e2e8f0] light:bg-white light:[&:hover]:border-[#e2e8f0]'
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-3 mobile:flex-col mobile:items-start mobile:gap-[0.35rem]">

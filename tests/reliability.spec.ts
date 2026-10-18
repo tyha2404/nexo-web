@@ -39,7 +39,7 @@ test('switching type clears the previous category; closing never asks about draf
   const state = await setup(page);
   await page.goto('/');
   const dialog = await openTransactionForm(page);
-  await dialog.getByLabel('Số tiền chi tiêu (đ)').fill('50000');
+  await dialog.getByLabel('Số tiền (đ)', { exact: true }).fill('50000');
   await dialog.getByLabel('Danh mục').fill('Ăn uống');
   await page.getByRole('option', { name: 'Ăn uống', exact: true }).click();
   await dialog.getByRole('tab', { name: 'Thu nhập', exact: true }).click();
@@ -50,7 +50,7 @@ test('switching type clears the previous category; closing never asks about draf
   await expect(dialog).not.toBeVisible();
   expect(state.writes[0].categoryId).toBe(INCOME);
   const again = await openTransactionForm(page);
-  await again.getByLabel('Số tiền chi tiêu (đ)').fill('1000');
+  await again.getByLabel('Số tiền (đ)', { exact: true }).fill('1000');
   await again.getByRole('button', { name: 'Đóng', exact: true }).first().click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(
@@ -65,7 +65,7 @@ test('search reaches a transaction beyond the first page and realtime refreshes 
 }) => {
   const state = await setup(page);
   await page.goto('/#/transactions/expense');
-  await page.getByPlaceholder('Tìm kiếm theo tiêu đề...').fill('đặc biệt');
+  await page.getByRole('textbox', { name: 'Tìm giao dịch' }).fill('đặc biệt');
   await expect.poll(() => state.requests.some((path) => path.includes('keyword='))).toBe(true);
   await expect(
     page.getByText('Hóa đơn đặc biệt', { exact: true }).filter({ visible: true })
@@ -102,15 +102,15 @@ test('a failed save keeps the form open with its values', async ({ page }) => {
   const state = await setup(page);
   await page.goto('/');
   const dialog = await openTransactionForm(page);
-  await dialog.getByLabel('Ghi chú (không bắt buộc)').fill('Chưa gửi');
-  await dialog.getByLabel('Số tiền chi tiêu (đ)').fill('10000');
+  await dialog.getByLabel('Ghi chú (tùy chọn)').fill('Chưa gửi');
+  await dialog.getByLabel('Số tiền (đ)', { exact: true }).fill('10000');
   await dialog.getByLabel('Danh mục').fill('Ăn uống');
   await page.getByRole('option', { name: 'Ăn uống', exact: true }).click();
   state.failSave = true;
   await dialog.getByRole('button', { name: 'Thêm giao dịch', exact: true }).click();
   await expect(page.getByText('Không lưu được', { exact: true })).toBeVisible();
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByLabel('Ghi chú (không bắt buộc)')).toHaveValue('Chưa gửi');
+  await expect(dialog.getByLabel('Ghi chú (tùy chọn)')).toHaveValue('Chưa gửi');
 });
 
 test('quick add from the bottom nav saves with only amount and category', async ({
@@ -122,8 +122,8 @@ test('quick add from the bottom nav saves with only amount and category', async 
   await page.goto('/');
   await page.getByRole('button', { name: 'Ghi giao dịch mới' }).click();
   const dialog = page.getByRole('dialog');
-  await expect(dialog.getByLabel('Số tiền chi tiêu (đ)')).toBeVisible();
-  await dialog.getByLabel('Số tiền chi tiêu (đ)').fill('45000');
+  await expect(dialog.getByLabel('Số tiền (đ)', { exact: true })).toBeVisible();
+  await dialog.getByLabel('Số tiền (đ)', { exact: true }).fill('45000');
   await dialog.getByLabel('Danh mục').fill('Ăn uống');
   await page.getByRole('option', { name: 'Ăn uống', exact: true }).click();
   await dialog.getByRole('button', { name: /Thêm giao dịch/ }).click();

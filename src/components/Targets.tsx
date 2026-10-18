@@ -228,7 +228,7 @@ export default function Targets() {
       <div className={cx(SUMMARY_GRID, 'animate-fade-in')}>
         <div className={SUMMARY_STAT_CARD}>
           <div className={SUMMARY_STAT_HEADER}>
-            <span className={SUMMARY_STAT_TITLE}>Hạn Mức Chi Tiêu Tháng</span>
+            <span className={SUMMARY_STAT_TITLE}>Hạn mức chi</span>
           </div>
           <div className={statValueClass('expense')}>
             {targetSummary?.expense
@@ -238,13 +238,13 @@ export default function Targets() {
           <div className={SUMMARY_STAT_SUBTITLE}>
             {targetSummary?.expense
               ? `Đã chi: ${formatCurrency(Math.abs(targetSummary.expense.spentAmount))} (Còn lại: ${formatCurrency(Math.abs(targetSummary.expense.remainingAmount))})`
-              : 'Hãy đặt hạn mức để kiểm soát thu chi'}
+              : 'Chưa có hạn mức'}
           </div>
         </div>
 
         <div className={SUMMARY_STAT_CARD}>
           <div className={SUMMARY_STAT_HEADER}>
-            <span className={SUMMARY_STAT_TITLE}>Mục Tiêu Đầu Tư Tháng</span>
+            <span className={SUMMARY_STAT_TITLE}>Mục tiêu đầu tư</span>
           </div>
           <div className={statValueClass()}>
             {targetSummary?.investment
@@ -254,13 +254,13 @@ export default function Targets() {
           <div className={SUMMARY_STAT_SUBTITLE}>
             {targetSummary?.investment
               ? `Đã đầu tư: ${formatCurrency(targetSummary.investment.investedAmount)}`
-              : 'Tích lũy tài chính cho tương lai'}
+              : 'Chưa có mục tiêu'}
           </div>
         </div>
 
         <div className={SUMMARY_STAT_CARD}>
           <div className={SUMMARY_STAT_HEADER}>
-            <span className={SUMMARY_STAT_TITLE}>Gợi Ý Chi Tiêu / Ngày</span>
+            <span className={SUMMARY_STAT_TITLE}>Có thể chi / ngày</span>
           </div>
           <div
             className={statValueClass(targetSummary?.expense?.isOverBudget ? 'expense' : 'default')}
@@ -273,8 +273,8 @@ export default function Targets() {
           </div>
           <div className={SUMMARY_STAT_SUBTITLE}>
             {targetSummary?.daysRemaining
-              ? `Còn ${targetSummary.daysRemaining} ngày trong tháng`
-              : 'Tính toán theo số ngày còn lại'}
+              ? `Còn ${targetSummary.daysRemaining} ngày`
+              : 'Chưa có hạn mức'}
           </div>
         </div>
       </div>
@@ -589,11 +589,11 @@ export default function Targets() {
                   </div>
 
                   <div className={FORM_GROUP}>
-                    <label htmlFor="target-month">Áp dụng cho tháng</label>
+                    <label htmlFor="target-month">Tháng áp dụng</label>
                     <div className="target-datepicker-wrapper">
                       <DatePickerField
                         id="target-month"
-                        label="Áp dụng cho tháng"
+                        label="Tháng áp dụng"
                         mode="month"
                         value={selectedMonth}
                         onChange={setSelectedMonth}

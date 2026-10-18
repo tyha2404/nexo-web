@@ -1,3 +1,5 @@
+import { MOTION_PRESS } from './ui';
+
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -8,8 +10,7 @@ interface PaginationProps {
   itemsPerPageOptions?: number[];
 }
 
-const PAGE_BTN =
-  'inline-flex h-[38px] min-w-[38px] cursor-pointer items-center justify-center rounded-md border px-[0.6rem] text-[0.875rem] transition-all duration-200 enabled:hover:border-line-hover enabled:hover:bg-hover enabled:hover:text-primary disabled:cursor-not-allowed disabled:opacity-35 max-[640px]:h-11 max-[640px]:min-w-11 max-[640px]:text-[0.95rem] mobile:min-h-11 mobile:min-w-11 pointer-coarse:min-h-11 pointer-coarse:min-w-11';
+const PAGE_BTN = `${MOTION_PRESS} inline-flex h-[38px] min-w-[38px] cursor-pointer items-center justify-center rounded-md border px-[0.6rem] text-[0.875rem] transition-all duration-200 enabled:hover:border-line-hover enabled:hover:bg-hover enabled:hover:text-primary disabled:cursor-not-allowed disabled:opacity-35 max-[640px]:h-11 max-[640px]:min-w-11 max-[640px]:text-[0.95rem] mobile:min-h-11 mobile:min-w-11 pointer-coarse:min-h-11 pointer-coarse:min-w-11`;
 const PAGE_BTN_IDLE = 'border-line bg-card font-semibold text-main';
 const PAGE_BTN_ACTIVE =
   'active border-primary bg-primary font-bold text-[var(--text-dark,#fff)] shadow-[0_2px_8px_var(--primary-glow)]';

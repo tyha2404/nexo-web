@@ -252,3 +252,24 @@
     box-shadow: 0 0 12px 2px rgba(239, 68, 68, 0.5);
   }
 }
+
+/* Small anchored popover; fixed page/modal backdrops never translate. */
+@keyframes nexo-menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes nexo-progress-enter {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}

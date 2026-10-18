@@ -1,7 +1,7 @@
 import type { SummaryReport } from '../../commons/types';
 import { formatCurrency } from '../../commons/utils';
 import type { DebtSummary } from '../../types/debt';
-import { CLICKABLE_GLASS_CARD, cx } from '../ui';
+import { CLICKABLE_GLASS_CARD, cx, STAGGER_CHILDREN } from '../ui';
 
 interface SecondaryStatsSectionProps {
   summary: SummaryReport | null;
@@ -22,7 +22,9 @@ export function SecondaryStatsSection({
         <span>Tài sản Tích lũy, Đầu tư & Vay Nợ</span>
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-[0.85rem] mobile:w-full mobile:gap-2">
+      <div
+        className={`${STAGGER_CHILDREN} grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-[0.85rem] mobile:w-full mobile:gap-2`}
+      >
         {/* Investment Portfolio Card */}
         <div
           className={cx(CLICKABLE_GLASS_CARD, 'flex flex-col justify-between')}
@@ -49,13 +51,10 @@ export function SecondaryStatsSection({
           title="Xem chi tiết các khoản nợ phải trả"
         >
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[0.8rem] font-semibold text-muted">Tôi Nợ (Phải Trả) ↗</span>
+            <span className="text-[0.8rem] font-semibold text-muted">Phải trả ↗</span>
           </div>
           <div className="mb-1 font-mono text-[1.3rem] font-extrabold tracking-[-0.02em]">
             {formatCurrency(Math.abs(debtSummary?.totalPayable ?? 0))}
-          </div>
-          <div className="text-[0.75rem] text-muted">
-            <span>Đang nợ người khác / thẻ tín dụng</span>
           </div>
         </div>
 
@@ -66,15 +65,10 @@ export function SecondaryStatsSection({
           title="Xem chi tiết các khoản cho vay / cần thu"
         >
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[0.8rem] font-semibold text-muted">
-              Người Khác Nợ (Phải Thu) ↗
-            </span>
+            <span className="text-[0.8rem] font-semibold text-muted">Phải thu ↗</span>
           </div>
           <div className="mb-1 font-mono text-[1.3rem] font-extrabold tracking-[-0.02em]">
             {formatCurrency(Math.abs(debtSummary?.totalReceivable ?? 0))}
-          </div>
-          <div className="text-[0.75rem] text-muted">
-            <span>Các khoản cho vay cần thu hồi</span>
           </div>
         </div>
       </div>

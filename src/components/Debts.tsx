@@ -22,7 +22,6 @@ import {
   MOBILE_CARD_TITLE,
   mobileIconBadgeClass,
   PAGE_HEADER,
-  PAGE_SUBTITLE,
   PAGE_TITLE,
   PAGE_TITLE_H2,
   PAGE_VIEW,
@@ -54,7 +53,6 @@ import {
   SUMMARY_GRID,
   SUMMARY_STAT_CARD,
   SUMMARY_STAT_HEADER,
-  SUMMARY_STAT_SUBTITLE,
   SUMMARY_STAT_TITLE,
   TXN_AMOUNT,
   TXN_DATE,
@@ -246,8 +244,7 @@ export default function Debts() {
     <div className={PAGE_VIEW}>
       <header className={`${PAGE_HEADER} animate-fade-in`}>
         <div className={PAGE_TITLE}>
-          <h2 className={PAGE_TITLE_H2}>Quản lý Vay & Nợ</h2>
-          <p className={PAGE_SUBTITLE}>Theo dõi khoản vay phải trả và khoản nợ phải thu của bạn</p>
+          <h2 className={PAGE_TITLE_H2}>Vay & Nợ</h2>
         </div>
         <div className={HEADER_ACTIONS}>
           <button className={PAGE_HEADER_BTN} onClick={() => openCreateModal('PAYABLE')}>
@@ -271,9 +268,6 @@ export default function Debts() {
           <div className={statValueClass('expense')}>
             {formatCurrency(Math.abs(displayPayable))}
           </div>
-          <div className={SUMMARY_STAT_SUBTITLE}>
-            Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}
-          </div>
         </div>
 
         <div className={SUMMARY_STAT_CARD}>
@@ -282,9 +276,6 @@ export default function Debts() {
           </div>
           <div className={statValueClass('income')}>
             {formatCurrency(Math.abs(displayReceivable))}
-          </div>
-          <div className={SUMMARY_STAT_SUBTITLE}>
-            Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}
           </div>
         </div>
       </div>
@@ -296,7 +287,8 @@ export default function Debts() {
           <input
             className={SEARCH_INPUT}
             type="text"
-            placeholder="Tìm kiếm tiêu đề hoặc ghi chú..."
+            aria-label="Tìm khoản nợ theo tiêu đề hoặc ghi chú"
+            placeholder="Tìm kiếm..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -385,7 +377,7 @@ export default function Debts() {
             >
               <thead>
                 <tr>
-                  <th>Tên khoản nợ / Đối tác</th>
+                  <th>Khoản nợ / Đối tác</th>
                   <th>Loại</th>
                   <th className="text-right!">Tổng số tiền</th>
                   <th className="text-right!">Đã thanh toán</th>
@@ -588,7 +580,7 @@ export default function Debts() {
               </div>
               <form onSubmit={handleCreateSubmit}>
                 <div className={FORM_GROUP}>
-                  <label htmlFor="debt-title">Tên khoản nợ / Đối tác</label>
+                  <label htmlFor="debt-title">Khoản nợ / Đối tác</label>
                   <input
                     id="debt-title"
                     type="text"
@@ -601,7 +593,7 @@ export default function Debts() {
 
                 <div className={FORM_ROW_2COL}>
                   <div className={FORM_GROUP}>
-                    <label htmlFor="debt-type-select">Loại nghĩa vụ</label>
+                    <label htmlFor="debt-type-select">Loại nợ</label>
                     <Select
                       id="debt-type-select"
                       options={[
@@ -637,10 +629,10 @@ export default function Debts() {
 
                 <div className={FORM_ROW_2COL}>
                   <div className={FORM_GROUP}>
-                    <label htmlFor="debt-startdate">Ngày bắt đầu vay / cho vay</label>
+                    <label htmlFor="debt-startdate">Ngày bắt đầu</label>
                     <DatePickerField
                       id="debt-startdate"
-                      label="Ngày bắt đầu vay / cho vay"
+                      label="Ngày bắt đầu"
                       value={formStartDate ? moment(formStartDate).format('YYYY-MM-DD') : ''}
                       onChange={(value) => {
                         const date = moment(value, 'YYYY-MM-DD', true);
@@ -743,7 +735,7 @@ export default function Debts() {
                 </div>
 
                 <div className={FORM_GROUP}>
-                  <label htmlFor="repay-notes">Ghi chú đợt thanh toán</label>
+                  <label htmlFor="repay-notes">Ghi chú</label>
                   <input
                     id="repay-notes"
                     type="text"
