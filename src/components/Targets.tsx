@@ -14,7 +14,7 @@ import {
 } from '../commons/utils';
 import { toast } from 'react-toastify';
 import { useModal } from '../hooks';
-import { MonthFilter } from './common';
+import { DatePickerField, MonthFilter } from './common';
 import './Targets.css';
 
 const TARGET_TYPE_OPTIONS: { value: TargetType; label: string }[] = [
@@ -553,14 +553,12 @@ export default function Targets() {
                   <div className="form-group">
                     <label htmlFor="target-month">Áp dụng cho tháng</label>
                     <div className="target-datepicker-wrapper">
-                      <input
+                      <DatePickerField
                         id="target-month"
-                        type="month"
+                        label="Áp dụng cho tháng"
+                        mode="month"
                         value={selectedMonth}
-                        onChange={(event) => {
-                          if (moment(event.target.value, 'YYYY-MM', true).isValid())
-                            setSelectedMonth(event.target.value);
-                        }}
+                        onChange={setSelectedMonth}
                         required
                       />
                     </div>

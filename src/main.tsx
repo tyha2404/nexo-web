@@ -7,6 +7,7 @@ import { HashRouter } from 'react-router-dom';
 import App from './App.tsx';
 import './tailwind.css';
 import './index.css';
+import './motion.css';
 
 // Vietnamese month/day names for every DatePicker in the app
 registerLocale('vi', vi);

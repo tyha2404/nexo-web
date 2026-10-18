@@ -102,15 +102,17 @@ test('login uses compact spacing and fits phone width', async ({ page }) => {
 
 test('month filter shows the year and navigates across year boundaries', async ({ page }) => {
   await page.goto('/');
-  const month = page.getByLabel('Tháng hiển thị');
-  await month.fill('2026-12');
-  await expect(page.locator('.month-picker-display')).toHaveText('12/2026');
-  await page.getByRole('button', { name: 'Tháng kế tiếp' }).click();
-  await expect(month).toHaveValue('2027-01');
-  await expect(page.locator('.month-picker-display')).toHaveText('01/2027');
-  await page.getByRole('button', { name: 'Tháng trước' }).click();
-  await expect(month).toHaveValue('2026-12');
-  const arrow = await page.getByRole('button', { name: 'Tháng trước' }).boundingBox();
+  const month = page.getByRole('button', { name: 'Tháng hiển thị' });
+  await month.click();
+  const calendar = page.locator('.date-picker-panel');
+  await calendar.getByLabel('Chọn năm').selectOption('2026');
+  await calendar.getByText('Tháng 12', { exact: true }).click();
+  await expect(month).toContainText('12/2026');
+  await page.getByRole('button', { name: 'Tháng kế tiếp', exact: true }).click();
+  await expect(month).toContainText('01/2027');
+  await page.getByRole('button', { name: 'Tháng trước', exact: true }).click();
+  await expect(month).toContainText('12/2026');
+  const arrow = await page.getByRole('button', { name: 'Tháng trước', exact: true }).boundingBox();
   expect(arrow!.width).toBeGreaterThanOrEqual(44);
   expect(arrow!.height).toBeGreaterThanOrEqual(44);
   await page.screenshot({ path: 'test-results/iphone-month-filter.png' });
@@ -120,8 +122,14 @@ test('date inputs remain inside a vertically scrolling transaction modal', async
   await page.goto('/');
   const dialog = await openTransactionForm(page);
   const date = dialog.getByLabel('Ngày thực hiện');
-  await date.fill('2026-12-31');
-  await expect(date).toHaveValue('2026-12-31');
+  await date.click();
+  const calendar = page.locator('.date-picker-panel');
+  await calendar.getByLabel('Chọn năm').selectOption('2026');
+  await calendar.getByLabel('Chọn tháng').selectOption('11');
+  await calendar
+    .locator('.react-datepicker__day--031:not(.react-datepicker__day--outside-month)')
+    .click();
+  await expect(date).toContainText('31/12/2026');
   await date.scrollIntoViewIfNeeded();
   const bounds = await date.boundingBox();
   const modal = await dialog.boundingBox();

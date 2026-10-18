@@ -1,5 +1,6 @@
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import moment from 'moment';
+import { DatePickerField } from './DatePickerField';
 import './MonthFilter.css';
 
 export interface MonthFilterProps {
@@ -33,21 +34,13 @@ export default function MonthFilter({ value, onChange }: MonthFilterProps) {
         </button>
 
         <div className="month-picker-label-wrap">
-          <span className="month-picker-display" aria-hidden="true">
-            <CalendarDays size={18} />
-            {moment(value, 'YYYY-MM', true).format('MM/YYYY')}
-          </span>
-          <input
-            type="month"
-            min="0001-01"
-            max="9999-12"
-            aria-label="Tháng hiển thị"
+          <DatePickerField
+            label="Tháng hiển thị"
             value={value}
-            onChange={(event) => {
-              if (moment(event.target.value, 'YYYY-MM', true).isValid())
-                onChange(event.target.value);
-            }}
-            className="month-datepicker-input"
+            mode="month"
+            onChange={onChange}
+            required
+            compact
           />
         </div>
 

@@ -3,3 +3,4 @@ export { default as MonthFilter } from './MonthFilter';
 export type { MonthFilterProps } from './MonthFilter';
 export { ReceiptUploader } from './ReceiptUploader';
 export { ReceiptModal } from './ReceiptModal';
+export { DatePickerField } from './DatePickerField';

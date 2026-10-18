@@ -9,6 +9,8 @@ export function useModal(open: boolean, onClose: () => void) {
   }, [onClose]);
   useEffect(() => {
     if (!open) return;
+    const dialog = dialogRef.current;
+    if (dialog) dialog.dataset.modalLayer = 'true';
     const previousFocus = document.activeElement as HTMLElement | null;
     const scrollY = window.scrollY;
     const previousStyle = document.body.getAttribute('style');
@@ -18,6 +20,9 @@ export function useModal(open: boolean, onClose: () => void) {
       width: '100%',
       overflow: 'hidden',
     });
+    const rootStyle = document.documentElement.style;
+    const previousViewportHeight = rootStyle.getPropertyValue('--modal-viewport-height');
+    const previousViewportTop = rootStyle.getPropertyValue('--modal-viewport-top');
     const viewport = window.visualViewport;
     const resize = () => {
       document.documentElement.style.setProperty(
@@ -34,6 +39,8 @@ export function useModal(open: boolean, onClose: () => void) {
     viewport?.addEventListener('scroll', resize);
     const frame = requestAnimationFrame(() => dialogRef.current?.focus());
     const keydown = (event: KeyboardEvent) => {
+      const layers = document.querySelectorAll('[data-modal-layer="true"]');
+      if (layers.length && layers[layers.length - 1] !== dialog) return;
       if (event.key === 'Escape') {
         event.preventDefault();
         closeRef.current();
@@ -66,12 +73,16 @@ export function useModal(open: boolean, onClose: () => void) {
     };
     document.addEventListener('keydown', keydown);
     return () => {
+      if (dialog) delete dialog.dataset.modalLayer;
       cancelAnimationFrame(frame);
       viewport?.removeEventListener('resize', resize);
       viewport?.removeEventListener('scroll', resize);
       document.removeEventListener('keydown', keydown);
-      document.documentElement.style.removeProperty('--modal-viewport-height');
-      document.documentElement.style.removeProperty('--modal-viewport-top');
+      if (previousViewportHeight)
+        rootStyle.setProperty('--modal-viewport-height', previousViewportHeight);
+      else rootStyle.removeProperty('--modal-viewport-height');
+      if (previousViewportTop) rootStyle.setProperty('--modal-viewport-top', previousViewportTop);
+      else rootStyle.removeProperty('--modal-viewport-top');
       if (previousStyle === null) document.body.removeAttribute('style');
       else document.body.setAttribute('style', previousStyle);
       window.scrollTo(0, scrollY);

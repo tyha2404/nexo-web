@@ -16,7 +16,7 @@ import {
 } from '../commons/utils';
 import { categoryService, transactionService } from '../services';
 import type { CreateTransactionDTO } from '../services';
-import { ReceiptUploader } from './common';
+import { DatePickerField, ReceiptUploader } from './common';
 
 const INVESTMENT_STATUS_OPTIONS = [
   { value: InvestmentStatus.HOLDING, label: 'Đang đầu tư' },
@@ -371,11 +371,11 @@ export default function AddTransactionModal({
 
             <div className="form-group">
               <label htmlFor="atxn-incurred">Ngày thực hiện</label>
-              <input
+              <DatePickerField
                 id="atxn-incurred"
-                type="date"
+                label="Ngày thực hiện"
                 value={transactionDate}
-                onChange={(event) => setTransactionDate(event.target.value)}
+                onChange={setTransactionDate}
                 required
               />
             </div>

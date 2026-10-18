@@ -7,7 +7,7 @@ import { formatCurrency, formatNumberInput, parseNumberInput } from '../commons/
 import { debtService } from '../services';
 import type { Debt, DebtType } from '../types/debt';
 import { useDataEvents } from '../hooks';
-import { ConfirmModal, MonthFilter } from './common';
+import { ConfirmModal, DatePickerField, MonthFilter } from './common';
 import './Debts.css';
 
 export default function Debts() {
@@ -592,12 +592,12 @@ export default function Debts() {
               <div className="form-row-2col">
                 <div className="form-group">
                   <label htmlFor="debt-startdate">Ngày bắt đầu vay / cho vay</label>
-                  <input
+                  <DatePickerField
                     id="debt-startdate"
-                    type="date"
+                    label="Ngày bắt đầu vay / cho vay"
                     value={formStartDate ? moment(formStartDate).format('YYYY-MM-DD') : ''}
-                    onChange={(event) => {
-                      const date = moment(event.target.value, 'YYYY-MM-DD', true);
+                    onChange={(value) => {
+                      const date = moment(value, 'YYYY-MM-DD', true);
                       setFormStartDate(date.isValid() ? date.toDate() : null);
                     }}
                   />
@@ -605,12 +605,12 @@ export default function Debts() {
 
                 <div className="form-group">
                   <label htmlFor="debt-duedate">Hạn thanh toán</label>
-                  <input
+                  <DatePickerField
                     id="debt-duedate"
-                    type="date"
+                    label="Hạn thanh toán"
                     value={formDueDate ? moment(formDueDate).format('YYYY-MM-DD') : ''}
-                    onChange={(event) => {
-                      const date = moment(event.target.value, 'YYYY-MM-DD', true);
+                    onChange={(value) => {
+                      const date = moment(value, 'YYYY-MM-DD', true);
                       setFormDueDate(date.isValid() ? date.toDate() : null);
                     }}
                   />

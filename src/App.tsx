@@ -374,6 +374,7 @@ function App() {
           <button
             onClick={() => handleNavigate('dashboard')}
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+            aria-current={activeTab === 'dashboard' ? 'page' : undefined}
           >
             <span className="nav-icon">
               <LayoutDashboard size={18} />
@@ -384,6 +385,7 @@ function App() {
           <button
             onClick={() => handleNavigate('transactions')}
             className={`nav-item ${activeTab === 'transactions' ? 'active' : ''}`}
+            aria-current={activeTab === 'transactions' ? 'page' : undefined}
           >
             <span className="nav-icon">
               <ArrowLeftRight size={18} />
@@ -394,6 +396,7 @@ function App() {
           <button
             onClick={() => handleNavigate('debts')}
             className={`nav-item ${activeTab === 'debts' ? 'active' : ''}`}
+            aria-current={activeTab === 'debts' ? 'page' : undefined}
           >
             <span className="nav-icon">
               <Handshake size={18} />
@@ -404,6 +407,7 @@ function App() {
           <button
             onClick={() => handleNavigate('planning')}
             className={`nav-item ${activeTab === 'planning' ? 'active' : ''}`}
+            aria-current={activeTab === 'planning' ? 'page' : undefined}
           >
             <span className="nav-icon">
               <Target size={18} />
@@ -539,10 +543,11 @@ function App() {
       </main>
 
       {/* Mobile PWA Bottom Navigation Bar */}
-      <nav className="bottom-nav" aria-label="Mobile Navigation">
+      <nav className="bottom-nav" aria-label="Điều hướng chính">
         <button
           type="button"
           className={`bottom-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+          aria-current={activeTab === 'dashboard' ? 'page' : undefined}
           onClick={() => handleNavigate('dashboard')}
           aria-label="Tổng quan"
         >
@@ -555,6 +560,7 @@ function App() {
         <button
           type="button"
           className={`bottom-nav-item ${activeTab === 'transactions' ? 'active' : ''}`}
+          aria-current={activeTab === 'transactions' ? 'page' : undefined}
           onClick={() => handleNavigate('transactions')}
           aria-label="Giao dịch"
         >
@@ -571,13 +577,15 @@ function App() {
           aria-label="Ghi giao dịch mới"
         >
           <div className="bottom-nav-add-icon">
-            <Plus size={24} strokeWidth={2.5} />
+            <Plus size={23} strokeWidth={2.25} />
           </div>
+          <span className="bottom-nav-label">Ghi mới</span>
         </button>
 
         <button
           type="button"
           className={`bottom-nav-item ${activeTab === 'debts' ? 'active' : ''}`}
+          aria-current={activeTab === 'debts' ? 'page' : undefined}
           onClick={() => handleNavigate('debts')}
           aria-label="Sổ Vay & Nợ"
         >
@@ -590,6 +598,7 @@ function App() {
         <button
           type="button"
           className={`bottom-nav-item ${activeTab === 'planning' ? 'active' : ''}`}
+          aria-current={activeTab === 'planning' ? 'page' : undefined}
           onClick={() => handleNavigate('planning')}
           aria-label="Kế hoạch & Mục tiêu"
         >
