@@ -15,7 +15,49 @@ import {
 import { toast } from 'react-toastify';
 import { useModal } from '../hooks';
 import { DatePickerField, MonthFilter } from './common';
-import './Targets.css';
+import {
+  ACTIONS_CELL,
+  CATEGORY_BADGE,
+  LOADING_SPINNER,
+  MOBILE_CARD,
+  MOBILE_CARD_ACTIONS,
+  MOBILE_CARD_AMOUNT,
+  MOBILE_CARD_DATE,
+  MOBILE_CARD_LEFT,
+  MOBILE_CARD_TAGS,
+  MOBILE_CARD_TITLE,
+  mobileIconBadgeClass,
+  TABLE,
+  TABLE_CONTAINER,
+  TITLE_CELL,
+  MOBILE_CARDS,
+} from './transaction-list/listStyles';
+import {
+  ACTION_BTN_EDIT,
+  BTN_FILL,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  cx,
+  EMPTY_STATE,
+  filterBarClass,
+  FORM_GROUP,
+  MOBILE_ACTION_EDIT,
+  SPINNER_SECTION,
+  statValueClass,
+  SUMMARY_GRID,
+  SUMMARY_STAT_CARD,
+  SUMMARY_STAT_HEADER,
+  SUMMARY_STAT_SUBTITLE,
+  SUMMARY_STAT_TITLE,
+  TXN_AMOUNT,
+  TXN_DATE,
+  MODAL_BACKDROP,
+  MODAL_CLOSE_BTN,
+  MODAL_FORM_BODY,
+  MODAL_FORM_SHELL_PANEL,
+  MODAL_SHELL_FOOTER,
+  MODAL_SHELL_HEADER,
+} from './ui';
 
 const TARGET_TYPE_OPTIONS: { value: TargetType; label: string }[] = [
   { value: TransactionType.EXPENSE, label: 'Hạn mức Chi tiêu' },
@@ -175,53 +217,53 @@ export default function Targets() {
   });
 
   return (
-    <div className="targets-subview">
+    <div className="targets-subview mx-auto w-full max-w-full p-0">
       {error && (
-        <div className="error-banner animate-fade-in">
-          <AlertTriangle size={18} className="error-icon" /> {error}
+        <div className="animate-fade-in">
+          <AlertTriangle size={18} /> {error}
         </div>
       )}
 
       {/* Summary Cards Grid */}
-      <div className="summary-cards-grid animate-fade-in">
-        <div className="summary-stat-card accent-expense">
-          <div className="summary-stat-header">
-            <span className="summary-stat-title">Hạn Mức Chi Tiêu Tháng</span>
+      <div className={cx(SUMMARY_GRID, 'animate-fade-in')}>
+        <div className={SUMMARY_STAT_CARD}>
+          <div className={SUMMARY_STAT_HEADER}>
+            <span className={SUMMARY_STAT_TITLE}>Hạn Mức Chi Tiêu Tháng</span>
           </div>
-          <div className="summary-stat-value value-expense">
+          <div className={statValueClass('expense')}>
             {targetSummary?.expense
               ? formatCurrency(targetSummary.expense.targetAmount)
               : 'Chưa đặt'}
           </div>
-          <div className="summary-stat-subtitle">
+          <div className={SUMMARY_STAT_SUBTITLE}>
             {targetSummary?.expense
               ? `Đã chi: ${formatCurrency(Math.abs(targetSummary.expense.spentAmount))} (Còn lại: ${formatCurrency(Math.abs(targetSummary.expense.remainingAmount))})`
               : 'Hãy đặt hạn mức để kiểm soát thu chi'}
           </div>
         </div>
 
-        <div className="summary-stat-card">
-          <div className="summary-stat-header">
-            <span className="summary-stat-title">Mục Tiêu Đầu Tư Tháng</span>
+        <div className={SUMMARY_STAT_CARD}>
+          <div className={SUMMARY_STAT_HEADER}>
+            <span className={SUMMARY_STAT_TITLE}>Mục Tiêu Đầu Tư Tháng</span>
           </div>
-          <div className="summary-stat-value">
+          <div className={statValueClass()}>
             {targetSummary?.investment
               ? formatCurrency(targetSummary.investment.targetAmount)
               : 'Chưa đặt'}
           </div>
-          <div className="summary-stat-subtitle">
+          <div className={SUMMARY_STAT_SUBTITLE}>
             {targetSummary?.investment
               ? `Đã đầu tư: ${formatCurrency(targetSummary.investment.investedAmount)}`
               : 'Tích lũy tài chính cho tương lai'}
           </div>
         </div>
 
-        <div className="summary-stat-card">
-          <div className="summary-stat-header">
-            <span className="summary-stat-title">Gợi Ý Chi Tiêu / Ngày</span>
+        <div className={SUMMARY_STAT_CARD}>
+          <div className={SUMMARY_STAT_HEADER}>
+            <span className={SUMMARY_STAT_TITLE}>Gợi Ý Chi Tiêu / Ngày</span>
           </div>
           <div
-            className={`summary-stat-value ${targetSummary?.expense?.isOverBudget ? 'value-expense' : ''}`}
+            className={statValueClass(targetSummary?.expense?.isOverBudget ? 'expense' : 'default')}
           >
             {targetSummary?.expense && targetSummary.expense.dailyAllowance > 0
               ? `${formatCurrency(Math.round(targetSummary.expense.dailyAllowance))}/ngày`
@@ -229,7 +271,7 @@ export default function Targets() {
                 ? `🚨 ${formatCurrency(Math.abs(targetSummary.expense.overspentAmount))} (Vượt)`
                 : '—'}
           </div>
-          <div className="summary-stat-subtitle">
+          <div className={SUMMARY_STAT_SUBTITLE}>
             {targetSummary?.daysRemaining
               ? `Còn ${targetSummary.daysRemaining} ngày trong tháng`
               : 'Tính toán theo số ngày còn lại'}
@@ -238,8 +280,8 @@ export default function Targets() {
       </div>
 
       {/* Filter bar aligned with system design */}
-      <div className="filter-bar animate-fade-in">
-        <div className="category-select-wrapper" style={{ minWidth: '220px' }}>
+      <div className={cx(filterBarClass(), 'animate-fade-in')}>
+        <div className="category-select-wrapper w-full" style={{ minWidth: '220px' }}>
           <Select
             options={[{ value: '', label: 'Tất cả Mục tiêu' }, ...TARGET_TYPE_OPTIONS]}
             value={
@@ -253,19 +295,19 @@ export default function Targets() {
             menuPortalTarget={document.body}
           />
         </div>
-        <div className="date-range-filter-col">
+        <div>
           <MonthFilter value={selectedMonth} onChange={setSelectedMonth} />
         </div>
       </div>
 
       {loading ? (
-        <div className="loading-spinner animate-fade-in">
-          <div className="spinner"></div>
+        <div className={`${LOADING_SPINNER} animate-fade-in`}>
+          <div className={SPINNER_SECTION}></div>
           <p>Đang tải mục tiêu tài chính...</p>
         </div>
       ) : filteredRows.length === 0 ? (
         <div
-          className="empty-state animate-fade-in"
+          className={cx(EMPTY_STATE, 'animate-fade-in')}
           style={{ padding: '3rem 1.5rem', textAlign: 'center' }}
         >
           <div
@@ -300,7 +342,7 @@ export default function Targets() {
           </p>
           <button
             onClick={() => openAddModal(TransactionType.EXPENSE)}
-            className="btn btn-primary"
+            className={BTN_PRIMARY}
             style={{ padding: '0.65rem 1.5rem', minHeight: '42px', fontWeight: 600 }}
           >
             <Plus size={16} /> Thêm mục tiêu
@@ -309,8 +351,8 @@ export default function Targets() {
       ) : (
         <>
           {/* Desktop Table View */}
-          <div className="transactions-table-container animate-fade-in">
-            <table className="transactions-table">
+          <div className={`${TABLE_CONTAINER} animate-fade-in`}>
+            <table className={TABLE}>
               <thead>
                 <tr>
                   <th>Loại mục tiêu</th>
@@ -329,18 +371,18 @@ export default function Targets() {
 
                   return (
                     <tr key={row.id}>
-                      <td className="txn-title-cell">
+                      <td className={TITLE_CELL}>
                         <span>{row.title}</span>
                       </td>
-                      <td className="txn-amount">
+                      <td className={TXN_AMOUNT}>
                         {row.targetAmount > 0 ? formatCurrency(row.targetAmount) : 'Chưa đặt'}
                       </td>
-                      <td className="txn-date">{formatCurrency(row.currentAmount)}</td>
+                      <td className={TXN_DATE}>{formatCurrency(row.currentAmount)}</td>
                       <td>
                         {row.targetAmount > 0 ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                             <span
-                              className="txn-category-badge"
+                              className={CATEGORY_BADGE}
                               style={{
                                 alignSelf: 'flex-start',
                                 background:
@@ -371,18 +413,15 @@ export default function Targets() {
                             </span>
                           </div>
                         ) : (
-                          <span
-                            className="txn-category-badge"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
+                          <span className={CATEGORY_BADGE} style={{ color: 'var(--text-muted)' }}>
                             Chưa thiết lập
                           </span>
                         )}
                       </td>
-                      <td className="txn-actions-cell">
+                      <td className={ACTIONS_CELL}>
                         <button
                           onClick={() => openAddModal(row.type)}
-                          className="action-btn edit-btn"
+                          className={ACTION_BTN_EDIT}
                           aria-label={`Chỉnh sửa ${row.title}`}
                           title={`Chỉnh sửa ${row.title}`}
                         >
@@ -397,7 +436,7 @@ export default function Targets() {
           </div>
 
           {/* Mobile Card View (<768px) */}
-          <div className="transactions-mobile-cards animate-fade-in">
+          <div className={`${MOBILE_CARDS} animate-fade-in`}>
             {filteredRows.map((row) => {
               const percent =
                 row.targetAmount > 0
@@ -406,19 +445,15 @@ export default function Targets() {
               const isExpense = row.type === TransactionType.EXPENSE;
 
               return (
-                <div key={`m-target-${row.id}`} className="transaction-mobile-card">
+                <div key={`m-target-${row.id}`} className={MOBILE_CARD}>
                   <div className="mobile-card-top">
-                    <div className="mobile-card-left">
-                      <div
-                        className={`mobile-card-icon-badge ${
-                          isExpense ? 'icon-expense' : 'icon-investment'
-                        }`}
-                      >
+                    <div className={MOBILE_CARD_LEFT}>
+                      <div className={mobileIconBadgeClass(isExpense ? 'expense' : 'investment')}>
                         <TargetIcon size={18} />
                       </div>
                       <div className="mobile-card-info">
-                        <div className="mobile-card-title">{row.title}</div>
-                        <div className="mobile-card-date">
+                        <div className={MOBILE_CARD_TITLE}>{row.title}</div>
+                        <div className={MOBILE_CARD_DATE}>
                           <span>
                             Thực tế: <strong>{formatCurrency(row.currentAmount)}</strong>
                           </span>
@@ -427,7 +462,10 @@ export default function Targets() {
                     </div>
 
                     <div className="mobile-card-amount-group">
-                      <div className="mobile-card-amount" style={{ color: 'var(--text-main)' }}>
+                      <div
+                        className={`${MOBILE_CARD_AMOUNT} text-main`}
+                        style={{ color: 'var(--text-main)' }}
+                      >
                         {row.targetAmount > 0 ? formatCurrency(row.targetAmount) : 'Chưa đặt'}
                       </div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
@@ -436,9 +474,9 @@ export default function Targets() {
                     </div>
                   </div>
 
-                  <div className="mobile-card-tags">
+                  <div className={MOBILE_CARD_TAGS}>
                     <span
-                      className="txn-category-badge"
+                      className={CATEGORY_BADGE}
                       style={{
                         background:
                           row.status === 'OVER_BUDGET'
@@ -470,11 +508,11 @@ export default function Targets() {
                     </span>
                   </div>
 
-                  <div className="mobile-card-actions">
+                  <div className={MOBILE_CARD_ACTIONS}>
                     <button
                       type="button"
                       onClick={() => openAddModal(row.type)}
-                      className="mobile-action-btn edit-btn"
+                      className={MOBILE_ACTION_EDIT}
                       title="Thiết lập / Chỉnh sửa mục tiêu"
                     >
                       <Pencil size={14} /> {row.targetAmount > 0 ? 'Chỉnh sửa' : 'Thiết lập'}
@@ -491,21 +529,21 @@ export default function Targets() {
       {isModalOpen &&
         // Portal: the tab container is animated (transform), which would trap position: fixed
         createPortal(
-          <div className="modal-backdrop app-modal-backdrop" onClick={() => setIsModalOpen(false)}>
+          <div className={MODAL_BACKDROP} onClick={() => setIsModalOpen(false)}>
             <div
               ref={targetDialogRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="target-modal-title"
               tabIndex={-1}
-              className="modal-content modal-form-shell animate-scale-in"
+              className={MODAL_FORM_SHELL_PANEL}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="modal-header">
+              <div className={MODAL_SHELL_HEADER}>
                 <h3 id="target-modal-title">Thêm mục tiêu</h3>
                 <button
                   type="button"
-                  className="close-btn"
+                  className={MODAL_CLOSE_BTN}
                   onClick={() => setIsModalOpen(false)}
                   aria-label="Đóng"
                 >
@@ -513,8 +551,8 @@ export default function Targets() {
                 </button>
               </div>
               <form onSubmit={handleSubmit}>
-                <div className="modal-form-body min-h-0 overflow-y-auto overscroll-contain">
-                  <div className="form-group">
+                <div className={MODAL_FORM_BODY}>
+                  <div className={FORM_GROUP}>
                     <label htmlFor="target-type-select">Loại mục tiêu</label>
                     <Select
                       id="target-type-select"
@@ -538,7 +576,7 @@ export default function Targets() {
                     />
                   </div>
 
-                  <div className="form-group">
+                  <div className={FORM_GROUP}>
                     <label htmlFor="target-amount-input">Số tiền (đ)</label>
                     <input
                       id="target-amount-input"
@@ -550,7 +588,7 @@ export default function Targets() {
                     />
                   </div>
 
-                  <div className="form-group">
+                  <div className={FORM_GROUP}>
                     <label htmlFor="target-month">Áp dụng cho tháng</label>
                     <div className="target-datepicker-wrapper">
                       <DatePickerField
@@ -564,15 +602,15 @@ export default function Targets() {
                     </div>
                   </div>
                 </div>
-                <div className="button-group">
+                <div className={MODAL_SHELL_FOOTER}>
                   <button
                     type="button"
-                    className="btn btn-secondary"
+                    className={cx(BTN_SECONDARY, BTN_FILL)}
                     onClick={() => setIsModalOpen(false)}
                   >
                     Hủy
                   </button>
-                  <button type="submit" className="btn btn-primary">
+                  <button type="submit" className={cx(BTN_PRIMARY, BTN_FILL)}>
                     Lưu mục tiêu
                   </button>
                 </div>

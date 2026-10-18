@@ -1,14 +1,69 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import moment from 'moment';
+import { createPortal } from 'react-dom';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 import { Search, Plus, Trash2, Handshake, X, AlertTriangle, ArrowRightLeft } from 'lucide-react';
 import { formatCurrency, formatNumberInput, parseNumberInput } from '../commons/utils';
 import { debtService } from '../services';
 import type { Debt, DebtType } from '../types/debt';
-import { useDataEvents } from '../hooks';
+import { useDataEvents, useModal } from '../hooks';
 import { ConfirmModal, DatePickerField, MonthFilter } from './common';
-import './Debts.css';
+import {
+  ACTIONS_CELL,
+  CATEGORY_BADGE,
+  LOADING_SPINNER,
+  MOBILE_CARD,
+  MOBILE_CARD_ACTIONS,
+  MOBILE_CARD_AMOUNT,
+  MOBILE_CARD_DATE,
+  MOBILE_CARD_LEFT,
+  MOBILE_CARD_TAGS,
+  MOBILE_CARD_TITLE,
+  mobileIconBadgeClass,
+  PAGE_HEADER,
+  PAGE_SUBTITLE,
+  PAGE_TITLE,
+  PAGE_TITLE_H2,
+  PAGE_VIEW,
+  TABLE,
+  TABLE_CONTAINER,
+  TITLE_CELL,
+  MOBILE_CARDS,
+} from './transaction-list/listStyles';
+import {
+  ACTION_BTN_DELETE,
+  BTN_FILL,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  btnClass,
+  cx,
+  EMPTY_STATE,
+  filterBarClass,
+  FORM_GROUP,
+  FORM_ROW_2COL,
+  HEADER_ACTIONS,
+  MOBILE_ACTION_DELETE,
+  MOBILE_ACTION_EDIT,
+  PAGE_HEADER_BTN,
+  SEARCH_ICON,
+  SEARCH_INPUT,
+  SEARCH_WRAPPER,
+  SPINNER_SECTION,
+  statValueClass,
+  SUMMARY_GRID,
+  SUMMARY_STAT_CARD,
+  SUMMARY_STAT_HEADER,
+  SUMMARY_STAT_SUBTITLE,
+  SUMMARY_STAT_TITLE,
+  TXN_AMOUNT,
+  TXN_DATE,
+  MODAL_BACKDROP,
+  MODAL_CLOSE_BTN,
+  MODAL_FOOTER,
+  MODAL_HEADER,
+  MODAL_PANEL,
+} from './ui';
 
 export default function Debts() {
   const [debts, setDebts] = useState<Debt[]>([]);
@@ -23,6 +78,8 @@ export default function Debts() {
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
   const [isRepayModalOpen, setIsRepayModalOpen] = useState<boolean>(false);
+  const createDialogRef = useModal(isCreateModalOpen, () => setIsCreateModalOpen(false));
+  const repayDialogRef = useModal(isRepayModalOpen, () => setIsRepayModalOpen(false));
   const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
 
   // Create / Edit Form State
@@ -186,57 +243,58 @@ export default function Debts() {
     .reduce((sum, d) => sum + (d.remaining ?? d.totalAmount ?? 0), 0);
 
   return (
-    <div className="transactions-view">
-      <header className="transactions-header animate-fade-in">
-        <div className="transactions-title">
-          <h2>Quản lý Vay & Nợ</h2>
-          <p className="subtitle">Theo dõi khoản vay phải trả và khoản nợ phải thu của bạn</p>
+    <div className={PAGE_VIEW}>
+      <header className={`${PAGE_HEADER} animate-fade-in`}>
+        <div className={PAGE_TITLE}>
+          <h2 className={PAGE_TITLE_H2}>Quản lý Vay & Nợ</h2>
+          <p className={PAGE_SUBTITLE}>Theo dõi khoản vay phải trả và khoản nợ phải thu của bạn</p>
         </div>
-        <div className="header-actions">
-          <button className="btn btn-primary" onClick={() => openCreateModal('PAYABLE')}>
+        <div className={HEADER_ACTIONS}>
+          <button className={PAGE_HEADER_BTN} onClick={() => openCreateModal('PAYABLE')}>
             <Plus size={16} /> Tạo khoản nợ mới
           </button>
         </div>
       </header>
 
       {error && (
-        <div className="error-banner animate-fade-in">
-          <AlertTriangle size={18} className="error-icon" /> {error}
+        <div className="animate-fade-in">
+          <AlertTriangle size={18} /> {error}
         </div>
       )}
 
       {/* Summary Cards Grid */}
-      <div className="summary-cards-grid animate-fade-in">
-        <div className="summary-stat-card accent-expense">
-          <div className="summary-stat-header">
-            <span className="summary-stat-title">Tôi nợ</span>
+      <div className={cx(SUMMARY_GRID, 'animate-fade-in')}>
+        <div className={SUMMARY_STAT_CARD}>
+          <div className={SUMMARY_STAT_HEADER}>
+            <span className={SUMMARY_STAT_TITLE}>Tôi nợ</span>
           </div>
-          <div className="summary-stat-value value-payable">
+          <div className={statValueClass('expense')}>
             {formatCurrency(Math.abs(displayPayable))}
           </div>
-          <div className="summary-stat-subtitle">
+          <div className={SUMMARY_STAT_SUBTITLE}>
             Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}
           </div>
         </div>
 
-        <div className="summary-stat-card accent-income">
-          <div className="summary-stat-header">
-            <span className="summary-stat-title">Người khác nợ tôi</span>
+        <div className={SUMMARY_STAT_CARD}>
+          <div className={SUMMARY_STAT_HEADER}>
+            <span className={SUMMARY_STAT_TITLE}>Người khác nợ tôi</span>
           </div>
-          <div className="summary-stat-value value-receivable">
+          <div className={statValueClass('income')}>
             {formatCurrency(Math.abs(displayReceivable))}
           </div>
-          <div className="summary-stat-subtitle">
+          <div className={SUMMARY_STAT_SUBTITLE}>
             Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}
           </div>
         </div>
       </div>
 
       {/* Filter and Search Bar - 100% Matching Transactions.tsx */}
-      <div className="filter-bar animate-fade-in">
-        <div className="search-input-wrapper">
-          <Search size={16} className="search-icon" />
+      <div className={cx(filterBarClass(), 'animate-fade-in')}>
+        <div className={SEARCH_WRAPPER}>
+          <Search size={16} className={SEARCH_ICON} />
           <input
+            className={SEARCH_INPUT}
             type="text"
             placeholder="Tìm kiếm tiêu đề hoặc ghi chú..."
             value={searchQuery}
@@ -244,7 +302,7 @@ export default function Debts() {
           />
         </div>
 
-        <div className="category-select-wrapper select-wrapper-type">
+        <div className="category-select-wrapper w-full min-w-[180px] flex-1">
           <Select
             options={[
               { value: '', label: 'Tất cả loại nợ' },
@@ -265,19 +323,19 @@ export default function Debts() {
           />
         </div>
 
-        <div className="date-range-filter-col">
+        <div>
           <MonthFilter value={selectedMonth} onChange={setSelectedMonth} />
         </div>
       </div>
 
       {loading ? (
-        <div className="loading-spinner animate-fade-in">
-          <div className="spinner"></div>
+        <div className={`${LOADING_SPINNER} animate-fade-in`}>
+          <div className={SPINNER_SECTION}></div>
           <p>Đang tải danh sách khoản vay...</p>
         </div>
       ) : filteredDebts.length === 0 ? (
         <div
-          className="empty-state animate-fade-in"
+          className={cx(EMPTY_STATE, 'animate-fade-in')}
           style={{ padding: '3rem 1.5rem', textAlign: 'center' }}
         >
           <div
@@ -312,7 +370,7 @@ export default function Debts() {
           </p>
           <button
             onClick={() => openCreateModal('PAYABLE')}
-            className="btn btn-primary"
+            className={BTN_PRIMARY}
             style={{ padding: '0.65rem 1.5rem', minHeight: '42px', fontWeight: 600 }}
           >
             <Plus size={16} /> Tạo khoản nợ mới
@@ -321,15 +379,17 @@ export default function Debts() {
       ) : (
         <>
           {/* Desktop Table View */}
-          <div className="debts-table-container transactions-table-container animate-fade-in">
-            <table className="debts-table transactions-table">
+          <div className={`debts-table-container ${TABLE_CONTAINER} max-w-full animate-fade-in`}>
+            <table
+              className={`debts-table ${TABLE} [&_th]:whitespace-nowrap [&_th]:text-left [&_th]:text-[0.8rem] [&_th]:uppercase [&_th]:tracking-[0.05em] [&_td]:text-[0.875rem]`}
+            >
               <thead>
                 <tr>
                   <th>Tên khoản nợ / Đối tác</th>
                   <th>Loại</th>
-                  <th className="text-right">Tổng số tiền</th>
-                  <th className="text-right">Đã thanh toán</th>
-                  <th className="text-right">Còn lại</th>
+                  <th className="text-right!">Tổng số tiền</th>
+                  <th className="text-right!">Đã thanh toán</th>
+                  <th className="text-right!">Còn lại</th>
                   <th>Ngày vay/cho vay</th>
                   <th>Hạn chót</th>
                   <th>Trạng thái</th>
@@ -345,20 +405,18 @@ export default function Debts() {
 
                   return (
                     <tr key={debt.id}>
-                      <td className="txn-title-cell">
-                        <div className="debt-title-text">{debt.title}</div>
-                        {debt.notes && <div className="debt-notes-text">{debt.notes}</div>}
+                      <td className={TITLE_CELL}>
+                        <div className="max-w-[220px] break-words font-semibold">{debt.title}</div>
+                        {debt.notes && (
+                          <div className="mt-0.5 text-[0.78rem] text-muted">{debt.notes}</div>
+                        )}
                       </td>
                       <td>
-                        <span
-                          className={`txn-category-badge ${
-                            debt.type === 'PAYABLE' ? 'badge-payable' : 'badge-receivable'
-                          }`}
-                        >
+                        <span className={CATEGORY_BADGE}>
                           {debt.type === 'PAYABLE' ? 'Tôi nợ' : 'Phải thu'}
                         </span>
                       </td>
-                      <td className="txn-amount">{formatCurrency(debt.totalAmount)}</td>
+                      <td className={TXN_AMOUNT}>{formatCurrency(debt.totalAmount)}</td>
                       <td className="cell-paid">{formatCurrency(debt.paidAmount)}</td>
                       <td
                         className="cell-remaining"
@@ -369,22 +427,14 @@ export default function Debts() {
                       >
                         {formatCurrency(Math.abs(debt.remaining))}
                       </td>
-                      <td className="txn-date">
+                      <td className={TXN_DATE}>
                         {debt.startDate ? moment(debt.startDate).format('DD/MM/YYYY') : '—'}
                       </td>
-                      <td className="txn-date">
+                      <td className={TXN_DATE}>
                         {debt.dueDate ? moment(debt.dueDate).format('DD/MM/YYYY') : '—'}
                       </td>
                       <td>
-                        <span
-                          className={`txn-category-badge ${
-                            debt.status === 'COMPLETED'
-                              ? 'badge-completed'
-                              : debt.status === 'OVERDUE'
-                                ? 'badge-overdue-status'
-                                : 'badge-pending-status'
-                          }`}
-                        >
+                        <span className={CATEGORY_BADGE}>
                           {debt.status === 'COMPLETED'
                             ? '🎉 Đã xong'
                             : debt.status === 'OVERDUE'
@@ -392,8 +442,8 @@ export default function Debts() {
                               : `Đang nợ (${percent}%)`}
                         </span>
                       </td>
-                      <td className="txn-actions-cell">
-                        <div className="debt-actions-group">
+                      <td className={ACTIONS_CELL}>
+                        <div className="flex items-center gap-2">
                           {debt.status !== 'COMPLETED' && (
                             <button
                               onClick={() => {
@@ -401,7 +451,10 @@ export default function Debts() {
                                 setRepayAmount('');
                                 setIsRepayModalOpen(true);
                               }}
-                              className="btn btn-secondary repay-action-btn"
+                              className={cx(
+                                btnClass('secondary', 'px-[0.85rem] py-[0.45rem] text-[0.85rem]'),
+                                'min-h-9'
+                              )}
                               title="Ghi nhận trả/thu tiền"
                             >
                               <ArrowRightLeft size={14} /> Trả tiền
@@ -409,7 +462,7 @@ export default function Debts() {
                           )}
                           <button
                             onClick={() => handleDelete(debt.id)}
-                            className="action-btn delete-btn"
+                            className={ACTION_BTN_DELETE}
                             aria-label="Xóa khoản vay"
                             title="Xóa"
                           >
@@ -425,28 +478,26 @@ export default function Debts() {
           </div>
 
           {/* Mobile Card View (<768px) */}
-          <div className="transactions-mobile-cards animate-fade-in">
+          <div className={`${MOBILE_CARDS} animate-fade-in`}>
             {filteredDebts.map((debt) => {
               const isPayable = debt.type === 'PAYABLE';
               const percent = Math.min(100, Math.round((debt.paidAmount / debt.totalAmount) * 100));
 
               return (
-                <div key={`m-debt-${debt.id}`} className="transaction-mobile-card">
+                <div key={`m-debt-${debt.id}`} className={MOBILE_CARD}>
                   <div className="mobile-card-top">
-                    <div className="mobile-card-left">
-                      <div
-                        className={`mobile-card-icon-badge ${isPayable ? 'icon-expense' : 'icon-income'}`}
-                      >
+                    <div className={MOBILE_CARD_LEFT}>
+                      <div className={mobileIconBadgeClass(isPayable ? 'expense' : 'income')}>
                         <Handshake size={18} />
                       </div>
                       <div className="mobile-card-info">
-                        <div className="mobile-card-title">{debt.title}</div>
+                        <div className={MOBILE_CARD_TITLE}>{debt.title}</div>
                         {debt.notes && (
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                             {debt.notes}
                           </div>
                         )}
-                        <div className="mobile-card-date">
+                        <div className={MOBILE_CARD_DATE}>
                           <span>
                             {debt.startDate ? moment(debt.startDate).format('DD/MM/YYYY') : '—'}
                             {debt.dueDate
@@ -459,7 +510,7 @@ export default function Debts() {
 
                     <div className="mobile-card-amount-group">
                       <div
-                        className="mobile-card-amount"
+                        className={`${MOBILE_CARD_AMOUNT} text-main`}
                         style={{ color: isPayable ? 'var(--expense)' : 'var(--income)' }}
                       >
                         {formatCurrency(Math.abs(debt.remaining))}
@@ -470,23 +521,9 @@ export default function Debts() {
                     </div>
                   </div>
 
-                  <div className="mobile-card-tags">
-                    <span
-                      className={`txn-category-badge ${
-                        isPayable ? 'badge-payable' : 'badge-receivable'
-                      }`}
-                    >
-                      {isPayable ? 'Tôi nợ' : 'Phải thu'}
-                    </span>
-                    <span
-                      className={`txn-category-badge ${
-                        debt.status === 'COMPLETED'
-                          ? 'badge-completed'
-                          : debt.status === 'OVERDUE'
-                            ? 'badge-overdue-status'
-                            : 'badge-pending-status'
-                      }`}
-                    >
+                  <div className={MOBILE_CARD_TAGS}>
+                    <span className={CATEGORY_BADGE}>{isPayable ? 'Tôi nợ' : 'Phải thu'}</span>
+                    <span className={CATEGORY_BADGE}>
                       {debt.status === 'COMPLETED'
                         ? '🎉 Đã xong'
                         : debt.status === 'OVERDUE'
@@ -495,7 +532,7 @@ export default function Debts() {
                     </span>
                   </div>
 
-                  <div className="mobile-card-actions">
+                  <div className={MOBILE_CARD_ACTIONS}>
                     {debt.status !== 'COMPLETED' && (
                       <button
                         type="button"
@@ -504,7 +541,7 @@ export default function Debts() {
                           setRepayAmount('');
                           setIsRepayModalOpen(true);
                         }}
-                        className="mobile-action-btn edit-btn"
+                        className={MOBILE_ACTION_EDIT}
                         title="Ghi nhận trả/thu tiền"
                       >
                         <ArrowRightLeft size={14} /> Trả tiền
@@ -513,7 +550,7 @@ export default function Debts() {
                     <button
                       type="button"
                       onClick={() => handleDelete(debt.id)}
-                      className="mobile-action-btn delete-btn"
+                      className={MOBILE_ACTION_DELETE}
                       title="Xóa khoản nợ"
                     >
                       <Trash2 size={14} /> Xóa
@@ -527,191 +564,212 @@ export default function Debts() {
       )}
 
       {/* Create Modal */}
-      {isCreateModalOpen && (
-        <div className="modal-backdrop" onClick={() => setIsCreateModalOpen(false)}>
-          <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Tạo khoản nợ mới</h3>
-              <button
-                className="close-btn"
-                onClick={() => setIsCreateModalOpen(false)}
-                aria-label="Đóng"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <form onSubmit={handleCreateSubmit}>
-              <div className="form-group">
-                <label htmlFor="debt-title">Tên khoản nợ / Đối tác</label>
-                <input
-                  id="debt-title"
-                  type="text"
-                  placeholder="Ví dụ: Vay mua xe TPBank, Anh Tuấn..."
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  required
-                />
+      {isCreateModalOpen &&
+        createPortal(
+          <div className={MODAL_BACKDROP} onClick={() => setIsCreateModalOpen(false)}>
+            <div
+              ref={createDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Tạo khoản nợ mới"
+              tabIndex={-1}
+              className={MODAL_PANEL}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className={MODAL_HEADER}>
+                <h3>Tạo khoản nợ mới</h3>
+                <button
+                  className={MODAL_CLOSE_BTN}
+                  onClick={() => setIsCreateModalOpen(false)}
+                  aria-label="Đóng"
+                >
+                  <X size={18} />
+                </button>
               </div>
-
-              <div className="form-row-2col">
-                <div className="form-group">
-                  <label htmlFor="debt-type-select">Loại nghĩa vụ</label>
-                  <Select
-                    id="debt-type-select"
-                    options={[
-                      { value: 'PAYABLE', label: 'Tôi Nợ (Phải Trả)' },
-                      { value: 'RECEIVABLE', label: 'Người Khác Nợ (Phải Thu)' },
-                    ]}
-                    value={
-                      [
-                        { value: 'PAYABLE', label: 'Tôi Nợ (Phải Trả)' },
-                        { value: 'RECEIVABLE', label: 'Người Khác Nợ (Phải Thu)' },
-                      ].find((opt) => opt.value === formType) || null
-                    }
-                    onChange={(option) => {
-                      if (option) setFormType(option.value as DebtType);
-                    }}
-                    classNamePrefix="react-select"
-                    menuPortalTarget={document.body}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="debt-amount">Số tiền gốc (đ)</label>
+              <form onSubmit={handleCreateSubmit}>
+                <div className={FORM_GROUP}>
+                  <label htmlFor="debt-title">Tên khoản nợ / Đối tác</label>
                   <input
-                    id="debt-amount"
+                    id="debt-title"
                     type="text"
-                    placeholder="Ví dụ: 5.000.000"
-                    value={formAmount}
-                    onChange={(e) => handleAmountChange(e.target.value, setFormAmount)}
+                    placeholder="Ví dụ: Vay mua xe TPBank, Anh Tuấn..."
+                    value={formTitle}
+                    onChange={(e) => setFormTitle(e.target.value)}
                     required
                   />
                 </div>
-              </div>
 
-              <div className="form-row-2col">
-                <div className="form-group">
-                  <label htmlFor="debt-startdate">Ngày bắt đầu vay / cho vay</label>
-                  <DatePickerField
-                    id="debt-startdate"
-                    label="Ngày bắt đầu vay / cho vay"
-                    value={formStartDate ? moment(formStartDate).format('YYYY-MM-DD') : ''}
-                    onChange={(value) => {
-                      const date = moment(value, 'YYYY-MM-DD', true);
-                      setFormStartDate(date.isValid() ? date.toDate() : null);
-                    }}
+                <div className={FORM_ROW_2COL}>
+                  <div className={FORM_GROUP}>
+                    <label htmlFor="debt-type-select">Loại nghĩa vụ</label>
+                    <Select
+                      id="debt-type-select"
+                      options={[
+                        { value: 'PAYABLE', label: 'Tôi Nợ (Phải Trả)' },
+                        { value: 'RECEIVABLE', label: 'Người Khác Nợ (Phải Thu)' },
+                      ]}
+                      value={
+                        [
+                          { value: 'PAYABLE', label: 'Tôi Nợ (Phải Trả)' },
+                          { value: 'RECEIVABLE', label: 'Người Khác Nợ (Phải Thu)' },
+                        ].find((opt) => opt.value === formType) || null
+                      }
+                      onChange={(option) => {
+                        if (option) setFormType(option.value as DebtType);
+                      }}
+                      classNamePrefix="react-select"
+                      menuPortalTarget={document.body}
+                    />
+                  </div>
+
+                  <div className={FORM_GROUP}>
+                    <label htmlFor="debt-amount">Số tiền gốc (đ)</label>
+                    <input
+                      id="debt-amount"
+                      type="text"
+                      placeholder="Ví dụ: 5.000.000"
+                      value={formAmount}
+                      onChange={(e) => handleAmountChange(e.target.value, setFormAmount)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className={FORM_ROW_2COL}>
+                  <div className={FORM_GROUP}>
+                    <label htmlFor="debt-startdate">Ngày bắt đầu vay / cho vay</label>
+                    <DatePickerField
+                      id="debt-startdate"
+                      label="Ngày bắt đầu vay / cho vay"
+                      value={formStartDate ? moment(formStartDate).format('YYYY-MM-DD') : ''}
+                      onChange={(value) => {
+                        const date = moment(value, 'YYYY-MM-DD', true);
+                        setFormStartDate(date.isValid() ? date.toDate() : null);
+                      }}
+                    />
+                  </div>
+
+                  <div className={FORM_GROUP}>
+                    <label htmlFor="debt-duedate">Hạn thanh toán</label>
+                    <DatePickerField
+                      id="debt-duedate"
+                      label="Hạn thanh toán"
+                      value={formDueDate ? moment(formDueDate).format('YYYY-MM-DD') : ''}
+                      onChange={(value) => {
+                        const date = moment(value, 'YYYY-MM-DD', true);
+                        setFormDueDate(date.isValid() ? date.toDate() : null);
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className={FORM_GROUP}>
+                  <label htmlFor="debt-notes">Ghi chú</label>
+                  <textarea
+                    id="debt-notes"
+                    rows={2}
+                    placeholder="Ghi chú thêm..."
+                    value={formNotes}
+                    onChange={(e) => setFormNotes(e.target.value)}
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="debt-duedate">Hạn thanh toán</label>
-                  <DatePickerField
-                    id="debt-duedate"
-                    label="Hạn thanh toán"
-                    value={formDueDate ? moment(formDueDate).format('YYYY-MM-DD') : ''}
-                    onChange={(value) => {
-                      const date = moment(value, 'YYYY-MM-DD', true);
-                      setFormDueDate(date.isValid() ? date.toDate() : null);
-                    }}
-                  />
+                <div className={MODAL_FOOTER}>
+                  <button
+                    type="button"
+                    className={cx(BTN_SECONDARY, BTN_FILL)}
+                    onClick={() => setIsCreateModalOpen(false)}
+                  >
+                    Hủy
+                  </button>
+                  <button type="submit" className={cx(BTN_PRIMARY, BTN_FILL)}>
+                    Tạo khoản nợ
+                  </button>
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="debt-notes">Ghi chú</label>
-                <textarea
-                  id="debt-notes"
-                  rows={2}
-                  placeholder="Ghi chú thêm..."
-                  value={formNotes}
-                  onChange={(e) => setFormNotes(e.target.value)}
-                />
-              </div>
-
-              <div className="button-group">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setIsCreateModalOpen(false)}
-                >
-                  Hủy
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Tạo khoản nợ
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Repay Modal */}
-      {isRepayModalOpen && selectedDebt && (
-        <div className="modal-backdrop" onClick={() => setIsRepayModalOpen(false)}>
-          <div className="modal-content animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Ghi nhận trả / thu tiền</h3>
-              <button
-                className="close-btn"
-                onClick={() => setIsRepayModalOpen(false)}
-                aria-label="Đóng"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <form onSubmit={handleRepaySubmit}>
-              <div className="repay-info-box">
-                <div className="repay-info-title">{selectedDebt.title}</div>
-                <div
-                  className="repay-info-remaining"
-                  style={{
-                    color: selectedDebt.type === 'PAYABLE' ? 'var(--expense)' : 'var(--income)',
-                    fontWeight: 600,
-                  }}
-                >
-                  Còn lại: {formatCurrency(Math.abs(selectedDebt.remaining))}
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="repay-amount">Số tiền trả đợt này (đ)</label>
-                <input
-                  id="repay-amount"
-                  type="text"
-                  placeholder={`Ví dụ: ${formatCurrency(selectedDebt.remaining)}`}
-                  value={repayAmount}
-                  onChange={(e) => handleAmountChange(e.target.value, setRepayAmount)}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="repay-notes">Ghi chú đợt thanh toán</label>
-                <input
-                  id="repay-notes"
-                  type="text"
-                  placeholder="VD: Trả đợt 1..."
-                  value={repayNotes}
-                  onChange={(e) => setRepayNotes(e.target.value)}
-                />
-              </div>
-
-              <div className="button-group">
+      {isRepayModalOpen &&
+        selectedDebt &&
+        createPortal(
+          <div className={MODAL_BACKDROP} onClick={() => setIsRepayModalOpen(false)}>
+            <div
+              ref={repayDialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Ghi nhận trả / thu tiền"
+              tabIndex={-1}
+              className={MODAL_PANEL}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className={MODAL_HEADER}>
+                <h3>Ghi nhận trả / thu tiền</h3>
                 <button
-                  type="button"
-                  className="btn btn-secondary"
+                  className={MODAL_CLOSE_BTN}
                   onClick={() => setIsRepayModalOpen(false)}
+                  aria-label="Đóng"
                 >
-                  Hủy
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Xác nhận thanh toán
+                  <X size={18} />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+              <form onSubmit={handleRepaySubmit}>
+                <div className="mb-4 rounded-sm border border-line bg-input p-[0.8rem]">
+                  <div className="font-bold">{selectedDebt.title}</div>
+                  <div
+                    className="mt-[0.2rem] text-[0.85rem] text-primary"
+                    style={{
+                      color: selectedDebt.type === 'PAYABLE' ? 'var(--expense)' : 'var(--income)',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Còn lại: {formatCurrency(Math.abs(selectedDebt.remaining))}
+                  </div>
+                </div>
+
+                <div className={FORM_GROUP}>
+                  <label htmlFor="repay-amount">Số tiền trả đợt này (đ)</label>
+                  <input
+                    id="repay-amount"
+                    type="text"
+                    placeholder={`Ví dụ: ${formatCurrency(selectedDebt.remaining)}`}
+                    value={repayAmount}
+                    onChange={(e) => handleAmountChange(e.target.value, setRepayAmount)}
+                    required
+                  />
+                </div>
+
+                <div className={FORM_GROUP}>
+                  <label htmlFor="repay-notes">Ghi chú đợt thanh toán</label>
+                  <input
+                    id="repay-notes"
+                    type="text"
+                    placeholder="VD: Trả đợt 1..."
+                    value={repayNotes}
+                    onChange={(e) => setRepayNotes(e.target.value)}
+                  />
+                </div>
+
+                <div className={MODAL_FOOTER}>
+                  <button
+                    type="button"
+                    className={cx(BTN_SECONDARY, BTN_FILL)}
+                    onClick={() => setIsRepayModalOpen(false)}
+                  >
+                    Hủy
+                  </button>
+                  <button type="submit" className={cx(BTN_PRIMARY, BTN_FILL)}>
+                    Xác nhận thanh toán
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* Delete Debt Confirm Modal */}
       <ConfirmModal

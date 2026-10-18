@@ -78,66 +78,18 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
 
   return (
     <div className="w-full">
-      <label
-        style={{
-          display: 'block',
-          fontSize: '0.875rem',
-          fontWeight: 500,
-          color: 'var(--text-main)',
-          marginBottom: '0.5rem',
-        }}
-      >
+      <label className="mb-2! block! text-[0.875rem]! font-medium! text-main!">
         Hóa đơn / Chứng từ đính kèm
       </label>
 
       {value ? (
-        <div
-          style={{
-            position: 'relative',
-            width: '100%',
-            height: '140px',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border)',
-            background: 'var(--bg-card)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
-            boxShadow: 'var(--shadow-sm)',
-          }}
-        >
-          <img
-            src={value}
-            alt="Receipt preview"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              padding: '0.5rem',
-            }}
-          />
+        <div className="relative flex h-[140px] w-full items-center justify-center overflow-hidden rounded-md border border-line bg-card shadow-app-sm">
+          <img src={value} alt="Receipt preview" className="size-full object-contain p-2" />
           {!disabled && (
             <button
               type="button"
               onClick={handleRemove}
-              style={{
-                position: 'absolute',
-                top: '0.5rem',
-                right: '0.5rem',
-                padding: '0.35rem',
-                background: 'rgba(244, 63, 94, 0.9)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: 'var(--radius-full)',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                transition: 'all 0.15s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.08)')}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+              className="absolute top-2 right-2 inline-flex cursor-pointer items-center justify-center rounded-full border-none bg-[rgba(244,63,94,0.9)] p-[0.35rem] text-white shadow-[0_2px_6px_rgba(0,0,0,0.3)] transition-all duration-150 ease-[ease] hover:scale-[1.08]"
               title="Xóa ảnh"
             >
               <X size={15} />
@@ -147,78 +99,26 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
       ) : (
         <div
           onClick={() => !disabled && !uploading && fileInputRef.current?.click()}
-          style={{
-            width: '100%',
-            minHeight: '96px',
-            border: '1.5px dashed var(--border)',
-            borderRadius: 'var(--radius-md)',
-            background: disabled || uploading ? 'var(--bg-hover)' : 'var(--bg-card)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1rem',
-            cursor: disabled || uploading ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s ease',
-            color: 'var(--text-muted)',
-          }}
-          onMouseEnter={(e) => {
-            if (!disabled && !uploading) {
-              e.currentTarget.style.borderColor = 'var(--primary)';
-              e.currentTarget.style.background = 'var(--bg-hover)';
-              e.currentTarget.style.boxShadow = '0 0 12px var(--primary-glow)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!disabled && !uploading) {
-              e.currentTarget.style.borderColor = 'var(--border)';
-              e.currentTarget.style.background = 'var(--bg-card)';
-              e.currentTarget.style.boxShadow = 'none';
-            }
-          }}
+          className={`flex min-h-24 w-full flex-col items-center justify-center rounded-md border-[1.5px] border-dashed border-line p-4 text-muted transition-all duration-200 ease-[ease] ${
+            disabled || uploading
+              ? 'cursor-not-allowed bg-hover'
+              : 'cursor-pointer bg-card hover:border-primary hover:bg-hover hover:shadow-[0_0_12px_var(--primary-glow)]'
+          }`}
         >
           {uploading ? (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '0.5rem',
-                color: 'var(--primary)',
-              }}
-            >
+            <div className="flex flex-col items-center gap-2 text-primary">
               <Loader2 className="animate-spin" size={22} />
-              <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>
-                Đang tải ảnh lên máy chủ...
-              </span>
+              <span className="text-[0.8rem] font-medium">Đang tải ảnh lên máy chủ...</span>
             </div>
           ) : (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '0.4rem',
-              }}
-            >
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'var(--bg-hover)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--primary)',
-                }}
-              >
+            <div className="flex flex-col items-center gap-[0.4rem]">
+              <div className="flex size-8 items-center justify-center rounded-sm bg-hover text-primary">
                 <Upload size={16} />
               </div>
-              <span style={{ fontSize: '0.825rem', fontWeight: 500, color: 'var(--text-main)' }}>
+              <span className="text-[0.825rem] font-medium text-main">
                 Bấm để tải ảnh hóa đơn / chứng từ
               </span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              <span className="text-[0.75rem] text-muted">
                 Hỗ trợ PNG, JPEG, WEBP (tối đa 10MB)
               </span>
             </div>
@@ -227,25 +127,14 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            style={{ display: 'none' }}
+            className="hidden"
             onChange={handleFileChange}
             disabled={disabled || uploading}
           />
         </div>
       )}
 
-      {error && (
-        <p
-          style={{
-            marginTop: '0.35rem',
-            fontSize: '0.75rem',
-            color: 'var(--expense)',
-            fontWeight: 500,
-          }}
-        >
-          {error}
-        </p>
-      )}
+      {error && <p className="mt-[0.35rem] text-[0.75rem] font-medium text-expense">{error}</p>}
     </div>
   );
 };

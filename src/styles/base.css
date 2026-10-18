@@ -1,0 +1,137 @@
+/* Element-level base styles. Kept in the base layer so Tailwind utilities
+   (p-4, m-2, ...) override them. Preflight stays off; this is the app's reset. */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background-color: var(--bg-app);
+    color: var(--text-main);
+    touch-action: manipulation;
+    overscroll-behavior-y: none;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  body.light-theme {
+    background-color: var(--bg-app);
+  }
+
+  /* Hide scrollbars (horizontal & vertical) */
+  *::-webkit-scrollbar,
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  * {
+    -ms-overflow-style: none !important; /* IE and Edge */
+    scrollbar-width: none !important; /* Firefox */
+  }
+
+  /* Accessibility Focus-Visible Ring */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  [role='tab']:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  /* Form controls. !important keeps these over component utilities (as before). */
+  select,
+  textarea {
+    border-radius: var(--radius-md) !important;
+  }
+
+  /* 16px stops iOS Safari zooming into a focused field. */
+  @media screen and (max-width: 1024px) {
+    input:not([type='checkbox']):not([type='radio']),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Accessible Checkbox Styling */
+  input[type='checkbox'] {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    accent-color: var(--primary) !important;
+    cursor: pointer !important;
+  }
+
+  :root {
+    --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media screen and (max-width: 1024px) {
+    :root {
+      --input-font-size: 16px;
+    }
+  }
+
+  button svg {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  button,
+  a {
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  table tbody tr {
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  /* Native date/month inputs follow the app theme. */
+  input:is([type='date'], [type='month'], [type='datetime-local']) {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    color-scheme: dark;
+  }
+
+  .light-theme input:is([type='date'], [type='month'], [type='datetime-local']) {
+    color-scheme: light;
+  }
+
+  input::-webkit-date-and-time-value {
+    text-align: left;
+  }
+
+  /* Global reduced-motion kill switch: has to hit every element and pseudo-element,
+     which no per-element motion-reduce: utility can do. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

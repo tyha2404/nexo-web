@@ -23,9 +23,34 @@ import {
 } from '../commons/utils';
 import { useDataEvents, useModal } from '../hooks';
 import { categoryService } from '../services';
-import './Categories.css';
+import { LOADING_SPINNER } from './transaction-list/listStyles';
 import Pagination from './Pagination';
 import { ConfirmModal } from './common';
+import {
+  ACTION_BTN_DELETE,
+  ACTION_BTN_EDIT,
+  BTN_FILL,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  CATEGORIES_LIST,
+  cx,
+  EMPTY_STATE,
+  FORM_CHECK,
+  FORM_CHECK_INPUT,
+  FORM_CHECK_LABEL,
+  FORM_GROUP,
+  GLASS_CARD,
+  SPINNER_SECTION,
+  tabClass,
+  TABS,
+  TABS_NAV,
+  MODAL_BACKDROP,
+  MODAL_CLOSE_BTN,
+  MODAL_FORM_BODY,
+  MODAL_FORM_SHELL_PANEL,
+  MODAL_SHELL_FOOTER,
+  MODAL_SHELL_HEADER,
+} from './ui';
 
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -242,15 +267,15 @@ export default function Categories() {
   }, []);
 
   return (
-    <div className="categories-subview">
+    <div className="categories-subview mx-auto w-full max-w-full p-0">
       {/* Category Type Tabs Switcher (Below Page Title) */}
-      <div className="category-tabs-nav animate-fade-in">
-        <div className="category-tabs" role="tablist" aria-label="Loại danh mục">
+      <div className={`${TABS_NAV} animate-fade-in`}>
+        <div className={TABS} role="tablist" aria-label="Loại danh mục">
           <button
             type="button"
             role="tab"
             aria-selected={activeTab === TransactionType.EXPENSE}
-            className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.EXPENSE ? 'active' : ''}`}
+            className={tabClass(activeTab === TransactionType.EXPENSE)}
             onClick={() => setActiveTab(TransactionType.EXPENSE)}
           >
             <ShoppingBag size={14} />
@@ -260,7 +285,7 @@ export default function Categories() {
             type="button"
             role="tab"
             aria-selected={activeTab === TransactionType.INCOME}
-            className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.INCOME ? 'active' : ''}`}
+            className={tabClass(activeTab === TransactionType.INCOME)}
             onClick={() => setActiveTab(TransactionType.INCOME)}
           >
             <Wallet size={14} />
@@ -270,7 +295,7 @@ export default function Categories() {
             type="button"
             role="tab"
             aria-selected={activeTab === TransactionType.INVESTMENT}
-            className={`category-tab flex items-center gap-1.5 ${activeTab === TransactionType.INVESTMENT ? 'active' : ''}`}
+            className={tabClass(activeTab === TransactionType.INVESTMENT)}
             onClick={() => setActiveTab(TransactionType.INVESTMENT)}
           >
             <TrendingUp size={14} />
@@ -280,26 +305,28 @@ export default function Categories() {
       </div>
 
       {error && (
-        <div className="error-banner animate-fade-in">
-          <AlertTriangle size={18} className="error-icon" /> {error}
+        <div className="animate-fade-in">
+          <AlertTriangle size={18} /> {error}
         </div>
       )}
 
       {/* Main List Section */}
       <div className="categories-single-column animate-fade-in">
-        <div className="glass-card list-card">
-          <div className="list-header-tabs">
-            <h3>Danh mục hiện có ({categories.length})</h3>
+        <div className={GLASS_CARD}>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 pb-3">
+            <h3 className="m-0 mobile:mb-2 mobile:text-[1.05rem]">
+              Danh mục hiện có ({categories.length})
+            </h3>
           </div>
 
           {loading ? (
-            <div className="loading-spinner">
-              <div className="spinner"></div>
+            <div className={LOADING_SPINNER}>
+              <div className={SPINNER_SECTION}></div>
               <p>Đang tải danh mục...</p>
             </div>
           ) : categories.length === 0 ? (
             <div
-              className="empty-state"
+              className={EMPTY_STATE}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -337,7 +364,7 @@ export default function Categories() {
                 </p>
               </div>
               <button
-                className="btn btn-primary"
+                className={BTN_PRIMARY}
                 onClick={openCreateModal}
                 style={{ marginTop: '0.5rem' }}
               >
@@ -346,40 +373,49 @@ export default function Categories() {
             </div>
           ) : (
             <>
-              <div className="categories-list">
+              <div className={CATEGORIES_LIST}>
                 {categories.map((cat) => (
-                  <div key={cat.id} className="category-item-card">
-                    <div className="category-item-info">
-                      <div className="category-item-title-row">
-                        <h4 className="category-name">{cat.name}</h4>
+                  <div
+                    key={cat.id}
+                    className="box-border flex w-full max-w-full items-center justify-between overflow-hidden rounded-lg border border-line bg-card px-5 py-4 text-left transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] [-webkit-backdrop-filter:var(--glass-blur)] [backdrop-filter:var(--glass-blur)] hover:-translate-y-0.5 hover:border-line-hover hover:bg-card-hover hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.25),0_0_0_1px_var(--primary-glow)] mobile:rounded-md mobile:px-[0.65rem] mobile:py-[0.55rem]"
+                  >
+                    <div className="min-w-0 flex-auto pr-2">
+                      <div className="mb-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-[0.35rem]">
+                        <h4 className="m-0 break-words text-[1rem] font-semibold text-main">
+                          {cat.name}
+                        </h4>
                         {(cat.budgetLimit !== undefined || cat.excludeFromAverageDaily) && (
-                          <div className="category-meta-tags">
+                          <div className="inline-flex flex-wrap items-center gap-[0.35rem]">
                             {cat.budgetLimit !== undefined && (
-                              <span className="category-limit-tag">
+                              <span className="whitespace-nowrap rounded-sm border border-line bg-input px-[0.45rem] py-[0.15rem] text-[0.72rem] font-medium text-muted">
                                 Hạn mức: {formatCurrency(cat.budgetLimit)}
                               </span>
                             )}
                             {cat.excludeFromAverageDaily && (
-                              <span className="exclude-avg-badge">
-                                <span className="badge-text-desktop">
+                              <span className="inline-flex shrink-0 items-center whitespace-nowrap [word-break:keep-all] rounded-full bg-[var(--bg-warning,rgba(245,158,11,0.15))] px-[0.45rem] py-[0.15rem] text-[0.7rem] font-semibold text-[var(--text-warning,#d97706)]">
+                                <span className="inline mobile:hidden">
                                   Không tính vào trung bình ngày
                                 </span>
-                                <span className="badge-text-mobile">Không tính TB ngày</span>
+                                <span className="hidden mobile:inline">Không tính TB ngày</span>
                               </span>
                             )}
                           </div>
                         )}
                       </div>
                       {cat.description ? (
-                        <p className="category-item-desc">{cat.description}</p>
+                        <p className="m-0 line-clamp-2 text-[0.875rem] text-muted mobile:hidden">
+                          {cat.description}
+                        </p>
                       ) : (
-                        <p className="category-item-desc no-desc">Không có mô tả</p>
+                        <p className="m-0 line-clamp-2 text-[0.875rem] italic text-muted opacity-50 mobile:hidden">
+                          Không có mô tả
+                        </p>
                       )}
                     </div>
-                    <div className="category-item-actions">
+                    <div className="flex gap-2">
                       <button
                         onClick={() => startEdit(cat)}
-                        className="action-btn edit-btn"
+                        className={ACTION_BTN_EDIT}
                         aria-label={`Chỉnh sửa danh mục ${cat.name}`}
                         title={`Chỉnh sửa danh mục ${cat.name}`}
                       >
@@ -387,7 +423,7 @@ export default function Categories() {
                       </button>
                       <button
                         onClick={() => handleDelete(cat.id, cat.name)}
-                        className="action-btn delete-btn"
+                        className={ACTION_BTN_DELETE}
                         aria-label={`Xóa danh mục ${cat.name}`}
                         title={`Xóa danh mục ${cat.name}`}
                       >
@@ -417,28 +453,33 @@ export default function Categories() {
       {isModalOpen &&
         // Portal: the tab container is animated (transform), which would trap position: fixed
         createPortal(
-          <div className="modal-backdrop app-modal-backdrop" onClick={closeModal}>
+          <div className={MODAL_BACKDROP} onClick={closeModal}>
             <div
               ref={categoryDialogRef}
               role="dialog"
               aria-modal="true"
               aria-labelledby="category-modal-title"
               tabIndex={-1}
-              className="modal-content modal-form-shell animate-scale-in"
+              className={MODAL_FORM_SHELL_PANEL}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="modal-header">
+              <div className={MODAL_SHELL_HEADER}>
                 <h3 id="category-modal-title">
                   {editingCategory ? 'Sửa danh mục' : 'Thêm danh mục'}
                 </h3>
-                <button type="button" className="close-btn" onClick={closeModal} aria-label="Đóng">
+                <button
+                  type="button"
+                  className={MODAL_CLOSE_BTN}
+                  onClick={closeModal}
+                  aria-label="Đóng"
+                >
                   <X size={18} />
                 </button>
               </div>
               {editingCategory ? (
                 <form onSubmit={handleUpdate}>
-                  <div className="modal-form-body min-h-0 overflow-y-auto overscroll-contain">
-                    <div className="form-group">
+                  <div className={MODAL_FORM_BODY}>
+                    <div className={FORM_GROUP}>
                       <label htmlFor="edit-name">Tên danh mục</label>
                       <input
                         id="edit-name"
@@ -449,7 +490,7 @@ export default function Categories() {
                         required
                       />
                     </div>
-                    <div className="form-group">
+                    <div className={FORM_GROUP}>
                       <label htmlFor="edit-type">Loại danh mục</label>
                       <Select
                         id="edit-type"
@@ -467,7 +508,7 @@ export default function Categories() {
                     </div>
                     {editType === TransactionType.EXPENSE && (
                       <>
-                        <div className="form-group">
+                        <div className={FORM_GROUP}>
                           <label htmlFor="edit-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
                           <input
                             id="edit-budget"
@@ -477,11 +518,12 @@ export default function Categories() {
                             placeholder="Ví dụ: 5.000.000"
                           />
                         </div>
-                        <div className="form-group form-check">
-                          <label className="checkbox-label">
+                        <div className={FORM_CHECK}>
+                          <label className={FORM_CHECK_LABEL}>
                             <input
                               id="edit-exclude-avg"
                               type="checkbox"
+                              className={FORM_CHECK_INPUT}
                               checked={editExcludeFromAverageDaily}
                               onChange={(e) => setEditExcludeFromAverageDaily(e.target.checked)}
                             />
@@ -490,7 +532,7 @@ export default function Categories() {
                         </div>
                       </>
                     )}
-                    <div className="form-group">
+                    <div className={FORM_GROUP}>
                       <label htmlFor="edit-desc">Mô tả</label>
                       <textarea
                         id="edit-desc"
@@ -501,19 +543,23 @@ export default function Categories() {
                       />
                     </div>
                   </div>
-                  <div className="button-group">
-                    <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                  <div className={MODAL_SHELL_FOOTER}>
+                    <button
+                      type="button"
+                      className={cx(BTN_SECONDARY, BTN_FILL)}
+                      onClick={closeModal}
+                    >
                       Hủy
                     </button>
-                    <button type="submit" className="btn btn-primary">
+                    <button type="submit" className={cx(BTN_PRIMARY, BTN_FILL)}>
                       Lưu danh mục
                     </button>
                   </div>
                 </form>
               ) : (
                 <form onSubmit={handleCreate}>
-                  <div className="modal-form-body min-h-0 overflow-y-auto overscroll-contain">
-                    <div className="form-group">
+                  <div className={MODAL_FORM_BODY}>
+                    <div className={FORM_GROUP}>
                       <label htmlFor="new-name">Tên danh mục</label>
                       <input
                         id="new-name"
@@ -524,7 +570,7 @@ export default function Categories() {
                         required
                       />
                     </div>
-                    <div className="form-group">
+                    <div className={FORM_GROUP}>
                       <label htmlFor="new-type">Loại danh mục</label>
                       <Select
                         id="new-type"
@@ -542,7 +588,7 @@ export default function Categories() {
                     </div>
                     {type === TransactionType.EXPENSE && (
                       <>
-                        <div className="form-group">
+                        <div className={FORM_GROUP}>
                           <label htmlFor="new-budget">Hạn mức chi tiêu hàng tháng (đ)</label>
                           <input
                             id="new-budget"
@@ -552,11 +598,12 @@ export default function Categories() {
                             placeholder="Ví dụ: 5.000.000"
                           />
                         </div>
-                        <div className="form-group form-check">
-                          <label className="checkbox-label">
+                        <div className={FORM_CHECK}>
+                          <label className={FORM_CHECK_LABEL}>
                             <input
                               id="new-exclude-avg"
                               type="checkbox"
+                              className={FORM_CHECK_INPUT}
                               checked={excludeFromAverageDaily}
                               onChange={(e) => setExcludeFromAverageDaily(e.target.checked)}
                             />
@@ -565,7 +612,7 @@ export default function Categories() {
                         </div>
                       </>
                     )}
-                    <div className="form-group">
+                    <div className={FORM_GROUP}>
                       <label htmlFor="new-desc">Mô tả</label>
                       <textarea
                         id="new-desc"
@@ -576,11 +623,15 @@ export default function Categories() {
                       />
                     </div>
                   </div>
-                  <div className="button-group">
-                    <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                  <div className={MODAL_SHELL_FOOTER}>
+                    <button
+                      type="button"
+                      className={cx(BTN_SECONDARY, BTN_FILL)}
+                      onClick={closeModal}
+                    >
                       Hủy
                     </button>
-                    <button type="submit" className="btn btn-primary">
+                    <button type="submit" className={cx(BTN_PRIMARY, BTN_FILL)}>
                       Thêm danh mục
                     </button>
                   </div>

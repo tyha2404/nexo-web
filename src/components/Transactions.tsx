@@ -24,7 +24,27 @@ import {
   TransactionTypeIcon,
   type TransactionListProps,
 } from './transaction-list';
-import './Transactions.css';
+import {
+  PAGE_HEADER,
+  PAGE_SUBTITLE,
+  PAGE_TITLE,
+  PAGE_TITLE_H2,
+  PAGE_VIEW,
+} from './transaction-list/listStyles';
+import {
+  btnClass,
+  cx,
+  EMPTY_STATE,
+  FILTER_FULL_ROW,
+  filterBarClass,
+  SEARCH_ICON,
+  SEARCH_INPUT,
+  SEARCH_WRAPPER,
+  SKELETON,
+  tabClass,
+  TABS,
+  TABS_NAV,
+} from './ui';
 
 export interface TransactionsProps {
   type?: TransactionType;
@@ -271,7 +291,7 @@ export default function Transactions({
             {original && (
               <button
                 type="button"
-                className="toast-undo-btn"
+                className="ml-3 cursor-pointer rounded-sm border-none bg-primary px-[0.6rem] py-[0.2rem] text-[0.8rem] font-semibold text-white transition-all duration-200 ease-[ease] hover:scale-[1.03] hover:bg-primary-hover hover:opacity-90"
                 onClick={() => {
                   closeToast();
                   void restoreTransaction(original);
@@ -322,28 +342,30 @@ export default function Transactions({
     setCurrentPage(1);
   };
 
+  const isInvestment = activeType === TransactionType.INVESTMENT;
+
   return (
-    <div className="transactions-view">
+    <div className={PAGE_VIEW}>
       {/* 1. Standard Header with Action */}
-      <header className="transactions-header animate-fade-in">
-        <div className="transactions-title">
-          <h2>
+      <header className={`${PAGE_HEADER} animate-fade-in`}>
+        <div className={PAGE_TITLE}>
+          <h2 className={PAGE_TITLE_H2}>
             {activeType === TransactionType.INCOME
               ? 'Quản lý Thu nhập'
               : activeType === TransactionType.INVESTMENT
                 ? 'Quản lý Đầu tư'
                 : 'Quản lý Chi tiêu'}
           </h2>
-          <p className="subtitle">
+          <p className={PAGE_SUBTITLE}>
             Theo dõi và quản lý các khoản {getTypeLabel(activeType)} của bạn
           </p>
         </div>
       </header>
 
       {/* 2. Transaction Type Segmented Tabs Switcher (Below Page Title) */}
-      <div className="category-tabs-nav animate-fade-in">
+      <div className={`${TABS_NAV} animate-fade-in`}>
         <div
-          className="category-tabs"
+          className={TABS}
           role="tablist"
           aria-label="Phân loại giao dịch (Chi tiêu, Thu nhập, Đầu tư)"
         >
@@ -351,9 +373,7 @@ export default function Transactions({
             type="button"
             role="tab"
             aria-selected={activeType === TransactionType.EXPENSE}
-            className={`category-tab flex items-center gap-1.5 ${
-              activeType === TransactionType.EXPENSE ? 'active' : ''
-            }`}
+            className={tabClass(activeType === TransactionType.EXPENSE)}
             onClick={() => handleTabSwitch(TransactionType.EXPENSE)}
           >
             <TransactionTypeIcon type={TransactionType.EXPENSE} size={14} />
@@ -364,9 +384,7 @@ export default function Transactions({
             type="button"
             role="tab"
             aria-selected={activeType === TransactionType.INCOME}
-            className={`category-tab flex items-center gap-1.5 ${
-              activeType === TransactionType.INCOME ? 'active' : ''
-            }`}
+            className={tabClass(activeType === TransactionType.INCOME)}
             onClick={() => handleTabSwitch(TransactionType.INCOME)}
           >
             <TransactionTypeIcon type={TransactionType.INCOME} size={14} />
@@ -377,9 +395,7 @@ export default function Transactions({
             type="button"
             role="tab"
             aria-selected={activeType === TransactionType.INVESTMENT}
-            className={`category-tab flex items-center gap-1.5 ${
-              activeType === TransactionType.INVESTMENT ? 'active' : ''
-            }`}
+            className={tabClass(activeType === TransactionType.INVESTMENT)}
             onClick={() => handleTabSwitch(TransactionType.INVESTMENT)}
           >
             <TransactionTypeIcon type={TransactionType.INVESTMENT} size={14} />
@@ -389,8 +405,8 @@ export default function Transactions({
       </div>
 
       {error && (
-        <div className="error-banner animate-fade-in">
-          <AlertTriangle size={18} className="error-icon" /> {error}
+        <div className="animate-fade-in">
+          <AlertTriangle size={18} /> {error}
         </div>
       )}
 
@@ -402,10 +418,11 @@ export default function Transactions({
       />
 
       {/* 4. Filter and Search controls */}
-      <div className="filter-bar animate-fade-in">
-        <div className="search-input-wrapper">
-          <Search size={16} className="search-icon" />
+      <div className={cx(filterBarClass(isInvestment), 'animate-fade-in')}>
+        <div className={SEARCH_WRAPPER}>
+          <Search size={16} className={SEARCH_ICON} />
           <input
+            className={SEARCH_INPUT}
             type="text"
             placeholder="Tìm kiếm theo tiêu đề..."
             value={searchQuery}
@@ -414,7 +431,7 @@ export default function Transactions({
             }}
           />
         </div>
-        <div className="category-select-wrapper">
+        <div className="category-select-wrapper w-full">
           <Select
             options={[
               { value: '', label: 'Tất cả Danh mục' },
@@ -436,8 +453,8 @@ export default function Transactions({
             menuPortalTarget={document.body}
           />
         </div>
-        {activeType === TransactionType.INVESTMENT && (
-          <div className="status-select-wrapper">
+        {isInvestment && (
+          <div className="status-select-wrapper w-full">
             <Select
               options={INVESTMENT_STATUS_FILTER_OPTIONS}
               value={
@@ -456,7 +473,7 @@ export default function Transactions({
             />
           </div>
         )}
-        <div className="date-range-filter-col">
+        <div className={isInvestment ? FILTER_FULL_ROW : undefined}>
           <MonthFilter
             value={selectedMonth}
             onChange={(mStr) => {
@@ -469,16 +486,16 @@ export default function Transactions({
 
       {/* 5. Transactions Table (Desktop) & Cards (Mobile) */}
       {loading ? (
-        <div className="txn-skeleton animate-fade-in" aria-busy="true">
-          <div className="skeleton txn-skeleton-row" />
-          <div className="skeleton txn-skeleton-row" />
-          <div className="skeleton txn-skeleton-row" />
-          <div className="skeleton txn-skeleton-row" />
-          <div className="skeleton txn-skeleton-row" />
-          <div className="skeleton txn-skeleton-row" />
+        <div className="animate-fade-in" aria-busy="true">
+          <div className={SKELETON} />
+          <div className={SKELETON} />
+          <div className={SKELETON} />
+          <div className={SKELETON} />
+          <div className={SKELETON} />
+          <div className={SKELETON} />
         </div>
       ) : filteredTransactions.length === 0 ? (
-        <div className="empty-state animate-fade-in px-6! py-12! text-center!">
+        <div className={cx(EMPTY_STATE, 'animate-fade-in')}>
           <div className="mb-3 flex justify-center text-muted">
             <Receipt size={44} className="empty-icon" />
           </div>
@@ -492,7 +509,7 @@ export default function Transactions({
           <button
             type="button"
             onClick={openAddModal}
-            className="btn btn-primary min-h-[42px]! px-6! py-[0.65rem]! font-semibold!"
+            className={cx(btnClass('primary', 'px-6 py-[0.65rem] text-[0.9rem]'), 'min-h-[42px]')}
           >
             <Plus size={16} /> Thêm {getTypeLabel(activeType)} ngay
           </button>

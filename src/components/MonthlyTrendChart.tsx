@@ -11,7 +11,23 @@ import {
 } from 'recharts';
 import type { MonthlyTrendItem } from '../commons/types';
 import { formatCompactCurrency, formatCurrency } from '../commons/utils';
-import './MonthlyTrendChart.css';
+import {
+  CARD_SECTION_HEADER,
+  CARD_TITLE,
+  CARD_TITLE_WRAP,
+  cx,
+  DASHBOARD_CARD,
+  SPINNER_MICRO,
+} from './ui';
+
+const dotCls = 'inline-block h-[7px] w-[7px] rounded-full';
+const emptyCls = 'flex h-[200px] items-center justify-center text-[0.875rem] text-muted';
+const filterBtnCls = (active: boolean) =>
+  `inline-flex cursor-pointer items-center gap-[0.4rem] rounded-sm border border-solid px-[0.65rem] py-[0.3rem] text-[0.775rem] whitespace-nowrap transition-all duration-150 mobile:justify-center mobile:px-1 mobile:text-center mobile:text-[0.725rem] ${
+    active
+      ? 'border-line-hover bg-card font-semibold text-main shadow-app-sm'
+      : 'border-transparent bg-transparent font-medium text-muted line-through opacity-45 hover:bg-hover hover:text-main'
+  }`;
 
 interface MonthlyTrendChartProps {
   items: MonthlyTrendItem[];
@@ -34,16 +50,23 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label })
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div className="trend-tooltip">
-      <div className="trend-tooltip-title">Tháng {label}</div>
-      <div className="trend-tooltip-list">
+    <div className="min-w-[190px] rounded-md border border-line bg-card px-[0.9rem] py-3 shadow-app-md [backdrop-filter:var(--glass-blur)]">
+      <div className="mb-2 border-b border-line pb-[0.35rem] text-[0.8rem] font-semibold text-muted">
+        Tháng {label}
+      </div>
+      <div className="flex flex-col gap-[0.35rem]">
         {payload.map((entry) => (
-          <div key={entry.dataKey} className="trend-tooltip-row">
-            <span className="trend-tooltip-label">
-              <span className="trend-dot-indicator" style={{ backgroundColor: entry.color }} />
+          <div
+            key={entry.dataKey}
+            className="flex items-center justify-between gap-3 text-[0.8rem]"
+          >
+            <span className="flex items-center gap-[0.4rem] text-muted">
+              <span className={dotCls} style={{ backgroundColor: entry.color }} />
               {entry.name}:
             </span>
-            <span className="trend-tooltip-value">{formatCurrency(entry.value || 0)}</span>
+            <span className="font-mono font-semibold text-main">
+              {formatCurrency(entry.value || 0)}
+            </span>
           </div>
         ))}
       </div>
@@ -69,14 +92,14 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
 
   if (loading) {
     return (
-      <div className="glass-card dashboard-card monthly-trend-card">
-        <div className="card-section-header">
-          <div className="card-title-wrap">
-            <h3 className="clickable-title">Xu hướng Chi tiêu & Thu nhập (12 Tháng)</h3>
+      <div className={cx(DASHBOARD_CARD, 'mb-3 w-full')}>
+        <div className={CARD_SECTION_HEADER}>
+          <div className={CARD_TITLE_WRAP}>
+            <h3 className={CARD_TITLE}>Xu hướng Chi tiêu & Thu nhập (12 Tháng)</h3>
           </div>
         </div>
-        <div className="trend-empty-state">
-          <div className="spinner-micro" style={{ width: 20, height: 20 }} />
+        <div className={emptyCls}>
+          <div className={cx(SPINNER_MICRO, 'size-5')} />
         </div>
       </div>
     );
@@ -89,57 +112,60 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
   }));
 
   return (
-    <div className="glass-card dashboard-card monthly-trend-card animate-fade-in">
-      <div className="card-section-header trend-card-header">
-        <div className="trend-title-container">
-          <div className="card-title-wrap">
-            <h3 className="clickable-title">Xu hướng Chi tiêu & Thu nhập (12 Tháng)</h3>
+    <div className={cx(DASHBOARD_CARD, 'animate-fade-in mb-3 w-full')}>
+      <div className={cx(CARD_SECTION_HEADER, 'flex-wrap gap-3 mobile:flex-col mobile:gap-2')}>
+        <div className="flex flex-col gap-[0.2rem]">
+          <div className={CARD_TITLE_WRAP}>
+            <h3 className={CARD_TITLE}>Xu hướng Chi tiêu & Thu nhập (12 Tháng)</h3>
           </div>
-          <p className="trend-card-subtitle">
-            Chi tiêu trung bình: <strong>{formatCurrency(averageExpense)}/tháng</strong>
+          <p className="m-0 text-[0.8rem] text-muted">
+            Chi tiêu trung bình:{' '}
+            <strong className="font-mono font-semibold text-main">
+              {formatCurrency(averageExpense)}/tháng
+            </strong>
           </p>
         </div>
 
         {/* Legend / Filter Controls */}
-        <div className="trend-legend-controls">
+        <div className="inline-flex flex-wrap items-center gap-[2px] rounded-sm border border-line bg-input p-[2px] mobile:grid mobile:w-full mobile:grid-cols-[repeat(4,1fr)] mobile:max-[481px]:grid-cols-[repeat(2,1fr)]">
           <button
             type="button"
             onClick={() => toggleSeries('expense')}
-            className={`trend-filter-btn ${visibleSeries.expense ? 'active' : 'inactive'}`}
+            className={filterBtnCls(visibleSeries.expense)}
             title="Bật/tắt cột Chi tiêu"
           >
-            <span className="trend-dot-indicator bar-dot" style={{ background: '#6366f1' }} />
+            <span className={`${dotCls} rounded-xs`} style={{ background: '#6366f1' }} />
             Chi tiêu
           </button>
 
           <button
             type="button"
             onClick={() => toggleSeries('income')}
-            className={`trend-filter-btn ${visibleSeries.income ? 'active' : 'inactive'}`}
+            className={filterBtnCls(visibleSeries.income)}
             title="Bật/tắt đường Thu nhập"
           >
-            <span className="trend-dot-indicator" style={{ background: '#10b981' }} />
+            <span className={dotCls} style={{ background: '#10b981' }} />
             Thu nhập
           </button>
 
           <button
             type="button"
             onClick={() => toggleSeries('target')}
-            className={`trend-filter-btn ${visibleSeries.target ? 'active' : 'inactive'}`}
+            className={filterBtnCls(visibleSeries.target)}
             title="Bật/tắt đường Ngân sách"
           >
-            <span className="trend-dot-indicator" style={{ background: '#f59e0b' }} />
+            <span className={dotCls} style={{ background: '#f59e0b' }} />
             Ngân sách
           </button>
 
           <button
             type="button"
             onClick={() => toggleSeries('avgExpense')}
-            className={`trend-filter-btn ${visibleSeries.avgExpense ? 'active' : 'inactive'}`}
+            className={filterBtnCls(visibleSeries.avgExpense)}
             title="Bật/tắt đường Chi tiêu Trung bình"
           >
             <span
-              className="trend-dot-indicator"
+              className={dotCls}
               style={{ background: '#94a3b8', borderRadius: 0, height: 2, width: 8 }}
             />
             TB Chi tiêu
@@ -147,9 +173,9 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
         </div>
       </div>
 
-      <div className="trend-chart-container">
+      <div className="relative h-[300px] w-full mobile:h-[250px]">
         {chartData.length === 0 ? (
-          <div className="trend-empty-state">Chưa có dữ liệu giao dịch 12 tháng qua</div>
+          <div className={emptyCls}>Chưa có dữ liệu giao dịch 12 tháng qua</div>
         ) : (
           <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>

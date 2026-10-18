@@ -1,8 +1,14 @@
 import { Tags, Target } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Categories from './Categories';
-import './Planning.css';
 import Targets from './Targets';
+import {
+  PAGE_HEADER,
+  PAGE_SUBTITLE,
+  PAGE_TITLE,
+  PAGE_TITLE_H2,
+} from './transaction-list/listStyles';
+import { HEADER_ACTIONS, PAGE_HEADER_BTN, TABS_NAV, TABS_UNDERLINE, tabClass } from './ui';
 
 export type PlanningSubTab = 'targets' | 'categories';
 
@@ -30,20 +36,20 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
   };
 
   return (
-    <div className="planning-hub-container">
+    <div className="planning-hub-container mx-auto flex w-full max-w-full flex-col gap-0 p-0">
       {/* 1. Planning Page Header with Action Button */}
-      <header className="transactions-header animate-fade-in">
-        <div className="transactions-title">
-          <h2>Kế hoạch & Mục tiêu</h2>
-          <p className="subtitle">
+      <header className={`${PAGE_HEADER} animate-fade-in`}>
+        <div className={PAGE_TITLE}>
+          <h2 className={PAGE_TITLE_H2}>Kế hoạch & Mục tiêu</h2>
+          <p className={PAGE_SUBTITLE}>
             Thiết lập hạn mức ngân sách, mục tiêu đầu tư và danh mục thu chi tài chính
           </p>
         </div>
-        <div className="header-actions">
+        <div className={HEADER_ACTIONS}>
           {activeSubTab === 'targets' ? (
             <button
               type="button"
-              className="btn btn-primary"
+              className={PAGE_HEADER_BTN}
               onClick={() => window.dispatchEvent(new CustomEvent('open-add-target-modal'))}
             >
               <Target size={16} /> Thêm mục tiêu
@@ -51,7 +57,7 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
           ) : (
             <button
               type="button"
-              className="btn btn-primary"
+              className={PAGE_HEADER_BTN}
               onClick={() => window.dispatchEvent(new CustomEvent('open-add-category-modal'))}
             >
               <Tags size={16} /> Tạo danh mục
@@ -61,13 +67,13 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
       </header>
 
       {/* 2. Hub Navigation Segmented Tabs (Below Page Title) */}
-      <div className="category-tabs-nav planning-hub-nav animate-fade-in">
-        <div className="category-tabs" role="tablist" aria-label="Phân mục Kế hoạch">
+      <div className={`${TABS_NAV} animate-fade-in`}>
+        <div className={TABS_UNDERLINE} role="tablist" aria-label="Phân mục Kế hoạch">
           <button
             type="button"
             role="tab"
             aria-selected={activeSubTab === 'targets'}
-            className={`category-tab flex items-center gap-1.5 ${activeSubTab === 'targets' ? 'active' : ''}`}
+            className={tabClass(activeSubTab === 'targets', 'underline')}
             onClick={() => handleTabChange('targets')}
           >
             <Target size={14} />
@@ -78,7 +84,7 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
             type="button"
             role="tab"
             aria-selected={activeSubTab === 'categories'}
-            className={`category-tab flex items-center gap-1.5 ${activeSubTab === 'categories' ? 'active' : ''}`}
+            className={tabClass(activeSubTab === 'categories', 'underline')}
             onClick={() => handleTabChange('categories')}
           >
             <Tags size={14} />
@@ -88,7 +94,7 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
       </div>
 
       {/* 3. Sub-view Content Area */}
-      <div className="planning-hub-content animate-fade-in" key={activeSubTab}>
+      <div className="w-full animate-fade-in" key={activeSubTab}>
         {activeSubTab === 'targets' ? <Targets /> : <Categories />}
       </div>
     </div>

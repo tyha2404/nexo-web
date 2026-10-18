@@ -20,7 +20,6 @@ import {
   walletService,
 } from '../services';
 import type { DebtSummary } from '../types/debt';
-import './Dashboard.css';
 const MonthlyTrendChart = lazy(() =>
   import('./MonthlyTrendChart').then((module) => ({ default: module.MonthlyTrendChart }))
 );
@@ -32,6 +31,7 @@ import {
   RecentTransactionsCard,
   SecondaryStatsSection,
 } from './dashboard-cards';
+import { BTN_SECONDARY, cx, DASHBOARD_MAIN_GRID } from './ui';
 
 export { getCategoryIcon };
 
@@ -173,26 +173,30 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   }, []);
 
   return (
-    <div className="dashboard-container animate-fade-in">
+    <div className="animate-fade-in mx-auto box-border w-full max-w-full p-0">
       {/* 1. Dashboard Header & Period Switcher */}
-      <div className="dashboard-header animate-fade-in">
+      <div className="animate-fade-in mb-[0.85rem] flex flex-wrap items-center justify-between gap-3 text-left mobile:mb-3 mobile:flex-col mobile:items-stretch mobile:gap-[0.65rem]">
         <div className="dashboard-title-group">
-          <h2>Tổng quan Tài chính</h2>
-          <p className="subtitle">Dòng tiền & phân tích thông minh thời gian thực</p>
+          <h2 className="m-0 mb-[0.15rem] text-[1.5rem] font-bold tracking-[-0.025em] text-main mobile:mb-0 mobile:text-[1.15rem]">
+            Tổng quan Tài chính
+          </h2>
+          <p className="subtitle m-0 text-[0.85rem] font-normal text-muted mobile:hidden">
+            Dòng tiền & phân tích thông minh thời gian thực
+          </p>
         </div>
 
         <MonthFilter value={selectedMonth} onChange={(newMonth) => setSelectedMonth(newMonth)} />
       </div>
 
       {error && (
-        <div className="error-banner animate-fade-in" style={{ marginBottom: '1.25rem' }}>
+        <div className="animate-fade-in" style={{ marginBottom: '1.25rem' }}>
           <div className="flex items-center gap-2">
             <AlertCircle size={18} />
             <span>{error}</span>
           </div>
           <button
             onClick={() => setRefreshKey((key) => key + 1)}
-            className="btn btn-secondary btn-retry"
+            className={BTN_SECONDARY}
             style={{ marginLeft: 'auto' }}
           >
             Thử lại
@@ -226,7 +230,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           )}
 
           {/* 3. Analytics Main Grid: Category Breakdown & Recent Transactions */}
-          <div className="dashboard-main-grid animate-fade-in">
+          <div className={cx(DASHBOARD_MAIN_GRID, 'animate-fade-in')}>
             {/* Left: MoM Spending & Category Comparison */}
             <CategoryMomCard
               selectedMonth={selectedMonth}

@@ -23,8 +23,13 @@ export function useModal(open: boolean, onClose: () => void) {
     const rootStyle = document.documentElement.style;
     const previousViewportHeight = rootStyle.getPropertyValue('--modal-viewport-height');
     const previousViewportTop = rootStyle.getPropertyValue('--modal-viewport-top');
+    const previousViewportBottom = rootStyle.getPropertyValue('--modal-viewport-bottom');
     const viewport = window.visualViewport;
     const resize = () => {
+      rootStyle.setProperty(
+        '--modal-viewport-bottom',
+        `${Math.max(0, window.innerHeight - (viewport?.height ?? window.innerHeight) - (viewport?.offsetTop ?? 0))}px`
+      );
       document.documentElement.style.setProperty(
         '--modal-viewport-height',
         `${viewport?.height ?? window.innerHeight}px`
@@ -35,9 +40,10 @@ export function useModal(open: boolean, onClose: () => void) {
       );
     };
     resize();
+    window.addEventListener('resize', resize);
     viewport?.addEventListener('resize', resize);
     viewport?.addEventListener('scroll', resize);
-    const frame = requestAnimationFrame(() => dialogRef.current?.focus());
+    const frame = requestAnimationFrame(() => dialogRef.current?.focus({ preventScroll: true }));
     const keydown = (event: KeyboardEvent) => {
       const layers = document.querySelectorAll('[data-modal-layer="true"]');
       if (layers.length && layers[layers.length - 1] !== dialog) return;
@@ -75,9 +81,13 @@ export function useModal(open: boolean, onClose: () => void) {
     return () => {
       if (dialog) delete dialog.dataset.modalLayer;
       cancelAnimationFrame(frame);
+      window.removeEventListener('resize', resize);
       viewport?.removeEventListener('resize', resize);
       viewport?.removeEventListener('scroll', resize);
       document.removeEventListener('keydown', keydown);
+      if (previousViewportBottom)
+        rootStyle.setProperty('--modal-viewport-bottom', previousViewportBottom);
+      else rootStyle.removeProperty('--modal-viewport-bottom');
       if (previousViewportHeight)
         rootStyle.setProperty('--modal-viewport-height', previousViewportHeight);
       else rootStyle.removeProperty('--modal-viewport-height');

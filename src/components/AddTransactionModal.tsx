@@ -17,6 +17,21 @@ import {
 import { categoryService, transactionService } from '../services';
 import type { CreateTransactionDTO } from '../services';
 import { DatePickerField, ReceiptUploader } from './common';
+import {
+  BTN_FILL,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
+  FORM_GROUP,
+  TABS,
+  cx,
+  tabClass,
+  MODAL_BACKDROP,
+  MODAL_CLOSE_BTN,
+  MODAL_FORM_BODY,
+  MODAL_FORM_SHELL_PANEL,
+  MODAL_SHELL_FOOTER,
+  MODAL_SHELL_HEADER,
+} from './ui';
 
 const INVESTMENT_STATUS_OPTIONS = [
   { value: InvestmentStatus.HOLDING, label: 'Đang đầu tư' },
@@ -193,23 +208,23 @@ export default function AddTransactionModal({
         : 'chi tiêu';
 
   return createPortal(
-    <div className="modal-backdrop app-modal-backdrop" onClick={requestClose}>
+    <div className={MODAL_BACKDROP} onClick={requestClose}>
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="transaction-modal-title"
         tabIndex={-1}
-        className="modal-content modal-form-shell animate-scale-in"
+        className={MODAL_FORM_SHELL_PANEL}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal-header">
+        <div className={MODAL_SHELL_HEADER}>
           <h3 id="transaction-modal-title">
             {isEditing ? 'Chỉnh sửa giao dịch' : `Thêm ${typeLabel} mới`}
           </h3>
           <button
             type="button"
-            className="close-btn"
+            className={MODAL_CLOSE_BTN}
             onClick={requestClose}
             disabled={submitting || uploading}
             aria-label="Đóng"
@@ -219,16 +234,17 @@ export default function AddTransactionModal({
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="modal-form-body min-h-0 overflow-y-auto overscroll-contain">
-            <div className="addmodal-type-tabs-container mb-5">
-              <div className="category-tabs w-full" role="tablist" aria-label="Loại giao dịch">
+          <div className={MODAL_FORM_BODY}>
+            <div className="mb-5 flex">
+              <div className={cx(TABS, 'w-full')} role="tablist" aria-label="Loại giao dịch">
                 <button
                   type="button"
                   role="tab"
                   aria-selected={activeType === TransactionType.EXPENSE}
-                  className={`category-tab flex flex-1 items-center gap-1.5 ${
-                    activeType === TransactionType.EXPENSE ? 'active' : ''
-                  }`}
+                  className={cx(
+                    tabClass(activeType === TransactionType.EXPENSE, 'pill', 'gap-1.5'),
+                    'grow basis-[0%]'
+                  )}
                   onClick={() => {
                     if (activeType !== TransactionType.EXPENSE) {
                       setActiveType(TransactionType.EXPENSE);
@@ -244,9 +260,10 @@ export default function AddTransactionModal({
                   type="button"
                   role="tab"
                   aria-selected={activeType === TransactionType.INCOME}
-                  className={`category-tab flex flex-1 items-center gap-1.5 ${
-                    activeType === TransactionType.INCOME ? 'active' : ''
-                  }`}
+                  className={cx(
+                    tabClass(activeType === TransactionType.INCOME, 'pill', 'gap-1.5'),
+                    'grow basis-[0%]'
+                  )}
                   onClick={() => {
                     if (activeType !== TransactionType.INCOME) {
                       setActiveType(TransactionType.INCOME);
@@ -262,9 +279,10 @@ export default function AddTransactionModal({
                   type="button"
                   role="tab"
                   aria-selected={activeType === TransactionType.INVESTMENT}
-                  className={`category-tab flex flex-1 items-center gap-1.5 ${
-                    activeType === TransactionType.INVESTMENT ? 'active' : ''
-                  }`}
+                  className={cx(
+                    tabClass(activeType === TransactionType.INVESTMENT, 'pill', 'gap-1.5'),
+                    'grow basis-[0%]'
+                  )}
                   onClick={() => {
                     if (activeType !== TransactionType.INVESTMENT) {
                       setActiveType(TransactionType.INVESTMENT);
@@ -279,7 +297,7 @@ export default function AddTransactionModal({
               </div>
             </div>
 
-            <div className="form-group">
+            <div className={FORM_GROUP}>
               <label htmlFor="atxn-amount">Số tiền {typeLabel} (đ)</label>
               <input
                 id="atxn-amount"
@@ -299,7 +317,7 @@ export default function AddTransactionModal({
               />
             </div>
 
-            <div className="form-group">
+            <div className={FORM_GROUP}>
               <label htmlFor="atxn-category">Danh mục</label>
               <Select
                 inputId="atxn-category"
@@ -317,7 +335,7 @@ export default function AddTransactionModal({
               />
             </div>
 
-            <div className="form-group">
+            <div className={FORM_GROUP}>
               <label htmlFor="atxn-title">
                 Ghi chú <span className="text-muted">(không bắt buộc)</span>
               </label>
@@ -337,7 +355,7 @@ export default function AddTransactionModal({
             </div>
 
             {activeType === TransactionType.INVESTMENT && (
-              <div className="form-group">
+              <div className={FORM_GROUP}>
                 <label htmlFor="atxn-status">Trạng thái đầu tư</label>
                 <Select
                   inputId="atxn-status"
@@ -353,7 +371,7 @@ export default function AddTransactionModal({
             )}
 
             {activeType === TransactionType.INVESTMENT && status !== InvestmentStatus.HOLDING && (
-              <div className="form-group">
+              <div className={FORM_GROUP}>
                 <label htmlFor="atxn-pnl">Số tiền Lãi / Lỗ thực tế (đ)</label>
                 <input
                   id="atxn-pnl"
@@ -369,7 +387,7 @@ export default function AddTransactionModal({
               </div>
             )}
 
-            <div className="form-group">
+            <div className={FORM_GROUP}>
               <label htmlFor="atxn-incurred">Ngày thực hiện</label>
               <DatePickerField
                 id="atxn-incurred"
@@ -380,7 +398,7 @@ export default function AddTransactionModal({
               />
             </div>
 
-            <div className="form-group">
+            <div className={FORM_GROUP}>
               <ReceiptUploader
                 value={receiptUrl}
                 onChange={setReceiptUrl}
@@ -389,10 +407,10 @@ export default function AddTransactionModal({
               />
             </div>
           </div>
-          <div className="button-group">
+          <div className={MODAL_SHELL_FOOTER}>
             <button
               type="button"
-              className="btn btn-secondary"
+              className={cx(BTN_SECONDARY, BTN_FILL)}
               disabled={submitting || uploading}
               onClick={requestClose}
             >
@@ -400,7 +418,7 @@ export default function AddTransactionModal({
             </button>
             <button
               type="submit"
-              className={`btn btn-primary btn-add-${activeType.toLowerCase()}`}
+              className={cx(BTN_PRIMARY, BTN_FILL)}
               disabled={submitting || uploading}
             >
               {submitting ? 'Đang lưu...' : isEditing ? 'Cập nhật' : 'Thêm'} giao dịch

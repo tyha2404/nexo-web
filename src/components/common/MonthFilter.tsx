@@ -1,13 +1,15 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import moment from 'moment';
 import { DatePickerField } from './DatePickerField';
-import './MonthFilter.css';
 
 export interface MonthFilterProps {
   /** Month in 'YYYY-MM' format (e.g. '2026-09') */
   value: string;
   onChange: (monthStr: string) => void;
 }
+
+const NAV_ARROW =
+  'inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent text-muted hover:bg-hover hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
 export default function MonthFilter({ value, onChange }: MonthFilterProps) {
   const handlePrevMonth = () => {
@@ -21,11 +23,11 @@ export default function MonthFilter({ value, onChange }: MonthFilterProps) {
   };
 
   return (
-    <div className="month-filter-container">
-      <div className="month-picker-pill">
+    <div className="inline-flex items-center mobile:w-full">
+      <div className="box-border inline-flex h-12 w-full items-center justify-between gap-[0.35rem] rounded-md border border-line bg-card px-[0.35rem] shadow-app-sm backdrop-blur-md transition-all duration-200 ease-[ease] hover:border-primary hover:shadow-[0_0_12px_var(--primary-glow)]">
         <button
           type="button"
-          className="month-nav-arrow"
+          className={NAV_ARROW}
           onClick={handlePrevMonth}
           title="Tháng trước"
           aria-label="Tháng trước"
@@ -33,7 +35,7 @@ export default function MonthFilter({ value, onChange }: MonthFilterProps) {
           <ChevronLeft size={16} />
         </button>
 
-        <div className="month-picker-label-wrap">
+        <div className="relative flex min-h-11 min-w-0 flex-1 items-center justify-center gap-[0.3rem] rounded-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary">
           <DatePickerField
             label="Tháng hiển thị"
             value={value}
@@ -46,7 +48,7 @@ export default function MonthFilter({ value, onChange }: MonthFilterProps) {
 
         <button
           type="button"
-          className="month-nav-arrow"
+          className={NAV_ARROW}
           onClick={handleNextMonth}
           title="Tháng kế tiếp"
           aria-label="Tháng kế tiếp"

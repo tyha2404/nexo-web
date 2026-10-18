@@ -47,3 +47,35 @@ test('form dialogs share the same shell and close on Escape', async ({ page }) =
 
   expect(new Set(widths).size).toBe(1);
 });
+
+// iOS can report a smaller visual viewport in standalone mode / with the keyboard.
+// The scrim must still cover the layout viewport, including the home indicator.
+test('modal scrim covers the screen when the visual viewport shrinks', async ({ page }) => {
+  await setup(page);
+  await page.addInitScript(() => {
+    if (!window.visualViewport) return;
+    Object.defineProperty(window.visualViewport, 'height', {
+      configurable: true,
+      get: () => window.innerHeight - 180,
+    });
+    Object.defineProperty(window.visualViewport, 'offsetTop', {
+      configurable: true,
+      get: () => 20,
+    });
+  });
+  await page.goto('/');
+  const dialog = await openTransactionForm(page);
+  await settledWidth(dialog);
+  const bounds = await page.locator('.app-modal-backdrop').evaluate((el) => {
+    const rect = el.getBoundingClientRect();
+    return { top: rect.top, bottom: rect.bottom, height: window.innerHeight };
+  });
+  expect(bounds.top).toBe(0);
+  expect(bounds.bottom).toBe(bounds.height);
+  const card = await dialog.boundingBox();
+  expect(card!.y).toBeGreaterThanOrEqual(20);
+  expect(card!.y + card!.height).toBeLessThanOrEqual(bounds.height - 160);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect(await page.evaluate(() => document.body.style.position)).not.toBe('fixed');
+});

@@ -3,6 +3,16 @@ import type { ReactNode } from 'react';
 import { TransactionType } from '../../commons/constants';
 import type { TransactionSummary } from '../../commons/types';
 import { formatCurrency } from '../../commons/utils';
+import {
+  cx,
+  statValueClass,
+  SUMMARY_GRID,
+  SUMMARY_STAT_CARD,
+  SUMMARY_STAT_HEADER,
+  SUMMARY_STAT_SUBTITLE,
+  SUMMARY_STAT_TITLE,
+  type StatTone,
+} from '../ui';
 
 export interface TransactionSummaryCardsProps {
   activeType: TransactionType;
@@ -15,24 +25,20 @@ function StatCard({
   title,
   value,
   subtitle,
-  accent,
-  valueClass,
+  tone,
 }: {
   title: string;
   value: ReactNode;
   subtitle: ReactNode;
-  accent?: string;
-  valueClass?: string;
+  tone?: StatTone;
 }) {
   return (
-    <div className={accent ? `summary-stat-card ${accent}` : 'summary-stat-card'}>
-      <div className="summary-stat-header">
-        <span className="summary-stat-title">{title}</span>
+    <div className={SUMMARY_STAT_CARD}>
+      <div className={SUMMARY_STAT_HEADER}>
+        <span className={SUMMARY_STAT_TITLE}>{title}</span>
       </div>
-      <div className={valueClass ? `summary-stat-value ${valueClass}` : 'summary-stat-value'}>
-        {value}
-      </div>
-      <div className="summary-stat-subtitle">{subtitle}</div>
+      <div className={statValueClass(tone)}>{value}</div>
+      <div className={SUMMARY_STAT_SUBTITLE}>{subtitle}</div>
     </div>
   );
 }
@@ -48,11 +54,10 @@ export function TransactionSummaryCards({
 
   if (activeType === TransactionType.INCOME) {
     return (
-      <div className="summary-cards-grid animate-fade-in">
+      <div className={cx(SUMMARY_GRID, 'animate-fade-in')}>
         <StatCard
           title="Tổng Thu Nhập"
-          accent="accent-income"
-          valueClass="value-income"
+          tone="income"
           value={formatCurrency(Math.abs(sumAmount))}
           subtitle="Tổng khoản thu nhập trong kỳ"
         />
@@ -76,7 +81,7 @@ export function TransactionSummaryCards({
     const holdingCount = summary.holdingCount ?? 0;
     const profit = totalRealizedPnl >= 0;
     return (
-      <div className="summary-cards-grid animate-fade-in">
+      <div className={cx(SUMMARY_GRID, 'animate-fade-in')}>
         <StatCard
           title="Tiền Đang Đầu Tư (Holding)"
           value={formatCurrency(holdingAmount)}
@@ -84,8 +89,7 @@ export function TransactionSummaryCards({
         />
         <StatCard
           title="Lãi / Lỗ Đã Thực Hiện"
-          accent={profit ? 'accent-income' : 'accent-expense'}
-          valueClass={profit ? 'value-income' : 'value-expense'}
+          tone={profit ? 'income' : 'expense'}
           value={formatCurrency(totalRealizedPnl)}
           subtitle="Tổng tiền lời / lỗ từ khoản đã bán/đáo hạn"
         />
@@ -107,11 +111,10 @@ export function TransactionSummaryCards({
   const dailyAvg = (summary.sumAmountForAverage ?? summary.sumAmount) / daysCount;
 
   return (
-    <div className="summary-cards-grid animate-fade-in">
+    <div className={cx(SUMMARY_GRID, 'animate-fade-in')}>
       <StatCard
         title="Tổng Chi Tiêu"
-        accent="accent-expense"
-        valueClass="value-expense"
+        tone="expense"
         value={formatCurrency(Math.abs(sumAmount))}
         subtitle="Tổng tiền đã chi trong kỳ"
       />

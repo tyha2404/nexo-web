@@ -1,0 +1,105 @@
+/* Design tokens. Colors and shadows switch with the `light-theme` class on <body>;
+   tailwind.css maps them to utilities (bg-card, text-muted, rounded-md, ...). */
+:root {
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Roboto,
+    sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+
+  /* FinTech Minimal Zinc Obsidian Palette (Linear / Stripe Inspired) */
+  --bg-app: #09090b;
+  --bg-card: #121215;
+  --bg-card-hover: #18181b;
+  --bg-input: #18181b;
+  --bg-hover: rgba(255, 255, 255, 0.05);
+
+  --text-main: #f4f4f5;
+  --text-muted: #a1a1aa;
+  --text-dark: #ffffff;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.16);
+  --border-active: #6366f1;
+
+  /* Solid Subtle Brand Accent (Indigo 500 - Matches Logo) */
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-glow: rgba(99, 102, 241, 0.15);
+  --primary-gradient: #6366f1;
+  --primary-gradient-hover: #4f46e5;
+
+  /* Semantic Colors for Financial Precision */
+  --income: #10b981;
+  --income-glow: rgba(16, 185, 129, 0.1);
+  --expense: #f43f5e;
+  --expense-glow: rgba(244, 63, 94, 0.1);
+  --investment: #6366f1;
+  --investment-glow: rgba(99, 102, 241, 0.12);
+  --warning: #f59e0b;
+  --warning-glow: rgba(245, 158, 11, 0.1);
+  --purple: #8b5cf6;
+  --purple-glow: rgba(139, 92, 246, 0.1);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.5);
+  --glass-blur: blur(8px);
+
+  font-family: var(--font-sans);
+  letter-spacing: -0.012em;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  color: var(--text-main);
+  background-color: var(--bg-app);
+}
+
+.light-theme {
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-input: #f1f5f9;
+  --bg-hover: rgba(15, 23, 42, 0.04);
+
+  --text-main: #09090b;
+  --text-muted: #64748b;
+  --text-dark: #ffffff;
+
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --border-active: #6366f1;
+
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-glow: rgba(79, 70, 229, 0.12);
+  --primary-gradient: #4f46e5;
+  --primary-gradient-hover: #4338ca;
+
+  --income: #059669;
+  --income-glow: rgba(5, 150, 105, 0.1);
+  --expense: #e11d48;
+  --expense-glow: rgba(225, 29, 72, 0.1);
+  --investment: #4f46e5;
+  --investment-glow: rgba(79, 70, 229, 0.12);
+  --warning: #d97706;
+  --warning-glow: rgba(217, 119, 6, 0.1);
+  --purple: #7c3aed;
+  --purple-glow: rgba(124, 58, 237, 0.1);
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  --glass-blur: blur(8px);
+
+  color-scheme: light;
+}
+
+/* Opaque hover fills so hover transitions never flash through transparency */
+:root {
+  --bg-input-hover: color-mix(in srgb, var(--bg-input) 90%, #ffffff);
+  --expense-hover-bg: color-mix(in srgb, var(--bg-input) 85%, #ef4444);
+}
+.light-theme {
+  --bg-input-hover: #e2e8f0;
+  --expense-hover-bg: #fee2e2;
+}

@@ -1,26 +1,92 @@
 /*
- * Tailwind v4 without Preflight: only the theme variables and utilities are
- * loaded so the existing hand-written CSS keeps its own base styles. Utilities
- * live in a cascade layer, so unlayered component CSS still wins on conflicts.
+ * Styling entry point. Tailwind v4 without Preflight: styles/base.css is the
+ * app's reset. Order: tokens → theme → base → utilities. Shared UI styling lives
+ * in class constants (src/components/ui/*Styles.ts), not in a components layer.
+ *
+ * Unlayered CSS (styles/vendor.css: react-select, datepicker, toastify overrides)
+ * still wins over every layer; keep it to third-party markup we can't put classes on.
  */
-@layer theme, base, components, utilities;
+@layer theme, base, utilities;
+@import './styles/tokens.css';
 @import 'tailwindcss/theme.css' layer(theme);
+@import './styles/base.css';
+@import './styles/animations.css';
 @import 'tailwindcss/utilities.css' layer(utilities);
 
-/* Map Tailwind colors to the app's theme tokens so utilities follow light/dark mode. */
+/* Theme tokens → utilities. `inline` keeps the var() reference so the
+   light/dark switch on <body> flows through: bg-card, text-muted, border-line... */
 @theme inline {
   --color-main: var(--text-main);
   --color-muted: var(--text-muted);
+  --color-on-primary: var(--text-dark);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-glow: var(--primary-glow);
   --color-income: var(--income);
+  --color-income-glow: var(--income-glow);
   --color-expense: var(--expense);
+  --color-expense-glow: var(--expense-glow);
   --color-investment: var(--investment);
+  --color-investment-glow: var(--investment-glow);
   --color-warning: var(--warning);
+  --color-warning-glow: var(--warning-glow);
+  --color-purple: var(--purple);
+  --color-purple-glow: var(--purple-glow);
   --color-app: var(--bg-app);
   --color-card: var(--bg-card);
+  --color-card-hover: var(--bg-card-hover);
   --color-input: var(--bg-input);
+  --color-input-hover: var(--bg-input-hover);
+  --color-hover: var(--bg-hover);
   --color-line: var(--border);
+  --color-line-hover: var(--border-hover);
+
+  --shadow-app-sm: var(--shadow-sm);
+  --shadow-app-md: var(--shadow-md);
+  --shadow-app-lg: var(--shadow-lg);
+}
+
+/* Entrance animations used across pages (keyframes in styles/animations.css):
+   animate-fade-in, animate-scale-in. */
+@theme {
+  --animate-fade-in: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-scale-in: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Radius scale (rounded-xs … rounded-xl). Single source of truth, also
+   exposed as --radius-* for the remaining CSS. */
+@theme static {
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
 }
 
 /* The app is dark by default; light mode is a `light-theme` class on <body>. */
 @custom-variant dark (&:where(body:not(.light-theme) *));
+@custom-variant light (&:where(body.light-theme *));
+
+/* Phone layout: same breakpoint the app shell uses to swap sidebar for bottom nav
+   (narrow screens, or a phone in landscape). Use `mobile:` instead of `max-md:`. */
+@custom-variant mobile {
+  @media (max-width: 768px),
+    (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
+    @slot;
+  }
+}
+
+/* Phones and touch tablets up to 1024px (wider than `mobile:`); used by the login screen. */
+@custom-variant touch {
+  @media (max-width: 768px), (pointer: coarse) and (max-width: 1024px) {
+    @slot;
+  }
+}
+
+/* Installed to the home screen (iOS standalone PWA). */
+@custom-variant standalone {
+  @media (display-mode: standalone) {
+    @slot;
+  }
+}

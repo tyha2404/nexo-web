@@ -5,9 +5,21 @@ import { createPortal } from 'react-dom';
 import DatePicker from 'react-datepicker';
 import { DATE_FORMAT_DISPLAY, DATE_FORMAT_INPUT } from '../../commons/constants';
 import { useModal } from '../../hooks';
-import './DatePickerField.css';
 
 type PickerMode = 'date' | 'month';
+
+// `font: inherit` split into longhands so the font-size utility always wins.
+const INHERIT_FONT = 'font-[inherit] [font-style:inherit] leading-[inherit]';
+const TRIGGER = `box-border flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-sm text-main ${INHERIT_FONT} text-[16px] tabular-nums transition-[border-color,background-color] duration-[160ms] ease-[ease] hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary [&_svg]:shrink-0 [&_svg]:text-muted`;
+const TRIGGER_DEFAULT =
+  'justify-between border border-line bg-input px-3.5 py-2.5 [font-weight:inherit]';
+const TRIGGER_COMPACT =
+  'flex-row-reverse justify-center border-none bg-transparent px-2 py-0 font-semibold';
+// Marker classes kept for tests/selectors.
+const PRESS = 'motion-safe:enabled:active:[transform:scale(0.97)]';
+const ICON_BUTTON = `date-picker-icon-button inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-muted hover:bg-hover hover:text-primary ${PRESS}`;
+const TEXT_BUTTON = `date-picker-text-button min-h-11 cursor-pointer rounded-md border-0 bg-transparent p-2 text-primary ${INHERIT_FONT} text-[14px] font-semibold hover:bg-primary-glow ${PRESS}`;
+const SELECT = `min-h-11 min-w-0 flex-1 rounded-sm border-0 bg-input p-1 text-main ${INHERIT_FONT} [font-weight:inherit] text-[16px]`;
 
 interface DatePickerFieldProps {
   id?: string;
@@ -43,14 +55,17 @@ function PickerPanel({
   };
 
   return createPortal(
-    <div className="date-picker-overlay" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[1000001] box-border flex items-center justify-center bg-[rgb(0_0_0/55%)] p-[max(12px,env(safe-area-inset-top))_max(12px,env(safe-area-inset-right))_max(12px,env(safe-area-inset-bottom))_max(12px,env(safe-area-inset-left))] backdrop-blur-[6px] animate-[date-picker-backdrop-in_160ms_ease-out] motion-reduce:animate-none"
+      onClick={onClose}
+    >
       <div
         ref={ref}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="date-picker-panel"
+        className="date-picker-panel w-[360px] max-w-full max-h-[calc(var(--modal-viewport-height,100dvh)-max(12px,env(safe-area-inset-top))-max(12px,env(safe-area-inset-bottom)))] overflow-x-hidden overflow-y-auto rounded-xl border border-line bg-card text-main shadow-app-lg outline-none animate-[date-picker-panel-in_200ms_cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:animate-none"
         onKeyDownCapture={(event) => {
           if (event.key === 'Escape') {
             event.preventDefault();
@@ -60,20 +75,15 @@ function PickerPanel({
         }}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="date-picker-panel-header">
+        <div className="flex items-center justify-between gap-2 px-4 py-2">
           <h3 id={titleId} className="m-0 text-base font-semibold text-main">
             {label}
           </h3>
-          <button
-            type="button"
-            className="date-picker-icon-button"
-            aria-label="Đóng lịch"
-            onClick={onClose}
-          >
+          <button type="button" className={ICON_BUTTON} aria-label="Đóng lịch" onClick={onClose}>
             <X size={18} />
           </button>
         </div>
-        <div className="date-picker-calendar-body">
+        <div className="px-2.5 pt-0 pb-3">
           <DatePicker
             inline
             selected={selected}
@@ -110,10 +120,10 @@ function PickerPanel({
               const firstYear = Math.min(1900, year - 50);
               const lastYear = Math.max(moment().year() + 50, year + 50);
               return (
-                <div className="date-picker-calendar-header">
+                <div className="flex items-center gap-1 pb-2">
                   <button
                     type="button"
-                    className="date-picker-icon-button"
+                    className={ICON_BUTTON}
                     aria-label={mode === 'month' ? 'Năm trước' : 'Tháng trước'}
                     onClick={mode === 'month' ? decreaseYear : decreaseMonth}
                   >
@@ -122,6 +132,7 @@ function PickerPanel({
                   {mode === 'date' && (
                     <select
                       aria-label="Chọn tháng"
+                      className={SELECT}
                       value={shown.month()}
                       onChange={(event) => changeMonth(Number(event.target.value))}
                     >
@@ -135,6 +146,7 @@ function PickerPanel({
                   )}
                   <select
                     aria-label="Chọn năm"
+                    className={SELECT}
                     value={year}
                     onChange={(event) => changeYear(Number(event.target.value))}
                   >
@@ -149,7 +161,7 @@ function PickerPanel({
                   </select>
                   <button
                     type="button"
-                    className="date-picker-icon-button"
+                    className={ICON_BUTTON}
                     aria-label={mode === 'month' ? 'Năm kế tiếp' : 'Tháng kế tiếp'}
                     onClick={mode === 'month' ? increaseYear : increaseMonth}
                   >
@@ -160,24 +172,16 @@ function PickerPanel({
             }}
           />
         </div>
-        <div className="date-picker-panel-footer">
-          <button
-            type="button"
-            className="date-picker-text-button"
-            onClick={() => select(moment().toDate())}
-          >
+        <div className="flex items-center justify-between gap-2 border-t border-line px-4 py-2">
+          <button type="button" className={TEXT_BUTTON} onClick={() => select(moment().toDate())}>
             {mode === 'month' ? 'Tháng này' : 'Hôm nay'}
           </button>
           {!required && (
-            <button
-              type="button"
-              className="date-picker-text-button text-muted"
-              onClick={() => select(null)}
-            >
+            <button type="button" className={TEXT_BUTTON} onClick={() => select(null)}>
               Xóa ngày
             </button>
           )}
-          <button type="button" className="date-picker-text-button" onClick={onClose}>
+          <button type="button" className={TEXT_BUTTON} onClick={onClose}>
             Xong
           </button>
         </div>
@@ -203,12 +207,12 @@ export function DatePickerField(props: DatePickerFieldProps) {
       : 'DD/MM/YYYY';
 
   return (
-    <div className={`date-picker-field ${compact ? 'date-picker-field-compact' : ''}`}>
+    <div className="w-full min-w-0">
       <button
         ref={triggerRef}
         id={id}
         type="button"
-        className="date-picker-trigger"
+        className={`${TRIGGER} ${compact ? TRIGGER_COMPACT : TRIGGER_DEFAULT}`}
         aria-label={label}
         aria-haspopup="dialog"
         aria-expanded={open}

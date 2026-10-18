@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
 import { authService } from '../services';
 import { toast } from 'react-toastify';
-import './Auth.css';
 import { getErrorMessage } from '../commons/utils';
+import { SPINNER_BUTTON } from './ui';
 
 interface AuthProps {
   onSuccess?: () => void;
 }
+
+// `touch:` (see tailwind.css) is wider than `mobile:`: any coarse pointer up to 1024px.
+const INPUT_GROUP = 'flex flex-col gap-2 text-left';
+const INPUT_LABEL = 'pl-1 text-[0.85rem] font-medium text-muted';
+const INPUT_FIELD =
+  'box-border w-full rounded-md border border-line bg-input px-4 py-3 text-[0.95rem] text-main transition-all duration-200 ease-[ease] focus:border-primary focus:shadow-[0_0_0_3px_var(--primary-glow)] focus:outline-none';
+const TOGGLE_BTN =
+  'flex-1 cursor-pointer rounded-sm border-none p-2.5 text-[0.95rem] font-semibold';
+const TOGGLE_ACTIVE = 'bg-primary text-white shadow-[0_2px_8px_var(--primary-glow)]';
+const TOGGLE_IDLE = 'bg-transparent text-muted';
 
 export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
   const [isLogin, setIsLogin] = useState<boolean>(true);
@@ -82,46 +92,50 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="auth-wrapper">
-      <div className="auth-container animate-fade-in">
-        <div className="auth-header">
-          <img src="/logo-transparent.svg" alt="Nexo logo" className="auth-logo" />
-          <h2 className="auth-title">Nexo Portal</h2>
-          <p className="auth-subtitle">
+    <div className="flex min-h-[480px] w-full items-center justify-center touch:min-h-0">
+      <div className="auth-container animate-fade-in box-border w-full max-w-[440px] rounded-xl border border-line bg-card p-10 text-main shadow-app-lg backdrop-blur-[16px] touch:p-5">
+        <div className="mb-8 flex flex-col items-center text-center touch:mb-5">
+          <img
+            src="/logo-transparent.svg"
+            alt="Nexo logo"
+            className="mb-[0.85rem] size-16 drop-shadow-[0_4px_12px_var(--primary-glow)] transition-transform duration-300 ease-[ease] hover:[transform:scale(1.05)_rotate(2deg)] touch:size-12"
+          />
+          <h2 className="mb-2 text-[2rem] font-bold text-main touch:text-[1.5rem]">Nexo Portal</h2>
+          <p className="text-[0.95rem] text-muted">
             {isLogin
               ? 'Truy cập bảng điều khiển tài chính của bạn'
               : 'Tạo tài khoản bảo mật của bạn'}
           </p>
         </div>
 
-        <div className="auth-toggle">
+        <div className="mb-8 flex rounded-md border border-line bg-input p-1">
           <button
             type="button"
-            className={`auth-toggle-btn ${isLogin ? 'active' : ''}`}
+            className={`${TOGGLE_BTN} ${isLogin ? TOGGLE_ACTIVE : TOGGLE_IDLE}`}
             onClick={() => toggleMode(true)}
           >
             Đăng nhập
           </button>
           <button
             type="button"
-            className={`auth-toggle-btn ${!isLogin ? 'active' : ''}`}
+            className={`${TOGGLE_BTN} ${!isLogin ? TOGGLE_ACTIVE : TOGGLE_IDLE}`}
             onClick={() => toggleMode(false)}
           >
             Đăng ký
           </button>
         </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
           {isLogin ? (
-            <div className="input-group">
-              <label className="input-label" htmlFor="identifier">
+            <div className={INPUT_GROUP}>
+              <label className={INPUT_LABEL} htmlFor="identifier">
                 Tên đăng nhập hoặc Email
               </label>
-              <div className="input-wrapper">
+              <div className="relative">
                 <input
                   id="identifier"
                   type="text"
-                  className="input-field"
+                  className={INPUT_FIELD}
                   placeholder="Nhập tên đăng nhập hoặc email"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
@@ -132,15 +146,15 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
             </div>
           ) : (
             <>
-              <div className="input-group">
-                <label className="input-label" htmlFor="username">
+              <div className={INPUT_GROUP}>
+                <label className={INPUT_LABEL} htmlFor="username">
                   Tên đăng nhập
                 </label>
-                <div className="input-wrapper">
+                <div className="relative">
                   <input
                     id="username"
                     type="text"
-                    className={`input-field ${usernameError ? 'input-invalid' : ''}`}
+                    className={`${INPUT_FIELD} ${usernameError ? 'input-invalid' : ''}`}
                     placeholder="johndoe"
                     value={username}
                     onChange={(e) => {
@@ -153,28 +167,19 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
                   />
                 </div>
                 {usernameError && (
-                  <span
-                    style={{
-                      color: '#ef4444',
-                      fontSize: '0.78rem',
-                      marginTop: '0.25rem',
-                      display: 'block',
-                    }}
-                  >
-                    {usernameError}
-                  </span>
+                  <span className="mt-1 block text-[0.78rem] text-[#ef4444]">{usernameError}</span>
                 )}
               </div>
 
-              <div className="input-group">
-                <label className="input-label" htmlFor="email">
+              <div className={INPUT_GROUP}>
+                <label className={INPUT_LABEL} htmlFor="email">
                   Địa chỉ Email
                 </label>
-                <div className="input-wrapper">
+                <div className="relative">
                   <input
                     id="email"
                     type="email"
-                    className="input-field"
+                    className={INPUT_FIELD}
                     placeholder="john@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -186,45 +191,26 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
             </>
           )}
 
-          <div className="input-group">
-            <label className="input-label" htmlFor="password">
+          <div className={INPUT_GROUP}>
+            <label className={INPUT_LABEL} htmlFor="password">
               Mật khẩu
             </label>
-            <div className="input-wrapper" style={{ position: 'relative' }}>
+            <div className="relative">
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                className="input-field"
+                className={`${INPUT_FIELD} pr-[45px]`}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{ paddingRight: '45px' }}
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="password-toggle-btn"
+                className="absolute top-1/2 right-2 inline-flex size-9 -translate-y-1/2 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-muted transition-all duration-200 ease-[ease]"
                 aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
                 title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                style={{
-                  position: 'absolute',
-                  right: '8px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  width: '36px',
-                  height: '36px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: 'var(--radius-sm)',
-                  transition: 'all 0.2s ease',
-                  padding: 0,
-                }}
               >
                 {showPassword ? (
                   <svg
@@ -261,8 +247,12 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
             </div>
           </div>
 
-          <button type="submit" className="submit-btn" disabled={isLoading}>
-            {isLoading && <span className="spinner"></span>}
+          <button
+            type="submit"
+            className="mt-4 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border-none bg-(color:--primary-gradient) align-middle leading-[1.2] p-3.5 text-[1rem] font-semibold text-white shadow-[0_4px_12px_var(--primary-glow)] transition-all duration-300 ease-[ease] hover:-translate-y-0.5 hover:shadow-[0_6px_20px_var(--primary-glow)] active:translate-y-0 disabled:translate-none disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
+            disabled={isLoading}
+          >
+            {isLoading && <span className={SPINNER_BUTTON}></span>}
             {isLogin ? 'Đăng nhập' : 'Đăng ký'}
           </button>
         </form>

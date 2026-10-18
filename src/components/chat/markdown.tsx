@@ -8,11 +8,18 @@ export const formatInlineText = (text: string): ReactNode => {
   const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
   return parts.map((part, partIdx) => {
     if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
-      return <strong key={partIdx}>{part.slice(2, -2)}</strong>;
+      return (
+        <strong key={partIdx} className="font-semibold text-primary">
+          {part.slice(2, -2)}
+        </strong>
+      );
     }
     if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
       return (
-        <code key={partIdx} className="chat-inline-code">
+        <code
+          key={partIdx}
+          className="py-px px-[5px] rounded-xs text-[11.5px] [font-family:'JetBrains_Mono','Fira_Code',monospace] bg-[rgba(0,0,0,0.25)] border border-[rgba(255,255,255,0.1)] text-[#a5b4fc] light:bg-[#e2e8f0] light:border-[#cbd5e1] light:text-[#4f46e5]"
+        >
           {part.slice(1, -1)}
         </code>
       );
@@ -76,20 +83,36 @@ export const renderFormattedText = (text: string): ReactNode => {
         });
 
         elements.push(
-          <div key={`table-${i}`} className="chat-markdown-table-wrapper">
-            <table className="chat-markdown-table">
-              <thead>
+          <div
+            key={`table-${i}`}
+            className="w-full my-[10px] overflow-x-auto rounded-md border border-[rgba(255,255,255,0.12)] bg-[rgba(15,23,42,0.6)] shadow-[0_4px_16px_rgba(0,0,0,0.25)] light:bg-white light:border-[#e2e8f0] light:shadow-[0_2px_10px_rgba(0,0,0,0.06)]"
+          >
+            <table className="w-full border-collapse text-[12px] text-left">
+              <thead className="bg-[rgba(30,41,59,0.85)] border-b border-[rgba(255,255,255,0.12)] light:bg-[#f8fafc] light:border-[#e2e8f0]">
                 <tr>
                   {headerCells.map((th, thIdx) => (
-                    <th key={thIdx}>{formatInlineText(th)}</th>
+                    <th
+                      key={thIdx}
+                      className="py-2 px-3 font-semibold tracking-[0.2px] whitespace-nowrap text-[#a5b4fc] light:text-[#4338ca]"
+                    >
+                      {formatInlineText(th)}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row, rIdx) => (
-                  <tr key={rIdx}>
+                  <tr
+                    key={rIdx}
+                    className="hover:bg-[rgba(99,102,241,0.08)] light:hover:bg-[#f5f3ff] [&:last-child>td]:border-b-0"
+                  >
                     {row.map((cell, cIdx) => (
-                      <td key={cIdx}>{formatInlineText(cell)}</td>
+                      <td
+                        key={cIdx}
+                        className="py-2 px-3 leading-[1.45] text-[#e2e8f0] border-b border-[rgba(255,255,255,0.05)] light:text-[#334155] light:border-[#f1f5f9]"
+                      >
+                        {formatInlineText(cell)}
+                      </td>
                     ))}
                   </tr>
                 ))}
@@ -104,7 +127,10 @@ export const renderFormattedText = (text: string): ReactNode => {
     // Headings
     if (line.startsWith('# ')) {
       elements.push(
-        <h3 key={`h3-${i}`} className="chat-md-h3">
+        <h3
+          key={`h3-${i}`}
+          className="mt-[10px] mb-[6px] text-[14.5px] font-bold text-[#f8fafc] light:text-[#0f172a]"
+        >
           {formatInlineText(line.slice(2))}
         </h3>
       );
@@ -113,7 +139,10 @@ export const renderFormattedText = (text: string): ReactNode => {
     }
     if (line.startsWith('## ') || line.startsWith('### ')) {
       elements.push(
-        <h4 key={`h4-${i}`} className="chat-md-h4">
+        <h4
+          key={`h4-${i}`}
+          className="mt-2 mb-1 text-[13px] font-semibold text-[#a5b4fc] light:text-[#4f46e5]"
+        >
           {formatInlineText(line.replace(/^#{2,3}\s+/, ''))}
         </h4>
       );
@@ -124,7 +153,7 @@ export const renderFormattedText = (text: string): ReactNode => {
     // Bullet lists
     if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
       elements.push(
-        <li key={`li-${i}`} className="chat-md-li">
+        <li key={`li-${i}`} className="ml-[18px] mb-[3px] list-disc leading-[1.5]">
           {formatInlineText(trimmed.slice(2))}
         </li>
       );
@@ -135,7 +164,10 @@ export const renderFormattedText = (text: string): ReactNode => {
     // Blockquotes
     if (trimmed.startsWith('> ')) {
       elements.push(
-        <blockquote key={`bq-${i}`} className="chat-md-blockquote">
+        <blockquote
+          key={`bq-${i}`}
+          className="my-[6px] py-[6px] px-3 border-l-[3px] border-l-primary bg-[rgba(99,102,241,0.08)] rounded-r-sm text-muted italic"
+        >
           {formatInlineText(trimmed.slice(2))}
         </blockquote>
       );
@@ -145,10 +177,10 @@ export const renderFormattedText = (text: string): ReactNode => {
 
     // Regular paragraph
     if (line === '') {
-      elements.push(<div key={`sp-${i}`} className="chat-md-spacer" />);
+      elements.push(<div key={`sp-${i}`} className="h-[6px]" />);
     } else {
       elements.push(
-        <p key={`p-${i}`} className="chat-md-p">
+        <p key={`p-${i}`} className="mt-0 mb-[6px] leading-[1.55] last:mb-0">
           {formatInlineText(line)}
         </p>
       );
