@@ -2,6 +2,7 @@ import { SlidingTabs } from './components/ui';
 import {
   ArrowLeftRight,
   Handshake,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Moon,
@@ -25,6 +26,7 @@ import { OPEN_ADD_TRANSACTION_EVENT, TransactionType } from './commons/constants
 import { openAddTransaction } from './commons/utils';
 import type { User } from './commons/types';
 import Auth from './components/Auth';
+import { ChangePasswordModal } from './components/common';
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const Debts = lazy(() => import('./components/Debts'));
 import type { PlanningSubTab } from './components/Planning';
@@ -80,6 +82,7 @@ function App() {
   const [quickAddType, setQuickAddType] = useState<TransactionType | null>(null);
   const [visitedTabs, setVisitedTabs] = useState<Set<ActiveTab>>(new Set());
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -166,6 +169,7 @@ function App() {
     setUser(null);
     setAuthError(null);
     setAIRequested(false);
+    setChangePasswordOpen(false);
     void authService.logout().catch(() => undefined);
   };
   useEffect(() => {
@@ -421,6 +425,17 @@ function App() {
                 <button
                   type="button"
                   role="menuitem"
+                  className={`${ACCOUNT_ITEM} text-main`}
+                  onClick={() => {
+                    setAccountMenuOpen(false);
+                    setChangePasswordOpen(true);
+                  }}
+                >
+                  <KeyRound size={16} /> Đổi mật khẩu
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
                   className={`${ACCOUNT_ITEM} text-expense`}
                   onClick={() => {
                     setAccountMenuOpen(false);
@@ -506,6 +521,14 @@ function App() {
                 title="Đổi giao diện"
               >
                 {theme === 'light' ? <Sun size={16} /> : <Moon size={16} />}
+              </button>
+              <button
+                onClick={() => setChangePasswordOpen(true)}
+                className={THEME_TOGGLE_BTN}
+                aria-label="Đổi mật khẩu"
+                title="Đổi mật khẩu"
+              >
+                <KeyRound size={16} />
               </button>
               <button
                 onClick={handleLogout}
@@ -647,6 +670,10 @@ function App() {
           />
         </Suspense>
       )}
+      <ChangePasswordModal
+        isOpen={changePasswordOpen}
+        onClose={() => setChangePasswordOpen(false)}
+      />
       <ReloadPrompt />
       {aiRequested && (
         <Suspense

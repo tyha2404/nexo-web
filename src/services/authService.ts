@@ -1,5 +1,5 @@
 import type { AuthResponse, User } from '../commons/types';
-import { request } from './client';
+import { ApiError, request } from './client';
 import { supabase } from './supabase';
 
 export const authService = {
@@ -75,6 +75,36 @@ export const authService = {
     return request<User>('/auth/whoami', {
       method: 'GET',
     });
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string): Promise<void> => {
+    // Supabase accounts keep their password in Supabase Auth (the API's copy is empty).
+    const { data } = await supabase.auth.getSession();
+    const email = data.session?.user.email;
+    if (email) {
+      // updateUser doesn't check the current password, so re-authenticate first.
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email,
+        password: currentPassword,
+      });
+      if (verifyError) throw new Error('Mật khẩu hiện tại không đúng.');
+
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw new Error(error.message);
+      return;
+    }
+
+    try {
+      await request<unknown>('/auth/change-password', {
+        method: 'POST',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 400) {
+        throw new Error('Mật khẩu hiện tại không đúng.', { cause: err });
+      }
+      throw err;
+    }
   },
 
   logout: async (): Promise<void> => {
