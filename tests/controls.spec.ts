@@ -12,6 +12,10 @@ for (const route of ['/#/transactions', '/#/debts', '/#/planning/targets']) {
       await expect
         .poll(() =>
           filters.evaluate((el) => {
+            // 44px touch controls on phones, 32px VS Code-density controls on desktop.
+            const controlHeight = parseFloat(
+              getComputedStyle(document.documentElement).getPropertyValue('--control-height')
+            );
             const nodes = [
               ...el.querySelectorAll<HTMLElement>(
                 'input[placeholder^="Tìm kiếm"], .react-select__control, .month-filter-control'
@@ -31,7 +35,7 @@ for (const route of ['/#/transactions', '/#/debts', '/#/planning/targets']) {
               styles.length >= 2 &&
               styles.every(
                 (s) =>
-                  s.height === 44 &&
+                  s.height === controlHeight &&
                   s.bg === styles[0].bg &&
                   s.border === styles[0].border &&
                   s.radius === styles[0].radius &&
@@ -56,6 +60,9 @@ test('modal input, dropdown and date picker use the same control shell', async (
   await expect
     .poll(() =>
       controls.evaluateAll((nodes) => {
+        const controlHeight = getComputedStyle(document.documentElement)
+          .getPropertyValue('--control-height')
+          .trim();
         const styles = nodes
           .filter((n) => n.getClientRects().length)
           .map((n) => {
@@ -65,7 +72,8 @@ test('modal input, dropdown and date picker use the same control shell', async (
         return (
           styles.length >= 2 &&
           styles.every(
-            (s) => s.height === '44px' && s.bg === styles[0].bg && s.radius === styles[0].radius
+            (s) =>
+              s.height === controlHeight && s.bg === styles[0].bg && s.radius === styles[0].radius
           )
         );
       })

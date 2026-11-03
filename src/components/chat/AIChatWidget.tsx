@@ -28,7 +28,7 @@ const DRAG_DISMISS_THRESHOLD = 90;
 
 // `nexo-chat-window` stays on the element as a test hook.
 const CHAT_WINDOW =
-  'fixed! bottom-[82px]! right-[24px]! min-w-[380px] max-w-[calc(100vw-32px)] min-h-[460px] max-h-[calc(100vh-100px)] flex flex-col overflow-hidden z-[99995]! bg-[#131d2e] border border-[rgba(255,255,255,0.12)] rounded-xl shadow-[0_24px_48px_-12px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)] backdrop-blur-[24px] animate-[chatSlideUp_0.3s_cubic-bezier(0.16,1,0.3,1)] light:bg-white light:border-[#e2e8f0] light:shadow-[0_20px_40px_rgba(0,0,0,0.15)] ' +
+  'fixed! bottom-[82px]! right-[24px]! min-w-[380px] max-w-[calc(100vw-32px)] min-h-[460px] max-h-[calc(100vh-100px)] flex flex-col overflow-hidden z-[99995]! bg-[var(--bg-card)] border border-[rgba(255,255,255,0.12)] rounded-xl shadow-[0_24px_48px_-12px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)] backdrop-blur-[24px] animate-[chatSlideUp_0.3s_cubic-bezier(0.16,1,0.3,1)] light:bg-white light:border-[var(--border)] light:shadow-[0_20px_40px_rgba(0,0,0,0.15)] ' +
   'mobile:left-0! mobile:right-0! mobile:w-full! mobile:min-w-full! mobile:max-w-full! mobile:top-[var(--chat-visible-top,15dvh)]! mobile:bottom-auto! mobile:h-[var(--chat-visible-height,85dvh)]! mobile:min-h-0! mobile:max-h-[var(--chat-visible-height,85dvh)]! mobile:pl-[env(safe-area-inset-left,0px)] mobile:pr-[env(safe-area-inset-right,0px)] mobile:pb-[env(safe-area-inset-bottom,0px)] mobile:rounded-t-xl! mobile:rounded-b-none! mobile:border-x-0! mobile:border-b-0! mobile:shadow-[0_-10px_30px_rgba(0,0,0,0.55)]! mobile:animate-[chatMobileSheetSlideUp_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]!';
 
 export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AIChatWidgetProps) {
@@ -212,7 +212,7 @@ export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AICha
       {/* Backdrop Overlay with Blur Effect */}
       {isOpen && (
         <div
-          className="fixed! inset-0 bg-[rgba(0,0,0,0.6)] backdrop-blur-[8px] z-[99990]! animate-[aiBackdropFadeIn_0.25s_cubic-bezier(0.16,1,0.3,1)_forwards] light:bg-[rgba(15,23,42,0.4)]"
+          className="fixed! inset-0 bg-[rgba(0,0,0,0.6)] backdrop-blur-[8px] z-[99990]! animate-[aiBackdropFadeIn_0.25s_cubic-bezier(0.16,1,0.3,1)_forwards] light:bg-[rgba(0,0,0,0.4)]"
           onClick={() => setIsOpen(false)}
           aria-hidden="true"
           title="Nhấn để đóng chat"
@@ -238,7 +238,7 @@ export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AICha
         >
           {/* Top Mobile Drag Handle Bar */}
           <div
-            className="group/drag hidden mobile:flex! w-full pt-[10px] pb-[6px] justify-center items-center cursor-grab touch-none select-none bg-[#0f172a] border-b border-[rgba(255,255,255,0.04)] light:bg-[#f8fafc] light:border-[#e2e8f0]"
+            className="group/drag hidden mobile:flex! w-full pt-[10px] pb-[6px] justify-center items-center cursor-grab touch-none select-none bg-[var(--bg-card)] border-b border-[rgba(255,255,255,0.04)] light:bg-[var(--bg-card)] light:border-[var(--border)]"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -247,12 +247,12 @@ export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AICha
             tabIndex={0}
             aria-label="Kéo xuống hoặc nhấn để đóng"
           >
-            <div className="w-[38px] h-[4.5px] rounded-full bg-[rgba(255,255,255,0.25)] transition-all duration-200 ease-[ease] light:bg-[#cbd5e1] group-active/drag:w-[44px] group-active/drag:bg-[rgba(255,255,255,0.5)]" />
+            <div className="w-[38px] h-[4.5px] rounded-full bg-[rgba(255,255,255,0.25)] transition-all duration-200 ease-[ease] light:bg-[var(--badge-bg)] group-active/drag:w-[44px] group-active/drag:bg-[rgba(255,255,255,0.5)]" />
           </div>
 
           {/* Desktop Top-Left Resize Handle */}
           <div
-            className={`absolute top-0 left-0 w-[22px] h-[22px] pt-[3px] pl-[3px] cursor-nwse-resize z-30 flex items-center justify-center transition-all duration-200 ease-[ease] hover:text-primary hover:bg-[rgba(99,102,241,0.2)] hover:rounded-br-[8px] mobile:hidden! ${isResizing ? 'text-primary bg-[rgba(99,102,241,0.2)] rounded-br-[8px]' : 'text-[rgba(255,255,255,0.25)]'}`}
+            className={`absolute top-0 left-0 w-[22px] h-[22px] pt-[3px] pl-[3px] cursor-nwse-resize z-30 flex items-center justify-center transition-all duration-200 ease-[ease] hover:text-primary hover:bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] hover:rounded-br-[8px] mobile:hidden! ${isResizing ? 'text-primary bg-[color-mix(in_srgb,var(--primary)_20%,transparent)] rounded-br-[8px]' : 'text-[rgba(255,255,255,0.25)]'}`}
             onMouseDown={startResizing}
             title="Kéo để thay đổi kích thước khung chat"
           >
@@ -310,7 +310,7 @@ export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AICha
             {/* Blur overlay backdrop over main chat when history sidebar or tools drawer is open */}
             {(showSessionsList || showToolsDrawer) && (
               <div
-                className="absolute inset-0 bg-[rgba(15,23,42,0.45)] backdrop-blur-[4px] z-[15] cursor-pointer animate-[chatFadeInOverlay_0.2s_ease] light:bg-[rgba(15,23,42,0.2)]"
+                className="absolute inset-0 bg-[rgba(0,0,0,0.45)] backdrop-blur-[4px] z-[15] cursor-pointer animate-[chatFadeInOverlay_0.2s_ease] light:bg-[rgba(0,0,0,0.2)]"
                 onClick={() => {
                   setShowSessionsList(false);
                   setShowToolsDrawer(false);

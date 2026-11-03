@@ -5,13 +5,13 @@ import type { DebtSummary } from '../../types/debt';
 import { CLICKABLE_CARD, cx, GLASS_CARD, MOTION_ENTER } from '../ui';
 
 const submetricCls =
-  'flex items-center gap-2 rounded-md border border-line bg-input px-[0.65rem] py-2 hover:border-line-hover hover:bg-hover mobile:px-[0.6rem] mobile:py-[0.45rem] light:border-[#e2e8f0] light:bg-[#f8fafc]';
+  'flex items-center gap-2 rounded-md border border-line bg-input px-[0.65rem] py-2 hover:border-line-hover hover:bg-hover mobile:px-[0.6rem] mobile:py-[0.45rem] light:border-[var(--border)] light:bg-[var(--bg-card)]';
 const submetricTitleCls =
   'overflow-hidden text-[0.725rem] font-semibold text-ellipsis whitespace-nowrap text-muted';
 const submetricNumberCls =
   'overflow-hidden font-mono text-[0.95rem] font-bold text-ellipsis whitespace-nowrap';
 const progressBoxCls =
-  'mt-0 flex flex-col justify-between rounded-md border bg-input px-3 py-[0.6rem] mobile:px-[0.65rem] mobile:py-2 light:border-[#e2e8f0] light:bg-[#f8fafc]';
+  'mt-0 flex flex-col justify-between rounded-md border bg-input px-3 py-[0.6rem] mobile:px-[0.65rem] mobile:py-2 light:border-[var(--border)] light:bg-[var(--bg-card)]';
 const statusBadgeCls =
   'inline-flex items-center gap-[0.3rem] rounded-full px-2 py-[0.15rem] text-[0.7rem] font-bold tracking-[0.02em] whitespace-nowrap';
 const setLinkCls =
@@ -85,7 +85,7 @@ export function HeroCashflowCard({
       className={cx(
         GLASS_CARD,
         MOTION_ENTER,
-        'relative mb-[0.85rem] overflow-hidden mobile:mb-2 light:border-[#e2e8f0] light:bg-white light:[&:hover]:border-[#e2e8f0]'
+        'relative mb-[0.85rem] overflow-hidden mobile:mb-2 light:border-[var(--border)] light:bg-white light:[&:hover]:border-[var(--border)]'
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-3 mobile:flex-col mobile:items-start mobile:gap-[0.35rem]">
@@ -187,9 +187,9 @@ export function HeroCashflowCard({
               <span
                 className={`${statusBadgeCls} ${
                   isOverBudget
-                    ? 'bg-[rgba(239,68,68,0.15)] text-expense'
+                    ? 'bg-[color-mix(in_srgb,var(--expense)_15%,transparent)] text-expense'
                     : budgetPercent >= 80
-                      ? 'bg-[rgba(245,158,11,0.15)] text-warning'
+                      ? 'bg-[color-mix(in_srgb,var(--warning)_15%,transparent)] text-warning'
                       : ''
                 }`}
               >
@@ -266,7 +266,9 @@ export function HeroCashflowCard({
         </div>
 
         {/* 2. Monthly Investment Target Progress */}
-        <div className={`${progressBoxCls} border-[rgba(99,102,241,0.25)]`}>
+        <div
+          className={`${progressBoxCls} border-[color-mix(in_srgb,var(--primary)_25%,transparent)]`}
+        >
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <span className="flex items-center gap-[0.4rem] text-[0.8125rem] font-semibold text-main">
               Mục tiêu Đầu tư Tháng
@@ -278,7 +280,7 @@ export function HeroCashflowCard({
                     ? ''
                     : investPercent >= 50
                       ? 'bg-primary-glow text-primary'
-                      : 'bg-[rgba(245,158,11,0.15)] text-warning'
+                      : 'bg-[color-mix(in_srgb,var(--warning)_15%,transparent)] text-warning'
                 }`}
               >
                 {isInvestReached
@@ -306,7 +308,7 @@ export function HeroCashflowCard({
                   {formatCurrency(investmentTarget)}
                 </span>
                 {isInvestReached && (
-                  <span style={{ color: '#10b981', fontWeight: 600 }}>
+                  <span style={{ color: 'var(--income)', fontWeight: 600 }}>
                     Vượt chỉ tiêu: <strong>+{formatCurrency(investSurplus)}</strong> 🎉
                   </span>
                 )}

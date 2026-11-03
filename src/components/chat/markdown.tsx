@@ -18,7 +18,7 @@ export const formatInlineText = (text: string): ReactNode => {
       return (
         <code
           key={partIdx}
-          className="py-px px-[5px] rounded-xs text-[11.5px] [font-family:'JetBrains_Mono','Fira_Code',monospace] bg-[rgba(0,0,0,0.25)] border border-[rgba(255,255,255,0.1)] text-[#a5b4fc] light:bg-[#e2e8f0] light:border-[#cbd5e1] light:text-[#4f46e5]"
+          className="py-px px-[5px] rounded-xs text-[11.5px] [font-family:'JetBrains_Mono','Fira_Code',monospace] bg-[rgba(0,0,0,0.25)] border border-[rgba(255,255,255,0.1)] text-[var(--text-link)] light:bg-[var(--btn-secondary-bg)] light:border-[var(--border-hover)] light:text-[var(--primary)]"
         >
           {part.slice(1, -1)}
         </code>
@@ -85,15 +85,15 @@ export const renderFormattedText = (text: string): ReactNode => {
         elements.push(
           <div
             key={`table-${i}`}
-            className="w-full my-[10px] overflow-x-auto rounded-md border border-[rgba(255,255,255,0.12)] bg-[rgba(15,23,42,0.6)] shadow-[0_4px_16px_rgba(0,0,0,0.25)] light:bg-white light:border-[#e2e8f0] light:shadow-[0_2px_10px_rgba(0,0,0,0.06)]"
+            className="w-full my-[10px] overflow-x-auto rounded-md border border-[rgba(255,255,255,0.12)] bg-[rgba(0,0,0,0.6)] shadow-[0_4px_16px_rgba(0,0,0,0.25)] light:bg-white light:border-[var(--border)] light:shadow-[0_2px_10px_rgba(0,0,0,0.06)]"
           >
             <table className="w-full border-collapse text-[12px] text-left">
-              <thead className="bg-[rgba(30,41,59,0.85)] border-b border-[rgba(255,255,255,0.12)] light:bg-[#f8fafc] light:border-[#e2e8f0]">
+              <thead className="bg-[var(--bg-widget)] border-b border-[rgba(255,255,255,0.12)] light:bg-[var(--bg-card)] light:border-[var(--border)]">
                 <tr>
                   {headerCells.map((th, thIdx) => (
                     <th
                       key={thIdx}
-                      className="py-2 px-3 font-semibold tracking-[0.2px] whitespace-nowrap text-[#a5b4fc] light:text-[#4338ca]"
+                      className="py-2 px-3 font-semibold tracking-[0.2px] whitespace-nowrap text-[var(--text-link)] light:text-[var(--primary-hover)]"
                     >
                       {formatInlineText(th)}
                     </th>
@@ -104,12 +104,12 @@ export const renderFormattedText = (text: string): ReactNode => {
                 {rows.map((row, rIdx) => (
                   <tr
                     key={rIdx}
-                    className="hover:bg-[rgba(99,102,241,0.08)] light:hover:bg-[#f5f3ff] [&:last-child>td]:border-b-0"
+                    className="hover:bg-[color-mix(in_srgb,var(--primary)_8%,transparent)] light:hover:bg-[color-mix(in_srgb,var(--purple)_8%,transparent)] [&:last-child>td]:border-b-0"
                   >
                     {row.map((cell, cIdx) => (
                       <td
                         key={cIdx}
-                        className="py-2 px-3 leading-[1.45] text-[#e2e8f0] border-b border-[rgba(255,255,255,0.05)] light:text-[#334155] light:border-[#f1f5f9]"
+                        className="py-2 px-3 leading-[1.45] text-[var(--text-main)] border-b border-[rgba(255,255,255,0.05)] light:text-[var(--text-main)] light:border-[var(--border)]"
                       >
                         {formatInlineText(cell)}
                       </td>
@@ -129,7 +129,7 @@ export const renderFormattedText = (text: string): ReactNode => {
       elements.push(
         <h3
           key={`h3-${i}`}
-          className="mt-[10px] mb-[6px] text-[14.5px] font-bold text-[#f8fafc] light:text-[#0f172a]"
+          className="mt-[10px] mb-[6px] text-[14.5px] font-bold text-[var(--text-main)] light:text-[var(--text-main)]"
         >
           {formatInlineText(line.slice(2))}
         </h3>
@@ -141,7 +141,7 @@ export const renderFormattedText = (text: string): ReactNode => {
       elements.push(
         <h4
           key={`h4-${i}`}
-          className="mt-2 mb-1 text-[13px] font-semibold text-[#a5b4fc] light:text-[#4f46e5]"
+          className="mt-2 mb-1 text-[13px] font-semibold text-[var(--text-link)] light:text-[var(--primary)]"
         >
           {formatInlineText(line.replace(/^#{2,3}\s+/, ''))}
         </h4>
@@ -166,7 +166,7 @@ export const renderFormattedText = (text: string): ReactNode => {
       elements.push(
         <blockquote
           key={`bq-${i}`}
-          className="my-[6px] py-[6px] px-3 border-l-[3px] border-l-primary bg-[rgba(99,102,241,0.08)] rounded-r-sm text-muted italic"
+          className="my-[6px] py-[6px] px-3 border-l-[3px] border-l-primary bg-[color-mix(in_srgb,var(--primary)_8%,transparent)] rounded-r-sm text-muted italic"
         >
           {formatInlineText(trimmed.slice(2))}
         </blockquote>

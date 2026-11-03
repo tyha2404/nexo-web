@@ -170,7 +170,9 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
                   />
                 </div>
                 {usernameError && (
-                  <span className="mt-1 block text-[0.78rem] text-[#ef4444]">{usernameError}</span>
+                  <span className="mt-1 block text-[0.78rem] text-[var(--expense)]">
+                    {usernameError}
+                  </span>
                 )}
               </div>
 

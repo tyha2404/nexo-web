@@ -1,15 +1,28 @@
 import { SlidingTabs } from './components/ui';
 import {
   ArrowLeftRight,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  CircleUser,
+  Gem,
   Handshake,
   KeyRound,
   LayoutDashboard,
   LogOut,
   Moon,
+  PanelLeft,
   Plus,
+  Search,
+  Settings,
+  ShoppingBag,
   Sparkles,
   Sun,
+  Tags,
   Target,
+  TrendingUp,
+  WifiOff,
+  type LucideIcon,
 } from 'lucide-react';
 import {
   lazy,
@@ -39,22 +52,30 @@ const AIChatWidget = lazy(() =>
 );
 import { ApiError, authService } from './services';
 import { useRealtimeSync } from './hooks';
-import { BTN_PRIMARY, BTN_SECONDARY, PWA_TOAST, SPINNER_PAGE, MOTION_MENU } from './components/ui';
+import { BTN_SECONDARY, PWA_TOAST, SPINNER_PAGE, MOTION_MENU, cx } from './components/ui';
 
 export type ActiveTab = 'dashboard' | 'transactions' | 'debts' | 'planning';
 
-// App shell styling. Breakpoint: `mobile:` swaps the sidebar + desktop header for the
-// fixed mobile header + bottom nav. `!` transitions beat the global unlayered `button` rule.
-const GLASS = '[backdrop-filter:var(--glass-blur)] [-webkit-backdrop-filter:var(--glass-blur)]';
+// App shell styling, modelled on the VS Code workbench: title bar, activity bar,
+// side bar, editor (tabs + breadcrumbs) and status bar on desktop. `mobile:` swaps
+// them for the fixed mobile header + bottom nav. `!` transitions beat the global
+// unlayered `button` rule.
 const BRAND_CLICKABLE =
-  'cursor-pointer select-none [-webkit-tap-highlight-color:transparent] transition-[transform,opacity] duration-200 ease-[ease] hover:opacity-90 active:[transform:scale(0.97)]';
-const BTN_TRANSITION =
-  'transition-[background-color,border-color,color,box-shadow,transform]! duration-[0.18s]! ease-[ease-out]!';
-const MOBILE_HEADER_BTN = `flex size-11 min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-sm border border-solid p-0 [-webkit-tap-highlight-color:transparent] ${BTN_TRANSITION} active:[transform:scale(0.95)] [&:hover]:bg-input-hover`;
-const SIDEBAR_ICON_BTN = `flex size-9 min-h-9 min-w-9 shrink-0 cursor-pointer items-center justify-center rounded-sm border border-solid bg-input p-0 pointer-coarse:min-h-11 pointer-coarse:min-w-11 ${BTN_TRANSITION} hover:[transform:translateY(-1px)]`;
-const THEME_TOGGLE_BTN = `${SIDEBAR_ICON_BTN} border-line text-muted hover:border-primary hover:bg-input-hover hover:text-primary`;
+  'cursor-pointer select-none [-webkit-tap-highlight-color:transparent] transition-opacity duration-100 hover:opacity-90';
+const BTN_TRANSITION = 'transition-[background-color,color]! duration-100! ease-out!';
+const MOBILE_HEADER_BTN = `flex size-11 min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-[5px] border-none p-0 [-webkit-tap-highlight-color:transparent] ${BTN_TRANSITION} [&:hover]:bg-hover active:bg-hover`;
+/** VS Code `.action-item`: 22px square, 5px radius, toolbar hover fill. */
+const TOOLBAR_BTN = `inline-flex size-[22px] shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-none bg-transparent p-0 text-main ${BTN_TRANSITION} hover:bg-hover`;
+const ACTIVITY_BTN = `relative flex h-12 w-12 cursor-pointer items-center justify-center border-none bg-transparent p-0 ${BTN_TRANSITION}`;
+const STATUS_ITEM = `inline-flex h-full cursor-pointer items-center gap-1 border-none bg-transparent px-[5px] text-[12px] text-statusbar-fg ${BTN_TRANSITION} hover:bg-statusbar-hover [&_svg]:size-[14px]`;
+/** VS Code context menu: blue selection on hover. */
+const MENU_PANEL = `${MOTION_MENU} z-100 min-w-[220px] rounded-md border border-line bg-widget p-1 text-[13px] shadow-app-lg`;
+const MENU_ITEM =
+  'flex h-[26px] w-full cursor-pointer items-center gap-2 rounded-[3px] border-none bg-transparent px-2 text-left text-[13px] text-main hover:bg-primary hover:text-white [&_svg]:size-[14px] mobile:h-10 mobile:text-[15px] mobile:[&_svg]:size-4';
+const TREE_ITEM =
+  'flex h-[22px] w-full cursor-pointer items-center gap-[6px] border border-transparent pr-3 text-left text-[13px] text-main hover:bg-list-hover focus-visible:border-primary focus-visible:outline-none [&_svg]:size-4 [&_svg]:shrink-0';
 const ACCOUNT_ITEM =
-  'flex min-h-10 w-full cursor-pointer items-center gap-[0.6rem] rounded-sm border-none bg-transparent p-[0.6rem] text-[0.875rem] active:bg-hover [&:hover]:bg-hover';
+  'flex min-h-10 w-full cursor-pointer items-center gap-[0.6rem] rounded-[3px] border-none bg-transparent p-[0.6rem] text-[0.875rem] active:bg-hover [&:hover]:bg-hover';
 
 const NAV_ITEMS = [
   { tab: 'dashboard', label: 'Tổng quan', short: 'Tổng quan', Icon: LayoutDashboard },
@@ -62,8 +83,32 @@ const NAV_ITEMS = [
   { tab: 'debts', label: 'Sổ Vay & Nợ', short: 'Vay & Nợ', Icon: Handshake },
   { tab: 'planning', label: 'Kế hoạch & Mục tiêu', short: 'Kế hoạch', Icon: Target },
 ] as const;
+
+type TreeChild = { nav: string; label: string; Icon: LucideIcon; iconClass: string };
+const TREE_CHILDREN: Partial<Record<ActiveTab, TreeChild[]>> = {
+  transactions: [
+    { nav: 'expenses', label: 'Chi tiêu', Icon: ShoppingBag, iconClass: 'text-expense' },
+    { nav: 'income', label: 'Thu nhập', Icon: TrendingUp, iconClass: 'text-income' },
+    { nav: 'investment', label: 'Đầu tư', Icon: Gem, iconClass: 'text-investment' },
+  ],
+  planning: [
+    { nav: 'targets', label: 'Mục tiêu & Ngân sách', Icon: Target, iconClass: 'text-warning' },
+    { nav: 'categories', label: 'Danh mục thu chi', Icon: Tags, iconClass: 'text-purple' },
+  ],
+};
+const TAB_ICON_CLASS: Record<ActiveTab, string> = {
+  dashboard: 'text-link',
+  transactions: 'text-income',
+  debts: 'text-warning',
+  planning: 'text-purple',
+};
+const TRANSACTION_TYPE_LABEL: Record<TransactionType, string> = {
+  [TransactionType.EXPENSE]: 'Chi tiêu',
+  [TransactionType.INCOME]: 'Thu nhập',
+  [TransactionType.INVESTMENT]: 'Đầu tư',
+};
 const CONTENT_VIEW =
-  'content-view mx-auto w-full max-w-[1400px] grow px-6 pt-5 pb-10 motion-safe:animate-[nexo-view-enter_240ms_var(--motion-ease)_backwards] mobile:max-w-full mobile:overflow-x-hidden mobile:p-[0.65rem] mobile:pb-6';
+  'content-view mx-auto w-full max-w-[1400px] grow px-6 pt-4 pb-10 motion-safe:animate-[nexo-view-enter_240ms_var(--motion-ease)_backwards] mobile:max-w-full mobile:overflow-x-hidden mobile:p-[0.65rem] mobile:pb-6';
 
 function App() {
   const navigate = useNavigate();
@@ -84,6 +129,41 @@ function App() {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
+  const [manageMenuOpen, setManageMenuOpen] = useState(false);
+  const manageMenuRef = useRef<HTMLDivElement>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    try {
+      return localStorage.getItem('nexo-sidebar') !== 'hidden';
+    } catch {
+      return true;
+    }
+  });
+  const [online, setOnline] = useState(() => navigator.onLine);
+
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => {
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
+    };
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem('nexo-sidebar', sidebarOpen ? 'visible' : 'hidden');
+    } catch {
+      /* storage unavailable: keep the in-memory state */
+    }
+  }, [sidebarOpen]);
+  useEffect(() => {
+    if (!manageMenuOpen) return;
+    const close = (e: PointerEvent) => {
+      if (!manageMenuRef.current?.contains(e.target as Node)) setManageMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [manageMenuOpen]);
 
   useEffect(() => {
     if (!accountMenuOpen) return;
@@ -300,6 +380,11 @@ function App() {
         e.preventDefault();
         handleOpenAIChat();
       }
+      // VS Code: Cmd/Ctrl+B toggles the side bar
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setSidebarOpen((open) => !open);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
@@ -341,24 +426,44 @@ function App() {
     }
   };
 
+  const activeNav = NAV_ITEMS.find((item) => item.tab === activeTab) ?? NAV_ITEMS[0];
+  const breadcrumbs: string[] = [activeNav.label];
+  if (activeTab === 'transactions') breadcrumbs.push(TRANSACTION_TYPE_LABEL[transactionType]);
+  if (activeTab === 'planning')
+    breadcrumbs.push(planningSubTab === 'targets' ? 'Mục tiêu & Ngân sách' : 'Danh mục thu chi');
+  const isTreeChildActive = (nav: string) =>
+    (activeTab === 'transactions' &&
+      ((nav === 'expenses' && transactionType === TransactionType.EXPENSE) ||
+        (nav === 'income' && transactionType === TransactionType.INCOME) ||
+        (nav === 'investment' && transactionType === TransactionType.INVESTMENT))) ||
+    (activeTab === 'planning' && nav === planningSubTab);
+
+  // VS Code: clicking the active activity-bar item toggles the side bar.
+  const handleActivityClick = (tab: ActiveTab) => {
+    if (tab === activeTab) {
+      setSidebarOpen((open) => !open);
+      return;
+    }
+    setSidebarOpen(true);
+    handleNavigate(tab);
+  };
+
   const renderBottomNavItem = ({ tab, label, short, Icon }: (typeof NAV_ITEMS)[number]) => {
     const active = activeTab === tab;
     return (
       <button
         key={tab}
         type="button"
-        className={`group relative flex h-full min-h-12 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-[3px] rounded-lg border-none bg-transparent px-px py-[3px] [-webkit-tap-highlight-color:transparent] transition-[color,background-color]! duration-[180ms]! ease-[ease]! focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary motion-reduce:duration-[0.01ms]! ${active ? 'text-primary' : 'text-muted'}`}
+        className={`group relative flex h-full min-h-12 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-[3px] border-none bg-transparent px-px py-[3px] [-webkit-tap-highlight-color:transparent] transition-[color]! duration-100! ease-out! focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-primary ${active ? 'text-activity' : 'text-activity-inactive'}`}
         aria-current={active ? 'page' : undefined}
         onClick={() => handleNavigate(tab)}
         aria-label={label}
       >
-        <div
-          className={`flex h-[30px] w-[38px] items-center justify-center rounded-md [transition:background-color_200ms_ease,color_200ms_ease,transform_200ms_var(--motion-ease)] motion-reduce:[transition-duration:0.01ms] ${active ? 'bg-transparent text-primary' : 'bg-transparent group-active:[transform:scale(0.9)]'}`}
-        >
-          <Icon size={20} />
+        <div className="flex h-[30px] w-[38px] items-center justify-center rounded-[5px]">
+          <Icon size={20} strokeWidth={active ? 2 : 1.75} />
         </div>
         <span
-          className={`text-[10px] leading-[14px] tracking-normal whitespace-nowrap transition-[color] duration-200 ease-[ease] ${active ? 'font-bold text-primary' : 'font-semibold'}`}
+          className={`text-[10px] leading-[14px] tracking-normal whitespace-nowrap ${active ? 'font-semibold' : 'font-normal'}`}
         >
           {short}
         </span>
@@ -366,52 +471,54 @@ function App() {
     );
   };
 
+  const themeLabel = theme === 'light' ? 'Giao diện tối' : 'Giao diện sáng';
+
   return (
-    <div className="app-shell flex min-h-screen w-screen bg-app mobile:min-h-dvh mobile:flex-col">
-      {/* Mobile Top Header */}
+    <div className="app-shell flex h-screen w-screen flex-col overflow-hidden bg-app text-[13px] mobile:h-auto mobile:min-h-dvh mobile:overflow-visible mobile:text-base">
+      {/* Mobile Top Header (styled as the VS Code title bar) */}
       <header
-        className={`fixed inset-x-0 top-0 z-90 hidden h-[calc(56px+env(safe-area-inset-top,0px))] min-h-[calc(56px+env(safe-area-inset-top,0px))] items-center justify-between border-b border-line bg-card pt-[max(0.5rem,env(safe-area-inset-top,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] pb-2 pl-[max(1rem,env(safe-area-inset-left,0px))] ${GLASS} mobile:flex standalone:light:bg-[linear-gradient(to_bottom,#0f172a_0,#0f172a_env(safe-area-inset-top,0px),var(--bg-card)_env(safe-area-inset-top,0px))]`}
+        className={`fixed inset-x-0 top-0 z-90 hidden h-[calc(52px+env(safe-area-inset-top,0px))] min-h-[calc(52px+env(safe-area-inset-top,0px))] items-center justify-between border-b border-line bg-titlebar pt-[max(0.4rem,env(safe-area-inset-top,0px))] pr-[max(0.5rem,env(safe-area-inset-right,0px))] pb-[0.4rem] pl-[max(0.85rem,env(safe-area-inset-left,0px))] mobile:flex standalone:light:bg-[linear-gradient(to_bottom,#1f1f1f_0,#1f1f1f_env(safe-area-inset-top,0px),var(--bg-titlebar)_env(safe-area-inset-top,0px))]`}
       >
         <div
-          className={`flex h-10 items-center gap-[0.65rem] ${BRAND_CLICKABLE}`}
+          className={`flex h-10 items-center gap-2 ${BRAND_CLICKABLE}`}
           onClick={() => handleNavigate('dashboard')}
           role="button"
           tabIndex={0}
           onKeyDown={brandKeyDown}
           aria-label="Trang chủ Nexo"
         >
-          <img src="/logo-transparent.svg" className="size-[30px]" alt="Nexo logo" />
-          <span className="text-[1.15rem] font-bold tracking-[-0.025em] text-main">
-            Nexo Portal
-          </span>
+          <img src="/logo-transparent.svg" className="size-6" alt="Nexo logo" />
+          <span className="text-[15px] font-semibold text-main">{activeNav.short}</span>
         </div>
-        <div className="flex items-center gap-[0.35rem]">
+        <div className="flex items-center gap-[2px]">
           <button
-            className={`${MOBILE_HEADER_BTN} border-line bg-input text-main [&:hover]:border-line-hover`}
+            className={`${MOBILE_HEADER_BTN} bg-transparent text-main`}
             onClick={handleOpenAIChat}
             aria-label="Trợ lý AI"
             title="Trợ lý Nexo AI"
           >
-            <Sparkles size={16} color="var(--primary)" />
+            <Sparkles size={18} className="text-link" />
           </button>
           <div className="relative" ref={accountMenuRef}>
             <button
-              className={`${MOBILE_HEADER_BTN} border-transparent bg-(--primary-gradient) text-[0.85rem] font-bold text-white`}
+              className={`${MOBILE_HEADER_BTN} bg-transparent text-main`}
               onClick={() => setAccountMenuOpen((open) => !open)}
               aria-label="Tài khoản"
               aria-haspopup="menu"
               aria-expanded={accountMenuOpen}
             >
-              {userInitial}
+              <span className="flex size-7 items-center justify-center rounded-full bg-primary text-[13px] font-semibold text-white">
+                {userInitial}
+              </span>
             </button>
             {accountMenuOpen && (
               <div
-                className={`${MOTION_MENU} absolute top-[calc(100%+0.4rem)] right-0 z-100 max-w-[calc(100vw-2rem)] min-w-[200px] rounded-md border border-line bg-card p-[0.35rem] shadow-app-lg`}
+                className={`${MENU_PANEL} absolute top-[calc(100%+0.4rem)] right-0 max-w-[calc(100vw-2rem)]`}
                 role="menu"
               >
-                <div className="mb-1 flex min-w-0 flex-col border-b border-line px-[0.6rem] pt-2 pb-[0.6rem]">
-                  <span className="text-[0.9rem] font-semibold">{user.username}</span>
-                  <span className="truncate text-[0.75rem] text-muted">{user.email}</span>
+                <div className="mb-1 flex min-w-0 flex-col border-b border-line px-2 pt-1 pb-2">
+                  <span className="text-[15px] font-semibold">{user.username}</span>
+                  <span className="truncate text-[13px] text-muted">{user.email}</span>
                 </div>
                 <button
                   type="button"
@@ -420,7 +527,7 @@ function App() {
                   onClick={toggleTheme}
                 >
                   {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-                  {theme === 'light' ? 'Giao diện tối' : 'Giao diện sáng'}
+                  {themeLabel}
                 </button>
                 <button
                   type="button"
@@ -450,211 +557,365 @@ function App() {
         </div>
       </header>
 
-      {/* Desktop Sidebar (Hidden on mobile/PWA since Bottom Navigation is active) */}
-      <aside
-        className={`sidebar sticky top-0 z-50 flex h-screen w-[260px] shrink-0 flex-col border-r border-line bg-card px-[0.9rem] py-5 ${GLASS} mobile:hidden`}
-      >
-        <div className="mb-4">
+      {/* Desktop title bar with the command center */}
+      <header className="titlebar relative z-60 grid h-[35px] shrink-0 grid-cols-[1fr_minmax(0,600px)_1fr] items-center gap-2 border-b border-line bg-titlebar px-2 text-[13px] text-main mobile:hidden">
+        <div className="flex min-w-0 items-center gap-2">
           <div
-            className={`group flex items-center gap-3 ${BRAND_CLICKABLE}`}
+            className={`flex items-center gap-2 px-1 ${BRAND_CLICKABLE}`}
             onClick={() => handleNavigate('dashboard')}
             role="button"
             tabIndex={0}
             onKeyDown={brandKeyDown}
             aria-label="Trang chủ Nexo"
           >
-            <img
-              src="/logo-transparent.svg"
-              className="size-[38px] transition-transform duration-[250ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:[transform:scale(1.08)_rotate(3deg)]"
-              alt="Nexo logo"
-            />
-            <span className="text-[1.25rem] font-bold tracking-[-0.025em] text-main">
-              Nexo Portal
-            </span>
+            <img src="/logo-transparent.svg" className="size-4" alt="Nexo logo" />
+            <span className="truncate text-[13px] text-main">Nexo Portal</span>
           </div>
         </div>
+        <button
+          type="button"
+          className="flex h-[24px] w-full min-w-0 cursor-pointer items-center justify-center gap-[6px] rounded-md border border-line bg-[color-mix(in_srgb,var(--bg-input)_60%,transparent)] px-2 text-[12px] text-muted transition-[background-color,border-color]! duration-100! hover:border-line-hover hover:bg-input-hover hover:text-main"
+          onClick={handleOpenAIChat}
+          aria-label="Trợ lý AI"
+          title="Trợ lý Nexo AI (⌘K)"
+        >
+          <Search size={14} className="shrink-0" />
+          <span className="truncate">Nexo — hỏi trợ lý AI về tài chính của bạn</span>
+          <kbd className="ml-1 shrink-0 rounded-[3px] border border-line bg-hover px-1 font-sans text-[11px] leading-[16px] text-muted">
+            ⌘K
+          </kbd>
+        </button>
+        <div className="flex items-center justify-end gap-[2px]">
+          <button
+            type="button"
+            className={cx(TOOLBAR_BTN, !sidebarOpen && 'text-muted')}
+            onClick={() => setSidebarOpen((open) => !open)}
+            aria-label="Ẩn/hiện thanh bên"
+            aria-pressed={sidebarOpen}
+            title="Ẩn/hiện thanh bên (⌘B)"
+          >
+            <PanelLeft size={16} />
+          </button>
+        </div>
+      </header>
 
-        {/* 4 Primary Navigation Hubs */}
-        <SlidingTabs as="nav" variant="navigation" className="nav-menu flex grow flex-col gap-1">
-          {NAV_ITEMS.map(({ tab, label, Icon }) => {
-            const active = activeTab === tab;
-            return (
+      <div className="flex min-h-0 flex-1 mobile:block mobile:flex-none">
+        {/* Desktop: activity bar + side bar (hidden on mobile, where the bottom nav is used) */}
+        <aside className="sidebar z-50 flex shrink-0 mobile:hidden">
+          <div className="flex w-12 flex-col border-r border-line bg-activitybar">
+            <SlidingTabs
+              as="nav"
+              variant="activity"
+              className="nav-menu flex flex-col"
+              aria-label="Điều hướng chính"
+            >
+              {NAV_ITEMS.map(({ tab, label, Icon }) => {
+                const active = activeTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => handleActivityClick(tab)}
+                    className={cx(
+                      ACTIVITY_BTN,
+                      active ? 'text-activity' : 'text-activity-inactive hover:text-activity'
+                    )}
+                    aria-current={active ? 'page' : undefined}
+                    aria-label={label}
+                    title={label}
+                  >
+                    <Icon size={24} strokeWidth={1.5} />
+                  </button>
+                );
+              })}
+            </SlidingTabs>
+            <div className="mt-auto flex flex-col">
               <button
-                key={tab}
-                onClick={() => handleNavigate(tab)}
-                className={`relative inline-flex w-full cursor-pointer items-center gap-3 overflow-hidden rounded-md border border-solid px-[0.85rem] py-[0.55rem] text-left align-middle text-[0.9rem] leading-[1.2] ${active ? 'border-transparent bg-transparent font-semibold text-main' : 'border-transparent bg-transparent font-medium text-muted hover:bg-hover hover:text-main'}`}
-                aria-current={active ? 'page' : undefined}
+                type="button"
+                className={cx(ACTIVITY_BTN, 'text-activity-inactive hover:text-activity')}
+                onClick={() => openAddTransaction(quickAddDefaultType)}
+                aria-label="Ghi giao dịch"
+                title="Ghi giao dịch"
               >
-                <span
-                  className={`inline-flex shrink-0 items-center justify-center transition-transform duration-[180ms] ease-(--motion-ease) motion-reduce:duration-[0.01ms] ${active ? 'scale-[1.08] text-primary [filter:drop-shadow(0_0_8px_var(--primary-glow))]' : ''}`}
+                <Plus size={24} strokeWidth={1.5} />
+              </button>
+              <div className="relative" ref={manageMenuRef}>
+                <button
+                  type="button"
+                  className={cx(
+                    ACTIVITY_BTN,
+                    manageMenuOpen ? 'text-activity' : 'text-activity-inactive hover:text-activity'
+                  )}
+                  onClick={() => setManageMenuOpen((open) => !open)}
+                  aria-label="Cài đặt"
+                  aria-haspopup="menu"
+                  aria-expanded={manageMenuOpen}
+                  title={`${user.username} · Cài đặt`}
                 >
-                  <Icon size={18} />
+                  <Settings size={24} strokeWidth={1.5} />
+                </button>
+                {manageMenuOpen && (
+                  <div
+                    className={`${MENU_PANEL} absolute bottom-1 left-[calc(100%+4px)] origin-bottom-left`}
+                    role="menu"
+                  >
+                    <div className="flex min-w-0 items-center gap-2 px-2 pt-1 pb-2">
+                      <CircleUser size={16} className="shrink-0 text-muted" />
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate font-semibold">{user.username}</span>
+                        <span className="truncate text-[12px] text-muted">{user.email}</span>
+                      </div>
+                    </div>
+                    <div className="mx-1 my-1 h-px bg-line" role="separator" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={MENU_ITEM}
+                      onClick={() => {
+                        setManageMenuOpen(false);
+                        toggleTheme();
+                      }}
+                    >
+                      {theme === 'light' ? <Moon /> : <Sun />}
+                      {themeLabel}
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={MENU_ITEM}
+                      onClick={() => {
+                        setManageMenuOpen(false);
+                        setChangePasswordOpen(true);
+                      }}
+                    >
+                      <KeyRound /> Đổi mật khẩu
+                    </button>
+                    <div className="mx-1 my-1 h-px bg-line" role="separator" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={MENU_ITEM}
+                      onClick={() => {
+                        setManageMenuOpen(false);
+                        handleLogout();
+                      }}
+                    >
+                      <LogOut /> Đăng xuất
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {sidebarOpen && (
+            <div className="flex w-[240px] flex-col border-r border-line bg-sidebar text-main">
+              <div className="flex h-[35px] shrink-0 items-center px-5 text-[11px] tracking-[0.04em] uppercase">
+                Explorer
+              </div>
+              <div className="flex h-[22px] shrink-0 items-center gap-[2px] px-[2px] text-[11px] font-bold tracking-[0.04em] uppercase">
+                <ChevronDown size={16} className="shrink-0" />
+                Nexo Portal
+              </div>
+              <nav aria-label="Trang" className="min-h-0 flex-1 overflow-y-auto pb-2">
+                {NAV_ITEMS.map(({ tab, label, Icon }) => {
+                  const children = TREE_CHILDREN[tab];
+                  const selected = activeTab === tab && !children;
+                  return (
+                    <div key={tab}>
+                      <button
+                        type="button"
+                        className={cx(
+                          TREE_ITEM,
+                          'pl-[8px]',
+                          selected ? 'bg-list-active' : 'bg-transparent'
+                        )}
+                        onClick={() => handleNavigate(tab)}
+                      >
+                        {children ? (
+                          <ChevronDown className="size-4! text-main" />
+                        ) : (
+                          <span className="w-4 shrink-0" />
+                        )}
+                        <Icon className={TAB_ICON_CLASS[tab]} />
+                        <span className="truncate">{label}</span>
+                      </button>
+                      {children?.map((child) => (
+                        <button
+                          key={child.nav}
+                          type="button"
+                          className={cx(
+                            TREE_ITEM,
+                            'pl-[30px]',
+                            isTreeChildActive(child.nav) ? 'bg-list-active' : 'bg-transparent'
+                          )}
+                          onClick={() => handleNavigate(child.nav)}
+                        >
+                          <child.Icon className={child.iconClass} />
+                          <span className="truncate">{child.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })}
+              </nav>
+            </div>
+          )}
+        </aside>
+
+        {/* Editor area */}
+        <main className="flex min-w-0 flex-1 flex-col bg-app mobile:min-h-dvh mobile:pt-[calc(52px+env(safe-area-inset-top,0px))] mobile:pr-[env(safe-area-inset-right,0px)] mobile:pb-[calc(76px+env(safe-area-inset-bottom,0px))] mobile:pl-[env(safe-area-inset-left,0px)]">
+          {/* Editor tab strip + editor actions */}
+          <div className="flex h-[35px] shrink-0 items-stretch bg-tabs mobile:hidden">
+            <div className="relative flex min-w-0 items-center gap-[6px] border-r border-line bg-tab-active pr-4 pl-[10px] text-[13px] text-main before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-primary">
+              <activeNav.Icon size={16} className={cx('shrink-0', TAB_ICON_CLASS[activeTab])} />
+              <span className="truncate">{activeNav.label}</span>
+            </div>
+            <div className="flex flex-1 items-center justify-end gap-[2px] border-b border-line px-2">
+              <button
+                type="button"
+                className={cx(TOOLBAR_BTN, 'w-auto gap-1 px-[6px] text-[12px]')}
+                onClick={() => openAddTransaction(quickAddDefaultType)}
+                aria-label="Ghi giao dịch mới"
+                title="Ghi giao dịch mới"
+              >
+                <Plus size={16} />
+                <span>Ghi giao dịch</span>
+              </button>
+            </div>
+          </div>
+          {/* Breadcrumbs */}
+          <nav
+            aria-label="Breadcrumb"
+            className="flex h-[22px] shrink-0 items-center gap-[2px] px-3 text-[13px] text-muted mobile:hidden"
+          >
+            <span>nexo</span>
+            {breadcrumbs.map((crumb, index) => (
+              <span key={crumb} className="flex items-center gap-[2px]">
+                <ChevronRight size={14} className="shrink-0" />
+                <span className={index === breadcrumbs.length - 1 ? 'text-main' : undefined}>
+                  {crumb}
                 </span>
-                <span>{label}</span>
-              </button>
-            );
-          })}
-        </SlidingTabs>
-
-        {/* Sidebar Footer */}
-        <div className="mt-auto border-t border-line pt-3">
-          <div className="flex w-full items-center gap-2">
-            <div className="flex size-[30px] shrink-0 items-center justify-center rounded-sm bg-primary text-[0.85rem] font-bold text-white shadow-[0_1px_4px_var(--primary-glow)]">
-              {userInitial}
-            </div>
-            <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-              <span
-                className="truncate text-[0.82rem] font-semibold text-main"
-                title={user.username}
-              >
-                {user.username}
               </span>
-              <span className="truncate text-[0.7rem] text-muted" title={user.email}>
-                {user.email}
-              </span>
+            ))}
+          </nav>
+
+          {/* Content Views — kept mounted to preserve filter/scroll state per tab */}
+          <div className="min-h-0 flex-1 overflow-y-auto mobile:overflow-visible mobile:[-webkit-overflow-scrolling:touch]">
+            <div
+              className={CONTENT_VIEW}
+              style={{ display: activeTab === 'dashboard' ? 'block' : 'none' }}
+            >
+              {visitedTabs.has('dashboard') && (
+                <Suspense fallback={<p role="status">Đang tải tổng quan...</p>}>
+                  <Dashboard onNavigate={handleNavigate} />
+                </Suspense>
+              )}
             </div>
-            <div className="flex shrink-0 items-center gap-[0.35rem]">
-              <button
-                className={THEME_TOGGLE_BTN}
-                onClick={toggleTheme}
-                aria-label="Đổi giao diện sáng/tối"
-                title="Đổi giao diện"
-              >
-                {theme === 'light' ? <Sun size={16} /> : <Moon size={16} />}
-              </button>
-              <button
-                onClick={() => setChangePasswordOpen(true)}
-                className={THEME_TOGGLE_BTN}
-                aria-label="Đổi mật khẩu"
-                title="Đổi mật khẩu"
-              >
-                <KeyRound size={16} />
-              </button>
-              <button
-                onClick={handleLogout}
-                className={`${SIDEBAR_ICON_BTN} border-line text-expense hover:border-[rgba(239,68,68,0.3)] hover:bg-(--expense-hover-bg) hover:text-[#ef4444]`}
-                title="Đăng xuất"
-                aria-label="Đăng xuất"
-              >
-                <LogOut size={16} />
-              </button>
+            <div
+              className={CONTENT_VIEW}
+              style={{ display: activeTab === 'transactions' ? 'block' : 'none' }}
+            >
+              {visitedTabs.has('transactions') && (
+                <Suspense fallback={<p role="status">Đang tải giao dịch...</p>}>
+                  <Transactions type={transactionType} />
+                </Suspense>
+              )}
+            </div>
+            <div
+              className={CONTENT_VIEW}
+              style={{ display: activeTab === 'debts' ? 'block' : 'none' }}
+            >
+              {visitedTabs.has('debts') && (
+                <Suspense fallback={<p role="status">Đang tải sổ nợ...</p>}>
+                  <Debts />
+                </Suspense>
+              )}
+            </div>
+            <div
+              className={CONTENT_VIEW}
+              style={{ display: activeTab === 'planning' ? 'block' : 'none' }}
+            >
+              {visitedTabs.has('planning') && (
+                <Suspense fallback={<p role="status">Đang tải kế hoạch...</p>}>
+                  <Planning
+                    initialSubTab={planningSubTab}
+                    onSubTabChange={setPlanningSubTab}
+                    onNavigate={handleNavigate}
+                  />
+                </Suspense>
+              )}
             </div>
           </div>
-        </div>
-      </aside>
+        </main>
+      </div>
 
-      {/* Main Content Area */}
-      <main className="flex h-screen min-w-0 grow flex-col overflow-y-auto bg-app mobile:h-auto mobile:min-h-dvh mobile:overflow-y-visible mobile:pt-[calc(56px+env(safe-area-inset-top,0px))] mobile:pr-[env(safe-area-inset-right,0px)] mobile:pb-[calc(80px+env(safe-area-inset-bottom,0px))] mobile:pl-[env(safe-area-inset-left,0px)] mobile:[-webkit-overflow-scrolling:touch]">
-        {/* Desktop Top Header with Sleek AI Action Button */}
-        <header
-          className={`sticky top-0 z-40 flex items-center justify-between gap-4 border-b border-line bg-card px-6 py-[0.85rem] ${GLASS} mobile:hidden`}
-        >
-          <div className="flex min-w-[180px] flex-col">
-            <h1 className="m-0 text-[1.25rem] font-bold tracking-[-0.02em] text-main">
-              {activeTab === 'dashboard' && 'Tổng quan'}
-              {activeTab === 'transactions' && 'Sổ giao dịch'}
-              {activeTab === 'debts' && 'Sổ Vay & Nợ'}
-              {activeTab === 'planning' && 'Kế hoạch & Mục tiêu'}
-            </h1>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              className={BTN_PRIMARY}
-              onClick={() => openAddTransaction(quickAddDefaultType)}
-            >
-              <Plus size={16} /> Ghi giao dịch
-            </button>
-            <button
-              className="header-ai-btn relative inline-flex cursor-pointer items-center gap-2 overflow-hidden rounded-full border border-solid border-line bg-input px-[0.85rem] py-[0.45rem] text-[0.86rem] font-semibold text-main shadow-app-sm transition-all! duration-200! ease-[ease]! select-none hover:border-primary hover:bg-hover hover:text-primary motion-reduce:duration-[0.01ms]!"
-              onClick={handleOpenAIChat}
-              type="button"
-              aria-label="Trợ lý AI"
-              title="Trợ lý Nexo AI (⌘K)"
-            >
-              <div />
-              <Sparkles size={16} className="shrink-0 text-primary" />
-              <span className="font-semibold tracking-[-0.01em] text-main">Trợ lý AI</span>
-              <kbd className="rounded-xs border border-solid border-[rgba(255,255,255,0.15)] bg-[rgba(0,0,0,0.25)] px-[0.35rem] py-[0.1rem] font-mono text-[0.7rem] leading-none font-bold text-[#e2e8f0] light:border-[rgba(0,0,0,0.1)] light:bg-[rgba(255,255,255,0.7)] light:text-[#475569]">
-                ⌘K
-              </kbd>
-            </button>
-
-            <button
-              className={THEME_TOGGLE_BTN}
-              onClick={toggleTheme}
-              aria-label="Đổi giao diện sáng/tối"
-              title="Đổi giao diện"
-            >
-              {theme === 'light' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-          </div>
-        </header>
-
-        {/* Content Views — kept mounted to preserve filter/scroll state per tab */}
-        <div
-          className={CONTENT_VIEW}
-          style={{ display: activeTab === 'dashboard' ? 'block' : 'none' }}
-        >
-          {visitedTabs.has('dashboard') && (
-            <Suspense fallback={<p role="status">Đang tải tổng quan...</p>}>
-              <Dashboard onNavigate={handleNavigate} />
-            </Suspense>
-          )}
+      {/* Desktop status bar */}
+      <footer className="flex h-[22px] shrink-0 items-stretch justify-between border-t border-line bg-statusbar text-[12px] text-statusbar-fg mobile:hidden">
+        <div className="flex min-w-0 items-stretch">
+          <button
+            type="button"
+            className={`${STATUS_ITEM} bg-statusbar-remote! px-[10px] text-white! hover:brightness-110`}
+            onClick={() => handleNavigate('dashboard')}
+            title="Nexo Portal"
+          >
+            <img src="/logo-transparent.svg" className="size-[14px] brightness-0 invert" alt="" />
+            <span>Nexo</span>
+          </button>
+          <span className={cx(STATUS_ITEM, 'cursor-default hover:bg-transparent')} role="status">
+            {online ? <Check /> : <WifiOff />}
+            {online ? 'Đã đồng bộ' : 'Ngoại tuyến'}
+          </span>
         </div>
-        <div
-          className={CONTENT_VIEW}
-          style={{ display: activeTab === 'transactions' ? 'block' : 'none' }}
-        >
-          {visitedTabs.has('transactions') && (
-            <Suspense fallback={<p role="status">Đang tải giao dịch...</p>}>
-              <Transactions type={transactionType} />
-            </Suspense>
-          )}
+        <div className="flex min-w-0 items-stretch">
+          <button
+            type="button"
+            className={STATUS_ITEM}
+            onClick={handleOpenAIChat}
+            title="Trợ lý Nexo AI (⌘K)"
+          >
+            <Sparkles />
+            <span>Nexo AI</span>
+          </button>
+          <span className={cx(STATUS_ITEM, 'cursor-default hover:bg-transparent')}>VND</span>
+          <span
+            className={cx(STATUS_ITEM, 'max-w-[220px] cursor-default hover:bg-transparent')}
+            title={user.email}
+          >
+            <CircleUser />
+            <span className="truncate">{user.username}</span>
+          </span>
+          <button
+            type="button"
+            className={cx(STATUS_ITEM, 'pr-[10px]')}
+            onClick={toggleTheme}
+            aria-label="Đổi giao diện sáng/tối"
+            title="Đổi giao diện"
+          >
+            {theme === 'light' ? <Sun /> : <Moon />}
+          </button>
         </div>
-        <div className={CONTENT_VIEW} style={{ display: activeTab === 'debts' ? 'block' : 'none' }}>
-          {visitedTabs.has('debts') && (
-            <Suspense fallback={<p role="status">Đang tải sổ nợ...</p>}>
-              <Debts />
-            </Suspense>
-          )}
-        </div>
-        <div
-          className={CONTENT_VIEW}
-          style={{ display: activeTab === 'planning' ? 'block' : 'none' }}
-        >
-          {visitedTabs.has('planning') && (
-            <Suspense fallback={<p role="status">Đang tải kế hoạch...</p>}>
-              <Planning
-                initialSubTab={planningSubTab}
-                onSubTabChange={setPlanningSubTab}
-                onNavigate={handleNavigate}
-              />
-            </Suspense>
-          )}
-        </div>
-      </main>
+      </footer>
 
-      {/* Mobile PWA Bottom Navigation Bar */}
+      {/* Mobile PWA Bottom Navigation Bar (styled as the activity bar) */}
       <SlidingTabs
         as="nav"
         variant="icon"
-        className={`bottom-nav fixed inset-x-0 bottom-0 z-[9990] hidden h-[calc(64px+env(safe-area-inset-bottom,0px))] items-center justify-around rounded-t-xl border-t border-line bg-card pt-[5px] pr-[max(6px,env(safe-area-inset-right,0px))] pb-[env(safe-area-inset-bottom,0px)] pl-[max(6px,env(safe-area-inset-left,0px))] shadow-[0_8px_32px_rgb(0_0_0/18%),inset_0_1px_0_rgb(255_255_255/4%)] ${GLASS} mobile:flex`}
+        className={`bottom-nav fixed inset-x-0 bottom-0 z-[9990] hidden h-[calc(60px+env(safe-area-inset-bottom,0px))] items-center justify-around border-t border-line bg-activitybar pt-[4px] pr-[max(6px,env(safe-area-inset-right,0px))] pb-[env(safe-area-inset-bottom,0px)] pl-[max(6px,env(safe-area-inset-left,0px))] mobile:flex`}
         aria-label="Điều hướng chính"
       >
         {NAV_ITEMS.slice(0, 2).map(renderBottomNavItem)}
 
         <button
           type="button"
-          className="group relative flex h-full min-h-12 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-[3px] rounded-lg border-none bg-transparent px-px py-[3px] text-muted [-webkit-tap-highlight-color:transparent] transition-[color,background-color]! duration-[180ms]! ease-[ease]! focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary motion-reduce:duration-[0.01ms]!"
+          className="group relative flex h-full min-h-12 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-[3px] border-none bg-transparent px-px py-[3px] text-activity [-webkit-tap-highlight-color:transparent] focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-primary"
           onClick={() => openAddTransaction(quickAddDefaultType)}
           aria-label="Ghi giao dịch mới"
         >
-          <div className="flex h-8 w-[38px] items-center justify-center rounded-md bg-primary text-white shadow-[0_3px_8px_rgb(99_102_241/24%)] transition-transform duration-[180ms] ease-(--motion-ease) group-active:[transform:scale(0.9)] motion-reduce:duration-[0.01ms]">
-            <Plus size={23} strokeWidth={2.25} />
+          <div className="flex h-[30px] w-[38px] items-center justify-center rounded-md border border-btn-border bg-primary text-white transition-[background-color] duration-100 group-active:bg-primary-hover">
+            <Plus size={22} strokeWidth={2} />
           </div>
-          <span className="text-[10px] leading-[14px] font-semibold tracking-normal whitespace-nowrap text-main transition-[color] duration-200 ease-[ease]">
+          <span className="text-[10px] leading-[14px] font-semibold tracking-normal whitespace-nowrap">
             Ghi mới
           </span>
         </button>

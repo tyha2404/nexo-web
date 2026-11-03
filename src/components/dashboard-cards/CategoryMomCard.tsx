@@ -115,9 +115,9 @@ export function CategoryMomCard({
                     <span
                       className={`inline-flex items-center rounded-full border px-2 py-[0.2rem] font-mono text-[0.725rem] font-bold tracking-[-0.01em] whitespace-nowrap ${
                         momExpenseDeltaPercent > 0
-                          ? 'border-[rgba(244,63,94,0.25)] bg-[rgba(244,63,94,0.12)] text-expense'
+                          ? 'border-[color-mix(in_srgb,var(--expense)_25%,transparent)] bg-[color-mix(in_srgb,var(--expense)_12%,transparent)] text-expense'
                           : momExpenseDeltaPercent < 0
-                            ? 'border-[rgba(16,185,129,0.25)] bg-[rgba(16,185,129,0.12)] text-income'
+                            ? 'border-[color-mix(in_srgb,var(--income)_25%,transparent)] bg-[color-mix(in_srgb,var(--income)_12%,transparent)] text-income'
                             : 'border-line bg-card text-muted'
                       }`}
                     >
@@ -159,7 +159,7 @@ export function CategoryMomCard({
                         </span>
                         {item.isNew ? (
                           <span
-                            className={`${changeTagCls} bg-[rgba(99,102,241,0.1)] text-primary`}
+                            className={`${changeTagCls} bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] text-primary`}
                           >
                             <Sparkles size={10} /> Mới
                           </span>
@@ -167,9 +167,9 @@ export function CategoryMomCard({
                           <span
                             className={`${changeTagCls} ${
                               item.deltaPct > 0
-                                ? 'bg-[rgba(244,63,94,0.1)] text-expense'
+                                ? 'bg-[color-mix(in_srgb,var(--expense)_10%,transparent)] text-expense'
                                 : item.deltaPct < 0
-                                  ? 'bg-[rgba(16,185,129,0.1)] text-income'
+                                  ? 'bg-[color-mix(in_srgb,var(--income)_10%,transparent)] text-income'
                                   : 'bg-hover text-muted'
                             }`}
                           >
@@ -193,7 +193,7 @@ export function CategoryMomCard({
                         style={{
                           width: `${Math.min(100, item.percentage)}%`,
                           background:
-                            item.hasBudget && item.budgetUtil > 100 ? '#f43f5e' : undefined,
+                            item.hasBudget && item.budgetUtil > 100 ? 'var(--expense)' : undefined,
                         }}
                       />
                     </div>

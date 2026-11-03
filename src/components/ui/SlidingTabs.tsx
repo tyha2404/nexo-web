@@ -3,7 +3,7 @@ import { cx } from './styles';
 
 type IndicatorBounds = { x: number; y: number; width: number; height: number };
 interface SlidingTabsProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'pill' | 'underline' | 'navigation' | 'icon';
+  variant?: 'pill' | 'underline' | 'navigation' | 'icon' | 'activity';
   as?: 'div' | 'nav';
 }
 
@@ -41,7 +41,8 @@ export function SlidingTabs({
       const next = {
         x,
         y: variant === 'underline' ? y + target.offsetHeight - 2 : y,
-        width: target.offsetWidth,
+        // Activity bar: VS Code's 2px bar on the left edge of the active item
+        width: variant === 'activity' ? 2 : target.offsetWidth,
         height: variant === 'underline' ? 2 : target.offsetHeight,
       };
       setBounds((previous) =>
@@ -83,10 +84,12 @@ export function SlidingTabs({
           variant === 'underline'
             ? 'rounded-full bg-primary'
             : variant === 'pill'
-              ? 'rounded-sm bg-(--primary-gradient) shadow-[0_2px_8px_var(--primary-glow)]'
-              : 'rounded-md bg-primary-glow',
-          variant === 'navigation' &&
-            'border border-[rgba(99,102,241,0.3)] shadow-[0_0_14px_var(--primary-glow)]'
+              ? 'rounded-xs bg-primary'
+              : variant === 'activity'
+                ? 'bg-primary'
+                : variant === 'icon'
+                  ? 'rounded-[5px] bg-hover'
+                  : 'rounded-xs bg-list-active'
         )}
         style={{
           visibility: bounds ? 'visible' : 'hidden',

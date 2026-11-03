@@ -3,9 +3,9 @@ import { BTN_TRANSITION, NO_WRAP } from './chatStyles';
 
 const ICON_BTN = `p-[6px] rounded-sm cursor-pointer flex items-center justify-center border ${BTN_TRANSITION}`;
 const ICON_BTN_IDLE =
-  'bg-transparent border-transparent text-[#94a3b8] hover:bg-[rgba(99,102,241,0.18)] hover:border-[rgba(99,102,241,0.35)] hover:text-[#c7d2fe] light:text-[#64748b] light:hover:bg-[rgba(99,102,241,0.1)] light:hover:border-[rgba(99,102,241,0.25)] light:hover:text-[#4f46e5]';
+  'bg-transparent border-transparent text-[var(--text-muted)] hover:bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_35%,transparent)] hover:text-[var(--text-link)] light:text-[var(--text-muted)] light:hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] light:hover:border-[color-mix(in_srgb,var(--primary)_25%,transparent)] light:hover:text-[var(--primary)]';
 const ICON_BTN_ACTIVE =
-  'bg-[rgba(99,102,241,0.25)] border-[rgba(99,102,241,0.5)] text-[#a5b4fc] light:bg-[rgba(99,102,241,0.15)] light:border-[rgba(99,102,241,0.4)] light:text-[#4f46e5]';
+  'bg-[color-mix(in_srgb,var(--primary)_25%,transparent)] border-[color-mix(in_srgb,var(--primary)_50%,transparent)] text-[var(--text-link)] light:bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] light:border-[color-mix(in_srgb,var(--primary)_40%,transparent)] light:text-[var(--primary)]';
 const iconBtn = (active = false) => `${ICON_BTN} ${active ? ICON_BTN_ACTIVE : ICON_BTN_IDLE}`;
 
 export interface ChatHeaderProps {
@@ -26,21 +26,21 @@ export function ChatHeader({
   onClose,
 }: ChatHeaderProps) {
   return (
-    <div className="flex items-center justify-between shrink-0 gap-2 px-4 py-3 bg-[#0f172a] border-b border-[rgba(255,255,255,0.08)] light:bg-[#f8fafc] light:border-[#e2e8f0] mobile:px-[14px] mobile:py-[10px]">
+    <div className="flex items-center justify-between shrink-0 gap-2 px-4 py-3 bg-[var(--bg-card)] border-b border-[rgba(255,255,255,0.08)] light:bg-[var(--bg-card)] light:border-[var(--border)] mobile:px-[14px] mobile:py-[10px]">
       <div className="flex items-center gap-[10px] min-w-0">
         <div className="relative inline-flex shrink-0">
           <div className="w-8 h-8 rounded-sm bg-primary flex items-center justify-center text-white shadow-[0_1px_4px_var(--primary-glow)]">
             <SparkIcon />
           </div>
-          <span className="absolute -bottom-px -right-px w-[9px] h-[9px] rounded-full bg-[#10b981] border-2 border-[#0f172a] shadow-[0_0_6px_#10b981] light:border-[#f8fafc]" />
+          <span className="absolute -bottom-px -right-px w-[9px] h-[9px] rounded-full bg-[var(--income)] border-2 border-[var(--border)] shadow-[0_0_6px_var(--income)] light:border-[var(--border)]" />
         </div>
         <div className="flex flex-col gap-[2px] min-w-0">
           <div className="flex items-center gap-[7px]">
-            <h3 className="m-0 text-[14.5px] font-bold tracking-[-0.2px] text-[#f8fafc] light:text-[#0f172a]">
+            <h3 className="m-0 text-[14.5px] font-bold tracking-[-0.2px] text-[var(--text-main)] light:text-[var(--text-main)]">
               Nexo AI
             </h3>
             <span
-              className={`inline-flex items-center py-[1.5px] px-[7px] rounded-sm text-[10.5px] font-semibold bg-[rgba(99,102,241,0.16)] text-[#a5b4fc] border border-[rgba(99,102,241,0.3)] light:bg-[#ede9fe] light:text-[#4f46e5] light:border-[#c4b5fd] ${NO_WRAP}`}
+              className={`inline-flex items-center py-[1.5px] px-[7px] rounded-sm text-[10.5px] font-semibold bg-[color-mix(in_srgb,var(--primary)_16%,transparent)] text-[var(--text-link)] border border-[color-mix(in_srgb,var(--primary)_30%,transparent)] light:bg-[color-mix(in_srgb,var(--purple)_12%,transparent)] light:text-[var(--primary)] light:border-[var(--purple)] ${NO_WRAP}`}
             >
               Trợ lý tài chính AI
             </span>
@@ -71,7 +71,7 @@ export function ChatHeader({
           <ListIcon size={17} />
         </button>
         <button
-          className={`${iconBtn()} hover:bg-[rgba(239,68,68,0.18)]! hover:border-[rgba(239,68,68,0.35)]! hover:text-[#f87171]! light:hover:bg-[rgba(239,68,68,0.12)]! light:hover:border-[rgba(239,68,68,0.25)]! light:hover:text-[#dc2626]!`}
+          className={`${iconBtn()} hover:bg-[color-mix(in_srgb,var(--expense)_18%,transparent)]! hover:border-[color-mix(in_srgb,var(--expense)_35%,transparent)]! hover:text-[var(--expense)]! light:hover:bg-[color-mix(in_srgb,var(--expense)_12%,transparent)]! light:hover:border-[color-mix(in_srgb,var(--expense)_25%,transparent)]! light:hover:text-[var(--expense)]!`}
           onClick={onClose}
           title="Đóng"
           aria-label="Close"

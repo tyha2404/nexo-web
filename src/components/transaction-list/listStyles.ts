@@ -28,10 +28,13 @@ export const CATEGORY_BADGE = `inline-flex items-center rounded-full border bord
 
 const STATUS_BADGE_BASE = `inline-block rounded-full border px-3 py-1 text-[0.8rem] font-semibold ${NO_WRAP_BADGE}`;
 const STATUS_BADGE_VARIANT: Record<string, string> = {
-  holding: 'bg-primary-glow text-primary border-[rgba(99,102,241,0.3)]',
-  sold: 'bg-[rgba(16,185,129,0.15)] text-income border-[rgba(16,185,129,0.3)]',
-  matured: 'bg-[rgba(168,85,247,0.15)] text-purple border-[rgba(168,85,247,0.3)]',
-  cancelled: 'bg-[rgba(244,63,94,0.15)] text-expense border-[rgba(244,63,94,0.3)]',
+  holding:
+    'bg-primary-glow text-primary border-[color-mix(in_srgb,var(--primary)_30%,transparent)]',
+  sold: 'bg-[color-mix(in_srgb,var(--income)_15%,transparent)] text-income border-[color-mix(in_srgb,var(--income)_30%,transparent)]',
+  matured:
+    'bg-[color-mix(in_srgb,var(--purple)_15%,transparent)] text-purple border-[color-mix(in_srgb,var(--purple)_30%,transparent)]',
+  cancelled:
+    'bg-[color-mix(in_srgb,var(--expense)_15%,transparent)] text-expense border-[color-mix(in_srgb,var(--expense)_30%,transparent)]',
 };
 export const statusBadgeClass = (status: string) =>
   `${STATUS_BADGE_BASE} ${STATUS_BADGE_VARIANT[status.toLowerCase()] ?? 'border-0'}`;
@@ -45,9 +48,12 @@ export const MOBILE_CARD_LEFT = 'flex min-w-0 items-center gap-3';
 const MOBILE_ICON_BADGE_BASE =
   'flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-sm border text-[1.15rem]';
 const MOBILE_ICON_BADGE_VARIANT: Record<string, string> = {
-  expense: 'bg-[rgba(244,63,94,0.15)] text-expense border-[rgba(244,63,94,0.25)]',
-  income: 'bg-[rgba(16,185,129,0.15)] text-income border-[rgba(16,185,129,0.25)]',
-  investment: 'bg-primary-glow text-primary border-[rgba(99,102,241,0.25)]',
+  expense:
+    'bg-[color-mix(in_srgb,var(--expense)_15%,transparent)] text-expense border-[color-mix(in_srgb,var(--expense)_25%,transparent)]',
+  income:
+    'bg-[color-mix(in_srgb,var(--income)_15%,transparent)] text-income border-[color-mix(in_srgb,var(--income)_25%,transparent)]',
+  investment:
+    'bg-primary-glow text-primary border-[color-mix(in_srgb,var(--primary)_25%,transparent)]',
 };
 export const mobileIconBadgeClass = (variant: string) =>
   `${MOBILE_ICON_BADGE_BASE} ${MOBILE_ICON_BADGE_VARIANT[variant] ?? 'border-0'}`;

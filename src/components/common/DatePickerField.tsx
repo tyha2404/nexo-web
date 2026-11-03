@@ -11,7 +11,7 @@ type PickerMode = 'date' | 'month';
 
 // `font: inherit` split into longhands so the font-size utility always wins.
 const INHERIT_FONT = 'font-[inherit] [font-style:inherit] leading-[inherit]';
-const TRIGGER = `date-picker-trigger box-border flex w-full cursor-pointer items-center gap-3 text-main ${INHERIT_FONT} text-[16px] tabular-nums transition-[border-color,background-color] duration-[160ms] ease-[ease] focus-visible:outline-none [&_svg]:shrink-0 [&_svg]:text-muted`;
+const TRIGGER = `date-picker-trigger box-border flex w-full cursor-pointer items-center gap-3 text-main ${INHERIT_FONT} text-(length:--control-font-size) tabular-nums transition-[border-color,background-color] duration-[160ms] ease-[ease] focus-visible:outline-none [&_svg]:shrink-0 [&_svg]:text-muted`;
 const TRIGGER_DEFAULT = `${CONTROL_FRAME} justify-between px-3.5 py-0 [font-weight:inherit]`;
 const TRIGGER_COMPACT =
   'h-10 min-h-0 flex-row-reverse justify-center gap-1 rounded-sm border-none bg-transparent px-0 py-0 font-semibold focus-visible:ring-2 focus-visible:ring-primary';

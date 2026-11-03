@@ -387,22 +387,22 @@ export default function Targets() {
                                 alignSelf: 'flex-start',
                                 background:
                                   row.status === 'OVER_BUDGET'
-                                    ? 'rgba(244, 63, 94, 0.15)'
+                                    ? 'color-mix(in srgb,var(--expense) 15%,transparent)'
                                     : row.status === 'COMPLETED'
-                                      ? 'rgba(16, 185, 129, 0.15)'
+                                      ? 'color-mix(in srgb,var(--income) 15%,transparent)'
                                       : 'var(--primary-glow)',
                                 color:
                                   row.status === 'OVER_BUDGET'
-                                    ? '#f43f5e'
+                                    ? 'var(--expense)'
                                     : row.status === 'COMPLETED'
-                                      ? '#10b981'
+                                      ? 'var(--income)'
                                       : 'var(--primary)',
                                 border:
                                   row.status === 'OVER_BUDGET'
-                                    ? '1px solid rgba(244, 63, 94, 0.3)'
+                                    ? '1px solid color-mix(in srgb,var(--expense) 30%,transparent)'
                                     : row.status === 'COMPLETED'
-                                      ? '1px solid rgba(16, 185, 129, 0.3)'
-                                      : '1px solid rgba(99, 102, 241, 0.3)',
+                                      ? '1px solid color-mix(in srgb,var(--income) 30%,transparent)'
+                                      : '1px solid color-mix(in srgb,var(--primary) 30%,transparent)',
                               }}
                             >
                               {row.status === 'OVER_BUDGET'
@@ -480,22 +480,22 @@ export default function Targets() {
                       style={{
                         background:
                           row.status === 'OVER_BUDGET'
-                            ? 'rgba(244, 63, 94, 0.15)'
+                            ? 'color-mix(in srgb,var(--expense) 15%,transparent)'
                             : row.status === 'COMPLETED'
-                              ? 'rgba(16, 185, 129, 0.15)'
+                              ? 'color-mix(in srgb,var(--income) 15%,transparent)'
                               : 'var(--primary-glow)',
                         color:
                           row.status === 'OVER_BUDGET'
-                            ? '#f43f5e'
+                            ? 'var(--expense)'
                             : row.status === 'COMPLETED'
-                              ? '#10b981'
+                              ? 'var(--income)'
                               : 'var(--primary)',
                         border:
                           row.status === 'OVER_BUDGET'
-                            ? '1px solid rgba(244, 63, 94, 0.3)'
+                            ? '1px solid color-mix(in srgb,var(--expense) 30%,transparent)'
                             : row.status === 'COMPLETED'
-                              ? '1px solid rgba(16, 185, 129, 0.3)'
-                              : '1px solid rgba(99, 102, 241, 0.3)',
+                              ? '1px solid color-mix(in srgb,var(--income) 30%,transparent)'
+                              : '1px solid color-mix(in srgb,var(--primary) 30%,transparent)',
                       }}
                     >
                       {row.targetAmount === 0

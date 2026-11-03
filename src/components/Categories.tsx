@@ -393,7 +393,7 @@ export default function Categories() {
                               </span>
                             )}
                             {cat.excludeFromAverageDaily && (
-                              <span className="inline-flex shrink-0 items-center whitespace-nowrap [word-break:keep-all] rounded-full bg-[var(--bg-warning,rgba(245,158,11,0.15))] px-[0.45rem] py-[0.15rem] text-[0.7rem] font-semibold text-[var(--text-warning,#d97706)]">
+                              <span className="inline-flex shrink-0 items-center whitespace-nowrap [word-break:keep-all] rounded-full bg-[var(--bg-warning,color-mix(in_srgb,var(--warning)_15%,transparent))] px-[0.45rem] py-[0.15rem] text-[0.7rem] font-semibold text-[var(--text-warning,var(--warning))]">
                                 <span className="inline mobile:hidden">
                                   Không tính vào trung bình ngày
                                 </span>

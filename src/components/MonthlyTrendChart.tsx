@@ -134,7 +134,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
             className={filterBtnCls(visibleSeries.expense)}
             title="Bật/tắt cột Chi tiêu"
           >
-            <span className={`${dotCls} rounded-xs`} style={{ background: '#6366f1' }} />
+            <span className={`${dotCls} rounded-xs`} style={{ background: 'var(--primary)' }} />
             Chi tiêu
           </button>
 
@@ -144,7 +144,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
             className={filterBtnCls(visibleSeries.income)}
             title="Bật/tắt đường Thu nhập"
           >
-            <span className={dotCls} style={{ background: '#10b981' }} />
+            <span className={dotCls} style={{ background: 'var(--income)' }} />
             Thu nhập
           </button>
 
@@ -154,7 +154,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
             className={filterBtnCls(visibleSeries.target)}
             title="Bật/tắt đường Ngân sách"
           >
-            <span className={dotCls} style={{ background: '#f59e0b' }} />
+            <span className={dotCls} style={{ background: 'var(--warning)' }} />
             Ngân sách
           </button>
 
@@ -166,7 +166,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
           >
             <span
               className={dotCls}
-              style={{ background: '#94a3b8', borderRadius: 0, height: 2, width: 8 }}
+              style={{ background: 'var(--text-muted)', borderRadius: 0, height: 2, width: 8 }}
             />
             TB Chi tiêu
           </button>
@@ -181,8 +181,8 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
             <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
               <defs>
                 <linearGradient id="trendExpenseGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity={0.85} />
-                  <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.4} />
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.85} />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity={0.4} />
                 </linearGradient>
               </defs>
               <CartesianGrid
@@ -213,7 +213,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
                   dataKey="expense"
                   name="Chi tiêu"
                   fill="url(#trendExpenseGradient)"
-                  stroke="#6366f1"
+                  stroke="var(--primary)"
                   strokeWidth={1}
                   radius={[4, 4, 0, 0]}
                   maxBarSize={28}
@@ -226,10 +226,10 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
                   type="monotone"
                   dataKey="income"
                   name="Thu nhập"
-                  stroke="#10b981"
+                  stroke="var(--income)"
                   strokeWidth={2}
-                  dot={{ r: 2.5, fill: '#10b981', strokeWidth: 0 }}
-                  activeDot={{ r: 4.5, fill: '#10b981' }}
+                  dot={{ r: 2.5, fill: 'var(--income)', strokeWidth: 0 }}
+                  activeDot={{ r: 4.5, fill: 'var(--income)' }}
                 />
               )}
 
@@ -239,10 +239,10 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
                   type="monotone"
                   dataKey="target"
                   name="Ngân sách"
-                  stroke="#f59e0b"
+                  stroke="var(--warning)"
                   strokeWidth={2}
-                  dot={{ r: 2.5, fill: '#f59e0b', strokeWidth: 0 }}
-                  activeDot={{ r: 4, fill: '#f59e0b' }}
+                  dot={{ r: 2.5, fill: 'var(--warning)', strokeWidth: 0 }}
+                  activeDot={{ r: 4, fill: 'var(--warning)' }}
                 />
               )}
 
@@ -252,7 +252,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
                   type="monotone"
                   dataKey="avgExpense"
                   name="TB Chi tiêu"
-                  stroke="#94a3b8"
+                  stroke="var(--text-muted)"
                   strokeWidth={1.5}
                   strokeDasharray="4 4"
                   dot={false}

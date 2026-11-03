@@ -11,7 +11,7 @@ import { AI_TOOL_CATEGORIES, AI_TOOLS_CATALOG, ALL_CATEGORY } from './toolsCatal
 
 const TAB = `border text-[11px] py-1 px-[9px] rounded-sm whitespace-nowrap cursor-pointer ${BTN_TRANSITION}`;
 const TAB_IDLE =
-  'bg-[rgba(255,255,255,0.04)] border-[rgba(255,255,255,0.06)] text-[#94a3b8] font-medium hover:bg-[rgba(99,102,241,0.15)] hover:text-[#e2e8f0] light:bg-[#f1f5f9] light:border-[#e2e8f0] light:text-[#475569] light:hover:bg-[#e0e7ff] light:hover:text-[#3730a3]';
+  'bg-[rgba(255,255,255,0.04)] border-[rgba(255,255,255,0.06)] text-[var(--text-muted)] font-medium hover:bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] hover:text-[var(--text-main)] light:bg-[var(--bg-card-hover)] light:border-[var(--border)] light:text-[var(--text-muted)] light:hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] light:hover:text-[var(--primary)]';
 const TAB_ACTIVE =
   '[background:linear-gradient(135deg,#6366f1_0%,#a855f7_100%)] border-transparent text-white font-semibold';
 
@@ -68,34 +68,34 @@ export function ChatToolsDrawer({
           <div key={group.id} className="flex flex-col gap-2">
             <div className="flex items-center gap-[6px] pt-[2px] px-[2px] pb-0">
               <span className="text-[13px]">{group.icon}</span>
-              <span className="text-[11px] font-semibold tracking-[0.3px] uppercase text-[#a5b4fc] light:text-[#4f46e5]">
+              <span className="text-[11px] font-semibold tracking-[0.3px] uppercase text-[var(--text-link)] light:text-[var(--primary)]">
                 {group.label}
               </span>
-              <span className="text-[9.5px] font-semibold py-px px-[6px] rounded-full bg-[rgba(99,102,241,0.18)] text-[#c7d2fe] light:bg-[#ede9fe] light:text-[#5b21b6]">
+              <span className="text-[9.5px] font-semibold py-px px-[6px] rounded-full bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] text-[var(--text-link)] light:bg-[color-mix(in_srgb,var(--purple)_12%,transparent)] light:text-[var(--purple)]">
                 {group.tools.length}
               </span>
             </div>
             {group.tools.map((tool) => (
               <div
                 key={tool.id}
-                className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-md py-[10px] px-3 cursor-pointer transition-all duration-[220ms] ease-[ease] hover:bg-[rgba(99,102,241,0.14)] hover:border-[rgba(99,102,241,0.4)] hover:-translate-y-px hover:shadow-[0_4px_14px_rgba(0,0,0,0.25)] light:bg-white light:border-[#e2e8f0] light:hover:bg-[#f5f3ff] light:hover:border-[#c4b5fd] light:hover:shadow-[0_4px_14px_rgba(99,102,241,0.12)]"
+                className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-md py-[10px] px-3 cursor-pointer transition-all duration-[220ms] ease-[ease] hover:bg-[color-mix(in_srgb,var(--primary)_14%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_40%,transparent)] hover:-translate-y-px hover:shadow-[0_4px_14px_rgba(0,0,0,0.25)] light:bg-white light:border-[var(--border)] light:hover:bg-[color-mix(in_srgb,var(--purple)_8%,transparent)] light:hover:border-[var(--purple)] light:hover:shadow-[0_4px_14px_color-mix(in_srgb,var(--primary)_12%,transparent)]"
                 onClick={() => onRunPrompt(tool.promptExample)}
                 title={`Chạy lệnh mẫu: "${tool.promptExample}"`}
               >
                 <div className="flex items-center gap-2 mb-[5px]">
                   <span className="text-[16px]">{tool.icon}</span>
                   <div className="flex items-center justify-between flex-1">
-                    <h5 className="m-0 text-[12.5px] font-semibold text-[#f8fafc] light:text-[#0f172a]">
+                    <h5 className="m-0 text-[12.5px] font-semibold text-[var(--text-main)] light:text-[var(--text-main)]">
                       {tool.name}
                     </h5>
                   </div>
                 </div>
-                <p className="m-0 mb-[6px] text-[11px] leading-[1.4] text-[#94a3b8] light:text-[#475569]">
+                <p className="m-0 mb-[6px] text-[11px] leading-[1.4] text-[var(--text-muted)] light:text-[var(--text-muted)]">
                   {tool.description}
                 </p>
-                <div className="text-[10.5px] text-primary bg-primary-glow py-1 px-[7px] rounded-xs light:bg-[#ede9fe]">
+                <div className="text-[10.5px] text-primary bg-primary-glow py-1 px-[7px] rounded-xs light:bg-[color-mix(in_srgb,var(--purple)_12%,transparent)]">
                   <span>💬 Thử ngay: </span>
-                  <em className="not-italic text-[#e2e8f0] light:text-[#0f172a]">
+                  <em className="not-italic text-[var(--text-main)] light:text-[var(--text-main)]">
                     "{tool.promptExample}"
                   </em>
                 </div>

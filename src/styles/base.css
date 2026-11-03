@@ -21,24 +21,45 @@
     color: var(--text-main);
     touch-action: manipulation;
     overscroll-behavior-y: none;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    font-size: 1rem;
   }
 
   body.light-theme {
     background-color: var(--bg-app);
   }
 
-  /* Hide scrollbars (horizontal & vertical) */
-  *::-webkit-scrollbar,
-  ::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
+  /* Phones: no scrollbars. Desktop: VS Code's slim overlay-style sliders. */
+  @media (max-width: 768px), (pointer: coarse) {
+    *::-webkit-scrollbar,
+    ::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    * {
+      scrollbar-width: none !important; /* Firefox */
+    }
   }
 
-  * {
-    -ms-overflow-style: none !important; /* IE and Edge */
-    scrollbar-width: none !important; /* Firefox */
+  @media (min-width: 769px) and (pointer: fine) {
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    ::-webkit-scrollbar-track,
+    ::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(121, 121, 121, 0.4); /* scrollbarSlider.background */
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 100, 100, 0.7);
+    }
+    ::-webkit-scrollbar-thumb:active {
+      background: rgba(191, 191, 191, 0.4);
+    }
   }
 
   /* Accessibility Focus-Visible Ring */
@@ -47,14 +68,15 @@
   input:focus-visible,
   select:focus-visible,
   [role='tab']:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
+    /* VS Code focusBorder: 1px, drawn just inside the element */
+    outline: 1px solid var(--border-active);
+    outline-offset: -1px;
   }
 
   /* Form controls. !important keeps these over component utilities (as before). */
   select,
   textarea {
-    border-radius: var(--radius-md) !important;
+    border-radius: var(--radius-xs) !important;
   }
 
   /* 16px stops iOS Safari zooming into a focused field. */

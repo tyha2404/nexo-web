@@ -1,54 +1,83 @@
 /* Design tokens. Colors and shadows switch with the `light-theme` class on <body>;
-   tailwind.css maps them to utilities (bg-card, text-muted, rounded-md, ...). */
+   tailwind.css maps them to utilities (bg-card, text-muted, rounded-md, ...).
+
+   Palette follows the VS Code workbench defaults: "Dark Modern" (dark) and
+   "Light Modern" (light). Names in comments are the VS Code theme color keys. */
 :root {
   --control-height: 44px;
+  --control-font-size: 16px;
+  /* VS Code workbench UI font and editor font stacks */
   --font-sans:
-    'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Roboto,
+    -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans',
     sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+  --font-mono: Menlo, Monaco, Consolas, 'Droid Sans Mono', 'Courier New', monospace;
 
-  /* FinTech Minimal Zinc Obsidian Palette (Linear / Stripe Inspired) */
-  --bg-app: #09090b;
-  --bg-card: #121215;
-  --bg-card-hover: #18181b;
-  --bg-input: #18181b;
-  --bg-hover: rgba(255, 255, 255, 0.05);
+  /* Surfaces */
+  --bg-app: #1f1f1f; /* editor.background */
+  --bg-card: #181818; /* panel.background / sideBar.background */
+  --bg-card-hover: #202020;
+  --bg-input: #313131; /* input.background */
+  --bg-hover: rgba(90, 93, 94, 0.31); /* toolbar.hoverBackground */
+  --bg-list-hover: #2a2d2e; /* list.hoverBackground */
+  --bg-list-active: #37373d; /* list.inactiveSelectionBackground */
+  --bg-widget: #202020; /* editorWidget.background */
 
-  --text-main: #f4f4f5;
-  --text-muted: #a1a1aa;
+  /* Workbench parts */
+  --bg-titlebar: #181818;
+  --bg-activitybar: #181818;
+  --bg-sidebar: #181818;
+  --bg-statusbar: #181818;
+  --bg-tabs: #181818; /* editorGroupHeader.tabsBackground */
+  --bg-tab-active: #1f1f1f;
+  --activity-fg: #d7d7d7;
+  --activity-fg-inactive: #868686;
+  --statusbar-fg: #cccccc;
+  --statusbar-remote-bg: #0078d4;
+  --statusbar-hover: rgba(255, 255, 255, 0.12);
+
+  --text-main: #cccccc; /* foreground */
+  --text-muted: #9d9d9d; /* descriptionForeground */
   --text-dark: #ffffff;
+  --text-link: #4daafc; /* textLink.foreground */
 
-  --border: rgba(255, 255, 255, 0.08);
-  --border-hover: rgba(255, 255, 255, 0.16);
-  --border-active: #6366f1;
+  --border: #2b2b2b; /* panel.border / sideBar.border */
+  --border-hover: #3c3c3c; /* input.border */
+  --border-active: #0078d4; /* focusBorder */
 
-  /* Solid Subtle Brand Accent (Indigo 500 - Matches Logo) */
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --primary-glow: rgba(99, 102, 241, 0.15);
-  --primary-gradient: #6366f1;
-  --primary-gradient-hover: #4f46e5;
+  --primary: #0078d4; /* button.background / focusBorder */
+  --primary-hover: #026ec1; /* button.hoverBackground */
+  --primary-glow: rgba(0, 120, 212, 0.2);
+  --primary-gradient: #0078d4;
+  --primary-gradient-hover: #026ec1;
 
-  /* Semantic Colors for Financial Precision */
-  --income: #10b981;
-  --income-glow: rgba(16, 185, 129, 0.1);
-  --expense: #f43f5e;
-  --expense-glow: rgba(244, 63, 94, 0.1);
-  --investment: #6366f1;
-  --investment-glow: rgba(99, 102, 241, 0.12);
-  --warning: #f59e0b;
-  --warning-glow: rgba(245, 158, 11, 0.1);
-  --purple: #8b5cf6;
-  --purple-glow: rgba(139, 92, 246, 0.1);
+  --btn-border: rgba(255, 255, 255, 0.07); /* button.border */
+  --btn-secondary-bg: #313131; /* button.secondaryBackground */
+  --btn-secondary-hover: #3c3c3c;
+  --btn-secondary-fg: #cccccc;
+  --badge-bg: #616161;
+  --badge-fg: #f8f8f8;
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.5);
-  --glass-blur: blur(8px);
+  /* Semantic colors (git decorations / terminal ANSI from Dark Modern) */
+  --income: #73c991;
+  --income-glow: rgba(115, 201, 145, 0.12);
+  --expense: #f85149;
+  --expense-glow: rgba(248, 81, 73, 0.12);
+  --investment: #3794ff;
+  --investment-glow: rgba(55, 148, 255, 0.14);
+  --warning: #cca700;
+  --warning-glow: rgba(204, 167, 0, 0.12);
+  --purple: #c586c0;
+  --purple-glow: rgba(197, 134, 192, 0.12);
+
+  /* widget.shadow */
+  --shadow-sm: none;
+  --shadow-md: 0 0 8px 2px rgba(0, 0, 0, 0.36);
+  --shadow-lg: 0 0 8px 2px rgba(0, 0, 0, 0.36);
+  --glass-blur: none;
 
   font-family: var(--font-sans);
-  letter-spacing: -0.012em;
-  line-height: 1.5;
+  letter-spacing: normal;
+  line-height: 1.4;
   font-weight: 400;
   color-scheme: dark;
   color: var(--text-main);
@@ -56,51 +85,86 @@
 }
 
 .light-theme {
-  --bg-app: #f8fafc;
-  --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
-  --bg-input: #f1f5f9;
-  --bg-hover: rgba(15, 23, 42, 0.04);
+  --bg-app: #ffffff;
+  --bg-card: #f8f8f8;
+  --bg-card-hover: #f2f2f2;
+  --bg-input: #ffffff;
+  --bg-hover: rgba(184, 184, 184, 0.31);
+  --bg-list-hover: #f2f2f2;
+  --bg-list-active: #e4e6f1;
+  --bg-widget: #f8f8f8;
 
-  --text-main: #09090b;
-  --text-muted: #64748b;
+  --bg-titlebar: #f8f8f8;
+  --bg-activitybar: #f8f8f8;
+  --bg-sidebar: #f8f8f8;
+  --bg-statusbar: #f8f8f8;
+  --bg-tabs: #f8f8f8;
+  --bg-tab-active: #ffffff;
+  --activity-fg: #1f1f1f;
+  --activity-fg-inactive: #616161;
+  --statusbar-fg: #3b3b3b;
+  --statusbar-remote-bg: #005fb8;
+  --statusbar-hover: rgba(31, 31, 31, 0.11);
+
+  --text-main: #3b3b3b;
+  --text-muted: #616161;
   --text-dark: #ffffff;
+  --text-link: #005fb8;
 
-  --border: #e2e8f0;
-  --border-hover: #cbd5e1;
-  --border-active: #6366f1;
+  --border: #e5e5e5;
+  --border-hover: #cecece;
+  --border-active: #005fb8;
 
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-glow: rgba(79, 70, 229, 0.12);
-  --primary-gradient: #4f46e5;
-  --primary-gradient-hover: #4338ca;
+  --primary: #005fb8;
+  --primary-hover: #0258a8;
+  --primary-glow: rgba(0, 95, 184, 0.12);
+  --primary-gradient: #005fb8;
+  --primary-gradient-hover: #0258a8;
 
-  --income: #059669;
-  --income-glow: rgba(5, 150, 105, 0.1);
-  --expense: #e11d48;
-  --expense-glow: rgba(225, 29, 72, 0.1);
-  --investment: #4f46e5;
-  --investment-glow: rgba(79, 70, 229, 0.12);
-  --warning: #d97706;
-  --warning-glow: rgba(217, 119, 6, 0.1);
-  --purple: #7c3aed;
-  --purple-glow: rgba(124, 58, 237, 0.1);
+  --btn-border: rgba(0, 0, 0, 0.1);
+  --btn-secondary-bg: #e5e5e5;
+  --btn-secondary-hover: #cccccc;
+  --btn-secondary-fg: #3b3b3b;
+  --badge-bg: #cccccc;
+  --badge-fg: #3b3b3b;
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
-  --glass-blur: blur(8px);
+  --income: #388a34;
+  --income-glow: rgba(56, 138, 52, 0.1);
+  --expense: #e51400;
+  --expense-glow: rgba(229, 20, 0, 0.08);
+  --investment: #005fb8;
+  --investment-glow: rgba(0, 95, 184, 0.1);
+  --warning: #bf8803;
+  --warning-glow: rgba(191, 136, 3, 0.1);
+  --purple: #af00db;
+  --purple-glow: rgba(175, 0, 219, 0.08);
+
+  --shadow-sm: none;
+  --shadow-md: 0 0 8px 2px rgba(0, 0, 0, 0.16);
+  --shadow-lg: 0 0 8px 2px rgba(0, 0, 0, 0.16);
+  --glass-blur: none;
 
   color-scheme: light;
 }
 
 /* Opaque hover fills so hover transitions never flash through transparency */
 :root {
-  --bg-input-hover: color-mix(in srgb, var(--bg-input) 90%, #ffffff);
-  --expense-hover-bg: color-mix(in srgb, var(--bg-input) 85%, #ef4444);
+  --bg-input-hover: #3c3c3c;
+  --expense-hover-bg: color-mix(in srgb, var(--bg-input) 80%, var(--expense));
 }
 .light-theme {
-  --bg-input-hover: #e2e8f0;
-  --expense-hover-bg: #fee2e2;
+  --bg-input-hover: #f2f2f2;
+  --expense-hover-bg: #fde7e9;
+}
+
+/* Desktop: VS Code density (13px workbench font, compact controls).
+   Phones keep 16px controls so iOS Safari never zooms into a focused field. */
+@media (min-width: 769px) and (not ((pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px))) {
+  :root {
+    --control-height: 32px;
+    --control-font-size: 13px;
+  }
+  html {
+    font-size: 13px;
+  }
 }

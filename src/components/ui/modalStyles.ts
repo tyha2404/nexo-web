@@ -26,7 +26,7 @@ const BACKDROP_BASE = cx(
   'modal-backdrop app-modal-backdrop',
   MOTION_FADE,
   'fixed inset-0 z-[999999] box-border flex h-auto w-auto items-center justify-center overflow-x-hidden overflow-y-auto [-webkit-overflow-scrolling:touch]',
-  'bg-[rgba(11,15,25,0.75)] backdrop-blur-[10px]',
+  'bg-[rgba(0,0,0,0.4)] light:bg-[rgba(0,0,0,0.2)]',
   'pt-[calc(var(--modal-viewport-top,0px)+max(12px,env(safe-area-inset-top,0px)))] pr-[max(12px,env(safe-area-inset-right,0px))] pb-[calc(var(--modal-viewport-bottom,0px)+max(12px,env(safe-area-inset-bottom,0px)))] pl-[max(12px,env(safe-area-inset-left,0px))]',
   // Form controls never overflow the dialog; native date inputs get a 44px tap target.
   '[&_form]:min-w-0 [&_form]:max-w-full',
@@ -48,7 +48,7 @@ export const CONFIRM_BACKDROP = BACKDROP_BASE;
 const PANEL_BASE = cx(
   'modal-content mx-auto my-0 box-border flex w-full flex-col',
   'max-h-[calc(var(--modal-viewport-height,100dvh)-max(12px,env(safe-area-inset-top,0px))-max(12px,env(safe-area-inset-bottom,0px)))]',
-  'rounded-lg border border-line bg-card shadow-app-lg outline-none [overflow-wrap:anywhere]',
+  'rounded-lg border border-line bg-widget shadow-app-lg outline-none [overflow-wrap:anywhere]',
   'animate-scale-in motion-safe:animate-[nexo-dialog-enter_220ms_var(--motion-ease)]'
 );
 
@@ -88,7 +88,7 @@ export const CONFIRM_PANEL = cx(
 /* ---------- Header ---------- */
 
 const HEADER_BASE =
-  'modal-header z-20 flex items-center justify-between gap-3 border-b border-line bg-card backdrop-blur-[12px] [&_h3]:m-0 [&_h3]:text-[1.25rem] [&_h3]:font-bold [&_h3]:tracking-[-0.01em] [&_h3]:text-main';
+  'modal-header z-20 flex items-center justify-between gap-3 border-b border-line bg-widget [&_h3]:m-0 [&_h3]:text-[13px] [&_h3]:font-semibold [&_h3]:text-main mobile:[&_h3]:text-[16px]';
 
 /** Sticky header of a scrolling panel; bleeds over the panel padding. */
 export const MODAL_HEADER = cx(
@@ -103,7 +103,7 @@ export const MODAL_SHELL_HEADER = cx(
 );
 
 export const MODAL_CLOSE_BTN =
-  'close-btn inline-flex size-[38px] min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-[1.5rem] leading-none text-muted transition-all duration-200 ease-[ease] hover:bg-hover hover:text-main';
+  'close-btn inline-flex size-[26px] min-h-[26px] min-w-[26px] cursor-pointer items-center justify-center rounded-[5px] border-none bg-transparent p-0 text-[1.25rem] leading-none text-main transition-colors duration-100 ease-out hover:bg-hover mobile:size-11 mobile:min-h-11 mobile:min-w-11';
 
 /* ---------- Body & footer ---------- */
 
@@ -111,25 +111,25 @@ export const MODAL_FORM_BODY =
   'modal-form-body min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain p-4';
 
 /** Footer of a scrolling panel: sticks to the bottom while the card scrolls. */
-export const MODAL_FOOTER = 'button-group sticky -bottom-px z-[2] mt-4 flex gap-3 bg-card py-3';
+export const MODAL_FOOTER = 'button-group sticky -bottom-px z-[2] mt-4 flex gap-2 bg-widget py-3';
 
 /** Footer of a form shell: always visible below the scrolling body. */
 export const MODAL_SHELL_FOOTER =
-  'button-group static z-[2] m-0 flex shrink-0 gap-3 border-t border-line bg-card px-4 pt-3 pb-2 mobile:pb-[max(8px,env(safe-area-inset-bottom,0px))]';
+  'button-group static z-[2] m-0 flex shrink-0 gap-2 border-t border-line bg-widget px-4 pt-3 pb-2 mobile:pb-[max(8px,env(safe-area-inset-bottom,0px))]';
 
 /* ---------- Confirm dialog ---------- */
 
 const CONFIRM_ICON_BADGE = 'flex size-10 shrink-0 items-center justify-center rounded-md';
 export const CONFIRM_ICON_DANGER = cx(
   CONFIRM_ICON_BADGE,
-  'bg-[rgba(239,68,68,0.15)] text-[#ef4444]'
+  'bg-[color-mix(in_srgb,var(--expense)_15%,transparent)] text-[var(--expense)]'
 );
 export const CONFIRM_ICON_WARNING = cx(
   CONFIRM_ICON_BADGE,
-  'bg-[rgba(245,158,11,0.15)] text-[#f59e0b]'
+  'bg-[color-mix(in_srgb,var(--warning)_15%,transparent)] text-[var(--warning)]'
 );
 
 /* ---------- PWA / loading toast ---------- */
 
 export const PWA_TOAST =
-  'pwa-toast fixed right-6 bottom-6 z-[99990] flex max-w-[min(420px,calc(100vw-24px))] flex-col gap-3 rounded-md border border-line bg-card p-4 shadow-app-lg backdrop-blur-[12px] mobile:right-3 mobile:bottom-[calc(76px+env(safe-area-inset-bottom))] mobile:left-3';
+  'pwa-toast fixed right-6 bottom-8 z-[99990] flex max-w-[min(420px,calc(100vw-24px))] flex-col gap-3 rounded-md border border-line bg-widget p-4 shadow-app-lg mobile:right-3 mobile:bottom-[calc(76px+env(safe-area-inset-bottom))] mobile:left-3';

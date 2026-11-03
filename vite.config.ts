@@ -31,8 +31,8 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         description: 'Theo dõi chi tiêu, ngân sách và tài chính cá nhân.',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#181818',
+        background_color: '#1f1f1f',
         display: 'standalone',
         orientation: 'portrait-primary',
         icons: [

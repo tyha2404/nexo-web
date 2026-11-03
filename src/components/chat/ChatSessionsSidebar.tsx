@@ -12,9 +12,9 @@ import {
 const ROW =
   'group flex items-center justify-between py-2 px-[10px] rounded-sm cursor-pointer border text-[12px] transition-all duration-200 ease-[ease]';
 const ROW_IDLE =
-  'bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.04)] text-[#94a3b8] hover:bg-[rgba(99,102,241,0.12)] hover:border-[rgba(99,102,241,0.3)] hover:text-[#f8fafc] light:bg-white light:border-[#e2e8f0] light:text-[#475569] light:hover:bg-[#f1f5f9] light:hover:border-[#cbd5e1] light:hover:text-[#0f172a]';
+  'bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.04)] text-[var(--text-muted)] hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_30%,transparent)] hover:text-[var(--text-main)] light:bg-white light:border-[var(--border)] light:text-[var(--text-muted)] light:hover:bg-[var(--bg-card-hover)] light:hover:border-[var(--border-hover)] light:hover:text-[var(--text-main)]';
 const ROW_SELECTED =
-  '[background:linear-gradient(90deg,rgba(99,102,241,0.22)_0%,rgba(168,85,247,0.12)_100%)] border-[rgba(99,102,241,0.5)] text-[#c7d2fe] font-semibold light:[background:#ede9fe] light:border-[#c4b5fd] light:text-[#4f46e5]';
+  '[background:linear-gradient(90deg,color-mix(in_srgb,var(--primary)_22%,transparent)_0%,color-mix(in_srgb,var(--purple)_12%,transparent)_100%)] border-[color-mix(in_srgb,var(--primary)_50%,transparent)] text-[var(--text-link)] font-semibold light:[background:color-mix(in_srgb,var(--purple)_12%,transparent)] light:border-[var(--purple)] light:text-[var(--primary)]';
 
 export interface ChatSessionsSidebarProps {
   sessions: ChatSession[];
@@ -50,7 +50,7 @@ export function ChatSessionsSidebar({
 
       <div className="flex items-center justify-between gap-2 px-[14px] py-[10px]">
         <button
-          className={`inline-flex items-center gap-[6px] py-[5px] px-[9px] rounded-sm cursor-pointer text-[11.5px] font-semibold bg-[rgba(99,102,241,0.15)] border border-[rgba(99,102,241,0.3)] text-[#a5b4fc] ${BTN_TRANSITION} hover:bg-[rgba(99,102,241,0.25)] hover:border-[rgba(99,102,241,0.5)] hover:text-white light:bg-[rgba(99,102,241,0.1)] light:border-[rgba(99,102,241,0.25)] light:text-[#4f46e5] light:hover:bg-[rgba(99,102,241,0.18)] light:hover:border-[rgba(99,102,241,0.4)] light:hover:text-[#3730a3]`}
+          className={`inline-flex items-center gap-[6px] py-[5px] px-[9px] rounded-sm cursor-pointer text-[11.5px] font-semibold bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] border border-[color-mix(in_srgb,var(--primary)_30%,transparent)] text-[var(--text-link)] ${BTN_TRANSITION} hover:bg-[color-mix(in_srgb,var(--primary)_25%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_50%,transparent)] hover:text-white light:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] light:border-[color-mix(in_srgb,var(--primary)_25%,transparent)] light:text-[var(--primary)] light:hover:bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] light:hover:border-[color-mix(in_srgb,var(--primary)_40%,transparent)] light:hover:text-[var(--primary)]`}
           onClick={onNewChat}
         >
           <PlusIcon size={13} />
@@ -58,7 +58,7 @@ export function ChatSessionsSidebar({
         </button>
         {sessions.length > 0 && (
           <button
-            className={`bg-transparent border-0 text-expense text-[11px] font-semibold cursor-pointer py-1 px-[6px] rounded-xs ${BTN_TRANSITION} hover:bg-[rgba(239,68,68,0.15)]`}
+            className={`bg-transparent border-0 text-expense text-[11px] font-semibold cursor-pointer py-1 px-[6px] rounded-xs ${BTN_TRANSITION} hover:bg-[color-mix(in_srgb,var(--expense)_15%,transparent)]`}
             onClick={onClearAll}
             title="Xóa tất cả lịch sử"
           >
@@ -82,12 +82,12 @@ export function ChatSessionsSidebar({
                 onClick={() => onSelect(sess.id)}
               >
                 <div className="flex items-center gap-[9px] overflow-hidden text-ellipsis whitespace-nowrap flex-1">
-                  <ChatBubbleIcon stroke={isSelected ? '#a5b4fc' : '#94a3b8'} />
+                  <ChatBubbleIcon stroke={isSelected ? 'var(--text-link)' : 'var(--text-muted)'} />
                   <span title={sess.title}>{sess.title}</span>
                 </div>
                 <div className="flex items-center ml-[6px] opacity-60 transition-opacity duration-200 ease-[ease] group-hover:opacity-100">
                   <button
-                    className={`bg-transparent border-0 text-[#64748b] p-1 rounded-xs cursor-pointer flex items-center justify-center ${BTN_TRANSITION} hover:bg-[rgba(239,68,68,0.25)] hover:text-[#f87171] light:text-[#94a3b8] light:hover:bg-[rgba(239,68,68,0.15)] light:hover:text-[#ef4444]`}
+                    className={`bg-transparent border-0 text-[var(--text-muted)] p-1 rounded-xs cursor-pointer flex items-center justify-center ${BTN_TRANSITION} hover:bg-[color-mix(in_srgb,var(--expense)_25%,transparent)] hover:text-[var(--expense)] light:text-[var(--text-muted)] light:hover:bg-[color-mix(in_srgb,var(--expense)_15%,transparent)] light:hover:text-[var(--expense)]`}
                     onClick={(e) => onDelete(e, sess.id)}
                     title="Xóa đoạn chat này"
                   >
