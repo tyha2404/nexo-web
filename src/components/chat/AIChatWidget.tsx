@@ -28,7 +28,7 @@ const DRAG_DISMISS_THRESHOLD = 90;
 
 // `nexo-chat-window` stays on the element as a test hook.
 const CHAT_WINDOW =
-  'fixed! bottom-[82px]! right-[24px]! min-w-[380px] max-w-[calc(100vw-32px)] min-h-[460px] max-h-[calc(100vh-100px)] flex flex-col overflow-hidden z-[99995]! bg-[var(--bg-card)] border border-[rgba(255,255,255,0.12)] rounded-xl shadow-[0_24px_48px_-12px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)] backdrop-blur-[24px] animate-[chatSlideUp_0.3s_cubic-bezier(0.16,1,0.3,1)] light:bg-white light:border-[var(--border)] light:shadow-[0_20px_40px_rgba(0,0,0,0.15)] ' +
+  'fixed! bottom-[82px]! right-[24px]! min-w-[380px] max-w-[calc(100vw-32px)] min-h-[460px] max-h-[calc(100vh-100px)] flex flex-col overflow-hidden z-[99995]! bg-[var(--bg-card)] border border-line rounded-xl shadow-[0_24px_48px_-12px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)] backdrop-blur-[24px] animate-[chatSlideUp_0.3s_cubic-bezier(0.16,1,0.3,1)] light:bg-white light:shadow-[0_20px_40px_rgba(0,0,0,0.15)] ' +
   'mobile:left-0! mobile:right-0! mobile:w-full! mobile:min-w-full! mobile:max-w-full! mobile:top-[var(--chat-visible-top,15dvh)]! mobile:bottom-auto! mobile:h-[var(--chat-visible-height,85dvh)]! mobile:min-h-0! mobile:max-h-[var(--chat-visible-height,85dvh)]! mobile:pl-[env(safe-area-inset-left,0px)] mobile:pr-[env(safe-area-inset-right,0px)] mobile:pb-[env(safe-area-inset-bottom,0px)] mobile:rounded-t-xl! mobile:rounded-b-none! mobile:border-x-0! mobile:border-b-0! mobile:shadow-[0_-10px_30px_rgba(0,0,0,0.55)]! mobile:animate-[chatMobileSheetSlideUp_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]!';
 
 export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AIChatWidgetProps) {
@@ -238,7 +238,7 @@ export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AICha
         >
           {/* Top Mobile Drag Handle Bar */}
           <div
-            className="group/drag hidden mobile:flex! w-full pt-[10px] pb-[6px] justify-center items-center cursor-grab touch-none select-none bg-[var(--bg-card)] border-b border-[rgba(255,255,255,0.04)] light:bg-[var(--bg-card)] light:border-[var(--border)]"
+            className="group/drag hidden mobile:flex! w-full pt-[10px] pb-[6px] justify-center items-center cursor-grab touch-none select-none bg-[var(--bg-card)] border-b border-line light:bg-[var(--bg-card)]"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}

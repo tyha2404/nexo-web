@@ -3,7 +3,7 @@ import moment from 'moment';
 import { createPortal } from 'react-dom';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
-import { Search, Plus, Trash2, Handshake, X, AlertTriangle, ArrowRightLeft } from 'lucide-react';
+import { Search, Plus, Trash2, Handshake, X, AlertTriangle, ArrowRightLeft } from './ui';
 import { formatCurrency, formatNumberInput, parseNumberInput } from '../commons/utils';
 import { debtService } from '../services';
 import type { Debt, DebtType } from '../types/debt';
@@ -255,7 +255,7 @@ export default function Debts() {
 
       {error && (
         <div className="animate-fade-in">
-          <AlertTriangle size={18} /> {error}
+          <AlertTriangle size={16} /> {error}
         </div>
       )}
 
@@ -449,7 +449,7 @@ export default function Debts() {
                               )}
                               title="Ghi nhận trả/thu tiền"
                             >
-                              <ArrowRightLeft size={14} /> Trả tiền
+                              <ArrowRightLeft size={16} /> Trả tiền
                             </button>
                           )}
                           <button
@@ -458,7 +458,7 @@ export default function Debts() {
                             aria-label="Xóa khoản vay"
                             title="Xóa"
                           >
-                            <Trash2 size={15} />
+                            <Trash2 size={16} />
                           </button>
                         </div>
                       </td>
@@ -480,7 +480,7 @@ export default function Debts() {
                   <div className="mobile-card-top">
                     <div className={MOBILE_CARD_LEFT}>
                       <div className={mobileIconBadgeClass(isPayable ? 'expense' : 'income')}>
-                        <Handshake size={18} />
+                        <Handshake size={16} />
                       </div>
                       <div className="mobile-card-info">
                         <div className={MOBILE_CARD_TITLE}>{debt.title}</div>
@@ -536,7 +536,7 @@ export default function Debts() {
                         className={MOBILE_ACTION_EDIT}
                         title="Ghi nhận trả/thu tiền"
                       >
-                        <ArrowRightLeft size={14} /> Trả tiền
+                        <ArrowRightLeft size={16} /> Trả tiền
                       </button>
                     )}
                     <button
@@ -545,7 +545,7 @@ export default function Debts() {
                       className={MOBILE_ACTION_DELETE}
                       title="Xóa khoản nợ"
                     >
-                      <Trash2 size={14} /> Xóa
+                      <Trash2 size={16} /> Xóa
                     </button>
                   </div>
                 </div>
@@ -575,7 +575,7 @@ export default function Debts() {
                   onClick={() => setIsCreateModalOpen(false)}
                   aria-label="Đóng"
                 >
-                  <X size={18} />
+                  <X size={16} />
                 </button>
               </div>
               <form onSubmit={handleCreateSubmit}>
@@ -707,7 +707,7 @@ export default function Debts() {
                   onClick={() => setIsRepayModalOpen(false)}
                   aria-label="Đóng"
                 >
-                  <X size={18} />
+                  <X size={16} />
                 </button>
               </div>
               <form onSubmit={handleRepaySubmit}>

@@ -1,5 +1,5 @@
 import { SlidingTabs } from './ui';
-import { Gem, ShoppingBag, TrendingUp, X } from 'lucide-react';
+import { Gem, ShoppingBag, TrendingUp, X } from './ui';
 import moment from 'moment';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -234,7 +234,7 @@ export default function AddTransactionModal({
             disabled={submitting || uploading}
             aria-label="Đóng"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
@@ -262,7 +262,7 @@ export default function AddTransactionModal({
                     }
                   }}
                 >
-                  <ShoppingBag size={14} />
+                  <ShoppingBag size={16} />
                   <span>Chi tiêu</span>
                 </button>
                 <button
@@ -281,7 +281,7 @@ export default function AddTransactionModal({
                     }
                   }}
                 >
-                  <TrendingUp size={14} />
+                  <TrendingUp size={16} />
                   <span>Thu nhập</span>
                 </button>
                 <button
@@ -300,7 +300,7 @@ export default function AddTransactionModal({
                     }
                   }}
                 >
-                  <Gem size={14} />
+                  <Gem size={16} />
                   <span>Đầu tư</span>
                 </button>
               </SlidingTabs>

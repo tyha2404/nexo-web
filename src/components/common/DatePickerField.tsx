@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, X } from '../ui';
 import moment from 'moment';
 import { useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -80,7 +80,7 @@ function PickerPanel({
             {label}
           </h3>
           <button type="button" className={ICON_BUTTON} aria-label="Đóng lịch" onClick={onClose}>
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
         <div className="px-2.5 pt-0 pb-3">
@@ -127,7 +127,7 @@ function PickerPanel({
                     aria-label={mode === 'month' ? 'Năm trước' : 'Tháng trước'}
                     onClick={mode === 'month' ? decreaseYear : decreaseMonth}
                   >
-                    <ChevronLeft size={18} />
+                    <ChevronLeft size={16} />
                   </button>
                   {mode === 'date' && (
                     <select
@@ -165,7 +165,7 @@ function PickerPanel({
                     aria-label={mode === 'month' ? 'Năm kế tiếp' : 'Tháng kế tiếp'}
                     onClick={mode === 'month' ? increaseYear : increaseMonth}
                   >
-                    <ChevronRight size={18} />
+                    <ChevronRight size={16} />
                   </button>
                 </div>
               );
@@ -220,7 +220,7 @@ export function DatePickerField(props: DatePickerFieldProps) {
         onClick={() => setOpen(true)}
       >
         <span className={date.isValid() ? '' : 'text-muted'}>{text}</span>
-        <CalendarDays size={18} aria-hidden="true" />
+        <CalendarDays size={16} aria-hidden="true" />
       </button>
       {open && <PickerPanel {...props} onClose={close} />}
     </div>

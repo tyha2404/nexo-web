@@ -1,4 +1,4 @@
-import { Calendar, Image as ImageIcon, Pencil, Trash2, Wallet } from 'lucide-react';
+import { Calendar, Image as ImageIcon, Pencil, Trash2, Wallet } from '../ui';
 import { InvestmentStatus, TransactionType } from '../../commons/constants';
 import { formatCurrency, formatDate } from '../../commons/utils';
 import { getAmountSign, INVESTMENT_STATUS_LABELS } from './constants';
@@ -100,7 +100,7 @@ export function TransactionMobileCards({
                   aria-label="Xem hóa đơn"
                   title="Xem hóa đơn"
                 >
-                  <ImageIcon size={14} />
+                  <ImageIcon size={16} />
                   <span>Ảnh</span>
                 </button>
               )}
@@ -110,7 +110,7 @@ export function TransactionMobileCards({
                 onClick={() => onEdit(txn)}
                 aria-label={`Chỉnh sửa ${label}`}
               >
-                <Pencil size={14} />
+                <Pencil size={16} />
                 <span>Sửa</span>
               </button>
               <button
@@ -119,7 +119,7 @@ export function TransactionMobileCards({
                 onClick={() => onDelete(txn)}
                 aria-label={`Xóa ${label}`}
               >
-                <Trash2 size={14} />
+                <Trash2 size={16} />
                 <span>Xóa</span>
               </button>
             </div>

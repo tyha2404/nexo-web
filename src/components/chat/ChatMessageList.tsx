@@ -8,8 +8,8 @@ import { CORE_QUICK_CHIPS, type QuickPrompt } from './toolsCatalog';
 import type { ActionCardData } from './types';
 import { BTN_TRANSITION, NO_WRAP } from './chatStyles';
 
-const CHIP_CARD = `flex flex-col gap-1 py-[10px] px-3 rounded-md text-left cursor-pointer bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] transition-all! duration-[220ms]! ease-[cubic-bezier(0.16,1,0.3,1)]! hover:bg-[color-mix(in_srgb,var(--primary)_14%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_40%,transparent)] hover:-translate-y-[2px] hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] light:bg-[var(--bg-card)] light:border-[var(--border)] light:hover:bg-[color-mix(in_srgb,var(--purple)_8%,transparent)] light:hover:border-[var(--purple)] light:hover:shadow-[0_6px_16px_color-mix(in_srgb,var(--primary)_10%,transparent)] ${NO_WRAP}`;
-const PROMPT_BTN = `flex items-center gap-2 py-[9px] px-3 rounded-md text-left cursor-pointer text-[11.5px] bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-[var(--text-main)] ${BTN_TRANSITION} hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_30%,transparent)] hover:text-[var(--text-main)] hover:translate-x-[3px] light:bg-[var(--bg-card-hover)] light:border-[var(--border)] light:text-[var(--text-main)] light:hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] light:hover:border-[color-mix(in_srgb,var(--primary)_25%,transparent)] light:hover:text-[var(--primary)]`;
+const CHIP_CARD = `flex flex-col gap-1 py-[10px] px-3 rounded-md text-left cursor-pointer bg-[rgba(255,255,255,0.04)] border border-line transition-all! duration-[220ms]! ease-[cubic-bezier(0.16,1,0.3,1)]! hover:bg-[color-mix(in_srgb,var(--primary)_14%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_40%,transparent)] hover:-translate-y-[2px] hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] light:bg-[var(--bg-card)] light:hover:bg-[color-mix(in_srgb,var(--purple)_8%,transparent)] light:hover:border-[var(--purple)] light:hover:shadow-[0_6px_16px_color-mix(in_srgb,var(--primary)_10%,transparent)] ${NO_WRAP}`;
+const PROMPT_BTN = `flex items-center gap-2 py-[9px] px-3 rounded-md text-left cursor-pointer text-[11.5px] bg-[rgba(255,255,255,0.04)] border border-line text-[var(--text-main)] ${BTN_TRANSITION} hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_30%,transparent)] hover:text-[var(--text-main)] hover:translate-x-[3px] light:bg-[var(--bg-card-hover)] light:text-[var(--text-main)] light:hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] light:hover:border-[color-mix(in_srgb,var(--primary)_25%,transparent)] light:hover:text-[var(--primary)]`;
 const CHIPS_TITLE = `text-[11px] font-bold uppercase tracking-[0.5px] text-muted text-left pl-[2px] ${NO_WRAP}`;
 const TYPING_DOT =
   'w-[7px] h-[7px] rounded-full inline-block bg-[linear-gradient(135deg,var(--primary),var(--purple))] animate-[chatTypingBounce_1.4s_infinite_ease-in-out_both]';
@@ -36,7 +36,7 @@ const bubbleClass = (
     cls.push(
       streaming
         ? 'border-[color-mix(in_srgb,var(--primary)_35%,transparent)] shadow-[0_4px_16px_color-mix(in_srgb,var(--primary)_15%,transparent)]'
-        : 'border-[rgba(255,255,255,0.08)] shadow-[0_2px_8px_rgba(0,0,0,0.2)] light:border-[var(--border)]'
+        : 'border-line shadow-[0_2px_8px_rgba(0,0,0,0.2)]'
     );
   }
   if (error)

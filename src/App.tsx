@@ -5,25 +5,24 @@ import {
   ChevronDown,
   ChevronRight,
   CircleUser,
+  ColorMode,
   Gem,
   Handshake,
   KeyRound,
   LayoutDashboard,
   LogOut,
-  Moon,
   PanelLeft,
   Plus,
   Search,
   Settings,
   ShoppingBag,
   Sparkles,
-  Sun,
   Tags,
   Target,
   TrendingUp,
   WifiOff,
-  type LucideIcon,
-} from 'lucide-react';
+  type IconComponent,
+} from './components/ui';
 import {
   lazy,
   Suspense,
@@ -71,7 +70,7 @@ const STATUS_ITEM = `inline-flex h-full cursor-pointer items-center gap-1 border
 /** VS Code context menu: blue selection on hover. */
 const MENU_PANEL = `${MOTION_MENU} z-100 min-w-[220px] rounded-md border border-line bg-widget p-1 text-[13px] shadow-app-lg`;
 const MENU_ITEM =
-  'flex h-[26px] w-full cursor-pointer items-center gap-2 rounded-[3px] border-none bg-transparent px-2 text-left text-[13px] text-main hover:bg-primary hover:text-white [&_svg]:size-[14px] mobile:h-10 mobile:text-[15px] mobile:[&_svg]:size-4';
+  'flex h-[26px] w-full cursor-pointer items-center gap-2 rounded-[3px] border-none bg-transparent px-2 text-left text-[13px] text-main hover:bg-primary hover:text-white [&_svg]:size-4 mobile:h-10 mobile:text-[15px]';
 const TREE_ITEM =
   'flex h-[22px] w-full cursor-pointer items-center gap-[6px] border border-transparent pr-3 text-left text-[13px] text-main hover:bg-list-hover focus-visible:border-primary focus-visible:outline-none [&_svg]:size-4 [&_svg]:shrink-0';
 const ACCOUNT_ITEM =
@@ -84,7 +83,7 @@ const NAV_ITEMS = [
   { tab: 'planning', label: 'Kế hoạch & Mục tiêu', short: 'Kế hoạch', Icon: Target },
 ] as const;
 
-type TreeChild = { nav: string; label: string; Icon: LucideIcon; iconClass: string };
+type TreeChild = { nav: string; label: string; Icon: IconComponent; iconClass: string };
 const TREE_CHILDREN: Partial<Record<ActiveTab, TreeChild[]>> = {
   transactions: [
     { nav: 'expenses', label: 'Chi tiêu', Icon: ShoppingBag, iconClass: 'text-expense' },
@@ -460,7 +459,7 @@ function App() {
         aria-label={label}
       >
         <div className="flex h-[30px] w-[38px] items-center justify-center rounded-[5px]">
-          <Icon size={20} strokeWidth={active ? 2 : 1.75} />
+          <Icon size={20} />
         </div>
         <span
           className={`text-[10px] leading-[14px] tracking-normal whitespace-nowrap ${active ? 'font-semibold' : 'font-normal'}`}
@@ -497,7 +496,7 @@ function App() {
             aria-label="Trợ lý AI"
             title="Trợ lý Nexo AI"
           >
-            <Sparkles size={18} className="text-link" />
+            <Sparkles size={16} className="text-link" />
           </button>
           <div className="relative" ref={accountMenuRef}>
             <button
@@ -526,7 +525,7 @@ function App() {
                   className={`${ACCOUNT_ITEM} text-main`}
                   onClick={toggleTheme}
                 >
-                  {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+                  <ColorMode size={16} />
                   {themeLabel}
                 </button>
                 <button
@@ -579,7 +578,7 @@ function App() {
           aria-label="Trợ lý AI"
           title="Trợ lý Nexo AI (⌘K)"
         >
-          <Search size={14} className="shrink-0" />
+          <Search size={16} className="shrink-0" />
           <span className="truncate">Nexo — hỏi trợ lý AI về tài chính của bạn</span>
           <kbd className="ml-1 shrink-0 rounded-[3px] border border-line bg-hover px-1 font-sans text-[11px] leading-[16px] text-muted">
             ⌘K
@@ -624,7 +623,7 @@ function App() {
                     aria-label={label}
                     title={label}
                   >
-                    <Icon size={24} strokeWidth={1.5} />
+                    <Icon size={24} />
                   </button>
                 );
               })}
@@ -637,7 +636,7 @@ function App() {
                 aria-label="Ghi giao dịch"
                 title="Ghi giao dịch"
               >
-                <Plus size={24} strokeWidth={1.5} />
+                <Plus size={24} />
               </button>
               <div className="relative" ref={manageMenuRef}>
                 <button
@@ -652,7 +651,7 @@ function App() {
                   aria-expanded={manageMenuOpen}
                   title={`${user.username} · Cài đặt`}
                 >
-                  <Settings size={24} strokeWidth={1.5} />
+                  <Settings size={24} />
                 </button>
                 {manageMenuOpen && (
                   <div
@@ -676,7 +675,7 @@ function App() {
                         toggleTheme();
                       }}
                     >
-                      {theme === 'light' ? <Moon /> : <Sun />}
+                      <ColorMode />
                       {themeLabel}
                     </button>
                     <button
@@ -792,7 +791,7 @@ function App() {
             <span>nexo</span>
             {breadcrumbs.map((crumb, index) => (
               <span key={crumb} className="flex items-center gap-[2px]">
-                <ChevronRight size={14} className="shrink-0" />
+                <ChevronRight size={16} className="shrink-0" />
                 <span className={index === breadcrumbs.length - 1 ? 'text-main' : undefined}>
                   {crumb}
                 </span>
@@ -859,7 +858,25 @@ function App() {
             onClick={() => handleNavigate('dashboard')}
             title="Nexo Portal"
           >
-            <img src="/logo-transparent.svg" className="size-[14px] brightness-0 invert" alt="" />
+            {/* Logo mark (prompt + rising bars) in the status bar's text colour */}
+            <svg
+              viewBox="0 0 120 120"
+              className="size-[14px]"
+              aria-hidden="true"
+              fill="currentColor"
+            >
+              <path
+                d="M26 38 L48 60 L26 82"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="13"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <rect x="58" y="66" width="12" height="17" rx="3" />
+              <rect x="74" y="53" width="12" height="30" rx="3" />
+              <rect x="90" y="37" width="12" height="46" rx="3" />
+            </svg>
             <span>Nexo</span>
           </button>
           <span className={cx(STATUS_ITEM, 'cursor-default hover:bg-transparent')} role="status">
@@ -892,7 +909,7 @@ function App() {
             aria-label="Đổi giao diện sáng/tối"
             title="Đổi giao diện"
           >
-            {theme === 'light' ? <Sun /> : <Moon />}
+            <ColorMode />
           </button>
         </div>
       </footer>
@@ -913,7 +930,7 @@ function App() {
           aria-label="Ghi giao dịch mới"
         >
           <div className="flex h-[30px] w-[38px] items-center justify-center rounded-md border border-btn-border bg-primary text-white transition-[background-color] duration-100 group-active:bg-primary-hover">
-            <Plus size={22} strokeWidth={2} />
+            <Plus size={22} />
           </div>
           <span className="text-[10px] leading-[14px] font-semibold tracking-normal whitespace-nowrap">
             Ghi mới

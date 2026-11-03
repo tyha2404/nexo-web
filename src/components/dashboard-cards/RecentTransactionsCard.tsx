@@ -1,4 +1,4 @@
-import { CreditCard, Plus, ReceiptText } from 'lucide-react';
+import { CreditCard, Plus, ReceiptText } from '../ui';
 import moment from 'moment';
 import { TransactionType } from '../../commons/constants';
 import type { Transaction, Wallet as WalletModel } from '../../commons/types';
@@ -130,7 +130,7 @@ export function RecentTransactionsCard({
                 className={BTN_PRIMARY}
                 onClick={() => onNavigate?.('expenses')}
               >
-                <Plus size={14} /> Ghi giao dịch
+                <Plus size={16} /> Ghi giao dịch
               </button>
             </div>
           </div>

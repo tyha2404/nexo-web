@@ -1,4 +1,4 @@
-import { Image as ImageIcon, Pencil, Trash2, Wallet } from 'lucide-react';
+import { Image as ImageIcon, Pencil, Trash2, Wallet } from '../ui';
 import { InvestmentStatus, TransactionType } from '../../commons/constants';
 import { formatCurrency, formatDate } from '../../commons/utils';
 import { getAmountSign, INVESTMENT_STATUS_LABELS } from './constants';
@@ -70,7 +70,7 @@ export function TransactionTable({
                         className="p-0 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition"
                         title="Xem hóa đơn / chứng từ"
                       >
-                        <ImageIcon size={15} />
+                        <ImageIcon size={16} />
                       </button>
                     )}
                   </div>
@@ -128,7 +128,7 @@ export function TransactionTable({
                       aria-label={`Chỉnh sửa ${label}`}
                       title={`Chỉnh sửa ${label}`}
                     >
-                      <Pencil size={15} />
+                      <Pencil size={16} />
                     </button>
                     <button
                       type="button"
@@ -137,7 +137,7 @@ export function TransactionTable({
                       aria-label={`Xóa ${label}`}
                       title={`Xóa ${label}`}
                     >
-                      <Trash2 size={15} />
+                      <Trash2 size={16} />
                     </button>
                   </div>
                 </td>

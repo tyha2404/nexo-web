@@ -62,7 +62,7 @@ export function ActionCardView({
   const isIncome = data?.type === TransactionType.INCOME;
   return (
     <div
-      className={`mt-[10px] py-3 px-[14px] rounded-md flex flex-col gap-[6px] bg-[rgba(0,0,0,0.7)] border border-[rgba(255,255,255,0.1)] border-l-[3.5px] shadow-[0_4px_16px_rgba(0,0,0,0.25)] light:bg-white light:border-[var(--border)] light:shadow-[0_4px_16px_rgba(0,0,0,0.06)] ${ACCENTS[card.actionType] ?? 'border-l-[var(--income)]'}`}
+      className={`mt-[10px] py-3 px-[14px] rounded-md flex flex-col gap-[6px] bg-[rgba(0,0,0,0.7)] border border-line border-l-[3.5px] shadow-[0_4px_16px_rgba(0,0,0,0.25)] light:bg-white light:shadow-[0_4px_16px_rgba(0,0,0,0.06)] ${ACCENTS[card.actionType] ?? 'border-l-[var(--income)]'}`}
     >
       <div className="flex items-center justify-between gap-2 mb-[2px]">
         <div
@@ -84,7 +84,7 @@ export function ActionCardView({
 
       {/* Transaction Details Meta Grid */}
       {data && (data.amount !== undefined || data.categoryName || data.walletName) && (
-        <div className="flex flex-wrap gap-x-3 gap-y-2 mt-1 py-2 px-[10px] rounded-sm bg-[rgba(0,0,0,0.25)] border border-[rgba(255,255,255,0.05)] light:bg-[var(--bg-card)] light:border-[var(--border)]">
+        <div className="flex flex-wrap gap-x-3 gap-y-2 mt-1 py-2 px-[10px] rounded-sm bg-[rgba(0,0,0,0.25)] border border-line light:bg-[var(--bg-card)]">
           {data.amount !== undefined && (
             <div className={META_ITEM}>
               <span className={META_LABEL}>Số tiền:</span>
@@ -112,7 +112,7 @@ export function ActionCardView({
       {/* Interactive Action Controls */}
       {feedback ? (
         <div className="inline-flex items-center gap-[6px] mt-1 py-[6px] px-[10px] rounded-sm text-[11px] font-semibold bg-[color-mix(in_srgb,var(--income)_14%,transparent)] border border-[color-mix(in_srgb,var(--income)_30%,transparent)] text-[var(--income)] light:bg-[color-mix(in_srgb,var(--income)_8%,transparent)] light:border-[color-mix(in_srgb,var(--income)_25%,transparent)] light:text-[var(--income)]">
-          <CheckIcon size={14} />
+          <CheckIcon size={16} />
           <span>{feedback}</span>
         </div>
       ) : (
@@ -128,7 +128,7 @@ export function ActionCardView({
                 Xác nhận ghi chép
               </button>
               <button
-                className={`${CARD_BTN} bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.12)] text-[var(--text-main)] hover:bg-[rgba(255,255,255,0.14)] hover:text-white light:bg-[var(--bg-card-hover)] light:border-[var(--border-hover)] light:text-[var(--text-muted)] light:hover:bg-[var(--btn-secondary-bg)] light:hover:text-[var(--text-main)]`}
+                className={`${CARD_BTN} bg-[rgba(255,255,255,0.08)] border border-line text-[var(--text-main)] hover:bg-[rgba(255,255,255,0.14)] hover:text-white light:bg-[var(--bg-card-hover)] light:border-[var(--border-hover)] light:text-[var(--text-muted)] light:hover:bg-[var(--btn-secondary-bg)] light:hover:text-[var(--text-main)]`}
                 onClick={onCancel}
               >
                 Hủy

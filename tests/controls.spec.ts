@@ -12,7 +12,7 @@ for (const route of ['/#/transactions', '/#/debts', '/#/planning/targets']) {
       await expect
         .poll(() =>
           filters.evaluate((el) => {
-            // 44px touch controls on phones, 32px VS Code-density controls on desktop.
+            // 44px touch controls on phones, 26px VS Code-density controls on desktop.
             const controlHeight = parseFloat(
               getComputedStyle(document.documentElement).getPropertyValue('--control-height')
             );

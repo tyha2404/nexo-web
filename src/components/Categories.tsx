@@ -1,15 +1,6 @@
 import { SlidingTabs } from './ui';
-import {
-  AlertTriangle,
-  FolderPlus,
-  Pencil,
-  Plus,
-  ShoppingBag,
-  Trash2,
-  TrendingUp,
-  Wallet,
-  X,
-} from 'lucide-react';
+import { AlertTriangle, FolderPlus, Pencil, Plus, Trash2, X } from './ui';
+import { TransactionTypeIcon } from './transaction-list';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Select from 'react-select';
@@ -279,7 +270,7 @@ export default function Categories() {
             className={tabClass(activeTab === TransactionType.EXPENSE)}
             onClick={() => setActiveTab(TransactionType.EXPENSE)}
           >
-            <ShoppingBag size={14} />
+            <TransactionTypeIcon type={TransactionType.EXPENSE} size={16} />
             <span>Chi tiêu</span>
           </button>
           <button
@@ -289,7 +280,7 @@ export default function Categories() {
             className={tabClass(activeTab === TransactionType.INCOME)}
             onClick={() => setActiveTab(TransactionType.INCOME)}
           >
-            <Wallet size={14} />
+            <TransactionTypeIcon type={TransactionType.INCOME} size={16} />
             <span>Thu nhập</span>
           </button>
           <button
@@ -299,7 +290,7 @@ export default function Categories() {
             className={tabClass(activeTab === TransactionType.INVESTMENT)}
             onClick={() => setActiveTab(TransactionType.INVESTMENT)}
           >
-            <TrendingUp size={14} />
+            <TransactionTypeIcon type={TransactionType.INVESTMENT} size={16} />
             <span>Đầu tư</span>
           </button>
         </SlidingTabs>
@@ -307,7 +298,7 @@ export default function Categories() {
 
       {error && (
         <div className="animate-fade-in">
-          <AlertTriangle size={18} /> {error}
+          <AlertTriangle size={16} /> {error}
         </div>
       )}
 
@@ -470,7 +461,7 @@ export default function Categories() {
                   onClick={closeModal}
                   aria-label="Đóng"
                 >
-                  <X size={18} />
+                  <X size={16} />
                 </button>
               </div>
               {editingCategory ? (

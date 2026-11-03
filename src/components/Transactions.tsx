@@ -1,5 +1,5 @@
 import { SlidingTabs } from './ui';
-import { AlertTriangle, Plus, Receipt, Search } from 'lucide-react';
+import { AlertTriangle, Plus, Receipt, Search } from './ui';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import Select from 'react-select';
@@ -368,7 +368,7 @@ export default function Transactions({
             className={tabClass(activeType === TransactionType.EXPENSE)}
             onClick={() => handleTabSwitch(TransactionType.EXPENSE)}
           >
-            <TransactionTypeIcon type={TransactionType.EXPENSE} size={14} />
+            <TransactionTypeIcon type={TransactionType.EXPENSE} size={16} />
             <span>Chi tiêu</span>
           </button>
 
@@ -379,7 +379,7 @@ export default function Transactions({
             className={tabClass(activeType === TransactionType.INCOME)}
             onClick={() => handleTabSwitch(TransactionType.INCOME)}
           >
-            <TransactionTypeIcon type={TransactionType.INCOME} size={14} />
+            <TransactionTypeIcon type={TransactionType.INCOME} size={16} />
             <span>Thu nhập</span>
           </button>
 
@@ -390,7 +390,7 @@ export default function Transactions({
             className={tabClass(activeType === TransactionType.INVESTMENT)}
             onClick={() => handleTabSwitch(TransactionType.INVESTMENT)}
           >
-            <TransactionTypeIcon type={TransactionType.INVESTMENT} size={14} />
+            <TransactionTypeIcon type={TransactionType.INVESTMENT} size={16} />
             <span>Đầu tư</span>
           </button>
         </SlidingTabs>
@@ -398,7 +398,7 @@ export default function Transactions({
 
       {error && (
         <div className="animate-fade-in">
-          <AlertTriangle size={18} /> {error}
+          <AlertTriangle size={16} /> {error}
         </div>
       )}
 

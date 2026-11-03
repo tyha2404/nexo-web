@@ -1,4 +1,4 @@
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle } from './ui';
 import moment from 'moment';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import type {
@@ -188,7 +188,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       {error && (
         <div className="animate-fade-in" style={{ marginBottom: '1.25rem' }}>
           <div className="flex items-center gap-2">
-            <AlertCircle size={18} />
+            <AlertCircle size={16} />
             <span>{error}</span>
           </div>
           <button

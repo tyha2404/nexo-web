@@ -1,7 +1,8 @@
-import { Gem, ShoppingBag, TrendingUp } from 'lucide-react';
+import { Gem, ShoppingBag, TrendingUp } from '../ui';
 import { TransactionType } from '../../commons/constants';
 
-export function TransactionTypeIcon({ type, size = 18 }: { type: TransactionType; size?: number }) {
+/** Expense / income / investment glyph, shared by tabs, the sidebar tree and lists. */
+export function TransactionTypeIcon({ type, size = 16 }: { type: TransactionType; size?: number }) {
   if (type === TransactionType.INCOME) return <TrendingUp size={size} />;
   if (type === TransactionType.INVESTMENT) return <Gem size={size} />;
   return <ShoppingBag size={size} />;

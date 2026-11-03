@@ -1,8 +1,15 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useModal } from '../../hooks';
-import { X, ExternalLink, Download } from 'lucide-react';
-import { MODAL_BACKDROP, MODAL_CLOSE_BTN, MODAL_HEADER, MODAL_PANEL, cx } from '../ui';
+import { X, ExternalLink, Download } from '../ui';
+import {
+  ACTION_BTN_EDIT,
+  MODAL_BACKDROP,
+  MODAL_CLOSE_BTN,
+  MODAL_HEADER,
+  MODAL_PANEL,
+  cx,
+} from '../ui';
 
 interface ReceiptModalProps {
   isOpen: boolean;
@@ -42,7 +49,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               href={safeUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex size-8 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent text-muted transition-all duration-150 ease-[ease] hover:bg-hover hover:text-primary"
+              className={ACTION_BTN_EDIT}
               title="Mở trong tab mới"
             >
               <ExternalLink size={16} />
@@ -52,13 +59,13 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               download
               target="_blank"
               rel="noreferrer"
-              className="inline-flex size-8 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent text-muted transition-all duration-150 ease-[ease] hover:bg-hover hover:text-primary"
+              className={ACTION_BTN_EDIT}
               title="Tải về máy"
             >
               <Download size={16} />
             </a>
             <button type="button" className={MODAL_CLOSE_BTN} onClick={onClose} aria-label="Đóng">
-              <X size={17} />
+              <X size={16} />
             </button>
           </div>
         </div>

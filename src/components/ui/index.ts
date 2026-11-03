@@ -4,3 +4,4 @@ export * from './modalStyles';
 export * from './motionStyles';
 export { SlidingTabs } from './SlidingTabs';
 export * from './controlStyles';
+export * from './icons';

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { X } from '../ui';
 import { toast } from 'react-toastify';
 import { useModal } from '../../hooks';
 import { authService } from '../../services';
@@ -94,7 +94,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
         <div className={MODAL_SHELL_HEADER}>
           <h3 id="change-password-title">Đổi mật khẩu</h3>
           <button type="button" className={MODAL_CLOSE_BTN} onClick={handleClose} aria-label="Đóng">
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
         <form onSubmit={handleSubmit}>

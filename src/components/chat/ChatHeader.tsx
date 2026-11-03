@@ -1,12 +1,9 @@
 import { CloseIcon, ListIcon, PlusIcon, SparkIcon, WrenchIcon } from './ChatIcons';
 import { BTN_TRANSITION, NO_WRAP } from './chatStyles';
+import { ACTION_BTN_EDIT, cx } from '../ui';
 
-const ICON_BTN = `p-[6px] rounded-sm cursor-pointer flex items-center justify-center border ${BTN_TRANSITION}`;
-const ICON_BTN_IDLE =
-  'bg-transparent border-transparent text-[var(--text-muted)] hover:bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_35%,transparent)] hover:text-[var(--text-link)] light:text-[var(--text-muted)] light:hover:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] light:hover:border-[color-mix(in_srgb,var(--primary)_25%,transparent)] light:hover:text-[var(--primary)]';
-const ICON_BTN_ACTIVE =
-  'bg-[color-mix(in_srgb,var(--primary)_25%,transparent)] border-[color-mix(in_srgb,var(--primary)_50%,transparent)] text-[var(--text-link)] light:bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] light:border-[color-mix(in_srgb,var(--primary)_40%,transparent)] light:text-[var(--primary)]';
-const iconBtn = (active = false) => `${ICON_BTN} ${active ? ICON_BTN_ACTIVE : ICON_BTN_IDLE}`;
+/** VS Code toolbar actions: 22px, 5px radius, hover fill; a toggled action keeps the selection fill. */
+const iconBtn = (active = false) => cx(ACTION_BTN_EDIT, BTN_TRANSITION, active && 'bg-list-active');
 
 export interface ChatHeaderProps {
   showToolsDrawer: boolean;
@@ -26,13 +23,13 @@ export function ChatHeader({
   onClose,
 }: ChatHeaderProps) {
   return (
-    <div className="flex items-center justify-between shrink-0 gap-2 px-4 py-3 bg-[var(--bg-card)] border-b border-[rgba(255,255,255,0.08)] light:bg-[var(--bg-card)] light:border-[var(--border)] mobile:px-[14px] mobile:py-[10px]">
+    <div className="flex items-center justify-between shrink-0 gap-2 px-4 py-3 bg-[var(--bg-card)] border-b border-line light:bg-[var(--bg-card)] mobile:px-[14px] mobile:py-[10px]">
       <div className="flex items-center gap-[10px] min-w-0">
         <div className="relative inline-flex shrink-0">
           <div className="w-8 h-8 rounded-sm bg-primary flex items-center justify-center text-white shadow-[0_1px_4px_var(--primary-glow)]">
             <SparkIcon />
           </div>
-          <span className="absolute -bottom-px -right-px w-[9px] h-[9px] rounded-full bg-[var(--income)] border-2 border-[var(--border)] shadow-[0_0_6px_var(--income)] light:border-[var(--border)]" />
+          <span className="absolute -bottom-px -right-px w-[9px] h-[9px] rounded-full bg-[var(--income)] border-2 border-[var(--border)] shadow-[0_0_6px_var(--income)]" />
         </div>
         <div className="flex flex-col gap-[2px] min-w-0">
           <div className="flex items-center gap-[7px]">
@@ -54,29 +51,24 @@ export function ChatHeader({
 
       <div className="flex items-center gap-1 shrink-0">
         <button className={iconBtn()} onClick={onNewChat} title="Tạo hội thoại mới">
-          <PlusIcon size={17} />
+          <PlusIcon size={16} />
         </button>
         <button
           className={iconBtn(showToolsDrawer)}
           onClick={onToggleTools}
           title="Danh sách công cụ AI (Financial Tools)"
         >
-          <WrenchIcon size={17} />
+          <WrenchIcon size={16} />
         </button>
         <button
           className={iconBtn(showSessionsList)}
           onClick={onToggleSessions}
           title="Lịch sử trò chuyện"
         >
-          <ListIcon size={17} />
+          <ListIcon size={16} />
         </button>
-        <button
-          className={`${iconBtn()} hover:bg-[color-mix(in_srgb,var(--expense)_18%,transparent)]! hover:border-[color-mix(in_srgb,var(--expense)_35%,transparent)]! hover:text-[var(--expense)]! light:hover:bg-[color-mix(in_srgb,var(--expense)_12%,transparent)]! light:hover:border-[color-mix(in_srgb,var(--expense)_25%,transparent)]! light:hover:text-[var(--expense)]!`}
-          onClick={onClose}
-          title="Đóng"
-          aria-label="Close"
-        >
-          <CloseIcon size={18} strokeWidth={2.2} />
+        <button className={iconBtn()} onClick={onClose} title="Đóng" aria-label="Close">
+          <CloseIcon size={16} />
         </button>
       </div>
     </div>

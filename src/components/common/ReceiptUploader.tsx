@@ -1,6 +1,6 @@
 import moment from 'moment';
 import React, { useState, useRef } from 'react';
-import { Upload, X, Loader2 } from 'lucide-react';
+import { Upload, X, Loader2 } from '../ui';
 import { supabase } from '../../services';
 import { getErrorMessage } from '../../commons/utils';
 
@@ -92,7 +92,7 @@ export const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
               className="absolute top-2 right-2 inline-flex cursor-pointer items-center justify-center rounded-full border-none bg-[color-mix(in_srgb,var(--expense)_90%,transparent)] p-[0.35rem] text-white shadow-[0_2px_6px_rgba(0,0,0,0.3)] transition-all duration-150 ease-[ease] hover:scale-[1.08]"
               title="Xóa ảnh"
             >
-              <X size={15} />
+              <X size={16} />
             </button>
           )}
         </div>

@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from '../ui';
 import moment from 'moment';
 import { DatePickerField } from './DatePickerField';
 import { CONTROL_FRAME, cx } from '../ui';

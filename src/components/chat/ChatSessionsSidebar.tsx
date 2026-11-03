@@ -12,7 +12,7 @@ import {
 const ROW =
   'group flex items-center justify-between py-2 px-[10px] rounded-sm cursor-pointer border text-[12px] transition-all duration-200 ease-[ease]';
 const ROW_IDLE =
-  'bg-[rgba(255,255,255,0.03)] border-[rgba(255,255,255,0.04)] text-[var(--text-muted)] hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_30%,transparent)] hover:text-[var(--text-main)] light:bg-white light:border-[var(--border)] light:text-[var(--text-muted)] light:hover:bg-[var(--bg-card-hover)] light:hover:border-[var(--border-hover)] light:hover:text-[var(--text-main)]';
+  'bg-[rgba(255,255,255,0.03)] border-line text-[var(--text-muted)] hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_30%,transparent)] hover:text-[var(--text-main)] light:bg-white light:text-[var(--text-muted)] light:hover:bg-[var(--bg-card-hover)] light:hover:border-[var(--border-hover)] light:hover:text-[var(--text-main)]';
 const ROW_SELECTED =
   '[background:linear-gradient(90deg,color-mix(in_srgb,var(--primary)_22%,transparent)_0%,color-mix(in_srgb,var(--purple)_12%,transparent)_100%)] border-[color-mix(in_srgb,var(--primary)_50%,transparent)] text-[var(--text-link)] font-semibold light:[background:color-mix(in_srgb,var(--purple)_12%,transparent)] light:border-[var(--purple)] light:text-[var(--primary)]';
 
@@ -40,11 +40,11 @@ export function ChatSessionsSidebar({
     <div className={`${SIDEBAR_PANEL} w-[270px] max-w-[85%]`}>
       <div className={SIDEBAR_HEADER}>
         <div className={SIDEBAR_TITLE}>
-          <ListIcon size={15} />
+          <ListIcon size={16} />
           <span>Lịch sử chat</span>
         </div>
         <button className={SIDEBAR_CLOSE_BTN} onClick={onClose} title="Đóng danh sách lịch sử">
-          <CloseIcon size={14} />
+          <CloseIcon size={16} />
         </button>
       </div>
 
@@ -82,7 +82,7 @@ export function ChatSessionsSidebar({
                 onClick={() => onSelect(sess.id)}
               >
                 <div className="flex items-center gap-[9px] overflow-hidden text-ellipsis whitespace-nowrap flex-1">
-                  <ChatBubbleIcon stroke={isSelected ? 'var(--text-link)' : 'var(--text-muted)'} />
+                  <ChatBubbleIcon className={isSelected ? 'text-link' : 'text-muted'} />
                   <span title={sess.title}>{sess.title}</span>
                 </div>
                 <div className="flex items-center ml-[6px] opacity-60 transition-opacity duration-200 ease-[ease] group-hover:opacity-100">

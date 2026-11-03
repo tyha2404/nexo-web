@@ -18,7 +18,7 @@ export const formatInlineText = (text: string): ReactNode => {
       return (
         <code
           key={partIdx}
-          className="py-px px-[5px] rounded-xs text-[11.5px] [font-family:'JetBrains_Mono','Fira_Code',monospace] bg-[rgba(0,0,0,0.25)] border border-[rgba(255,255,255,0.1)] text-[var(--text-link)] light:bg-[var(--btn-secondary-bg)] light:border-[var(--border-hover)] light:text-[var(--primary)]"
+          className="py-px px-[5px] rounded-xs text-[11.5px] [font-family:'JetBrains_Mono','Fira_Code',monospace] bg-[rgba(0,0,0,0.25)] border border-line text-[var(--text-link)] light:bg-[var(--btn-secondary-bg)] light:border-[var(--border-hover)] light:text-[var(--primary)]"
         >
           {part.slice(1, -1)}
         </code>
@@ -85,10 +85,10 @@ export const renderFormattedText = (text: string): ReactNode => {
         elements.push(
           <div
             key={`table-${i}`}
-            className="w-full my-[10px] overflow-x-auto rounded-md border border-[rgba(255,255,255,0.12)] bg-[rgba(0,0,0,0.6)] shadow-[0_4px_16px_rgba(0,0,0,0.25)] light:bg-white light:border-[var(--border)] light:shadow-[0_2px_10px_rgba(0,0,0,0.06)]"
+            className="w-full my-[10px] overflow-x-auto rounded-md border border-line bg-[rgba(0,0,0,0.6)] shadow-[0_4px_16px_rgba(0,0,0,0.25)] light:bg-white light:shadow-[0_2px_10px_rgba(0,0,0,0.06)]"
           >
             <table className="w-full border-collapse text-[12px] text-left">
-              <thead className="bg-[var(--bg-widget)] border-b border-[rgba(255,255,255,0.12)] light:bg-[var(--bg-card)] light:border-[var(--border)]">
+              <thead className="bg-[var(--bg-widget)] border-b border-line light:bg-[var(--bg-card)]">
                 <tr>
                   {headerCells.map((th, thIdx) => (
                     <th
@@ -109,7 +109,7 @@ export const renderFormattedText = (text: string): ReactNode => {
                     {row.map((cell, cIdx) => (
                       <td
                         key={cIdx}
-                        className="py-2 px-3 leading-[1.45] text-[var(--text-main)] border-b border-[rgba(255,255,255,0.05)] light:text-[var(--text-main)] light:border-[var(--border)]"
+                        className="py-2 px-3 leading-[1.45] text-[var(--text-main)] border-b border-line light:text-[var(--text-main)]"
                       >
                         {formatInlineText(cell)}
                       </td>

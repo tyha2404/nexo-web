@@ -11,7 +11,7 @@ import { AI_TOOL_CATEGORIES, AI_TOOLS_CATALOG, ALL_CATEGORY } from './toolsCatal
 
 const TAB = `border text-[11px] py-1 px-[9px] rounded-sm whitespace-nowrap cursor-pointer ${BTN_TRANSITION}`;
 const TAB_IDLE =
-  'bg-[rgba(255,255,255,0.04)] border-[rgba(255,255,255,0.06)] text-[var(--text-muted)] font-medium hover:bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] hover:text-[var(--text-main)] light:bg-[var(--bg-card-hover)] light:border-[var(--border)] light:text-[var(--text-muted)] light:hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] light:hover:text-[var(--primary)]';
+  'bg-[rgba(255,255,255,0.04)] border-line text-[var(--text-muted)] font-medium hover:bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] hover:text-[var(--text-main)] light:bg-[var(--bg-card-hover)] light:text-[var(--text-muted)] light:hover:bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] light:hover:text-[var(--primary)]';
 const TAB_ACTIVE =
   '[background:linear-gradient(135deg,#6366f1_0%,#a855f7_100%)] border-transparent text-white font-semibold';
 
@@ -41,16 +41,16 @@ export function ChatToolsDrawer({
     <div className={`${SIDEBAR_PANEL} w-[320px] max-w-[90%]`}>
       <div className={SIDEBAR_HEADER}>
         <div className={SIDEBAR_TITLE}>
-          <WrenchIcon size={15} />
+          <WrenchIcon size={16} />
           <span>Công cụ AI ({AI_TOOLS_CATALOG.length})</span>
         </div>
         <button className={SIDEBAR_CLOSE_BTN} onClick={onClose} title="Đóng danh sách công cụ">
-          <CloseIcon size={14} />
+          <CloseIcon size={16} />
         </button>
       </div>
 
       {/* Categories Filter Tabs */}
-      <div className="flex gap-[5px] py-2 px-[10px] overflow-x-auto border-b border-[rgba(255,255,255,0.06)]">
+      <div className="flex gap-[5px] py-2 px-[10px] overflow-x-auto border-b border-line">
         {[ALL_CATEGORY, ...AI_TOOL_CATEGORIES.map((c) => c.id)].map((cat) => (
           <button
             key={cat}
@@ -78,7 +78,7 @@ export function ChatToolsDrawer({
             {group.tools.map((tool) => (
               <div
                 key={tool.id}
-                className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-md py-[10px] px-3 cursor-pointer transition-all duration-[220ms] ease-[ease] hover:bg-[color-mix(in_srgb,var(--primary)_14%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_40%,transparent)] hover:-translate-y-px hover:shadow-[0_4px_14px_rgba(0,0,0,0.25)] light:bg-white light:border-[var(--border)] light:hover:bg-[color-mix(in_srgb,var(--purple)_8%,transparent)] light:hover:border-[var(--purple)] light:hover:shadow-[0_4px_14px_color-mix(in_srgb,var(--primary)_12%,transparent)]"
+                className="bg-[rgba(255,255,255,0.03)] border border-line rounded-md py-[10px] px-3 cursor-pointer transition-all duration-[220ms] ease-[ease] hover:bg-[color-mix(in_srgb,var(--primary)_14%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_40%,transparent)] hover:-translate-y-px hover:shadow-[0_4px_14px_rgba(0,0,0,0.25)] light:bg-white light:hover:bg-[color-mix(in_srgb,var(--purple)_8%,transparent)] light:hover:border-[var(--purple)] light:hover:shadow-[0_4px_14px_color-mix(in_srgb,var(--primary)_12%,transparent)]"
                 onClick={() => onRunPrompt(tool.promptExample)}
                 title={`Chạy lệnh mẫu: "${tool.promptExample}"`}
               >

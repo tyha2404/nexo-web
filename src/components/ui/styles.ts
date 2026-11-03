@@ -15,9 +15,9 @@ export const cx = (...parts: Array<string | false | null | undefined>) =>
 
 export const BTN_BASE = `inline-flex shrink-0 cursor-pointer items-center justify-center gap-[6px] rounded-xs align-middle leading-[18px] font-normal whitespace-nowrap [word-break:keep-all] select-none [-webkit-tap-highlight-color:transparent] transition-[background-color,border-color,color] duration-100 ease-out disabled:cursor-default disabled:opacity-50`;
 
-/** Default button size (VS Code `.monaco-button`: 13px, 4px/14px padding); taller touch target on phones. */
+/** Default button size (VS Code `.monaco-button`: 26px, 13px/18px text, 2px radius); taller touch target on phones. */
 export const BTN_MD =
-  'min-h-[28px] px-[14px] py-[4px] text-[13px] mobile:min-h-10 mobile:px-4 mobile:text-[15px]';
+  'min-h-[26px] px-[14px] py-[3px] text-[13px] mobile:min-h-10 mobile:px-4 mobile:text-[15px]';
 
 const BTN_SKIN = {
   primary:
@@ -94,7 +94,7 @@ export const TABS = cx(
 /** Underlined section nav (Planning hub). */
 export const TABS_UNDERLINE = cx(TABS_BASE, 'gap-5 p-0 mobile:justify-start');
 
-const TAB_BASE = `inline-flex min-h-[26px] shrink-0 cursor-pointer items-center justify-center align-middle text-[13px] leading-[1.2] font-normal mobile:min-h-[34px] whitespace-nowrap [word-break:keep-all] select-none [-webkit-tap-highlight-color:transparent] transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] [&_svg]:size-[14px] [&_svg]:shrink-0 mobile:min-w-0 mobile:gap-[0.35rem] mobile:overflow-hidden mobile:text-center mobile:text-[0.78rem] mobile:text-ellipsis`;
+const TAB_BASE = `inline-flex min-h-[26px] shrink-0 cursor-pointer items-center justify-center align-middle text-[13px] leading-[1.2] font-normal mobile:min-h-[34px] whitespace-nowrap [word-break:keep-all] select-none [-webkit-tap-highlight-color:transparent] transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] [&_svg]:size-4 [&_svg]:shrink-0 mobile:min-w-0 mobile:gap-[0.35rem] mobile:overflow-hidden mobile:text-center mobile:text-[0.78rem] mobile:text-ellipsis`;
 const TAB_PILL =
   'rounded-xs border border-transparent px-3 py-[3px] mobile:flex-[1_1_0] mobile:px-[0.35rem]';
 const TAB_PILL_IDLE = 'bg-transparent text-(--text-muted) hover:bg-hover hover:text-main';

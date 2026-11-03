@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, Plus, ShoppingBag, Sparkles } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Plus, ShoppingBag, Sparkles } from '../ui';
 import moment from 'moment';
 import { useMemo } from 'react';
 import type { Category, CategoryBreakdownItem, SummaryReport } from '../../commons/types';
@@ -231,7 +231,7 @@ export function CategoryMomCard({
               {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}.
             </p>
             <button type="button" className={BTN_PRIMARY} onClick={() => onNavigate?.('expenses')}>
-              <Plus size={14} /> Ghi chi tiêu mới
+              <Plus size={16} /> Ghi chi tiêu mới
             </button>
           </div>
         )}

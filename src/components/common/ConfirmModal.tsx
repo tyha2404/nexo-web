@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import { useModal } from '../../hooks';
-import { AlertTriangle, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Trash2, X } from '../ui';
 import {
   BTN_DANGER,
   BTN_FILL,
@@ -59,7 +59,7 @@ export default function ConfirmModal({
             <h3 id="confirm-modal-title">{title}</h3>
           </div>
           <button type="button" className={MODAL_CLOSE_BTN} onClick={onCancel} aria-label="Đóng">
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 

@@ -1,5 +1,5 @@
 import { SlidingTabs } from './ui';
-import { Tags, Target } from 'lucide-react';
+import { Tags, Target } from './ui';
 import { useEffect, useState } from 'react';
 import Categories from './Categories';
 import Targets from './Targets';
@@ -74,7 +74,7 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
             className={tabClass(activeSubTab === 'targets', 'underline')}
             onClick={() => handleTabChange('targets')}
           >
-            <Target size={14} />
+            <Target size={16} />
             <span>Mục tiêu & Ngân sách</span>
           </button>
 
@@ -85,7 +85,7 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
             className={tabClass(activeSubTab === 'categories', 'underline')}
             onClick={() => handleTabChange('categories')}
           >
-            <Tags size={14} />
+            <Tags size={16} />
             <span>Danh mục thu chi</span>
           </button>
         </SlidingTabs>

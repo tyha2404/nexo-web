@@ -4,8 +4,8 @@
 /*  from handoff-pages.css  */
 .react-select__control {
   background: var(--bg-input) !important;
-  border-color: var(--border) !important;
-  border-radius: var(--radius-md) !important;
+  border-color: var(--border-hover) !important;
+  border-radius: var(--radius-sm) !important;
   color: var(--text-main) !important;
   min-height: var(--control-height) !important;
   height: var(--control-height) !important;
@@ -71,8 +71,8 @@
   width: 100%;
   padding: 0.75rem 1rem;
   background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
   color: var(--text-main);
   font-family: inherit;
   font-size: 0.95rem;
@@ -265,7 +265,7 @@ input:not([type='checkbox']):not([type='radio']):not([class*='dummyInput']):not(
   ),
 .react-select__control,
 .react-datepicker-input {
-  border-radius: var(--radius-md) !important;
+  border-radius: var(--radius-sm) !important;
 }
 .react-select input,
 .react-select__input,
@@ -283,8 +283,8 @@ input[class*='dummyInput'] {
 }
 .react-select__control {
   background: var(--bg-input) !important;
-  border-color: var(--border) !important;
-  border-radius: var(--radius-md) !important;
+  border-color: var(--border-hover) !important;
+  border-radius: var(--radius-sm) !important;
   color: var(--text-main) !important;
   min-height: var(--control-height) !important;
   height: var(--control-height) !important;
@@ -344,6 +344,25 @@ input[class*='dummyInput'] {
 }
 .react-select__dropdown-indicator:hover {
   color: var(--primary) !important;
+}
+/* Fit the 26px desktop control (VS Code `.monaco-select-box`): react-select's default
+   2px/8px paddings assume a 38px control and push the text off-centre. */
+.react-select__control {
+  flex-wrap: nowrap !important;
+}
+.react-select__value-container {
+  padding: 0 8px !important;
+}
+.react-select__input-container {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.react-select__indicator {
+  padding: 0 6px !important;
+}
+.react-select__indicator svg {
+  width: 16px;
+  height: 16px;
 }
 .form-group
   input:not([type='checkbox']):not([type='radio']):not([class*='dummyInput']):not(

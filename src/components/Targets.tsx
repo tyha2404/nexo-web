@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import moment from 'moment';
 import { createPortal } from 'react-dom';
 import Select from 'react-select';
-import { Plus, Pencil, X, AlertTriangle, Target as TargetIcon } from 'lucide-react';
+import { Plus, Pencil, X, AlertTriangle, Target as TargetIcon } from './ui';
 import { targetService } from '../services';
 import { TransactionType } from '../commons/constants';
 import type { TargetSummaryResponse, TargetType } from '../commons/types';
@@ -220,7 +220,7 @@ export default function Targets() {
     <div className="targets-subview mx-auto w-full max-w-full p-0">
       {error && (
         <div className="animate-fade-in">
-          <AlertTriangle size={18} /> {error}
+          <AlertTriangle size={16} /> {error}
         </div>
       )}
 
@@ -425,7 +425,7 @@ export default function Targets() {
                           aria-label={`Chỉnh sửa ${row.title}`}
                           title={`Chỉnh sửa ${row.title}`}
                         >
-                          <Pencil size={15} />
+                          <Pencil size={16} />
                         </button>
                       </td>
                     </tr>
@@ -449,7 +449,7 @@ export default function Targets() {
                   <div className="mobile-card-top">
                     <div className={MOBILE_CARD_LEFT}>
                       <div className={mobileIconBadgeClass(isExpense ? 'expense' : 'investment')}>
-                        <TargetIcon size={18} />
+                        <TargetIcon size={16} />
                       </div>
                       <div className="mobile-card-info">
                         <div className={MOBILE_CARD_TITLE}>{row.title}</div>
@@ -515,7 +515,7 @@ export default function Targets() {
                       className={MOBILE_ACTION_EDIT}
                       title="Thiết lập / Chỉnh sửa mục tiêu"
                     >
-                      <Pencil size={14} /> {row.targetAmount > 0 ? 'Chỉnh sửa' : 'Thiết lập'}
+                      <Pencil size={16} /> {row.targetAmount > 0 ? 'Chỉnh sửa' : 'Thiết lập'}
                     </button>
                   </div>
                 </div>
@@ -547,7 +547,7 @@ export default function Targets() {
                   onClick={() => setIsModalOpen(false)}
                   aria-label="Đóng"
                 >
-                  <X size={18} />
+                  <X size={16} />
                 </button>
               </div>
               <form onSubmit={handleSubmit}>
