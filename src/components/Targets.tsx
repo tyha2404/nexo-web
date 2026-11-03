@@ -7,10 +7,12 @@ import { targetService } from '../services';
 import { TransactionType } from '../commons/constants';
 import type { TargetSummaryResponse, TargetType } from '../commons/types';
 import {
+  MONEY_INPUT_PROPS,
   formatCurrency,
   formatNumberInput,
-  parseNumberInput,
   getErrorMessage,
+  isTouchDevice,
+  parseNumberInput,
 } from '../commons/utils';
 import { toast } from 'react-toastify';
 import { useModal } from '../hooks';
@@ -21,6 +23,11 @@ import {
   LOADING_SPINNER,
   MOBILE_CARD,
   MOBILE_CARD_ACTIONS,
+  MOBILE_CARD_AMOUNT_GROUP,
+  MOBILE_CARD_FOOTER,
+  MOBILE_CARD_INFO,
+  MOBILE_CARD_TOP,
+  MOBILE_CARD_SUB_AMOUNT,
   MOBILE_CARD_AMOUNT,
   MOBILE_CARD_DATE,
   MOBILE_CARD_LEFT,
@@ -266,7 +273,7 @@ export default function Targets() {
             className={statValueClass(targetSummary?.expense?.isOverBudget ? 'expense' : 'default')}
           >
             {targetSummary?.expense && targetSummary.expense.dailyAllowance > 0
-              ? `${formatCurrency(Math.round(targetSummary.expense.dailyAllowance))}/ngày`
+              ? formatCurrency(Math.round(targetSummary.expense.dailyAllowance))
               : targetSummary?.expense?.isOverBudget
                 ? `🚨 ${formatCurrency(Math.abs(targetSummary.expense.overspentAmount))} (Vượt)`
                 : '—'}
@@ -291,6 +298,7 @@ export default function Targets() {
             }
             onChange={(option) => setFilterType(option ? option.value : '')}
             classNamePrefix="react-select"
+            isSearchable={!isTouchDevice()}
             placeholder="Tất cả Mục tiêu"
             menuPortalTarget={document.body}
           />
@@ -446,12 +454,12 @@ export default function Targets() {
 
               return (
                 <div key={`m-target-${row.id}`} className={MOBILE_CARD}>
-                  <div className="mobile-card-top">
+                  <div className={MOBILE_CARD_TOP}>
                     <div className={MOBILE_CARD_LEFT}>
                       <div className={mobileIconBadgeClass(isExpense ? 'expense' : 'investment')}>
                         <TargetIcon size={16} />
                       </div>
-                      <div className="mobile-card-info">
+                      <div className={MOBILE_CARD_INFO}>
                         <div className={MOBILE_CARD_TITLE}>{row.title}</div>
                         <div className={MOBILE_CARD_DATE}>
                           <span>
@@ -461,62 +469,64 @@ export default function Targets() {
                       </div>
                     </div>
 
-                    <div className="mobile-card-amount-group">
+                    <div className={MOBILE_CARD_AMOUNT_GROUP}>
                       <div
                         className={`${MOBILE_CARD_AMOUNT} text-main`}
                         style={{ color: 'var(--text-main)' }}
                       >
                         {row.targetAmount > 0 ? formatCurrency(row.targetAmount) : 'Chưa đặt'}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <div className={MOBILE_CARD_SUB_AMOUNT}>
                         {row.targetAmount > 0 ? `Tiến độ: ${percent}%` : 'Hạn mức mục tiêu'}
                       </div>
                     </div>
                   </div>
 
-                  <div className={MOBILE_CARD_TAGS}>
-                    <span
-                      className={CATEGORY_BADGE}
-                      style={{
-                        background:
-                          row.status === 'OVER_BUDGET'
-                            ? 'color-mix(in srgb,var(--expense) 15%,transparent)'
+                  <div className={MOBILE_CARD_FOOTER}>
+                    <div className={MOBILE_CARD_TAGS}>
+                      <span
+                        className={CATEGORY_BADGE}
+                        style={{
+                          background:
+                            row.status === 'OVER_BUDGET'
+                              ? 'color-mix(in srgb,var(--expense) 15%,transparent)'
+                              : row.status === 'COMPLETED'
+                                ? 'color-mix(in srgb,var(--income) 15%,transparent)'
+                                : 'var(--primary-glow)',
+                          color:
+                            row.status === 'OVER_BUDGET'
+                              ? 'var(--expense)'
+                              : row.status === 'COMPLETED'
+                                ? 'var(--income)'
+                                : 'var(--primary)',
+                          border:
+                            row.status === 'OVER_BUDGET'
+                              ? '1px solid color-mix(in srgb,var(--expense) 30%,transparent)'
+                              : row.status === 'COMPLETED'
+                                ? '1px solid color-mix(in srgb,var(--income) 30%,transparent)'
+                                : '1px solid color-mix(in srgb,var(--primary) 30%,transparent)',
+                        }}
+                      >
+                        {row.targetAmount === 0
+                          ? 'Chưa thiết lập'
+                          : row.status === 'OVER_BUDGET'
+                            ? '🚨 Vượt hạn mức'
                             : row.status === 'COMPLETED'
-                              ? 'color-mix(in srgb,var(--income) 15%,transparent)'
-                              : 'var(--primary-glow)',
-                        color:
-                          row.status === 'OVER_BUDGET'
-                            ? 'var(--expense)'
-                            : row.status === 'COMPLETED'
-                              ? 'var(--income)'
-                              : 'var(--primary)',
-                        border:
-                          row.status === 'OVER_BUDGET'
-                            ? '1px solid color-mix(in srgb,var(--expense) 30%,transparent)'
-                            : row.status === 'COMPLETED'
-                              ? '1px solid color-mix(in srgb,var(--income) 30%,transparent)'
-                              : '1px solid color-mix(in srgb,var(--primary) 30%,transparent)',
-                      }}
-                    >
-                      {row.targetAmount === 0
-                        ? 'Chưa thiết lập'
-                        : row.status === 'OVER_BUDGET'
-                          ? '🚨 Vượt hạn mức'
-                          : row.status === 'COMPLETED'
-                            ? '🎉 Đã hoàn thành'
-                            : `${percent}% hoàn thành`}
-                    </span>
-                  </div>
+                              ? '🎉 Đã hoàn thành'
+                              : `${percent}% hoàn thành`}
+                      </span>
+                    </div>
 
-                  <div className={MOBILE_CARD_ACTIONS}>
-                    <button
-                      type="button"
-                      onClick={() => openAddModal(row.type)}
-                      className={MOBILE_ACTION_EDIT}
-                      title="Thiết lập / Chỉnh sửa mục tiêu"
-                    >
-                      <Pencil size={16} /> {row.targetAmount > 0 ? 'Chỉnh sửa' : 'Thiết lập'}
-                    </button>
+                    <div className={MOBILE_CARD_ACTIONS}>
+                      <button
+                        type="button"
+                        onClick={() => openAddModal(row.type)}
+                        className={MOBILE_ACTION_EDIT}
+                        title="Thiết lập / Chỉnh sửa mục tiêu"
+                      >
+                        <Pencil size={16} /> {row.targetAmount > 0 ? 'Chỉnh sửa' : 'Thiết lập'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -572,6 +582,7 @@ export default function Targets() {
                         }
                       }}
                       classNamePrefix="react-select"
+                      isSearchable={!isTouchDevice()}
                       menuPortalTarget={document.body}
                       menuPosition="fixed"
                     />
@@ -581,8 +592,7 @@ export default function Targets() {
                     <label htmlFor="target-amount-input">Số tiền (đ)</label>
                     <input
                       id="target-amount-input"
-                      type="text"
-                      inputMode="numeric"
+                      {...MONEY_INPUT_PROPS}
                       placeholder="Ví dụ: 10.000.000"
                       value={amount}
                       onChange={(e) => handleAmountChange(e.target.value)}

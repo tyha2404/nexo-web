@@ -6,7 +6,12 @@ import Select from 'react-select';
 import { toast } from 'react-toastify';
 import { InvestmentStatus, TransactionType } from '../commons/constants';
 import type { Category, Transaction, TransactionSummary, Wallet } from '../commons/types';
-import { getErrorMessage, toISODateString } from '../commons/utils';
+import {
+  SEARCH_INPUT_PROPS,
+  getErrorMessage,
+  isTouchDevice,
+  toISODateString,
+} from '../commons/utils';
 import {
   categoryService,
   transactionService,
@@ -415,7 +420,7 @@ export default function Transactions({
           <Search size={16} className={SEARCH_ICON} />
           <input
             className={SEARCH_INPUT}
-            type="text"
+            {...SEARCH_INPUT_PROPS}
             aria-label="Tìm giao dịch"
             placeholder="Tìm kiếm..."
             value={searchQuery}
@@ -442,7 +447,7 @@ export default function Transactions({
             }}
             classNamePrefix="react-select"
             placeholder="Tất cả Danh mục"
-            isSearchable={true}
+            isSearchable={!isTouchDevice()}
             menuPortalTarget={document.body}
           />
         </div>

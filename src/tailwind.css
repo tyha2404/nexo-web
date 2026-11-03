@@ -107,6 +107,9 @@
   }
 }
 
+/* While the on-screen keyboard is up (hooks/useVirtualKeyboard sets html[data-keyboard]). */
+@custom-variant keyboard (&:where(html[data-keyboard='open'] *));
+
 /* Installed to the home screen (iOS standalone PWA). */
 @custom-variant standalone {
   @media (display-mode: standalone) {

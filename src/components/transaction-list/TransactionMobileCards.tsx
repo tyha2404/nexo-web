@@ -7,6 +7,10 @@ import {
   CATEGORY_BADGE,
   MOBILE_CARD,
   MOBILE_CARD_ACTIONS,
+  MOBILE_CARD_AMOUNT_GROUP,
+  MOBILE_CARD_FOOTER,
+  MOBILE_CARD_INFO,
+  MOBILE_CARD_TOP,
   MOBILE_CARD_AMOUNT,
   MOBILE_CARD_DATE,
   MOBILE_CARD_LEFT,
@@ -45,12 +49,12 @@ export function TransactionMobileCards({
         const label = txn.description || 'giao dịch';
         return (
           <div key={txn.id} className={MOBILE_CARD}>
-            <div className="mobile-card-top">
+            <div className={MOBILE_CARD_TOP}>
               <div className={MOBILE_CARD_LEFT}>
                 <div className={mobileIconBadgeClass(typeClass)}>
                   <TransactionTypeIcon type={activeType} />
                 </div>
-                <div className="mobile-card-info">
+                <div className={MOBILE_CARD_INFO}>
                   <div className={MOBILE_CARD_TITLE}>{txn.description}</div>
                   <div className={MOBILE_CARD_DATE}>
                     <Calendar size={12} className="mobile-date-icon" />
@@ -58,7 +62,7 @@ export function TransactionMobileCards({
                   </div>
                 </div>
               </div>
-              <div className="mobile-card-amount-group">
+              <div className={MOBILE_CARD_AMOUNT_GROUP}>
                 <div className={`${MOBILE_CARD_AMOUNT} ${mobileAmountColor(typeClass)}`}>
                   {getAmountSign(activeType)}
                   {formatCurrency(Math.abs(txn.amount))}
@@ -66,62 +70,66 @@ export function TransactionMobileCards({
               </div>
             </div>
 
-            <div className={MOBILE_CARD_TAGS}>
-              <span className={CATEGORY_BADGE}>{getCategoryName(txn.categoryId)}</span>
-              {wallet && (
-                <span className={WALLET_BADGE}>
-                  <Wallet size={12} />
-                  <span>
-                    {wallet.icon ? `${wallet.icon} ` : ''}
-                    {wallet.name}
-                  </span>
-                </span>
-              )}
-              {activeType === TransactionType.INVESTMENT && (
-                <span className={statusBadgeClass(status)}>{INVESTMENT_STATUS_LABELS[status]}</span>
-              )}
-              {activeType === TransactionType.INVESTMENT &&
-                txn.status &&
-                txn.status !== InvestmentStatus.HOLDING &&
-                txn.realizedPnl !== undefined && (
-                  <span className={pnlBadgeClass(txn.realizedPnl >= 0)}>
-                    {txn.realizedPnl >= 0 ? 'Lãi: +' : 'Lỗ: '}
-                    {formatCurrency(Math.abs(txn.realizedPnl))}
+            <div className={MOBILE_CARD_FOOTER}>
+              <div className={MOBILE_CARD_TAGS}>
+                <span className={CATEGORY_BADGE}>{getCategoryName(txn.categoryId)}</span>
+                {wallet && (
+                  <span className={WALLET_BADGE}>
+                    <Wallet size={12} />
+                    <span>
+                      {wallet.icon ? `${wallet.icon} ` : ''}
+                      {wallet.name}
+                    </span>
                   </span>
                 )}
-            </div>
+                {activeType === TransactionType.INVESTMENT && (
+                  <span className={statusBadgeClass(status)}>
+                    {INVESTMENT_STATUS_LABELS[status]}
+                  </span>
+                )}
+                {activeType === TransactionType.INVESTMENT &&
+                  txn.status &&
+                  txn.status !== InvestmentStatus.HOLDING &&
+                  txn.realizedPnl !== undefined && (
+                    <span className={pnlBadgeClass(txn.realizedPnl >= 0)}>
+                      {txn.realizedPnl >= 0 ? 'Lãi: +' : 'Lỗ: '}
+                      {formatCurrency(Math.abs(txn.realizedPnl))}
+                    </span>
+                  )}
+              </div>
 
-            <div className={MOBILE_CARD_ACTIONS}>
-              {txn.receiptUrl && (
+              <div className={MOBILE_CARD_ACTIONS}>
+                {txn.receiptUrl && (
+                  <button
+                    type="button"
+                    className={MOBILE_ACTION_BTN}
+                    onClick={() => onViewReceipt(txn.receiptUrl!)}
+                    aria-label="Xem hóa đơn"
+                    title="Xem hóa đơn"
+                  >
+                    <ImageIcon size={16} />
+                    <span>Ảnh</span>
+                  </button>
+                )}
                 <button
                   type="button"
-                  className={MOBILE_ACTION_BTN}
-                  onClick={() => onViewReceipt(txn.receiptUrl!)}
-                  aria-label="Xem hóa đơn"
-                  title="Xem hóa đơn"
+                  className={MOBILE_ACTION_EDIT}
+                  onClick={() => onEdit(txn)}
+                  aria-label={`Chỉnh sửa ${label}`}
                 >
-                  <ImageIcon size={16} />
-                  <span>Ảnh</span>
+                  <Pencil size={16} />
+                  <span>Sửa</span>
                 </button>
-              )}
-              <button
-                type="button"
-                className={MOBILE_ACTION_EDIT}
-                onClick={() => onEdit(txn)}
-                aria-label={`Chỉnh sửa ${label}`}
-              >
-                <Pencil size={16} />
-                <span>Sửa</span>
-              </button>
-              <button
-                type="button"
-                className={MOBILE_ACTION_DELETE}
-                onClick={() => onDelete(txn)}
-                aria-label={`Xóa ${label}`}
-              >
-                <Trash2 size={16} />
-                <span>Xóa</span>
-              </button>
+                <button
+                  type="button"
+                  className={MOBILE_ACTION_DELETE}
+                  onClick={() => onDelete(txn)}
+                  aria-label={`Xóa ${label}`}
+                >
+                  <Trash2 size={16} />
+                  <span>Xóa</span>
+                </button>
+              </div>
             </div>
           </div>
         );

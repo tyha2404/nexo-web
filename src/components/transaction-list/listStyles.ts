@@ -44,7 +44,12 @@ export const MOBILE_CARDS = `transactions-mobile-cards hidden mobile:flex mobile
 
 export const MOBILE_CARD =
   'transaction-mobile-card flex select-none flex-col gap-[0.35rem] rounded-md border border-line bg-card px-[0.65rem] py-[0.55rem] shadow-app-sm transition-[transform,border-color] duration-150 ease-[ease] [-webkit-tap-highlight-color:transparent] hover:border-line-hover hover:bg-card-hover light:border-line light:bg-white light:shadow-[0_2px_8px_rgba(0,0,0,0.04)]';
-export const MOBILE_CARD_LEFT = 'flex min-w-0 items-center gap-3';
+/** Title block on the left, amount on the right. */
+export const MOBILE_CARD_TOP = 'mobile-card-top flex items-start justify-between gap-3';
+export const MOBILE_CARD_LEFT = 'flex min-w-0 flex-1 items-center gap-3';
+export const MOBILE_CARD_INFO = 'mobile-card-info flex min-w-0 flex-col gap-[0.2rem]';
+export const MOBILE_CARD_AMOUNT_GROUP = 'mobile-card-amount-group shrink-0 text-right';
+export const MOBILE_CARD_SUB_AMOUNT = 'text-[0.72rem] text-muted';
 const MOBILE_ICON_BADGE_BASE =
   'flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-sm border text-[1.15rem]';
 const MOBILE_ICON_BADGE_VARIANT: Record<string, string> = {
@@ -67,8 +72,10 @@ const MOBILE_AMOUNT_COLOR: Record<string, string> = {
   income: 'text-income',
 };
 export const mobileAmountColor = (variant: string) => MOBILE_AMOUNT_COLOR[variant] ?? 'text-main';
-export const MOBILE_CARD_TAGS = 'flex flex-wrap items-center gap-[0.4rem]';
-export const MOBILE_CARD_ACTIONS =
-  'flex items-center justify-end gap-2 border-t border-line pt-[0.6rem]';
+/** Tags on the left and actions on the right share one row; actions wrap below when crowded. */
+export const MOBILE_CARD_FOOTER =
+  'flex flex-wrap items-center justify-between gap-2 border-t border-line pt-[0.5rem]';
+export const MOBILE_CARD_TAGS = 'flex min-w-0 flex-wrap items-center gap-[0.4rem]';
+export const MOBILE_CARD_ACTIONS = 'ml-auto flex shrink-0 items-center gap-2';
 
 export const LOADING_SPINNER = 'flex flex-col items-center justify-center py-12 text-muted';

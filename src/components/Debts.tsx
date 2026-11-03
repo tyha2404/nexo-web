@@ -4,7 +4,16 @@ import { createPortal } from 'react-dom';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 import { Search, Plus, Trash2, Handshake, X, AlertTriangle, ArrowRightLeft } from './ui';
-import { formatCurrency, formatNumberInput, parseNumberInput } from '../commons/utils';
+import {
+  MONEY_INPUT_PROPS,
+  SEARCH_INPUT_PROPS,
+  TEXT_DONE_INPUT_PROPS,
+  TEXT_NEXT_INPUT_PROPS,
+  formatCurrency,
+  formatNumberInput,
+  isTouchDevice,
+  parseNumberInput,
+} from '../commons/utils';
 import { debtService } from '../services';
 import type { Debt, DebtType } from '../types/debt';
 import { useDataEvents, useModal } from '../hooks';
@@ -15,6 +24,11 @@ import {
   LOADING_SPINNER,
   MOBILE_CARD,
   MOBILE_CARD_ACTIONS,
+  MOBILE_CARD_AMOUNT_GROUP,
+  MOBILE_CARD_FOOTER,
+  MOBILE_CARD_INFO,
+  MOBILE_CARD_TOP,
+  MOBILE_CARD_SUB_AMOUNT,
   MOBILE_CARD_AMOUNT,
   MOBILE_CARD_DATE,
   MOBILE_CARD_LEFT,
@@ -286,7 +300,7 @@ export default function Debts() {
           <Search size={16} className={SEARCH_ICON} />
           <input
             className={SEARCH_INPUT}
-            type="text"
+            {...SEARCH_INPUT_PROPS}
             aria-label="Tìm khoản nợ theo tiêu đề hoặc ghi chú"
             placeholder="Tìm kiếm..."
             value={searchQuery}
@@ -310,6 +324,7 @@ export default function Debts() {
             }
             onChange={(option) => setFilterType(option ? option.value : '')}
             classNamePrefix="react-select"
+            isSearchable={!isTouchDevice()}
             placeholder="Loại nợ"
             menuPortalTarget={document.body}
           />
@@ -477,12 +492,12 @@ export default function Debts() {
 
               return (
                 <div key={`m-debt-${debt.id}`} className={MOBILE_CARD}>
-                  <div className="mobile-card-top">
+                  <div className={MOBILE_CARD_TOP}>
                     <div className={MOBILE_CARD_LEFT}>
                       <div className={mobileIconBadgeClass(isPayable ? 'expense' : 'income')}>
                         <Handshake size={16} />
                       </div>
-                      <div className="mobile-card-info">
+                      <div className={MOBILE_CARD_INFO}>
                         <div className={MOBILE_CARD_TITLE}>{debt.title}</div>
                         {debt.notes && (
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -500,53 +515,55 @@ export default function Debts() {
                       </div>
                     </div>
 
-                    <div className="mobile-card-amount-group">
+                    <div className={MOBILE_CARD_AMOUNT_GROUP}>
                       <div
                         className={`${MOBILE_CARD_AMOUNT} text-main`}
                         style={{ color: isPayable ? 'var(--expense)' : 'var(--income)' }}
                       >
                         {formatCurrency(Math.abs(debt.remaining))}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      <div className={MOBILE_CARD_SUB_AMOUNT}>
                         Tổng: {formatCurrency(debt.totalAmount)}
                       </div>
                     </div>
                   </div>
 
-                  <div className={MOBILE_CARD_TAGS}>
-                    <span className={CATEGORY_BADGE}>{isPayable ? 'Tôi nợ' : 'Phải thu'}</span>
-                    <span className={CATEGORY_BADGE}>
-                      {debt.status === 'COMPLETED'
-                        ? '🎉 Đã xong'
-                        : debt.status === 'OVERDUE'
-                          ? '🚨 Quá hạn'
-                          : `Đã trả ${percent}% (${formatCurrency(debt.paidAmount)})`}
-                    </span>
-                  </div>
+                  <div className={MOBILE_CARD_FOOTER}>
+                    <div className={MOBILE_CARD_TAGS}>
+                      <span className={CATEGORY_BADGE}>{isPayable ? 'Tôi nợ' : 'Phải thu'}</span>
+                      <span className={CATEGORY_BADGE}>
+                        {debt.status === 'COMPLETED'
+                          ? '🎉 Đã xong'
+                          : debt.status === 'OVERDUE'
+                            ? '🚨 Quá hạn'
+                            : `Đã trả ${percent}% (${formatCurrency(debt.paidAmount)})`}
+                      </span>
+                    </div>
 
-                  <div className={MOBILE_CARD_ACTIONS}>
-                    {debt.status !== 'COMPLETED' && (
+                    <div className={MOBILE_CARD_ACTIONS}>
+                      {debt.status !== 'COMPLETED' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedDebt(debt);
+                            setRepayAmount('');
+                            setIsRepayModalOpen(true);
+                          }}
+                          className={MOBILE_ACTION_EDIT}
+                          title="Ghi nhận trả/thu tiền"
+                        >
+                          <ArrowRightLeft size={16} /> Trả tiền
+                        </button>
+                      )}
                       <button
                         type="button"
-                        onClick={() => {
-                          setSelectedDebt(debt);
-                          setRepayAmount('');
-                          setIsRepayModalOpen(true);
-                        }}
-                        className={MOBILE_ACTION_EDIT}
-                        title="Ghi nhận trả/thu tiền"
+                        onClick={() => handleDelete(debt.id)}
+                        className={MOBILE_ACTION_DELETE}
+                        title="Xóa khoản nợ"
                       >
-                        <ArrowRightLeft size={16} /> Trả tiền
+                        <Trash2 size={16} /> Xóa
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(debt.id)}
-                      className={MOBILE_ACTION_DELETE}
-                      title="Xóa khoản nợ"
-                    >
-                      <Trash2 size={16} /> Xóa
-                    </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -583,7 +600,7 @@ export default function Debts() {
                   <label htmlFor="debt-title">Khoản nợ / Đối tác</label>
                   <input
                     id="debt-title"
-                    type="text"
+                    {...TEXT_NEXT_INPUT_PROPS}
                     placeholder="Ví dụ: Vay mua xe TPBank, Anh Tuấn..."
                     value={formTitle}
                     onChange={(e) => setFormTitle(e.target.value)}
@@ -610,6 +627,7 @@ export default function Debts() {
                         if (option) setFormType(option.value as DebtType);
                       }}
                       classNamePrefix="react-select"
+                      isSearchable={!isTouchDevice()}
                       menuPortalTarget={document.body}
                       menuPosition="fixed"
                     />
@@ -619,8 +637,7 @@ export default function Debts() {
                     <label htmlFor="debt-amount">Số tiền gốc (đ)</label>
                     <input
                       id="debt-amount"
-                      type="text"
-                      inputMode="numeric"
+                      {...MONEY_INPUT_PROPS}
                       placeholder="Ví dụ: 5.000.000"
                       value={formAmount}
                       onChange={(e) => handleAmountChange(e.target.value, setFormAmount)}
@@ -728,8 +745,7 @@ export default function Debts() {
                   <label htmlFor="repay-amount">Số tiền trả đợt này (đ)</label>
                   <input
                     id="repay-amount"
-                    type="text"
-                    inputMode="numeric"
+                    {...MONEY_INPUT_PROPS}
                     placeholder={`Ví dụ: ${formatCurrency(selectedDebt.remaining)}`}
                     value={repayAmount}
                     onChange={(e) => handleAmountChange(e.target.value, setRepayAmount)}
@@ -741,7 +757,7 @@ export default function Debts() {
                   <label htmlFor="repay-notes">Ghi chú</label>
                   <input
                     id="repay-notes"
-                    type="text"
+                    {...TEXT_DONE_INPUT_PROPS}
                     placeholder="VD: Trả đợt 1..."
                     value={repayNotes}
                     onChange={(e) => setRepayNotes(e.target.value)}

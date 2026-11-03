@@ -105,6 +105,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 id="current-password"
                 type={inputType}
                 autoComplete="current-password"
+                enterKeyHint="next"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
@@ -116,6 +117,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 id="new-password"
                 type={inputType}
                 autoComplete="new-password"
+                enterKeyHint="next"
                 placeholder={`Ít nhất ${MIN_PASSWORD_LENGTH} ký tự`}
                 minLength={MIN_PASSWORD_LENGTH}
                 maxLength={128}
@@ -130,6 +132,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 id="confirm-password"
                 type={inputType}
                 autoComplete="new-password"
+                enterKeyHint="done"
                 maxLength={128}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}

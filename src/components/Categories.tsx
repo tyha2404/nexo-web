@@ -8,10 +8,13 @@ import { toast } from 'react-toastify';
 import { TransactionType } from '../commons/constants';
 import type { Category } from '../commons/types';
 import {
+  MONEY_INPUT_PROPS,
+  TEXT_NEXT_INPUT_PROPS,
   formatCurrency,
   formatNumberInput,
-  parseNumberInput,
   getErrorMessage,
+  isTouchDevice,
+  parseNumberInput,
 } from '../commons/utils';
 import { useDataEvents, useModal } from '../hooks';
 import { categoryService } from '../services';
@@ -471,7 +474,7 @@ export default function Categories() {
                       <label htmlFor="edit-name">Tên danh mục</label>
                       <input
                         id="edit-name"
-                        type="text"
+                        {...TEXT_NEXT_INPUT_PROPS}
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
                         placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
@@ -490,6 +493,7 @@ export default function Categories() {
                           )
                         }
                         classNamePrefix="react-select"
+                        isSearchable={!isTouchDevice()}
                         placeholder="Chọn Loại danh mục"
                         menuPortalTarget={document.body}
                         menuPosition="fixed"
@@ -501,8 +505,7 @@ export default function Categories() {
                           <label htmlFor="edit-budget">Hạn mức tháng (đ)</label>
                           <input
                             id="edit-budget"
-                            type="text"
-                            inputMode="numeric"
+                            {...MONEY_INPUT_PROPS}
                             value={editBudgetLimit}
                             onChange={(e) => handleEditBudgetChange(e.target.value)}
                             placeholder="Ví dụ: 5.000.000"
@@ -553,7 +556,7 @@ export default function Categories() {
                       <label htmlFor="new-name">Tên danh mục</label>
                       <input
                         id="new-name"
-                        type="text"
+                        {...TEXT_NEXT_INPUT_PROPS}
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
@@ -572,6 +575,7 @@ export default function Categories() {
                           )
                         }
                         classNamePrefix="react-select"
+                        isSearchable={!isTouchDevice()}
                         placeholder="Chọn Loại danh mục"
                         menuPortalTarget={document.body}
                         menuPosition="fixed"
@@ -583,8 +587,7 @@ export default function Categories() {
                           <label htmlFor="new-budget">Hạn mức tháng (đ)</label>
                           <input
                             id="new-budget"
-                            type="text"
-                            inputMode="numeric"
+                            {...MONEY_INPUT_PROPS}
                             value={budgetLimit}
                             onChange={(e) => handleBudgetChange(e.target.value)}
                             placeholder="Ví dụ: 5.000.000"

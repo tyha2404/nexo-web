@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import moment from 'moment';
 
 export const USER = {
@@ -147,4 +147,17 @@ export async function openTransactionForm(page: Page) {
     .first()
     .click();
   return page.getByRole('dialog');
+}
+
+/** The react-select control labelled `label` (its input is hidden when not searchable). */
+export function selectControl(scope: Locator, label: string) {
+  return scope
+    .getByLabel(label)
+    .locator('xpath=ancestor::div[contains(concat(" ", @class, " "), " react-select__control ")]');
+}
+
+/** Opens a react-select by tapping it and picks an option (dropdowns are tap-only on phones). */
+export async function chooseOption(page: Page, scope: Locator, label: string, option: string) {
+  await selectControl(scope, label).click();
+  await page.getByRole('option', { name: option, exact: true }).click();
 }

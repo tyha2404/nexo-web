@@ -50,7 +50,7 @@ const AIChatWidget = lazy(() =>
   import('./components/chat').then((module) => ({ default: module.AIChatWidget }))
 );
 import { ApiError, authService } from './services';
-import { useRealtimeSync } from './hooks';
+import { useRealtimeSync, useVirtualKeyboard } from './hooks';
 import { BTN_SECONDARY, PWA_TOAST, SPINNER_PAGE, MOTION_MENU, cx } from './components/ui';
 
 export type ActiveTab = 'dashboard' | 'transactions' | 'debts' | 'planning';
@@ -180,6 +180,7 @@ function App() {
   );
 
   useRealtimeSync({ userId: user?.id });
+  useVirtualKeyboard();
 
   const checkAuth = async () => {
     const attempt = ++authAttempt.current;
@@ -225,11 +226,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (theme === 'light') {
-      document.body.classList.add('light-theme');
-    } else {
-      document.body.classList.remove('light-theme');
-    }
+    const light = theme === 'light';
+    // On <html> too, so the page canvas (iOS overscroll, area behind the status bar) follows.
+    document.documentElement.classList.toggle('light-theme', light);
+    document.body.classList.toggle('light-theme', light);
+    // iOS status bar / Safari toolbar colour = the title bar colour of the active theme.
+    const titlebar = getComputedStyle(document.body).getPropertyValue('--bg-titlebar').trim();
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', titlebar);
     localStorage.setItem('theme', theme);
   }, [theme]);
 
@@ -476,7 +479,7 @@ function App() {
     <div className="app-shell flex h-screen w-screen flex-col overflow-hidden bg-app text-[13px] mobile:h-auto mobile:min-h-dvh mobile:overflow-visible mobile:text-base">
       {/* Mobile Top Header (styled as the VS Code title bar) */}
       <header
-        className={`fixed inset-x-0 top-0 z-90 hidden h-[calc(52px+env(safe-area-inset-top,0px))] min-h-[calc(52px+env(safe-area-inset-top,0px))] items-center justify-between border-b border-line bg-titlebar pt-[max(0.4rem,env(safe-area-inset-top,0px))] pr-[max(0.5rem,env(safe-area-inset-right,0px))] pb-[0.4rem] pl-[max(0.85rem,env(safe-area-inset-left,0px))] mobile:flex standalone:light:bg-[linear-gradient(to_bottom,#1f1f1f_0,#1f1f1f_env(safe-area-inset-top,0px),var(--bg-titlebar)_env(safe-area-inset-top,0px))]`}
+        className={`fixed inset-x-0 top-0 z-90 hidden h-[calc(52px+env(safe-area-inset-top,0px))] min-h-[calc(52px+env(safe-area-inset-top,0px))] items-center justify-between border-b border-line bg-titlebar pt-[max(0.4rem,env(safe-area-inset-top,0px))] pr-[max(0.5rem,env(safe-area-inset-right,0px))] pb-[0.4rem] pl-[max(0.85rem,env(safe-area-inset-left,0px))] mobile:flex`}
       >
         <div
           className={`flex h-10 items-center gap-2 ${BRAND_CLICKABLE}`}
@@ -918,7 +921,7 @@ function App() {
       <SlidingTabs
         as="nav"
         variant="icon"
-        className={`bottom-nav fixed inset-x-0 bottom-0 z-[9990] hidden h-[calc(60px+env(safe-area-inset-bottom,0px))] items-center justify-around border-t border-line bg-activitybar pt-[4px] pr-[max(6px,env(safe-area-inset-right,0px))] pb-[env(safe-area-inset-bottom,0px)] pl-[max(6px,env(safe-area-inset-left,0px))] mobile:flex`}
+        className={`bottom-nav fixed inset-x-0 bottom-0 z-[9990] hidden keyboard:hidden! h-[calc(60px+env(safe-area-inset-bottom,0px))] items-center justify-around border-t border-line bg-activitybar pt-[4px] pr-[max(6px,env(safe-area-inset-right,0px))] pb-[env(safe-area-inset-bottom,0px)] pl-[max(6px,env(safe-area-inset-left,0px))] mobile:flex`}
         aria-label="Điều hướng chính"
       >
         {NAV_ITEMS.slice(0, 2).map(renderBottomNavItem)}

@@ -19,7 +19,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- "default": iOS paints the status bar with theme-color (updated by App.tsx when the
+         app theme changes) and picks dark/light status text for contrast. "black-translucent"
+         would force white text, unreadable over the light theme. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Nexo" />
     <meta name="theme-color" content="#181818" />
     <title>Nexo Portal - Quản lý Tài chính Cá nhân</title>

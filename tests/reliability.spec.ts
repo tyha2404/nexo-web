@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setup, openTransactionForm, TOKEN, INCOME } from './fixtures';
+import { setup, openTransactionForm, TOKEN, INCOME, chooseOption, selectControl } from './fixtures';
 
 test('dashboard shows the original sections without expanding analysis and fits the viewport', async ({
   page,
@@ -40,12 +40,10 @@ test('switching type clears the previous category; closing never asks about draf
   await page.goto('/');
   const dialog = await openTransactionForm(page);
   await dialog.getByLabel('Số tiền (đ)', { exact: true }).fill('50000');
-  await dialog.getByLabel('Danh mục').fill('Ăn uống');
-  await page.getByRole('option', { name: 'Ăn uống', exact: true }).click();
+  await chooseOption(page, dialog, 'Danh mục', 'Ăn uống');
   await dialog.getByRole('tab', { name: 'Thu nhập', exact: true }).click();
   await expect(dialog.getByText('Chọn Danh mục', { exact: true })).toBeVisible();
-  await dialog.getByLabel('Danh mục').fill('Lương');
-  await page.getByRole('option', { name: 'Lương', exact: true }).click();
+  await chooseOption(page, dialog, 'Danh mục', 'Lương');
   await dialog.getByRole('button', { name: 'Thêm giao dịch', exact: true }).click();
   await expect(dialog).not.toBeVisible();
   expect(state.writes[0].categoryId).toBe(INCOME);
@@ -104,8 +102,7 @@ test('a failed save keeps the form open with its values', async ({ page }) => {
   const dialog = await openTransactionForm(page);
   await dialog.getByLabel('Ghi chú (tùy chọn)').fill('Chưa gửi');
   await dialog.getByLabel('Số tiền (đ)', { exact: true }).fill('10000');
-  await dialog.getByLabel('Danh mục').fill('Ăn uống');
-  await page.getByRole('option', { name: 'Ăn uống', exact: true }).click();
+  await chooseOption(page, dialog, 'Danh mục', 'Ăn uống');
   state.failSave = true;
   await dialog.getByRole('button', { name: 'Thêm giao dịch', exact: true }).click();
   await expect(page.getByText('Không lưu được', { exact: true })).toBeVisible();
@@ -124,8 +121,7 @@ test('quick add from the bottom nav saves with only amount and category', async 
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByLabel('Số tiền (đ)', { exact: true })).toBeVisible();
   await dialog.getByLabel('Số tiền (đ)', { exact: true }).fill('45000');
-  await dialog.getByLabel('Danh mục').fill('Ăn uống');
-  await page.getByRole('option', { name: 'Ăn uống', exact: true }).click();
+  await chooseOption(page, dialog, 'Danh mục', 'Ăn uống');
   await dialog.getByRole('button', { name: /Thêm giao dịch/ }).click();
   await expect(dialog).toBeHidden();
   const saved = state.writes.at(-1) as { amount: number; description: string };
@@ -147,7 +143,7 @@ test('category menu in the quick-add modal stays under its control after the pag
   expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(100);
   await page.getByRole('button', { name: 'Ghi giao dịch mới' }).click();
   const dialog = page.getByRole('dialog');
-  const control = dialog.getByLabel('Danh mục');
+  const control = selectControl(dialog, 'Danh mục');
   await control.click();
   const menu = page.locator('.react-select__menu');
   await expect(menu).toBeVisible();

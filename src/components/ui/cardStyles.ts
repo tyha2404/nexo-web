@@ -49,6 +49,8 @@ export const CARD_TITLE =
 export const SUMMARY_GRID = cx(
   'mb-[0.85rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3',
   'mobile:-mx-[0.65rem] mobile:mb-[0.65rem] mobile:grid-flow-col mobile:auto-cols-[minmax(150px,46%)] mobile:grid-cols-none mobile:gap-[0.45rem] mobile:snap-x mobile:snap-mandatory mobile:scroll-px-[0.65rem] mobile:overflow-x-auto mobile:px-[0.65rem] mobile:py-0',
+  // One or two tiles fit side by side: split the row instead of leaving a gap on the right.
+  'mobile:[&:not(:has(>:nth-child(3)))]:auto-cols-fr',
   'mobile:[&>div]:col-auto mobile:[&>div]:min-h-0 mobile:[&>div]:snap-start mobile:[&>div:last-child:nth-child(odd)]:col-[1/-1]',
   STAGGER_CHILDREN
 );

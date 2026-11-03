@@ -9,9 +9,12 @@ import { toast } from 'react-toastify';
 import { DATE_FORMAT_INPUT, InvestmentStatus, TransactionType } from '../commons/constants';
 import type { Category, Transaction } from '../commons/types';
 import {
+  MONEY_INPUT_PROPS,
+  TEXT_DONE_INPUT_PROPS,
   formatDate,
   formatNumberInput,
   getErrorMessage,
+  isTouchDevice,
   parseNumberInput,
   toISODateString,
 } from '../commons/utils';
@@ -310,8 +313,7 @@ export default function AddTransactionModal({
               <label htmlFor="atxn-amount">Số tiền (đ)</label>
               <input
                 id="atxn-amount"
-                type="text"
-                inputMode="numeric"
+                {...MONEY_INPUT_PROPS}
                 placeholder={
                   activeType === TransactionType.INCOME
                     ? 'Ví dụ: 15.000.000'
@@ -339,7 +341,7 @@ export default function AddTransactionModal({
                 onChange={(option) => setCategoryId(option ? option.value : '')}
                 classNamePrefix="react-select"
                 placeholder="Chọn Danh mục"
-                isSearchable
+                isSearchable={!isTouchDevice()}
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
               />
@@ -351,7 +353,7 @@ export default function AddTransactionModal({
               </label>
               <input
                 id="atxn-title"
-                type="text"
+                {...TEXT_DONE_INPUT_PROPS}
                 placeholder={
                   activeType === TransactionType.INCOME
                     ? 'Ví dụ: Lương tháng, Thưởng dự án...'
@@ -401,8 +403,7 @@ export default function AddTransactionModal({
                   <input
                     id="atxn-pnl"
                     className="min-w-0 flex-1"
-                    type="text"
-                    inputMode="numeric"
+                    {...MONEY_INPUT_PROPS}
                     placeholder="Lãi: 500.000 · Lỗ: -200.000"
                     value={realizedPnl}
                     onChange={(e) => handlePnlChange(e.target.value)}
