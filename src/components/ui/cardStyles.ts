@@ -54,7 +54,7 @@ export const SUMMARY_GRID = cx(
 );
 
 export const SUMMARY_STAT_CARD =
-  'relative flex min-h-[84px] flex-col justify-between overflow-hidden rounded-md border border-line bg-card px-4 py-[0.85rem] transition-[border-color] duration-100 ease-out [&:hover]:border-line-hover mobile:min-h-[72px] mobile:px-3 mobile:py-[0.65rem]';
+  'relative flex min-h-[84px] flex-col justify-between overflow-hidden rounded-md border border-line bg-card px-4 py-[0.85rem] transition-[border-color] duration-100 ease-out [&:hover]:border-line-hover mobile:min-h-0 mobile:justify-start mobile:px-3 mobile:py-[0.65rem]';
 export const SUMMARY_STAT_HEADER =
   'mb-2 flex items-center justify-between align-middle leading-[1.2] [&_svg]:block [&_svg]:shrink-0 mobile:mb-1';
 export const SUMMARY_STAT_TITLE = 'text-[11px] font-bold tracking-[0.04em] text-muted uppercase';

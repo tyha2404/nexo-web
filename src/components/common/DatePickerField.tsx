@@ -17,9 +17,9 @@ const TRIGGER_COMPACT =
   'h-10 min-h-0 flex-row-reverse justify-center gap-1 rounded-sm border-none bg-transparent px-0 py-0 font-semibold focus-visible:ring-2 focus-visible:ring-primary';
 // Marker classes kept for tests/selectors.
 const PRESS = 'motion-safe:enabled:active:[transform:scale(0.97)]';
-const ICON_BUTTON = `date-picker-icon-button inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-muted hover:bg-hover hover:text-primary ${PRESS}`;
-const TEXT_BUTTON = `date-picker-text-button min-h-11 cursor-pointer rounded-md border-0 bg-transparent p-2 text-primary ${INHERIT_FONT} text-[14px] font-semibold hover:bg-primary-glow ${PRESS}`;
-const SELECT = `min-h-11 min-w-0 flex-1 rounded-sm border-0 bg-input p-1 text-main ${INHERIT_FONT} [font-weight:inherit] text-[16px]`;
+const ICON_BUTTON = `date-picker-icon-button inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-muted hover:bg-hover hover:text-primary ${PRESS}`;
+const TEXT_BUTTON = `date-picker-text-button min-h-8 cursor-pointer rounded-sm border-0 bg-transparent px-2 py-1 text-primary ${INHERIT_FONT} text-[13px] font-semibold hover:bg-primary-glow ${PRESS}`;
+const SELECT = `min-h-9 min-w-0 flex-1 rounded-sm border-0 bg-input p-1 text-main ${INHERIT_FONT} [font-weight:inherit] text-[16px]`;
 
 interface DatePickerFieldProps {
   id?: string;

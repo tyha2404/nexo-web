@@ -23,7 +23,7 @@ test('form scrolls independently above the save actions, including a short viewp
     const actions = await footer.boundingBox();
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(actions!.y + 1);
     expect(actions!.y + actions!.height).toBeLessThanOrEqual(height);
-    expect(await footer.evaluate((el) => getComputedStyle(el).paddingBottom)).toBe('8px');
+    expect(await footer.evaluate((el) => getComputedStyle(el).paddingBottom)).toBe('12px');
     expect(await body.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
     expect(await body.evaluate((el) => getComputedStyle(el).overflowX)).toBe('hidden');
   }

@@ -63,9 +63,11 @@ export default function ConfirmModal({
           </button>
         </div>
 
-        <p className="m-0 mb-6 text-[0.9rem] leading-[1.5] text-muted">{message}</p>
+        <p className="m-0 mb-5 text-[13px] leading-[1.5] text-muted mobile:text-[14px]">
+          {message}
+        </p>
 
-        <div className="flex justify-end gap-3">
+        <div className="flex justify-end gap-2">
           <button type="button" className={cx(BTN_SECONDARY, BTN_FILL)} onClick={onCancel}>
             {cancelText}
           </button>

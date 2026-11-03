@@ -16,4 +16,4 @@ export const SIDEBAR_TITLE =
   'flex items-center gap-[7px] text-[12.5px] font-semibold text-[var(--text-main)] light:text-[var(--text-main)]';
 
 /** VS Code toolbar action (same shape as ACTION_BTN_* in ui/styles.ts). */
-export const SIDEBAR_CLOSE_BTN = `inline-flex size-[22px] shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent p-0 text-main ${BTN_TRANSITION} hover:bg-hover pointer-coarse:size-11`;
+export const SIDEBAR_CLOSE_BTN = `inline-flex size-[22px] shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-0 bg-transparent p-0 text-main ${BTN_TRANSITION} hover:bg-hover pointer-coarse:size-9`;

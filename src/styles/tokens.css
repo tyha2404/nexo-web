@@ -4,7 +4,8 @@
    Palette follows the VS Code workbench defaults: "Dark Modern" (dark) and
    "Light Modern" (light). Names in comments are the VS Code theme color keys. */
 :root {
-  --control-height: 44px;
+  /* Phones: 40px controls (16px text so iOS never zooms); desktop overrides below. */
+  --control-height: 40px;
   --control-font-size: 16px;
   /* VS Code workbench UI font and editor font stacks */
   --font-sans:
@@ -159,7 +160,7 @@
 
 /* Desktop: VS Code density (13px workbench font, 26px inputs/selects/buttons like
    `.monaco-inputbox` / `.monaco-select-box` / `.monaco-button`).
-   Phones keep 44px, 16px controls so iOS Safari never zooms into a focused field. */
+   Phones keep 40px, 16px controls so iOS Safari never zooms into a focused field. */
 @media (min-width: 769px) and (not ((pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px))) {
   :root {
     --control-height: 26px;

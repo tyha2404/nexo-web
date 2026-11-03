@@ -76,7 +76,7 @@
   /* Form controls. !important keeps these over component utilities (as before). */
   select,
   textarea {
-    border-radius: var(--radius-xs) !important;
+    border-radius: var(--radius-sm) !important;
   }
 
   /* 16px stops iOS Safari zooming into a focused field. */

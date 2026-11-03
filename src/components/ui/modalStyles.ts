@@ -31,7 +31,7 @@ const BACKDROP_BASE = cx(
   // Form controls never overflow the dialog; native date inputs get a 44px tap target.
   '[&_form]:min-w-0 [&_form]:max-w-full',
   '[&_:is(input,textarea,select)]:min-w-0 [&_:is(input,textarea,select)]:max-w-full',
-  "[&_input:is([type='date'],[type='month'],[type='datetime-local'])]:w-full [&_input:is([type='date'],[type='month'],[type='datetime-local'])]:min-h-11! [&_input:is([type='date'],[type='month'],[type='datetime-local'])]:text-[16px]!"
+  "[&_input:is([type='date'],[type='month'],[type='datetime-local'])]:w-full [&_input:is([type='date'],[type='month'],[type='datetime-local'])]:min-h-10! [&_input:is([type='date'],[type='month'],[type='datetime-local'])]:text-[16px]!"
 );
 
 /** Backdrop of a form modal: on phones the panel fills the visual viewport edge to edge. */
@@ -68,7 +68,7 @@ export const MODAL_PANEL = cx(
   PANEL_BASE,
   PANEL_SCROLL,
   PANEL_PHONE,
-  'max-w-[500px] p-7 max-[600px]:px-4 mobile:pt-[max(1.25rem,env(safe-area-inset-top,0px))] mobile:pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]'
+  'max-w-[500px] p-5 max-[600px]:px-4 mobile:pt-[max(1.25rem,env(safe-area-inset-top,0px))] mobile:pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]'
 );
 
 /** Header / scrolling body / footer modal: the panel itself never scrolls. */
@@ -82,7 +82,7 @@ export const MODAL_FORM_SHELL_PANEL = cx(
 export const CONFIRM_PANEL = cx(
   PANEL_BASE,
   PANEL_SCROLL,
-  'confirm-modal-content max-w-[420px] p-6 max-[600px]:rounded-md'
+  'confirm-modal-content max-w-[420px] p-5'
 );
 
 /* ---------- Header ---------- */
@@ -93,7 +93,7 @@ const HEADER_BASE =
 /** Sticky header of a scrolling panel; bleeds over the panel padding. */
 export const MODAL_HEADER = cx(
   HEADER_BASE,
-  'sticky -top-7 -mx-7 -mt-7 mb-5 px-7 pt-5 pb-3',
+  'sticky -top-5 -mx-5 -mt-5 mb-4 px-5 pt-4 pb-3',
   'max-[600px]:-top-5 max-[600px]:-mx-4 max-[600px]:-mt-5 max-[600px]:px-4 max-[600px]:pt-4'
 );
 
@@ -103,7 +103,7 @@ export const MODAL_SHELL_HEADER = cx(
 );
 
 export const MODAL_CLOSE_BTN =
-  'close-btn inline-flex size-[22px] min-h-[22px] min-w-[22px] cursor-pointer items-center justify-center rounded-[5px] border-none bg-transparent p-0 leading-none text-main transition-colors duration-100 ease-out hover:bg-hover [&_svg]:size-4 mobile:size-11 mobile:min-h-11 mobile:min-w-11';
+  'close-btn inline-flex size-[22px] min-h-[22px] min-w-[22px] cursor-pointer items-center justify-center rounded-[5px] border-none bg-transparent p-0 leading-none text-main transition-colors duration-100 ease-out hover:bg-hover [&_svg]:size-4 mobile:size-9 mobile:min-h-9 mobile:min-w-9';
 
 /* ---------- Body & footer ---------- */
 
@@ -111,11 +111,12 @@ export const MODAL_FORM_BODY =
   'modal-form-body min-h-0 min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain p-4';
 
 /** Footer of a scrolling panel: sticks to the bottom while the card scrolls. */
-export const MODAL_FOOTER = 'button-group sticky -bottom-px z-[2] mt-4 flex gap-2 bg-widget py-3';
+export const MODAL_FOOTER =
+  'button-group sticky -bottom-px z-[2] mt-4 flex justify-end gap-2 bg-widget py-3';
 
 /** Footer of a form shell: always visible below the scrolling body. */
 export const MODAL_SHELL_FOOTER =
-  'button-group static z-[2] m-0 flex shrink-0 gap-2 border-t border-line bg-widget px-4 pt-3 pb-2 mobile:pb-[max(8px,env(safe-area-inset-bottom,0px))]';
+  'button-group static z-[2] m-0 flex shrink-0 justify-end gap-2 border-t border-line bg-widget px-4 py-3 mobile:pb-[max(12px,env(safe-area-inset-bottom,0px))]';
 
 /* ---------- Confirm dialog ---------- */
 
