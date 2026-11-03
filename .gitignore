@@ -26,3 +26,10 @@ dist-ssr
 .test-dist/
 playwright-report/
 test-results/
+
+# Env files. .env and .env.test are tracked on purpose and may only hold
+# public VITE_* values (they end up in the bundle). Anything else goes in an
+# untracked file.
+.env.production
+.env.development
+.env.*.local

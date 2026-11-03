@@ -17,8 +17,10 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
   imageUrl,
   title = 'Chứng từ / Hóa đơn đính kèm',
 }) => {
-  const dialogRef = useModal(isOpen && !!imageUrl, onClose);
-  if (!isOpen || !imageUrl) return null;
+  // Only http(s) links: the URL is stored data and ends up in href.
+  const safeUrl = imageUrl && /^https?:\/\//i.test(imageUrl) ? imageUrl : undefined;
+  const dialogRef = useModal(isOpen && !!safeUrl, onClose);
+  if (!isOpen || !safeUrl) return null;
 
   return createPortal(
     <div className={MODAL_BACKDROP} onClick={onClose}>
@@ -37,7 +39,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
           <h3>{title}</h3>
           <div className="flex items-center gap-[0.4rem]">
             <a
-              href={imageUrl}
+              href={safeUrl}
               target="_blank"
               rel="noreferrer"
               className="inline-flex size-8 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent text-muted transition-all duration-150 ease-[ease] hover:bg-hover hover:text-primary"
@@ -46,7 +48,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               <ExternalLink size={16} />
             </a>
             <a
-              href={imageUrl}
+              href={safeUrl}
               download
               target="_blank"
               rel="noreferrer"
@@ -63,7 +65,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
 
         <div className="flex min-h-[260px] flex-1 items-center justify-center overflow-auto bg-card p-5">
           <img
-            src={imageUrl}
+            src={safeUrl}
             alt="Receipt details"
             className="h-auto max-h-[68vh] w-auto max-w-full rounded-md border border-line object-contain shadow-app-md"
           />

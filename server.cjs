@@ -57,59 +57,140 @@ function compress(filePath, content, encoding) {
   return compressedCache.get(key);
 }
 
-const server = http.createServer((req, res) => {
-  const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+// Sent with every app response (not with proxied API responses).
+// style-src needs 'unsafe-inline' for the <style> tags react-select/emotion
+// inject. Supabase is used for Realtime (wss) and receipt images/uploads.
+const SECURITY_HEADERS = {
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https://*.supabase.co",
+    "font-src 'self' data:",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    "worker-src 'self'",
+    "manifest-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join('; '),
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'same-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+};
+// HSTS only makes sense when the site is served over HTTPS (by whatever
+// terminates TLS in front of this server).
+if (process.env.ENABLE_HSTS === 'true') {
+  SECURITY_HEADERS['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+}
+
+// Hop-by-hop headers describe this connection only and must not be forwarded.
+const HOP_BY_HOP_HEADERS = [
+  'connection',
+  'keep-alive',
+  'proxy-authenticate',
+  'proxy-authorization',
+  'proxy-connection',
+  'te',
+  'trailer',
+  'transfer-encoding',
+  'upgrade',
+];
+
+function withoutHopByHop(headers) {
+  const out = { ...headers };
+  const listed = String(headers.connection || '')
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean);
+  for (const h of [...HOP_BY_HOP_HEADERS, ...listed]) delete out[h];
+  return out;
+}
+
+function sendError(res, status, message) {
+  if (res.headersSent) {
+    res.destroy();
+    return;
+  }
+  res.writeHead(status, { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' });
+  res.end(message);
+}
+
+function proxyToApi(req, res, parsedUrl) {
+  const targetUrl = new URL(parsedUrl.pathname + parsedUrl.search, BACKEND_API_URL);
+  const client = targetUrl.protocol === 'https:' ? https : http;
+
+  const headers = withoutHopByHop(req.headers);
+  // The API trusts the right-most X-Forwarded-For entry from a loopback peer,
+  // so overwrite whatever the client sent; X-Real-IP is its fallback.
+  delete headers['x-real-ip'];
+  headers.host = targetUrl.host;
+  headers['x-forwarded-for'] = req.socket.remoteAddress;
+  headers['x-forwarded-proto'] = 'http';
+
+  const proxyReq = client.request(targetUrl, { method: req.method, headers }, (proxyRes) => {
+    proxyRes.on('error', (err) => {
+      // Backend reset mid-response (e.g. API reload during a chat stream).
+      console.error('API Proxy response error:', err.message);
+      res.destroy();
+    });
+    res.writeHead(proxyRes.statusCode, withoutHopByHop(proxyRes.headers));
+    proxyRes.pipe(res, { end: true });
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error('API Proxy Error:', err.message);
+    if (res.headersSent) {
+      res.destroy();
+      return;
+    }
+    res.writeHead(502, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Bad Gateway: Cannot connect to API backend' }));
+  });
+
+  req.on('error', () => proxyReq.destroy());
+  // Client went away (e.g. closed a chat stream): stop the upstream request
+  // so the API stops streaming (and spending AI tokens) for nobody.
+  res.on('close', () => {
+    if (!res.writableFinished) proxyReq.destroy();
+  });
+
+  req.pipe(proxyReq, { end: true });
+}
+
+function handleRequest(req, res) {
+  // Fixed base: the Host header is client-controlled and only the path is used.
+  const parsedUrl = new URL(req.url, 'http://localhost');
 
   // 1. REVERSE PROXY FOR API CALLS (/api/*)
   if (parsedUrl.pathname.startsWith('/api/')) {
-    const targetUrl = new URL(parsedUrl.pathname + parsedUrl.search, BACKEND_API_URL);
-    const client = targetUrl.protocol === 'https:' ? https : http;
-
-    const proxyReq = client.request(
-      targetUrl,
-      {
-        method: req.method,
-        headers: {
-          ...req.headers,
-          host: targetUrl.host,
-          'x-forwarded-for': req.socket.remoteAddress,
-          'x-forwarded-proto': 'http',
-        },
-      },
-      (proxyRes) => {
-        res.writeHead(proxyRes.statusCode, proxyRes.headers);
-        proxyRes.pipe(res, { end: true });
-      }
-    );
-
-    proxyReq.on('error', (err) => {
-      console.error('API Proxy Error:', err.message);
-      res.writeHead(502, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Bad Gateway: Cannot connect to API backend' }));
-    });
-
-    req.pipe(proxyReq, { end: true });
+    proxyToApi(req, res, parsedUrl);
     return;
   }
 
   // 2. STATIC FILES & SPA FALLBACK
-  let reqPath = decodeURI(parsedUrl.pathname);
+  let reqPath;
+  try {
+    reqPath = decodeURI(parsedUrl.pathname);
+  } catch {
+    return sendError(res, 400, 'Bad Request');
+  }
   if (reqPath === '/') reqPath = '/index.html';
 
   let filePath = path.join(DIST_DIR, reqPath);
 
   // Security: prevent directory traversal
-  if (!filePath.startsWith(DIST_DIR)) {
-    res.writeHead(403);
-    return res.end('Forbidden');
+  if (!filePath.startsWith(DIST_DIR + path.sep)) {
+    return sendError(res, 403, 'Forbidden');
   }
 
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
       // Missing hashed assets must 404, otherwise index.html gets cached as JS for a year
       if (reqPath.startsWith('/assets/')) {
-        res.writeHead(404, { 'Content-Type': 'text/plain', 'Cache-Control': 'no-store' });
-        return res.end('Not Found');
+        return sendError(res, 404, 'Not Found');
       }
       filePath = path.join(DIST_DIR, 'index.html');
     }
@@ -119,11 +200,10 @@ const server = http.createServer((req, res) => {
 
     fs.readFile(filePath, (readErr, content) => {
       if (readErr) {
-        res.writeHead(500);
-        return res.end('Server Error');
+        return sendError(res, 500, 'Server Error');
       }
 
-      const headers = { 'Content-Type': contentType, Vary: 'Accept-Encoding' };
+      const headers = { ...SECURITY_HEADERS, 'Content-Type': contentType, Vary: 'Accept-Encoding' };
       if (reqPath.startsWith('/assets/')) {
         headers['Cache-Control'] = 'public, max-age=31536000, immutable';
       } else {
@@ -144,6 +224,23 @@ const server = http.createServer((req, res) => {
       res.end(req.method === 'HEAD' ? undefined : body);
     });
   });
+}
+
+const server = http.createServer((req, res) => {
+  // One malformed request must never take the whole process down.
+  try {
+    handleRequest(req, res);
+  } catch (err) {
+    console.error('Request handling error:', err.message);
+    sendError(res, 400, 'Bad Request');
+  }
+});
+
+// Malformed request lines/headers are rejected by Node's parser; answer 400
+// instead of leaving the socket hanging.
+server.on('clientError', (err, socket) => {
+  if (socket.writable) socket.end('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n');
+  else socket.destroy();
 });
 
 server.listen(PORT, '0.0.0.0', () => {
