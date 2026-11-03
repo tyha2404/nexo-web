@@ -92,7 +92,7 @@ export function TransactionTable({
                     txn.status !== InvestmentStatus.HOLDING &&
                     txn.realizedPnl !== undefined ? (
                       <span
-                        className={`font-semibold ${txn.realizedPnl >= 0 ? 'text-income' : 'text-expense'}`}
+                        className={`${TXN_AMOUNT} ${txn.realizedPnl >= 0 ? 'text-income' : 'text-expense'}`}
                       >
                         {txn.realizedPnl >= 0 ? '+' : ''}
                         {formatCurrency(txn.realizedPnl)}

@@ -14,10 +14,13 @@ import {
   EMPTY_ICON_CIRCLE,
   EMPTY_SUB,
   EMPTY_TITLE,
+  MONEY,
 } from '../ui';
 
-const changeTagCls =
-  'inline-flex items-center gap-[0.2rem] rounded-sm px-[0.35rem] py-[0.1rem] font-mono text-[0.725rem] font-bold';
+const changeTagCls = cx(
+  MONEY,
+  'inline-flex items-center gap-[0.2rem] rounded-sm px-[0.35rem] py-[0.1rem] text-[0.725rem]'
+);
 
 interface CategoryMomCardProps {
   selectedMonth: string;
@@ -100,7 +103,7 @@ export function CategoryMomCard({
                 </span>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`font-mono text-[1.15rem] font-bold tracking-[-0.02em] mobile:text-[0.95rem] ${
+                    className={`${MONEY} text-[1.15rem] mobile:text-[0.95rem] ${
                       momExpenseDelta > 0
                         ? 'text-expense'
                         : momExpenseDelta < 0
@@ -113,7 +116,7 @@ export function CategoryMomCard({
                   </span>
                   {momExpenseDeltaPercent !== null && (
                     <span
-                      className={`inline-flex items-center rounded-full border px-2 py-[0.2rem] font-mono text-[0.725rem] font-bold tracking-[-0.01em] whitespace-nowrap ${
+                      className={`${MONEY} inline-flex items-center rounded-full border px-2 py-[0.2rem] text-[0.725rem] whitespace-nowrap ${
                         momExpenseDeltaPercent > 0
                           ? 'border-[color-mix(in_srgb,var(--expense)_25%,transparent)] bg-[color-mix(in_srgb,var(--expense)_12%,transparent)] text-expense'
                           : momExpenseDeltaPercent < 0
@@ -133,7 +136,7 @@ export function CategoryMomCard({
                 <span className="mb-[0.15rem] text-[0.7rem] font-semibold text-muted mobile:text-[0.8125rem]">
                   Tháng {moment(selectedMonth, 'YYYY-MM').subtract(1, 'month').format('MM/YYYY')}
                 </span>
-                <span className="font-mono text-[0.9rem] font-bold tracking-[-0.01em] text-main mobile:text-[0.875rem]">
+                <span className={cx(MONEY, 'text-[0.9rem] text-main mobile:text-[0.875rem]')}>
                   {formatCurrency(prevTotalExpense)}
                 </span>
               </div>
@@ -154,7 +157,9 @@ export function CategoryMomCard({
                         </span>
                       </div>
                       <div className="flex items-center gap-[0.45rem] mobile:gap-[0.3rem]">
-                        <span className="font-mono text-[0.85rem] font-bold text-main mobile:text-[0.8rem]">
+                        <span
+                          className={cx(MONEY, 'text-[0.85rem] text-main mobile:text-[0.8rem]')}
+                        >
                           {formatCurrency(item.totalAmount)}
                         </span>
                         {item.isNew ? (

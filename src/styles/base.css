@@ -73,6 +73,17 @@
     outline-offset: -1px;
   }
 
+  /* Without preflight, browsers give form controls their own font (Arial in Chrome,
+     system-ui in Safari). Inherit the app font instead; utilities like font-mono still win. */
+  button,
+  input,
+  select,
+  textarea,
+  optgroup {
+    font-family: inherit;
+    letter-spacing: inherit;
+  }
+
   /* Form controls. !important keeps these over component utilities (as before). */
   select,
   textarea {

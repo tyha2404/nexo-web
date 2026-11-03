@@ -63,7 +63,6 @@ import {
   SUMMARY_STAT_TITLE,
   Target as TargetIcon,
   TXN_AMOUNT,
-  TXN_DATE,
   X,
 } from './ui';
 
@@ -349,7 +348,7 @@ export default function Targets() {
                       <td className={TXN_AMOUNT}>
                         {row.targetAmount > 0 ? formatCurrency(row.targetAmount) : 'Chưa đặt'}
                       </td>
-                      <td className={TXN_DATE}>{formatCurrency(row.currentAmount)}</td>
+                      <td className={TXN_AMOUNT}>{formatCurrency(row.currentAmount)}</td>
                       <td>
                         {row.targetAmount > 0 ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>

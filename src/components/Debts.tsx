@@ -391,11 +391,12 @@ export default function Debts() {
                         </span>
                       </td>
                       <td className={TXN_AMOUNT}>{formatCurrency(debt.totalAmount)}</td>
-                      <td className="cell-paid">{formatCurrency(debt.paidAmount)}</td>
+                      <td className={cx('cell-paid', TXN_AMOUNT)}>
+                        {formatCurrency(debt.paidAmount)}
+                      </td>
                       <td
-                        className="cell-remaining"
+                        className={cx('cell-remaining', TXN_AMOUNT)}
                         style={{
-                          fontWeight: 700,
                           color: debt.type === 'PAYABLE' ? 'var(--expense)' : 'var(--income)',
                         }}
                       >

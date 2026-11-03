@@ -12,6 +12,7 @@ import {
 import type { MonthlyTrendItem } from '../commons/types';
 import { formatCompactCurrency, formatCurrency } from '../commons/utils';
 import {
+  MONEY,
   BLOCK_GAP,
   CARD_SECTION_HEADER,
   CARD_TITLE,
@@ -65,9 +66,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label })
               <span className={dotCls} style={{ backgroundColor: entry.color }} />
               {entry.name}:
             </span>
-            <span className="font-mono font-semibold text-main">
-              {formatCurrency(entry.value || 0)}
-            </span>
+            <span className={cx(MONEY, 'text-main')}>{formatCurrency(entry.value || 0)}</span>
           </div>
         ))}
       </div>
@@ -121,7 +120,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
           </div>
           <p className="m-0 text-[0.8rem] text-muted">
             Chi tiêu trung bình:{' '}
-            <strong className="font-mono font-semibold text-main">
+            <strong className={cx(MONEY, 'text-main')}>
               {formatCurrency(averageExpense)}/tháng
             </strong>
           </p>

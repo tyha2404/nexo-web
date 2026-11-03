@@ -8,7 +8,7 @@
  * `hover:` only where the old rule was inside `@media (hover: hover)`.
  */
 import { CONTROL_FRAME } from './controlStyles';
-import { BLOCK_GAP, CARD_PAD, CARD_SURFACE, ITEM_GAP } from './layoutStyles';
+import { BLOCK_GAP, CARD_PAD, CARD_SURFACE, ITEM_GAP, MONEY } from './layoutStyles';
 import { MOTION_ENTER, STAGGER_CHILDREN } from './motionStyles';
 import { cx } from './styles';
 
@@ -70,8 +70,10 @@ export const SUMMARY_STAT_TITLE = 'text-[11px] font-bold tracking-[0.04em] text-
 export const SUMMARY_STAT_SUBTITLE =
   'mt-[0.35rem] text-[0.8rem] text-muted mobile:text-[0.7rem] mobile:[.transactions-view_&]:hidden';
 
-const STAT_VALUE_BASE =
-  'my-1 font-mono text-[1.45rem] leading-[1.2] font-normal tracking-normal tabular-nums mobile:my-[0.15rem] mobile:text-[1.1rem]';
+const STAT_VALUE_BASE = cx(
+  MONEY,
+  'my-1 text-[1.45rem] leading-[1.2] mobile:my-[0.15rem] mobile:text-[1.1rem]'
+);
 const STAT_VALUE_TONE = {
   default: 'text-main',
   income: 'text-income',
@@ -92,7 +94,8 @@ export const WALLET_BADGE = cx(
 );
 
 const PNL_BADGE_BASE = cx(
-  'inline-block rounded-xs px-[6px] py-[2px] font-mono text-[12px] font-normal',
+  MONEY,
+  'inline-block rounded-xs px-[6px] py-[2px] text-[12px]',
   NO_WRAP_BADGE
 );
 /** Realized profit/loss pill (bordered). */
@@ -112,7 +115,7 @@ export const pnlBadgeSoftClass = (profit: boolean) =>
       : 'bg-[color-mix(in_srgb,var(--expense)_15%,transparent)] text-expense'
   );
 
-export const TXN_AMOUNT = 'font-mono font-normal';
+export const TXN_AMOUNT = MONEY;
 export const TXN_DATE = 'text-[0.875rem] text-muted';
 
 /* ---------- Dashboard ---------- */

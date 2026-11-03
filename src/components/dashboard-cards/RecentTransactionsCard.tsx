@@ -15,6 +15,7 @@ import {
   EMPTY_ICON_CIRCLE,
   EMPTY_SUB,
   EMPTY_TITLE,
+  MONEY,
   NO_WRAP_BADGE,
   pnlBadgeSoftClass,
   RECENT_TXN_ROW,
@@ -78,7 +79,7 @@ export function RecentTransactionsCard({
                             <CreditCard size={11} /> {walletLabel}
                           </span>
                         )}
-                        <span className="font-mono text-[0.7rem]">
+                        <span className="text-[0.7rem]">
                           {moment(txn.transactionDate).format('DD/MM/YYYY')}
                         </span>
                       </div>
@@ -87,7 +88,7 @@ export function RecentTransactionsCard({
 
                   <div className="flex shrink-0 flex-col items-end gap-[0.15rem]">
                     <span
-                      className={`font-mono text-[0.925rem] font-bold ${
+                      className={`${MONEY} text-[0.925rem] ${
                         txn.type === TransactionType.INCOME
                           ? 'text-income'
                           : txn.type === TransactionType.INVESTMENT

@@ -2,7 +2,7 @@ import moment from 'moment';
 import type { SummaryReport, TargetSummaryResponse } from '../../commons/types';
 import { formatCurrency } from '../../commons/utils';
 import type { DebtSummary } from '../../types/debt';
-import { BLOCK_GAP, cx, GLASS_CARD, MOTION_ENTER, SUB_TILE } from '../ui';
+import { BLOCK_GAP, cx, GLASS_CARD, MONEY, MOTION_ENTER, SUB_TILE } from '../ui';
 
 // Groups inside the hero are SUB_TILEs (filled, no border): cards never nest.
 const submetricCls = cx(
@@ -11,8 +11,10 @@ const submetricCls = cx(
 );
 const submetricTitleCls =
   'overflow-hidden text-[0.725rem] font-semibold text-ellipsis whitespace-nowrap text-muted';
-const submetricNumberCls =
-  'overflow-hidden font-mono text-[0.95rem] font-bold text-ellipsis whitespace-nowrap';
+const submetricNumberCls = cx(
+  MONEY,
+  'overflow-hidden text-[0.95rem] text-ellipsis whitespace-nowrap'
+);
 const progressBoxCls = cx(SUB_TILE, 'flex flex-col justify-between');
 const statusBadgeCls =
   'inline-flex items-center gap-[0.3rem] rounded-full px-2 py-[0.15rem] text-[0.7rem] font-bold tracking-[0.02em] whitespace-nowrap';
@@ -98,7 +100,7 @@ export function HeroCashflowCard({
           </div>
           <div className="flex flex-wrap items-baseline gap-2">
             <span
-              className={`font-mono text-[length:clamp(1.6rem,2.8vw,2.2rem)] leading-[1.1] font-bold tracking-[-0.03em] tabular-nums ${
+              className={`${MONEY} text-[length:clamp(1.6rem,2.8vw,2.2rem)] leading-[1.1] ${
                 monthlyNetCashFlow >= 0 ? 'text-income' : 'text-expense'
               }`}
             >
@@ -113,16 +115,14 @@ export function HeroCashflowCard({
             <span>Tiền khả dụng thực tế</span>
           </div>
           <div
-            className={`font-mono text-[length:clamp(1.15rem,1.8vw,1.45rem)] font-bold tracking-[-0.02em] whitespace-nowrap ${availableCash >= 0 ? 'text-income' : 'text-expense'}`}
+            className={`${MONEY} text-[length:clamp(1.15rem,1.8vw,1.45rem)] whitespace-nowrap ${availableCash >= 0 ? 'text-income' : 'text-expense'}`}
             title={`Tiền mặt khả dụng: ${formatCurrency(availableCash)}`}
           >
             {formatCurrency(availableCash)}
           </div>
           <div className="mt-[0.35rem] inline-flex items-center gap-[0.35rem] rounded-sm border border-line bg-input px-2 py-[0.15rem] text-[0.75rem] text-muted mobile:px-[0.45rem]">
             <span>Tổng tài sản:</span>
-            <strong className="font-mono font-semibold text-primary">
-              {formatCurrency(totalNetWorth)}
-            </strong>
+            <strong className={cx(MONEY, 'text-primary')}>{formatCurrency(totalNetWorth)}</strong>
           </div>
         </div>
       </div>

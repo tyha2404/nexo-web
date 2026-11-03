@@ -9,6 +9,7 @@ import {
   CARD_SURFACE,
   cx,
   LIST_ITEM_PAD,
+  MONEY,
   MOTION_TABLE_ROWS,
   NO_WRAP_BADGE,
   PAGE_ROOT,
@@ -91,8 +92,10 @@ export const mobileIconBadgeClass = (variant: string) =>
 export const MOBILE_CARD_TITLE =
   'overflow-hidden text-ellipsis whitespace-nowrap text-[0.95rem] font-semibold text-main';
 export const MOBILE_CARD_DATE = 'flex items-center gap-1 text-[0.75rem] text-muted';
-export const MOBILE_CARD_AMOUNT =
-  'whitespace-nowrap text-right font-mono text-[1.05rem] font-bold leading-[1.3]';
+export const MOBILE_CARD_AMOUNT = cx(
+  MONEY,
+  'whitespace-nowrap text-right text-[1.05rem] leading-[1.3]'
+);
 const MOBILE_AMOUNT_COLOR: Record<string, string> = {
   expense: 'text-expense',
   income: 'text-income',
