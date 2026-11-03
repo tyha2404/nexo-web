@@ -132,3 +132,29 @@ test('quick add from the bottom nav saves with only amount and category', async 
   expect(saved.amount).toBe(45000);
   expect(saved.description).toBe('Ăn uống');
 });
+
+test('category menu in the quick-add modal stays under its control after the page was scrolled', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'The raised + button lives in the mobile bottom nav.');
+  await setup(page);
+  await page.goto('/');
+  await expect(page.getByText('Tiền khả dụng thực tế', { exact: true })).toBeVisible();
+  // The modal locks the body with `position: fixed; top: -scrollY`, which used to shift
+  // a body-portalled absolute menu up by scrollY, off screen.
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(100);
+  await page.getByRole('button', { name: 'Ghi giao dịch mới' }).click();
+  const dialog = page.getByRole('dialog');
+  const control = dialog.getByLabel('Danh mục');
+  await control.click();
+  const menu = page.locator('.react-select__menu');
+  await expect(menu).toBeVisible();
+  const controlBox = (await control.boundingBox())!;
+  const menuBox = (await menu.boundingBox())!;
+  const viewport = page.viewportSize()!;
+  expect(menuBox.y).toBeGreaterThanOrEqual(0);
+  expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(viewport.height);
+  expect(Math.abs(menuBox.y - controlBox.y)).toBeLessThan(controlBox.height + menuBox.height + 20);
+});

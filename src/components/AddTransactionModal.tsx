@@ -138,6 +138,10 @@ export default function AddTransactionModal({
     setRealizedPnl(formatted ? (isNegative ? `-${formatted}` : formatted) : isNegative ? '-' : '');
   };
 
+  const toggleSignPnl = () => {
+    setRealizedPnl((prev) => (prev.startsWith('-') ? prev.slice(1) : `-${prev}`));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submittingRef.current || uploading) return;
@@ -337,6 +341,7 @@ export default function AddTransactionModal({
                 placeholder="Chọn Danh mục"
                 isSearchable
                 menuPortalTarget={document.body}
+                menuPosition="fixed"
               />
             </div>
 
@@ -371,6 +376,7 @@ export default function AddTransactionModal({
                   placeholder="Chọn Trạng thái"
                   isSearchable={false}
                   menuPortalTarget={document.body}
+                  menuPosition="fixed"
                 />
               </div>
             )}
@@ -378,16 +384,32 @@ export default function AddTransactionModal({
             {activeType === TransactionType.INVESTMENT && status !== InvestmentStatus.HOLDING && (
               <div className={FORM_GROUP}>
                 <label htmlFor="atxn-pnl">Lãi / lỗ thực tế (đ)</label>
-                <input
-                  id="atxn-pnl"
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Lãi: 500.000 · Lỗ: -200.000"
-                  value={realizedPnl}
-                  onChange={(e) => handlePnlChange(e.target.value)}
-                />
+                <div className="flex items-stretch gap-2">
+                  {/* iOS numeric keypad has no minus key, so the sign is a toggle. */}
+                  <button
+                    type="button"
+                    className={cx(BTN_SECONDARY, 'w-12 px-0 text-[1.1rem]')}
+                    aria-label={
+                      realizedPnl.startsWith('-')
+                        ? 'Đang là lỗ, đổi sang lãi'
+                        : 'Đang là lãi, đổi sang lỗ'
+                    }
+                    onClick={toggleSignPnl}
+                  >
+                    {realizedPnl.startsWith('-') ? '−' : '+'}
+                  </button>
+                  <input
+                    id="atxn-pnl"
+                    className="min-w-0 flex-1"
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Lãi: 500.000 · Lỗ: -200.000"
+                    value={realizedPnl}
+                    onChange={(e) => handlePnlChange(e.target.value)}
+                  />
+                </div>
                 <small className="mt-1 block text-[0.8rem] text-muted">
-                  Nhập số dương nếu có lãi, hoặc dấu trừ (-) ở đầu nếu bị lỗ.
+                  Bấm nút +/− để chọn lãi hoặc lỗ, rồi nhập số tiền.
                 </small>
               </div>
             )}

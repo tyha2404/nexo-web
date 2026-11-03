@@ -573,6 +573,7 @@ export default function Targets() {
                       }}
                       classNamePrefix="react-select"
                       menuPortalTarget={document.body}
+                      menuPosition="fixed"
                     />
                   </div>
 
@@ -581,6 +582,7 @@ export default function Targets() {
                     <input
                       id="target-amount-input"
                       type="text"
+                      inputMode="numeric"
                       placeholder="Ví dụ: 10.000.000"
                       value={amount}
                       onChange={(e) => handleAmountChange(e.target.value)}

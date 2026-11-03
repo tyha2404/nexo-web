@@ -611,6 +611,7 @@ export default function Debts() {
                       }}
                       classNamePrefix="react-select"
                       menuPortalTarget={document.body}
+                      menuPosition="fixed"
                     />
                   </div>
 
@@ -619,6 +620,7 @@ export default function Debts() {
                     <input
                       id="debt-amount"
                       type="text"
+                      inputMode="numeric"
                       placeholder="Ví dụ: 5.000.000"
                       value={formAmount}
                       onChange={(e) => handleAmountChange(e.target.value, setFormAmount)}
@@ -727,6 +729,7 @@ export default function Debts() {
                   <input
                     id="repay-amount"
                     type="text"
+                    inputMode="numeric"
                     placeholder={`Ví dụ: ${formatCurrency(selectedDebt.remaining)}`}
                     value={repayAmount}
                     onChange={(e) => handleAmountChange(e.target.value, setRepayAmount)}

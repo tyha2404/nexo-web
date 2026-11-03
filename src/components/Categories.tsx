@@ -501,6 +501,7 @@ export default function Categories() {
                         classNamePrefix="react-select"
                         placeholder="Chọn Loại danh mục"
                         menuPortalTarget={document.body}
+                        menuPosition="fixed"
                       />
                     </div>
                     {editType === TransactionType.EXPENSE && (
@@ -510,6 +511,7 @@ export default function Categories() {
                           <input
                             id="edit-budget"
                             type="text"
+                            inputMode="numeric"
                             value={editBudgetLimit}
                             onChange={(e) => handleEditBudgetChange(e.target.value)}
                             placeholder="Ví dụ: 5.000.000"
@@ -581,6 +583,7 @@ export default function Categories() {
                         classNamePrefix="react-select"
                         placeholder="Chọn Loại danh mục"
                         menuPortalTarget={document.body}
+                        menuPosition="fixed"
                       />
                     </div>
                     {type === TransactionType.EXPENSE && (
@@ -590,6 +593,7 @@ export default function Categories() {
                           <input
                             id="new-budget"
                             type="text"
+                            inputMode="numeric"
                             value={budgetLimit}
                             onChange={(e) => handleBudgetChange(e.target.value)}
                             placeholder="Ví dụ: 5.000.000"
