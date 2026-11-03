@@ -4,7 +4,15 @@ import { useEffect, useState } from 'react';
 import Categories from './Categories';
 import Targets from './Targets';
 import { PAGE_HEADER, PAGE_TITLE, PAGE_TITLE_H2 } from './transaction-list/listStyles';
-import { HEADER_ACTIONS, PAGE_HEADER_BTN, TABS_NAV, TABS_UNDERLINE, tabClass } from './ui';
+import {
+  cx,
+  HEADER_ACTIONS,
+  PAGE_HEADER_BTN,
+  PAGE_ROOT,
+  TABS_NAV,
+  TABS_UNDERLINE,
+  tabClass,
+} from './ui';
 
 export type PlanningSubTab = 'targets' | 'categories';
 
@@ -32,7 +40,7 @@ export default function Planning({ initialSubTab = 'targets', onSubTabChange }: 
   };
 
   return (
-    <div className="planning-hub-container mx-auto flex w-full max-w-full flex-col gap-0 p-0">
+    <div className={cx(PAGE_ROOT, 'planning-hub-container')}>
       {/* 1. Planning Page Header with Action Button */}
       <header className={`${PAGE_HEADER} animate-fade-in`}>
         <div className={PAGE_TITLE}>

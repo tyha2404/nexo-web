@@ -1,5 +1,3 @@
-import { SlidingTabs } from './ui';
-import { AlertTriangle, Plus, Receipt, Search } from './ui';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 import Select from 'react-select';
@@ -7,9 +5,9 @@ import { toast } from 'react-toastify';
 import { InvestmentStatus, TransactionType } from '../commons/constants';
 import type { Category, Transaction, TransactionSummary, Wallet } from '../commons/types';
 import {
-  SEARCH_INPUT_PROPS,
   getErrorMessage,
   isTouchDevice,
+  SEARCH_INPUT_PROPS,
   toISODateString,
 } from '../commons/utils';
 import {
@@ -19,7 +17,7 @@ import {
   type CreateTransactionDTO,
 } from '../services';
 import AddTransactionModal from './AddTransactionModal';
-import { ConfirmModal, MonthFilter, ReceiptModal } from './common';
+import { ConfirmModal, EmptyState, ListSkeleton, MonthFilter, ReceiptModal } from './common';
 import Pagination from './Pagination';
 import {
   getTypeLabel,
@@ -32,15 +30,17 @@ import {
 } from './transaction-list';
 import { PAGE_HEADER, PAGE_TITLE, PAGE_TITLE_H2, PAGE_VIEW } from './transaction-list/listStyles';
 import {
-  btnClass,
+  ALERT_ERROR,
+  AlertTriangle,
   cx,
-  EMPTY_STATE,
   FILTER_FULL_ROW,
   filterBarClass,
+  Receipt,
+  Search,
   SEARCH_ICON,
   SEARCH_INPUT,
   SEARCH_WRAPPER,
-  SKELETON,
+  SlidingTabs,
   tabClass,
   TABS,
   TABS_NAV,
@@ -402,7 +402,7 @@ export default function Transactions({
       </div>
 
       {error && (
-        <div className="animate-fade-in">
+        <div className={cx(ALERT_ERROR, 'animate-fade-in')} role="alert">
           <AlertTriangle size={16} /> {error}
         </div>
       )}
@@ -484,33 +484,16 @@ export default function Transactions({
 
       {/* 5. Transactions Table (Desktop) & Cards (Mobile) */}
       {loading ? (
-        <div className="animate-fade-in" aria-busy="true">
-          <div className={SKELETON} />
-          <div className={SKELETON} />
-          <div className={SKELETON} />
-          <div className={SKELETON} />
-          <div className={SKELETON} />
-          <div className={SKELETON} />
-        </div>
+        <ListSkeleton label="Đang tải giao dịch" />
       ) : filteredTransactions.length === 0 ? (
-        <div className={cx(EMPTY_STATE, 'animate-fade-in')}>
-          <div className="mb-3 flex justify-center text-muted">
-            <Receipt size={44} className="empty-icon" />
-          </div>
-          <h4 className="mx-0 mt-0 mb-2 text-[1.15rem] font-semibold text-main">
-            Chưa có giao dịch
-          </h4>
-          <p className="mx-auto mt-0 mb-5 max-w-[400px] text-[0.9rem] text-muted">
-            Đổi bộ lọc hoặc thêm giao dịch.
-          </p>
-          <button
-            type="button"
-            onClick={openAddModal}
-            className={cx(btnClass('primary', 'px-6 py-[0.65rem] text-[0.9rem]'), 'min-h-[42px]')}
-          >
-            <Plus size={16} /> Thêm {getTypeLabel(activeType)} ngay
-          </button>
-        </div>
+        <EmptyState
+          className="animate-fade-in"
+          icon={<Receipt />}
+          title="Chưa có giao dịch"
+          description="Đổi bộ lọc hoặc thêm giao dịch."
+          actionLabel={`Thêm ${getTypeLabel(activeType)} ngay`}
+          onAction={openAddModal}
+        />
       ) : (
         <>
           <TransactionTable {...listProps} />

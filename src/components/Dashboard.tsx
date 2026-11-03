@@ -31,7 +31,8 @@ import {
   RecentTransactionsCard,
   SecondaryStatsSection,
 } from './dashboard-cards';
-import { BTN_SECONDARY, cx, DASHBOARD_MAIN_GRID } from './ui';
+import { ALERT_ERROR, BTN_SECONDARY, cx, DASHBOARD_MAIN_GRID, PAGE_ROOT } from './ui';
+import { PAGE_HEADER, PAGE_TITLE, PAGE_TITLE_H2 } from './transaction-list/listStyles';
 
 export { getCategoryIcon };
 
@@ -173,28 +174,25 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   }, []);
 
   return (
-    <div className="animate-fade-in mx-auto box-border w-full max-w-full p-0">
-      {/* 1. Dashboard Header & Period Switcher */}
-      <div className="animate-fade-in mb-[0.85rem] flex flex-wrap items-center justify-between gap-3 text-left mobile:mb-3 mobile:flex-col mobile:items-stretch mobile:gap-[0.65rem]">
-        <div className="dashboard-title-group">
-          <h2 className="m-0 mb-[0.15rem] text-[1.5rem] font-bold tracking-[-0.025em] text-main mobile:mb-0 mobile:text-[1.15rem]">
-            Tổng quan
-          </h2>
+    <div className={cx(PAGE_ROOT, 'animate-fade-in')}>
+      {/* 1. Page header: title + the page-wide month (same slot as other pages' action) */}
+      <header className={cx(PAGE_HEADER, 'animate-fade-in')}>
+        <div className={cx(PAGE_TITLE, 'dashboard-title-group')}>
+          <h2 className={PAGE_TITLE_H2}>Tổng quan</h2>
         </div>
-
-        <MonthFilter value={selectedMonth} onChange={(newMonth) => setSelectedMonth(newMonth)} />
-      </div>
+        <div className="w-[260px] mobile:w-full">
+          <MonthFilter value={selectedMonth} onChange={(newMonth) => setSelectedMonth(newMonth)} />
+        </div>
+      </header>
 
       {error && (
-        <div className="animate-fade-in" style={{ marginBottom: '1.25rem' }}>
-          <div className="flex items-center gap-2">
-            <AlertCircle size={16} />
-            <span>{error}</span>
-          </div>
+        <div className={cx(ALERT_ERROR, 'animate-fade-in')} role="alert">
+          <AlertCircle size={16} />
+          <span>{error}</span>
           <button
+            type="button"
             onClick={() => setRefreshKey((key) => key + 1)}
-            className={BTN_SECONDARY}
-            style={{ marginLeft: 'auto' }}
+            className={cx(BTN_SECONDARY, 'ml-auto')}
           >
             Thử lại
           </button>

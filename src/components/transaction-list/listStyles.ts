@@ -4,18 +4,33 @@
  * (`transactions-header`, `transactions-table-container`, `transactions-mobile-cards`, ...)
  * are markers for tests.
  */
-import { NO_WRAP_BADGE, STAGGER_CHILDREN, MOTION_TABLE_ROWS } from '../ui';
+import {
+  BLOCK_GAP,
+  CARD_SURFACE,
+  cx,
+  LIST_ITEM_PAD,
+  MOTION_TABLE_ROWS,
+  NO_WRAP_BADGE,
+  PAGE_ROOT,
+  STAGGER_CHILDREN,
+} from '../ui';
 
-export const PAGE_HEADER =
-  'transactions-header mb-[0.85rem] flex flex-wrap items-center justify-between gap-2 mobile:mb-3 mobile:gap-[0.65rem]';
+export const PAGE_HEADER = cx(
+  BLOCK_GAP,
+  'transactions-header flex flex-wrap items-center justify-between gap-2 mobile:gap-[0.65rem]'
+);
 export const PAGE_TITLE = 'transactions-title text-left mobile:min-w-0';
 export const PAGE_TITLE_H2 =
   'm-0 mb-[0.15rem] text-[1.35rem] font-bold tracking-[-0.025em] text-main mobile:mb-0 mobile:text-[1.15rem]';
 export const PAGE_SUBTITLE = 'subtitle m-0 text-[0.8125rem] text-muted mobile:hidden';
-export const PAGE_VIEW = 'transactions-view mx-auto w-full max-w-full p-0';
+/** Root of a list page; `transactions-view` hides stat-tile subtitles on phones. */
+export const PAGE_VIEW = cx('transactions-view', PAGE_ROOT);
 
-export const TABLE_CONTAINER =
-  'transactions-table-container overflow-x-auto rounded-lg border border-line bg-card shadow-app-md backdrop-blur-[16px] transition-[box-shadow,border-color] duration-[250ms] ease-[ease] mobile:hidden';
+/** The table is the card: no extra wrapper card around it. */
+export const TABLE_CONTAINER = cx(
+  CARD_SURFACE,
+  'transactions-table-container overflow-x-auto mobile:hidden'
+);
 export const TABLE =
   `${MOTION_TABLE_ROWS} transactions-table w-full min-w-[600px] border-collapse text-left text-[0.95rem] ` +
   '[&_th]:border-b [&_th]:border-line [&_th]:bg-input [&_th]:px-6 [&_th]:py-4 [&_th]:font-semibold [&_th]:text-muted ' +
@@ -40,10 +55,21 @@ export const statusBadgeClass = (status: string) =>
   `${STATUS_BADGE_BASE} ${STATUS_BADGE_VARIANT[status.toLowerCase()] ?? 'border-0'}`;
 
 /** Mobile card list (replaces the table on phones); children enter staggered. */
-export const MOBILE_CARDS = `transactions-mobile-cards hidden mobile:flex mobile:flex-col mobile:gap-[0.45rem] ${STAGGER_CHILDREN}`;
+export const MOBILE_CARDS = cx(
+  'transactions-mobile-cards hidden mobile:flex mobile:flex-col mobile:gap-2',
+  STAGGER_CHILDREN
+);
 
-export const MOBILE_CARD =
-  'transaction-mobile-card flex select-none flex-col gap-[0.35rem] rounded-md border border-line bg-card px-[0.65rem] py-[0.55rem] shadow-app-sm transition-[transform,border-color] duration-150 ease-[ease] [-webkit-tap-highlight-color:transparent] hover:border-line-hover hover:bg-card-hover light:border-line light:bg-white light:shadow-[0_2px_8px_rgba(0,0,0,0.04)]';
+/** One row of a list rendered as cards (mobile lists, category grid). */
+export const LIST_ITEM_CARD = cx(
+  CARD_SURFACE,
+  LIST_ITEM_PAD,
+  'transition-[border-color,background-color] duration-150 ease-[ease] [-webkit-tap-highlight-color:transparent] hover:border-line-hover hover:bg-card-hover light:bg-white'
+);
+export const MOBILE_CARD = cx(
+  LIST_ITEM_CARD,
+  'transaction-mobile-card flex select-none flex-col gap-[0.35rem]'
+);
 /** Title block on the left, amount on the right. */
 export const MOBILE_CARD_TOP = 'mobile-card-top flex items-start justify-between gap-3';
 export const MOBILE_CARD_LEFT = 'flex min-w-0 flex-1 items-center gap-3';
@@ -77,5 +103,3 @@ export const MOBILE_CARD_FOOTER =
   'flex flex-wrap items-center justify-between gap-2 border-t border-line pt-[0.5rem]';
 export const MOBILE_CARD_TAGS = 'flex min-w-0 flex-wrap items-center gap-[0.4rem]';
 export const MOBILE_CARD_ACTIONS = 'ml-auto flex shrink-0 items-center gap-2';
-
-export const LOADING_SPINNER = 'flex flex-col items-center justify-center py-12 text-muted';

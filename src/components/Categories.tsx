@@ -1,6 +1,3 @@
-import { SlidingTabs } from './ui';
-import { AlertTriangle, FolderPlus, Pencil, Plus, Trash2, X } from './ui';
-import { TransactionTypeIcon } from './transaction-list';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Select from 'react-select';
@@ -8,43 +5,48 @@ import { toast } from 'react-toastify';
 import { TransactionType } from '../commons/constants';
 import type { Category } from '../commons/types';
 import {
-  MONEY_INPUT_PROPS,
-  TEXT_NEXT_INPUT_PROPS,
   formatCurrency,
   formatNumberInput,
   getErrorMessage,
   isTouchDevice,
+  MONEY_INPUT_PROPS,
   parseNumberInput,
+  TEXT_NEXT_INPUT_PROPS,
 } from '../commons/utils';
 import { useDataEvents, useModal } from '../hooks';
 import { categoryService } from '../services';
-import { LOADING_SPINNER } from './transaction-list/listStyles';
 import Pagination from './Pagination';
-import { ConfirmModal } from './common';
+import { ConfirmModal, EmptyState, ListSkeleton } from './common';
+import { TransactionTypeIcon } from './transaction-list';
+import { LIST_ITEM_CARD } from './transaction-list/listStyles';
 import {
   ACTION_BTN_DELETE,
   ACTION_BTN_EDIT,
+  ALERT_ERROR,
+  AlertTriangle,
   BTN_FILL,
   BTN_PRIMARY,
   BTN_SECONDARY,
   CATEGORIES_LIST,
   cx,
-  EMPTY_STATE,
+  FolderPlus,
   FORM_CHECK,
   FORM_CHECK_INPUT,
   FORM_CHECK_LABEL,
   FORM_GROUP,
-  GLASS_CARD,
-  SPINNER_SECTION,
-  tabClass,
-  TABS,
-  TABS_NAV,
   MODAL_BACKDROP,
   MODAL_CLOSE_BTN,
   MODAL_FORM_BODY,
   MODAL_FORM_SHELL_PANEL,
   MODAL_SHELL_FOOTER,
   MODAL_SHELL_HEADER,
+  Pencil,
+  SlidingTabs,
+  tabClass,
+  TABS,
+  TABS_NAV,
+  Trash2,
+  X,
 } from './ui';
 
 export default function Categories() {
@@ -262,7 +264,7 @@ export default function Categories() {
   }, []);
 
   return (
-    <div className="categories-subview mx-auto w-full max-w-full p-0">
+    <div className="categories-subview w-full">
       {/* Category Type Tabs Switcher (Below Page Title) */}
       <div className={`${TABS_NAV} animate-fade-in`}>
         <SlidingTabs className={TABS} role="tablist" aria-label="Loại danh mục">
@@ -300,144 +302,97 @@ export default function Categories() {
       </div>
 
       {error && (
-        <div className="animate-fade-in">
+        <div className={cx(ALERT_ERROR, 'animate-fade-in')} role="alert">
           <AlertTriangle size={16} /> {error}
         </div>
       )}
 
       {/* Main List Section */}
       <div className="categories-single-column animate-fade-in">
-        <div className={GLASS_CARD}>
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="m-0 mobile:mb-2 mobile:text-[1.05rem]">
-              Danh mục ({categories.length})
-            </h3>
-          </div>
-
-          {loading ? (
-            <div className={LOADING_SPINNER}>
-              <div className={SPINNER_SECTION}></div>
-              <p>Đang tải danh mục...</p>
-            </div>
-          ) : categories.length === 0 ? (
-            <div
-              className={EMPTY_STATE}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '3rem 1.5rem',
-                textAlign: 'center',
-                background: 'var(--bg-card)',
-                borderRadius: 'var(--radius-lg)',
-                border: '1px dashed var(--border)',
-                gap: '1rem',
-              }}
-            >
-              <div
-                style={{
-                  background: 'var(--primary-glow)',
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--primary)',
-                }}
-              >
-                <FolderPlus size={32} className="empty-icon" />
-              </div>
-              <div>
-                <h4 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-                  Chưa có danh mục {getTabTypeName(activeTab)}
-                </h4>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: '380px' }}>
-                  Hãy tạo danh mục đầu tiên để dễ dàng phân loại và theo dõi ngân sách tài chính của
-                  bạn.
-                </p>
-              </div>
-              <button
-                className={BTN_PRIMARY}
-                onClick={openCreateModal}
-                style={{ marginTop: '0.5rem' }}
-              >
-                <Plus size={16} /> Tạo danh mục {getTabTypeName(activeTab)}
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className={CATEGORIES_LIST}>
-                {categories.map((cat) => (
-                  <div
-                    key={cat.id}
-                    className="box-border flex w-full max-w-full items-center justify-between overflow-hidden rounded-lg border border-line bg-card px-5 py-4 text-left transition-all duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)] [-webkit-backdrop-filter:var(--glass-blur)] [backdrop-filter:var(--glass-blur)] hover:-translate-y-0.5 hover:border-line-hover hover:bg-card-hover hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.25),0_0_0_1px_var(--primary-glow)] mobile:rounded-md mobile:px-[0.65rem] mobile:py-[0.55rem]"
-                  >
-                    <div className="min-w-0 flex-auto pr-2">
-                      <div className="mb-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-[0.35rem]">
-                        <h4 className="m-0 break-words text-[1rem] font-semibold text-main">
-                          {cat.name}
-                        </h4>
-                        {(cat.budgetLimit !== undefined || cat.excludeFromAverageDaily) && (
-                          <div className="inline-flex flex-wrap items-center gap-[0.35rem]">
-                            {cat.budgetLimit !== undefined && (
-                              <span className="whitespace-nowrap rounded-sm border border-line bg-input px-[0.45rem] py-[0.15rem] text-[0.72rem] font-medium text-muted">
-                                Hạn mức: {formatCurrency(cat.budgetLimit)}
+        {loading ? (
+          <ListSkeleton rows={4} label="Đang tải danh mục" />
+        ) : categories.length === 0 ? (
+          <EmptyState
+            icon={<FolderPlus />}
+            title={`Chưa có danh mục ${getTabTypeName(activeTab)}`}
+            description="Tạo danh mục đầu tiên để phân loại và theo dõi ngân sách."
+            actionLabel={`Tạo danh mục ${getTabTypeName(activeTab)}`}
+            onAction={openCreateModal}
+          />
+        ) : (
+          <>
+            <div className={CATEGORIES_LIST}>
+              {categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  className={cx(
+                    LIST_ITEM_CARD,
+                    'flex w-full max-w-full items-center justify-between overflow-hidden text-left'
+                  )}
+                >
+                  <div className="min-w-0 flex-auto pr-2">
+                    <div className="mb-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-[0.35rem]">
+                      <h4 className="m-0 break-words text-[1rem] font-semibold text-main">
+                        {cat.name}
+                      </h4>
+                      {(cat.budgetLimit !== undefined || cat.excludeFromAverageDaily) && (
+                        <div className="inline-flex flex-wrap items-center gap-[0.35rem]">
+                          {cat.budgetLimit !== undefined && (
+                            <span className="whitespace-nowrap rounded-sm border border-line bg-input px-[0.45rem] py-[0.15rem] text-[0.72rem] font-medium text-muted">
+                              Hạn mức: {formatCurrency(cat.budgetLimit)}
+                            </span>
+                          )}
+                          {cat.excludeFromAverageDaily && (
+                            <span className="inline-flex shrink-0 items-center whitespace-nowrap [word-break:keep-all] rounded-full bg-[var(--bg-warning,color-mix(in_srgb,var(--warning)_15%,transparent))] px-[0.45rem] py-[0.15rem] text-[0.7rem] font-semibold text-[var(--text-warning,var(--warning))]">
+                              <span className="inline mobile:hidden">
+                                Không tính vào trung bình ngày
                               </span>
-                            )}
-                            {cat.excludeFromAverageDaily && (
-                              <span className="inline-flex shrink-0 items-center whitespace-nowrap [word-break:keep-all] rounded-full bg-[var(--bg-warning,color-mix(in_srgb,var(--warning)_15%,transparent))] px-[0.45rem] py-[0.15rem] text-[0.7rem] font-semibold text-[var(--text-warning,var(--warning))]">
-                                <span className="inline mobile:hidden">
-                                  Không tính vào trung bình ngày
-                                </span>
-                                <span className="hidden mobile:inline">Không tính TB ngày</span>
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      {cat.description && (
-                        <p className="m-0 line-clamp-2 text-[0.875rem] text-muted mobile:hidden">
-                          {cat.description}
-                        </p>
+                              <span className="hidden mobile:inline">Không tính TB ngày</span>
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => startEdit(cat)}
-                        className={ACTION_BTN_EDIT}
-                        aria-label={`Chỉnh sửa danh mục ${cat.name}`}
-                        title={`Chỉnh sửa danh mục ${cat.name}`}
-                      >
-                        <Pencil size={13} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(cat.id, cat.name)}
-                        className={ACTION_BTN_DELETE}
-                        aria-label={`Xóa danh mục ${cat.name}`}
-                        title={`Xóa danh mục ${cat.name}`}
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
+                    {cat.description && (
+                      <p className="m-0 line-clamp-2 text-[0.875rem] text-muted mobile:hidden">
+                        {cat.description}
+                      </p>
+                    )}
                   </div>
-                ))}
-              </div>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={Math.ceil(totalItems / itemsPerPage)}
-                onPageChange={(page: number) => setCurrentPage(page)}
-                itemsPerPage={itemsPerPage}
-                onItemsPerPageChange={(size: number) => {
-                  setItemsPerPage(size);
-                  setCurrentPage(1);
-                }}
-                totalItems={totalItems}
-              />
-            </>
-          )}
-        </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => startEdit(cat)}
+                      className={ACTION_BTN_EDIT}
+                      aria-label={`Chỉnh sửa danh mục ${cat.name}`}
+                      title={`Chỉnh sửa danh mục ${cat.name}`}
+                    >
+                      <Pencil size={13} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(cat.id, cat.name)}
+                      className={ACTION_BTN_DELETE}
+                      aria-label={`Xóa danh mục ${cat.name}`}
+                      title={`Xóa danh mục ${cat.name}`}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalItems / itemsPerPage)}
+              onPageChange={(page: number) => setCurrentPage(page)}
+              itemsPerPage={itemsPerPage}
+              onItemsPerPageChange={(size: number) => {
+                setItemsPerPage(size);
+                setCurrentPage(1);
+              }}
+              totalItems={totalItems}
+            />
+          </>
+        )}
       </div>
 
       {/* Modal Popup for Create / Edit Category */}

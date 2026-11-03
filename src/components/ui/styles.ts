@@ -82,7 +82,8 @@ export const FORM_ROW_2COL = 'grid grid-cols-2 gap-3 max-[601px]:grid-cols-1 max
 
 /* ---------- Segmented tabs ---------- */
 
-export const TABS_NAV = 'mb-[0.85rem] flex w-full items-center justify-start mobile:mb-3';
+/** Row holding a tab bar; spaced like any other page block (BLOCK_GAP). */
+export const TABS_NAV = 'mb-3 mobile:mb-2.5 flex w-full items-center justify-start';
 
 const TABS_BASE = 'box-border inline-flex max-w-full items-center mobile:flex mobile:w-full';
 /** Pill switcher (Transactions, Categories, add-transaction modal). */

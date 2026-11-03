@@ -1,69 +1,70 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
 import moment from 'moment';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Select from 'react-select';
-import { Plus, Pencil, X, AlertTriangle, Target as TargetIcon } from './ui';
-import { targetService } from '../services';
+import { toast } from 'react-toastify';
 import { TransactionType } from '../commons/constants';
 import type { TargetSummaryResponse, TargetType } from '../commons/types';
 import {
-  MONEY_INPUT_PROPS,
   formatCurrency,
   formatNumberInput,
   getErrorMessage,
   isTouchDevice,
+  MONEY_INPUT_PROPS,
   parseNumberInput,
 } from '../commons/utils';
-import { toast } from 'react-toastify';
 import { useModal } from '../hooks';
-import { DatePickerField, MonthFilter } from './common';
+import { targetService } from '../services';
+import { DatePickerField, EmptyState, ListSkeleton, MonthFilter } from './common';
 import {
   ACTIONS_CELL,
   CATEGORY_BADGE,
-  LOADING_SPINNER,
   MOBILE_CARD,
   MOBILE_CARD_ACTIONS,
+  MOBILE_CARD_AMOUNT,
   MOBILE_CARD_AMOUNT_GROUP,
+  MOBILE_CARD_DATE,
   MOBILE_CARD_FOOTER,
   MOBILE_CARD_INFO,
-  MOBILE_CARD_TOP,
-  MOBILE_CARD_SUB_AMOUNT,
-  MOBILE_CARD_AMOUNT,
-  MOBILE_CARD_DATE,
   MOBILE_CARD_LEFT,
+  MOBILE_CARD_SUB_AMOUNT,
   MOBILE_CARD_TAGS,
   MOBILE_CARD_TITLE,
+  MOBILE_CARD_TOP,
+  MOBILE_CARDS,
   mobileIconBadgeClass,
   TABLE,
   TABLE_CONTAINER,
   TITLE_CELL,
-  MOBILE_CARDS,
 } from './transaction-list/listStyles';
 import {
+  ALERT_ERROR,
   ACTION_BTN_EDIT,
+  AlertTriangle,
   BTN_FILL,
   BTN_PRIMARY,
   BTN_SECONDARY,
   cx,
-  EMPTY_STATE,
   filterBarClass,
   FORM_GROUP,
   MOBILE_ACTION_EDIT,
-  SPINNER_SECTION,
-  statValueClass,
-  SUMMARY_GRID,
-  SUMMARY_STAT_CARD,
-  SUMMARY_STAT_HEADER,
-  SUMMARY_STAT_SUBTITLE,
-  SUMMARY_STAT_TITLE,
-  TXN_AMOUNT,
-  TXN_DATE,
   MODAL_BACKDROP,
   MODAL_CLOSE_BTN,
   MODAL_FORM_BODY,
   MODAL_FORM_SHELL_PANEL,
   MODAL_SHELL_FOOTER,
   MODAL_SHELL_HEADER,
+  Pencil,
+  statValueClass,
+  SUMMARY_GRID,
+  SUMMARY_STAT_CARD,
+  SUMMARY_STAT_HEADER,
+  SUMMARY_STAT_SUBTITLE,
+  SUMMARY_STAT_TITLE,
+  Target as TargetIcon,
+  TXN_AMOUNT,
+  TXN_DATE,
+  X,
 } from './ui';
 
 const TARGET_TYPE_OPTIONS: { value: TargetType; label: string }[] = [
@@ -224,9 +225,9 @@ export default function Targets() {
   });
 
   return (
-    <div className="targets-subview mx-auto w-full max-w-full p-0">
+    <div className="targets-subview w-full">
       {error && (
-        <div className="animate-fade-in">
+        <div className={cx(ALERT_ERROR, 'animate-fade-in')} role="alert">
           <AlertTriangle size={16} /> {error}
         </div>
       )}
@@ -288,7 +289,7 @@ export default function Targets() {
 
       {/* Filter bar aligned with system design */}
       <div className={cx(filterBarClass(), 'animate-fade-in')}>
-        <div className="category-select-wrapper w-full" style={{ minWidth: '220px' }}>
+        <div className="category-select-wrapper w-full">
           <Select
             options={[{ value: '', label: 'Tất cả Mục tiêu' }, ...TARGET_TYPE_OPTIONS]}
             value={
@@ -309,53 +310,16 @@ export default function Targets() {
       </div>
 
       {loading ? (
-        <div className={`${LOADING_SPINNER} animate-fade-in`}>
-          <div className={SPINNER_SECTION}></div>
-          <p>Đang tải mục tiêu tài chính...</p>
-        </div>
+        <ListSkeleton rows={2} label="Đang tải mục tiêu tài chính" />
       ) : filteredRows.length === 0 ? (
-        <div
-          className={cx(EMPTY_STATE, 'animate-fade-in')}
-          style={{ padding: '3rem 1.5rem', textAlign: 'center' }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginBottom: '0.75rem',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <TargetIcon size={44} className="empty-icon" />
-          </div>
-          <h4
-            style={{
-              fontSize: '1.15rem',
-              fontWeight: 600,
-              margin: '0 0 0.5rem 0',
-              color: 'var(--text-main)',
-            }}
-          >
-            Chưa có mục tiêu nào được thiết lập cho tháng này!
-          </h4>
-          <p
-            style={{
-              color: 'var(--text-muted)',
-              fontSize: '0.9rem',
-              maxWidth: '400px',
-              margin: '0 auto 1.25rem auto',
-            }}
-          >
-            Đặt hạn mức chi tiêu hoặc mục tiêu tích lũy để quản lý ngân sách tháng hiệu quả.
-          </p>
-          <button
-            onClick={() => openAddModal(TransactionType.EXPENSE)}
-            className={BTN_PRIMARY}
-            style={{ padding: '0.65rem 1.5rem', minHeight: '42px', fontWeight: 600 }}
-          >
-            <Plus size={16} /> Thêm mục tiêu
-          </button>
-        </div>
+        <EmptyState
+          className="animate-fade-in"
+          icon={<TargetIcon />}
+          title="Chưa có mục tiêu cho tháng này"
+          description="Đặt hạn mức chi tiêu hoặc mục tiêu tích lũy để quản lý ngân sách tháng."
+          actionLabel="Thêm mục tiêu"
+          onAction={() => openAddModal(TransactionType.EXPENSE)}
+        />
       ) : (
         <>
           {/* Desktop Table View */}

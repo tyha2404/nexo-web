@@ -12,6 +12,7 @@ import {
 import type { MonthlyTrendItem } from '../commons/types';
 import { formatCompactCurrency, formatCurrency } from '../commons/utils';
 import {
+  BLOCK_GAP,
   CARD_SECTION_HEADER,
   CARD_TITLE,
   CARD_TITLE_WRAP,
@@ -92,7 +93,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
 
   if (loading) {
     return (
-      <div className={cx(DASHBOARD_CARD, 'mb-3 w-full')}>
+      <div className={cx(DASHBOARD_CARD, BLOCK_GAP, 'w-full')}>
         <div className={CARD_SECTION_HEADER}>
           <div className={CARD_TITLE_WRAP}>
             <h3 className={CARD_TITLE}>Xu hướng Chi tiêu & Thu nhập (12 Tháng)</h3>
@@ -112,7 +113,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
   }));
 
   return (
-    <div className={cx(DASHBOARD_CARD, 'animate-fade-in mb-3 w-full')}>
+    <div className={cx(DASHBOARD_CARD, BLOCK_GAP, 'animate-fade-in w-full')}>
       <div className={cx(CARD_SECTION_HEADER, 'flex-wrap gap-3 mobile:flex-col mobile:gap-2')}>
         <div className="flex flex-col gap-[0.2rem]">
           <div className={CARD_TITLE_WRAP}>

@@ -2,16 +2,18 @@ import moment from 'moment';
 import type { SummaryReport, TargetSummaryResponse } from '../../commons/types';
 import { formatCurrency } from '../../commons/utils';
 import type { DebtSummary } from '../../types/debt';
-import { CLICKABLE_CARD, cx, GLASS_CARD, MOTION_ENTER } from '../ui';
+import { BLOCK_GAP, cx, GLASS_CARD, MOTION_ENTER, SUB_TILE } from '../ui';
 
-const submetricCls =
-  'flex items-center gap-2 rounded-md border border-line bg-input px-[0.65rem] py-2 hover:border-line-hover hover:bg-hover mobile:px-[0.6rem] mobile:py-[0.45rem] light:border-[var(--border)] light:bg-[var(--bg-card)]';
+// Groups inside the hero are SUB_TILEs (filled, no border): cards never nest.
+const submetricCls = cx(
+  SUB_TILE,
+  'flex cursor-pointer items-center gap-2 transition-colors duration-100 ease-out [&:hover]:bg-hover'
+);
 const submetricTitleCls =
   'overflow-hidden text-[0.725rem] font-semibold text-ellipsis whitespace-nowrap text-muted';
 const submetricNumberCls =
   'overflow-hidden font-mono text-[0.95rem] font-bold text-ellipsis whitespace-nowrap';
-const progressBoxCls =
-  'mt-0 flex flex-col justify-between rounded-md border bg-input px-3 py-[0.6rem] mobile:px-[0.65rem] mobile:py-2 light:border-[var(--border)] light:bg-[var(--bg-card)]';
+const progressBoxCls = cx(SUB_TILE, 'flex flex-col justify-between');
 const statusBadgeCls =
   'inline-flex items-center gap-[0.3rem] rounded-full px-2 py-[0.15rem] text-[0.7rem] font-bold tracking-[0.02em] whitespace-nowrap';
 const setLinkCls =
@@ -85,7 +87,8 @@ export function HeroCashflowCard({
       className={cx(
         GLASS_CARD,
         MOTION_ENTER,
-        'relative mb-[0.85rem] overflow-hidden mobile:mb-2 light:border-[var(--border)] light:bg-white light:[&:hover]:border-[var(--border)]'
+        BLOCK_GAP,
+        'relative overflow-hidden light:bg-white light:[&:hover]:border-line'
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-3 mobile:flex-col mobile:items-start mobile:gap-[0.35rem]">
@@ -127,7 +130,7 @@ export function HeroCashflowCard({
       {/* Hero Sub-metrics Row */}
       <div className="mt-2 grid grid-cols-[repeat(3,1fr)] gap-2 border-t border-line pt-2 mobile:mt-[0.35rem] mobile:grid-cols-[1fr] mobile:gap-[0.35rem] mobile:pt-[0.35rem]">
         <div
-          className={`metric-income ${CLICKABLE_CARD} ${submetricCls}`}
+          className={`metric-income ${submetricCls}`}
           onClick={() => onNavigate?.('income')}
           title="Xem chi tiết Thu nhập"
         >
@@ -143,7 +146,7 @@ export function HeroCashflowCard({
         </div>
 
         <div
-          className={`metric-expense ${CLICKABLE_CARD} ${submetricCls}`}
+          className={`metric-expense ${submetricCls}`}
           onClick={() => onNavigate?.('expenses')}
           title="Xem chi tiết Chi tiêu"
         >
@@ -159,7 +162,7 @@ export function HeroCashflowCard({
         </div>
 
         <div
-          className={`metric-invest ${CLICKABLE_CARD} ${submetricCls}`}
+          className={`metric-invest ${submetricCls}`}
           onClick={() => onNavigate?.('investment')}
           title="Xem chi tiết Đầu tư"
         >
@@ -178,7 +181,7 @@ export function HeroCashflowCard({
       {/* Visual Budget & Investment Progress Section */}
       <div className="mt-2 grid grid-cols-[repeat(2,1fr)] gap-2 mobile:mt-[0.35rem] mobile:grid-cols-[1fr] mobile:gap-[0.35rem]">
         {/* 1. Expense Budget Progress */}
-        <div className={`${progressBoxCls} border-line`}>
+        <div className={progressBoxCls}>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <span className="flex items-center gap-[0.4rem] text-[0.8125rem] font-semibold text-main">
               Hạn mức Ngân sách Chi tiêu
@@ -266,9 +269,7 @@ export function HeroCashflowCard({
         </div>
 
         {/* 2. Monthly Investment Target Progress */}
-        <div
-          className={`${progressBoxCls} border-[color-mix(in_srgb,var(--primary)_25%,transparent)]`}
-        >
+        <div className={progressBoxCls}>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <span className="flex items-center gap-[0.4rem] text-[0.8125rem] font-semibold text-main">
               Mục tiêu Đầu tư Tháng

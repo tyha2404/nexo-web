@@ -1,7 +1,15 @@
 import type { SummaryReport } from '../../commons/types';
 import { formatCurrency } from '../../commons/utils';
 import type { DebtSummary } from '../../types/debt';
-import { CLICKABLE_GLASS_CARD, cx, STAGGER_CHILDREN } from '../ui';
+import {
+  CLICKABLE_STAT_CARD,
+  SECTION_TITLE,
+  statValueClass,
+  SUMMARY_GRID,
+  SUMMARY_STAT_HEADER,
+  SUMMARY_STAT_SUBTITLE,
+  SUMMARY_STAT_TITLE,
+} from '../ui';
 
 interface SecondaryStatsSectionProps {
   summary: SummaryReport | null;
@@ -17,57 +25,46 @@ export function SecondaryStatsSection({
   onNavigate,
 }: SecondaryStatsSectionProps) {
   return (
-    <div className="dashboard-secondary-section animate-fade-in mb-[0.85rem] text-left">
-      <div className="mb-3 text-[0.95rem] font-bold text-main">
-        <span>Tài sản Tích lũy, Đầu tư & Vay Nợ</span>
-      </div>
+    <div className="dashboard-secondary-section animate-fade-in text-left">
+      <h3 className={SECTION_TITLE}>Tài sản Tích lũy, Đầu tư & Vay Nợ</h3>
 
-      <div
-        className={`${STAGGER_CHILDREN} grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-[0.85rem] mobile:w-full mobile:gap-2`}
-      >
-        {/* Investment Portfolio Card */}
+      <div className={SUMMARY_GRID}>
         <div
-          className={cx(CLICKABLE_GLASS_CARD, 'flex flex-col justify-between')}
+          className={CLICKABLE_STAT_CARD}
           onClick={() => onNavigate?.('investment')}
           title="Xem chi tiết Quản lý Đầu tư"
         >
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[0.8rem] font-semibold text-muted">Danh mục Đầu tư ↗</span>
+          <div className={SUMMARY_STAT_HEADER}>
+            <span className={SUMMARY_STAT_TITLE}>Danh mục Đầu tư ↗</span>
           </div>
-          <div className="mb-1 font-mono text-[1.3rem] font-extrabold tracking-[-0.02em]">
+          <div className={statValueClass()}>
             {formatCurrency(allTimeSummary?.totalInvestment ?? 0)}
           </div>
-          <div className="text-[0.75rem] text-muted">
-            <span>
-              Tháng này: <strong>{formatCurrency(summary?.totalInvestment ?? 0)}</strong>
-            </span>
+          <div className={SUMMARY_STAT_SUBTITLE}>
+            Tháng này: <strong>{formatCurrency(summary?.totalInvestment ?? 0)}</strong>
           </div>
         </div>
-
-        {/* Debts Payable Card */}
         <div
-          className={cx(CLICKABLE_GLASS_CARD, 'flex flex-col justify-between')}
+          className={CLICKABLE_STAT_CARD}
           onClick={() => onNavigate?.('debts')}
           title="Xem chi tiết các khoản nợ phải trả"
         >
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[0.8rem] font-semibold text-muted">Phải trả ↗</span>
+          <div className={SUMMARY_STAT_HEADER}>
+            <span className={SUMMARY_STAT_TITLE}>Phải trả ↗</span>
           </div>
-          <div className="mb-1 font-mono text-[1.3rem] font-extrabold tracking-[-0.02em]">
+          <div className={statValueClass()}>
             {formatCurrency(Math.abs(debtSummary?.totalPayable ?? 0))}
           </div>
         </div>
-
-        {/* Debts Receivable Card */}
         <div
-          className={cx(CLICKABLE_GLASS_CARD, 'flex flex-col justify-between')}
+          className={CLICKABLE_STAT_CARD}
           onClick={() => onNavigate?.('debts')}
           title="Xem chi tiết các khoản cho vay / cần thu"
         >
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[0.8rem] font-semibold text-muted">Phải thu ↗</span>
+          <div className={SUMMARY_STAT_HEADER}>
+            <span className={SUMMARY_STAT_TITLE}>Phải thu ↗</span>
           </div>
-          <div className="mb-1 font-mono text-[1.3rem] font-extrabold tracking-[-0.02em]">
+          <div className={statValueClass()}>
             {formatCurrency(Math.abs(debtSummary?.totalReceivable ?? 0))}
           </div>
         </div>

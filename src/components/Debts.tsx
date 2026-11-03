@@ -1,39 +1,38 @@
-import React, { useCallback, useEffect, useState } from 'react';
 import moment from 'moment';
+import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
-import { Search, Plus, Trash2, Handshake, X, AlertTriangle, ArrowRightLeft } from './ui';
 import {
-  MONEY_INPUT_PROPS,
-  SEARCH_INPUT_PROPS,
-  TEXT_DONE_INPUT_PROPS,
-  TEXT_NEXT_INPUT_PROPS,
   formatCurrency,
   formatNumberInput,
   isTouchDevice,
+  MONEY_INPUT_PROPS,
   parseNumberInput,
+  SEARCH_INPUT_PROPS,
+  TEXT_DONE_INPUT_PROPS,
+  TEXT_NEXT_INPUT_PROPS,
 } from '../commons/utils';
+import { useDataEvents, useModal } from '../hooks';
 import { debtService } from '../services';
 import type { Debt, DebtType } from '../types/debt';
-import { useDataEvents, useModal } from '../hooks';
-import { ConfirmModal, DatePickerField, MonthFilter } from './common';
+import { ConfirmModal, DatePickerField, EmptyState, ListSkeleton, MonthFilter } from './common';
 import {
   ACTIONS_CELL,
   CATEGORY_BADGE,
-  LOADING_SPINNER,
   MOBILE_CARD,
   MOBILE_CARD_ACTIONS,
+  MOBILE_CARD_AMOUNT,
   MOBILE_CARD_AMOUNT_GROUP,
+  MOBILE_CARD_DATE,
   MOBILE_CARD_FOOTER,
   MOBILE_CARD_INFO,
-  MOBILE_CARD_TOP,
-  MOBILE_CARD_SUB_AMOUNT,
-  MOBILE_CARD_AMOUNT,
-  MOBILE_CARD_DATE,
   MOBILE_CARD_LEFT,
+  MOBILE_CARD_SUB_AMOUNT,
   MOBILE_CARD_TAGS,
   MOBILE_CARD_TITLE,
+  MOBILE_CARD_TOP,
+  MOBILE_CARDS,
   mobileIconBadgeClass,
   PAGE_HEADER,
   PAGE_TITLE,
@@ -42,39 +41,44 @@ import {
   TABLE,
   TABLE_CONTAINER,
   TITLE_CELL,
-  MOBILE_CARDS,
 } from './transaction-list/listStyles';
 import {
+  ALERT_ERROR,
   ACTION_BTN_DELETE,
+  AlertTriangle,
+  ArrowRightLeft,
   BTN_FILL,
   BTN_PRIMARY,
   BTN_SECONDARY,
   btnClass,
   cx,
-  EMPTY_STATE,
   filterBarClass,
   FORM_GROUP,
   FORM_ROW_2COL,
+  Handshake,
   HEADER_ACTIONS,
   MOBILE_ACTION_DELETE,
   MOBILE_ACTION_EDIT,
-  PAGE_HEADER_BTN,
-  SEARCH_ICON,
-  SEARCH_INPUT,
-  SEARCH_WRAPPER,
-  SPINNER_SECTION,
-  statValueClass,
-  SUMMARY_GRID,
-  SUMMARY_STAT_CARD,
-  SUMMARY_STAT_HEADER,
-  SUMMARY_STAT_TITLE,
-  TXN_AMOUNT,
-  TXN_DATE,
   MODAL_BACKDROP,
   MODAL_CLOSE_BTN,
   MODAL_FOOTER,
   MODAL_HEADER,
   MODAL_PANEL,
+  PAGE_HEADER_BTN,
+  Plus,
+  Search,
+  SEARCH_ICON,
+  SEARCH_INPUT,
+  SEARCH_WRAPPER,
+  statValueClass,
+  SUMMARY_GRID,
+  SUMMARY_STAT_CARD,
+  SUMMARY_STAT_HEADER,
+  SUMMARY_STAT_TITLE,
+  Trash2,
+  TXN_AMOUNT,
+  TXN_DATE,
+  X,
 } from './ui';
 
 export default function Debts() {
@@ -268,7 +272,7 @@ export default function Debts() {
       </header>
 
       {error && (
-        <div className="animate-fade-in">
+        <div className={cx(ALERT_ERROR, 'animate-fade-in')} role="alert">
           <AlertTriangle size={16} /> {error}
         </div>
       )}
@@ -308,7 +312,7 @@ export default function Debts() {
           />
         </div>
 
-        <div className="category-select-wrapper w-full min-w-[180px] flex-1">
+        <div className="category-select-wrapper w-full">
           <Select
             options={[
               { value: '', label: 'Tất cả loại nợ' },
@@ -336,53 +340,16 @@ export default function Debts() {
       </div>
 
       {loading ? (
-        <div className={`${LOADING_SPINNER} animate-fade-in`}>
-          <div className={SPINNER_SECTION}></div>
-          <p>Đang tải danh sách khoản vay...</p>
-        </div>
+        <ListSkeleton label="Đang tải danh sách khoản vay" />
       ) : filteredDebts.length === 0 ? (
-        <div
-          className={cx(EMPTY_STATE, 'animate-fade-in')}
-          style={{ padding: '3rem 1.5rem', textAlign: 'center' }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              marginBottom: '0.75rem',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <Handshake size={44} className="empty-icon" />
-          </div>
-          <h4
-            style={{
-              fontSize: '1.15rem',
-              fontWeight: 600,
-              margin: '0 0 0.5rem 0',
-              color: 'var(--text-main)',
-            }}
-          >
-            Không tìm thấy khoản vay/nợ nào phù hợp!
-          </h4>
-          <p
-            style={{
-              color: 'var(--text-muted)',
-              fontSize: '0.9rem',
-              maxWidth: '400px',
-              margin: '0 auto 1.25rem auto',
-            }}
-          >
-            Tạo khoản nợ mới hoặc điều chỉnh bộ lọc để theo dõi các khoản nợ cần trả và cần thu.
-          </p>
-          <button
-            onClick={() => openCreateModal('PAYABLE')}
-            className={BTN_PRIMARY}
-            style={{ padding: '0.65rem 1.5rem', minHeight: '42px', fontWeight: 600 }}
-          >
-            <Plus size={16} /> Tạo khoản nợ mới
-          </button>
-        </div>
+        <EmptyState
+          className="animate-fade-in"
+          icon={<Handshake />}
+          title="Không có khoản vay/nợ nào"
+          description="Tạo khoản nợ mới hoặc đổi bộ lọc để theo dõi các khoản cần trả và cần thu."
+          actionLabel="Tạo khoản nợ mới"
+          onAction={() => openCreateModal('PAYABLE')}
+        />
       ) : (
         <>
           {/* Desktop Table View */}

@@ -7,14 +7,14 @@
  * `[&:hover]` is used where the old rule was a plain `:hover` (it also fires on a tap on iOS);
  * `hover:` only where the old rule was inside `@media (hover: hover)`.
  */
-import { cx } from './styles';
 import { CONTROL_FRAME } from './controlStyles';
+import { BLOCK_GAP, CARD_PAD, CARD_SURFACE, ITEM_GAP } from './layoutStyles';
 import { MOTION_ENTER, STAGGER_CHILDREN } from './motionStyles';
+import { cx } from './styles';
 
 /* ---------- Cards ---------- */
 
-const GLASS_CARD_BASE =
-  'box-border rounded-lg border border-line bg-card px-4 py-[0.85rem] shadow-app-sm mobile:rounded-md mobile:px-[0.65rem] mobile:py-[0.65rem]';
+const GLASS_CARD_BASE = cx(CARD_SURFACE, CARD_PAD);
 
 /** Plain glass card. */
 export const GLASS_CARD = cx(
@@ -47,16 +47,22 @@ export const CARD_TITLE =
 
 /** Grid of stat tiles; a horizontal swipe row on phones. */
 export const SUMMARY_GRID = cx(
-  'mb-[0.85rem] grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3',
-  'mobile:-mx-[0.65rem] mobile:mb-[0.65rem] mobile:grid-flow-col mobile:auto-cols-[minmax(150px,46%)] mobile:grid-cols-none mobile:gap-[0.45rem] mobile:snap-x mobile:snap-mandatory mobile:scroll-px-[0.65rem] mobile:overflow-x-auto mobile:px-[0.65rem] mobile:py-0',
+  BLOCK_GAP,
+  'grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3',
+  'mobile:-mx-[0.65rem] mobile:grid-flow-col mobile:auto-cols-[minmax(150px,46%)] mobile:grid-cols-none mobile:gap-[0.45rem] mobile:snap-x mobile:snap-mandatory mobile:scroll-px-[0.65rem] mobile:overflow-x-auto mobile:px-[0.65rem] mobile:py-0',
   // One or two tiles fit side by side: split the row instead of leaving a gap on the right.
   'mobile:[&:not(:has(>:nth-child(3)))]:auto-cols-fr',
-  'mobile:[&>div]:col-auto mobile:[&>div]:min-h-0 mobile:[&>div]:snap-start mobile:[&>div:last-child:nth-child(odd)]:col-[1/-1]',
+  'mobile:[&>div]:col-auto mobile:[&>div]:min-h-0 mobile:[&>div]:snap-start',
   STAGGER_CHILDREN
 );
 
-export const SUMMARY_STAT_CARD =
-  'relative flex min-h-[84px] flex-col justify-between overflow-hidden rounded-md border border-line bg-card px-4 py-[0.85rem] transition-[border-color] duration-100 ease-out [&:hover]:border-line-hover mobile:min-h-0 mobile:justify-start mobile:px-3 mobile:py-[0.65rem]';
+export const SUMMARY_STAT_CARD = cx(
+  CARD_SURFACE,
+  CARD_PAD,
+  'relative flex min-h-[84px] flex-col justify-between overflow-hidden transition-[border-color] duration-100 ease-out [&:hover]:border-line-hover mobile:min-h-0 mobile:justify-start'
+);
+/** Stat tile that navigates somewhere (Dashboard). */
+export const CLICKABLE_STAT_CARD = cx(SUMMARY_STAT_CARD, CLICKABLE_BASE, '[&:hover]:bg-list-hover');
 export const SUMMARY_STAT_HEADER =
   'mb-2 flex items-center justify-between align-middle leading-[1.2] [&_svg]:block [&_svg]:shrink-0 mobile:mb-1';
 export const SUMMARY_STAT_TITLE = 'text-[11px] font-bold tracking-[0.04em] text-muted uppercase';
@@ -112,7 +118,11 @@ export const TXN_DATE = 'text-[0.875rem] text-muted';
 /* ---------- Dashboard ---------- */
 
 /** Category breakdown + recent transactions; `dashboard-main-grid` is a test locator. */
-export const DASHBOARD_MAIN_GRID = `${STAGGER_CHILDREN} dashboard-main-grid mb-3 grid grid-cols-[1fr_1fr] items-stretch gap-3 max-[1025px]:grid-cols-[1fr] mobile:mb-2 mobile:w-full mobile:gap-2`;
+export const DASHBOARD_MAIN_GRID = cx(
+  STAGGER_CHILDREN,
+  BLOCK_GAP,
+  'dashboard-main-grid grid grid-cols-[1fr_1fr] items-stretch gap-3 max-[1025px]:grid-cols-[1fr] mobile:w-full mobile:gap-2.5'
+);
 
 export const TIMELINE_LIST = cx(
   'flex flex-1 flex-col gap-[0.45rem] mobile:[&>:nth-child(n+5)]:hidden',
@@ -139,11 +149,6 @@ const SPINNER_BASE =
   'm-0 inline-block shrink-0 rounded-full border-solid align-middle animate-[spin_1s_linear_infinite]';
 /** Full-page loader (app boot). */
 export const SPINNER_PAGE = cx(SPINNER_BASE, 'size-12 border-4 border-primary-glow border-l-main');
-/** Loader inside a LOADING_SPINNER block. */
-export const SPINNER_SECTION = cx(
-  SPINNER_BASE,
-  'size-10 border-[3px] border-primary-glow border-t-primary'
-);
 /** Inline loader inside a button (takes the text colour). */
 export const SPINNER_BUTTON = cx(
   SPINNER_BASE,
@@ -156,7 +161,7 @@ export const SPINNER_MICRO =
 const SKELETON_BASE =
   "relative overflow-hidden after:absolute after:inset-0 after:[transform:translateX(-100%)] after:bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)] after:content-[''] after:animate-[skeleton-shimmer_1.4s_infinite] motion-reduce:after:animate-none";
 export const SKELETON = cx(SKELETON_BASE, 'rounded-md bg-input');
-export const SKELETON_CARD = cx(SKELETON_BASE, 'rounded-lg bg-card p-5');
+export const SKELETON_CARD = cx(SKELETON_BASE, 'rounded-md border border-line bg-card');
 
 /* ---------- Filter bar ---------- */
 
@@ -166,11 +171,13 @@ export const SKELETON_CARD = cx(SKELETON_BASE, 'rounded-lg bg-card p-5');
  */
 export const filterBarClass = (withStatus = false) =>
   cx(
-    'filter-bar mb-[0.85rem] grid grid-cols-[1fr] items-start gap-2 rounded-md border border-line bg-card px-3 py-2 min-[640px]:grid-cols-[2fr_1fr]',
+    BLOCK_GAP,
+    CARD_SURFACE,
+    'filter-bar grid grid-cols-[1fr] items-start gap-2 px-3 py-2 min-[640px]:grid-cols-[2fr_1fr]',
     withStatus
       ? 'min-[1024px]:grid-cols-[1.5fr_1fr_1fr_1.2fr]'
       : 'min-[1024px]:grid-cols-[2fr_1fr_1.2fr]',
-    'mobile:mb-[0.65rem] mobile:grid-cols-[1fr_1fr]! mobile:gap-[0.4rem] mobile:px-[0.6rem] mobile:py-[0.45rem] mobile:[&>*]:min-w-0!',
+    'mobile:grid-cols-[1fr_1fr]! mobile:gap-[0.4rem] mobile:px-[0.6rem] mobile:py-[0.45rem] mobile:[&>*]:min-w-0!',
     '[&_:is(input,select):focus]:border-primary [&_:is(input,select):focus]:shadow-none [&_:is(input,select):focus]:outline-none'
   );
 /** Spans the whole row on phones. */
@@ -184,4 +191,8 @@ export const SEARCH_INPUT = cx(
   'w-full h-(--control-height)! min-h-(--control-height)! pl-[2.3rem]! py-0! text-(length:--control-font-size)! placeholder:text-muted'
 );
 
-export const CATEGORIES_LIST = `${STAGGER_CHILDREN} grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-4 pr-1 mobile:grid-cols-[1fr] mobile:gap-2`;
+export const CATEGORIES_LIST = cx(
+  STAGGER_CHILDREN,
+  ITEM_GAP,
+  'grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] mobile:grid-cols-[1fr]'
+);
