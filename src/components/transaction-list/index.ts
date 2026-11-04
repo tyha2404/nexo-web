@@ -1,4 +1,6 @@
 export * from './constants';
+export * from './SpendingCalendar';
+export * from './TagChips';
 export * from './TransactionMobileCards';
 export * from './TransactionSummaryCards';
 export * from './TransactionTable';

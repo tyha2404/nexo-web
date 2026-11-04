@@ -21,6 +21,7 @@ import {
   statusBadgeClass,
   MOBILE_CARDS,
 } from './listStyles';
+import { TagChips } from './TagChips';
 import type { TransactionListProps } from './types';
 import {
   MOBILE_ACTION_BTN,
@@ -39,6 +40,7 @@ export function TransactionMobileCards({
   onEdit,
   onDelete,
   onViewReceipt,
+  onTagClick,
 }: TransactionListProps) {
   const typeClass = activeType.toLowerCase();
   return (
@@ -82,6 +84,7 @@ export function TransactionMobileCards({
                     </span>
                   </span>
                 )}
+                <TagChips tags={txn.tags} onTagClick={onTagClick} />
                 {activeType === TransactionType.INVESTMENT && (
                   <span className={statusBadgeClass(status)}>
                     {INVESTMENT_STATUS_LABELS[status]}

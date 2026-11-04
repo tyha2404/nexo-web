@@ -10,12 +10,7 @@ import {
   SEARCH_INPUT_PROPS,
   toISODateString,
 } from '../commons/utils';
-import {
-  categoryService,
-  transactionService,
-  walletService,
-  type CreateTransactionDTO,
-} from '../services';
+import { categoryService, transactionService, walletService } from '../services';
 import AddTransactionModal from './AddTransactionModal';
 import { ConfirmModal, EmptyState, ListSkeleton, MonthFilter, ReceiptModal } from './common';
 import Pagination from './Pagination';
@@ -24,6 +19,7 @@ import {
   INVESTMENT_STATUS_FILTER_OPTIONS,
   TransactionMobileCards,
   TransactionSummaryCards,
+  SpendingCalendar,
   TransactionTable,
   TransactionTypeIcon,
   type TransactionListProps,
@@ -32,6 +28,8 @@ import { PAGE_HEADER, PAGE_TITLE, PAGE_TITLE_H2, PAGE_VIEW } from './transaction
 import {
   ALERT_ERROR,
   AlertTriangle,
+  BLOCK_GAP,
+  CHIP_BTN,
   cx,
   FILTER_FULL_ROW,
   filterBarClass,
@@ -44,6 +42,7 @@ import {
   tabClass,
   TABS,
   TABS_NAV,
+  X,
 } from './ui';
 
 export interface TransactionsProps {
@@ -70,6 +69,10 @@ export default function Transactions({
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<InvestmentStatus | ''>('');
   const [selectedMonth, setSelectedMonth] = useState<string>(() => moment().format('YYYY-MM'));
+  // Day picked in the calendar ('YYYY-MM-DD'); narrows the list to that day.
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  // Tag picked by tapping a "#tag" chip in the list.
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -138,14 +141,19 @@ export default function Transactions({
       try {
         setLoading(true);
         setError(null);
-        const startOfMonth = moment(selectedMonth, 'YYYY-MM').startOf('month');
-        const endOfMonth = moment(selectedMonth, 'YYYY-MM').endOf('month');
+        const startOfMonth = selectedDay
+          ? moment(selectedDay)
+          : moment(selectedMonth, 'YYYY-MM').startOf('month');
+        const endOfMonth = selectedDay
+          ? moment(selectedDay)
+          : moment(selectedMonth, 'YYYY-MM').endOf('month');
 
         const res = await transactionService.list(
           {
             type: activeType,
             keyword: debouncedSearch.trim() || undefined,
             categoryId: selectedCategoryFilter || undefined,
+            tag: selectedTag || undefined,
             status:
               activeType === TransactionType.INVESTMENT && selectedStatusFilter
                 ? selectedStatusFilter
@@ -181,6 +189,8 @@ export default function Transactions({
     selectedCategoryFilter,
     selectedStatusFilter,
     selectedMonth,
+    selectedDay,
+    selectedTag,
     currentPage,
     itemsPerPage,
     refreshKey,
@@ -217,6 +227,8 @@ export default function Transactions({
     setSelectedCategoryFilter('');
     setSelectedStatusFilter('');
     setSearchQuery('');
+    setSelectedDay(null);
+    setSelectedTag(null);
   };
 
   const openAddModal = () => {
@@ -246,29 +258,17 @@ export default function Transactions({
     setDeleteConfirm({ isOpen: true, id: txn.id, description: txn.description || '' });
   };
 
-  // Re-create a deleted transaction from its captured snapshot (every writable field)
-  const restoreTransaction = async (original: Transaction) => {
-    const restorePayload: CreateTransactionDTO = {
-      amount: original.amount,
-      categoryId: original.categoryId,
-      transactionDate: toISODateString(original.transactionDate),
-      type: original.type,
-      description: original.description,
-      walletId: original.walletId || undefined,
-      status: original.status,
-      realizedPnl: original.realizedPnl,
-      receiptUrl: original.receiptUrl || '',
-    };
+  // Undo a delete: the API clears the soft delete and re-applies the wallet effect,
+  // so the transaction keeps its id, timestamps and receipt.
+  const restoreTransaction = async (id: string) => {
     try {
-      await transactionService.create(restorePayload);
+      await transactionService.restore(id);
       setRefreshKey((prev) => prev + 1);
       window.dispatchEvent(new Event('transactions-changed'));
       toast.success('Đã hoàn tác xóa giao dịch!');
     } catch (err) {
       console.error('Failed to restore transaction', err);
-      toast.error(
-        `Không thể hoàn tác: ${getErrorMessage(err, 'lỗi không xác định')}. Vui lòng tạo lại giao dịch.`
-      );
+      toast.error(`Không thể hoàn tác: ${getErrorMessage(err, 'lỗi không xác định')}.`);
     }
   };
 
@@ -276,9 +276,6 @@ export default function Transactions({
     if (!deleteConfirm) return;
     const { id, description } = deleteConfirm;
     setDeleteConfirm(null);
-
-    // Capture the full transaction so we can restore it on undo
-    const original = transactions.find((t) => t.id === id);
 
     try {
       await transactionService.delete(id);
@@ -288,18 +285,16 @@ export default function Transactions({
         ({ closeToast }) => (
           <span>
             Đã xóa "{description}".
-            {original && (
-              <button
-                type="button"
-                className="ml-3 cursor-pointer rounded-sm border-none bg-primary px-[0.6rem] py-[0.2rem] text-[0.8rem] font-semibold text-white transition-all duration-200 ease-[ease] hover:scale-[1.03] hover:bg-primary-hover hover:opacity-90"
-                onClick={() => {
-                  closeToast();
-                  void restoreTransaction(original);
-                }}
-              >
-                Hoàn tác
-              </button>
-            )}
+            <button
+              type="button"
+              className="ml-3 cursor-pointer rounded-sm border-none bg-primary px-[0.6rem] py-[0.2rem] text-[0.8rem] font-semibold text-white transition-all duration-200 ease-[ease] hover:scale-[1.03] hover:bg-primary-hover hover:opacity-90"
+              onClick={() => {
+                closeToast();
+                void restoreTransaction(id);
+              }}
+            >
+              Hoàn tác
+            </button>
           </span>
         ),
         { autoClose: 6000 }
@@ -328,6 +323,10 @@ export default function Transactions({
     onEdit: openEditModal,
     onDelete: handleDelete,
     onViewReceipt: setSelectedReceiptUrl,
+    onTagClick: (tag) => {
+      setSelectedTag(tag);
+      setCurrentPage(1);
+    },
   };
 
   // Calculate total pages from totalItems from server
@@ -476,13 +475,46 @@ export default function Transactions({
             value={selectedMonth}
             onChange={(mStr) => {
               setSelectedMonth(mStr);
+              setSelectedDay(null);
               setCurrentPage(1);
             }}
           />
         </div>
       </div>
 
-      {/* 5. Transactions Table (Desktop) & Cards (Mobile) */}
+      {selectedTag && (
+        <div className={cx(BLOCK_GAP, 'flex items-center gap-2 text-[13px] text-muted')}>
+          <span>Đang lọc theo tag</span>
+          <button
+            type="button"
+            className={cx(CHIP_BTN, 'border border-primary bg-transparent text-main')}
+            onClick={() => {
+              setSelectedTag(null);
+              setCurrentPage(1);
+            }}
+            aria-label={`Bỏ lọc tag ${selectedTag}`}
+          >
+            #{selectedTag}
+            <X size={12} />
+          </button>
+        </div>
+      )}
+
+      {/* 5. Daily calendar of the month (taps filter the list to one day) */}
+      {(activeType === TransactionType.EXPENSE || activeType === TransactionType.INCOME) && (
+        <SpendingCalendar
+          month={selectedMonth}
+          type={activeType}
+          refreshKey={refreshKey}
+          selectedDay={selectedDay}
+          onSelectDay={(day) => {
+            setSelectedDay(day);
+            setCurrentPage(1);
+          }}
+        />
+      )}
+
+      {/* 6. Transactions Table (Desktop) & Cards (Mobile) */}
       {loading ? (
         <ListSkeleton label="Đang tải giao dịch" />
       ) : filteredTransactions.length === 0 ? (

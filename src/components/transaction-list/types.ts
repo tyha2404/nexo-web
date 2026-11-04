@@ -9,4 +9,6 @@ export interface TransactionListProps {
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
   onViewReceipt: (url: string) => void;
+  /** Tapping a tag filters the list by it. */
+  onTagClick?: (tag: string) => void;
 }

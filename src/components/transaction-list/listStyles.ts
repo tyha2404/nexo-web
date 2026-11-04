@@ -40,6 +40,16 @@ export const TABLE =
 export const TITLE_CELL = 'text-left font-medium';
 export const ACTIONS_CELL = 'whitespace-nowrap';
 
+/** A transaction tag ("#Đà Lạt"): quieter than the category badge. */
+export const TAG_CHIP = cx(
+  'inline-flex max-w-[12rem] items-center rounded-xs border-none bg-transparent p-0 align-middle text-[12px] leading-[1.2] text-muted',
+  'enabled:cursor-pointer enabled:[&:hover]:text-link',
+  // Tiny text link: on phones it gets a 44px-tall invisible tap area.
+  "mobile:enabled:after:absolute mobile:enabled:after:-inset-x-1 mobile:enabled:after:-inset-y-4 mobile:enabled:after:content-['']",
+  'relative',
+  NO_WRAP_BADGE
+);
+
 export const CATEGORY_BADGE = `inline-flex items-center rounded-full border border-primary-glow bg-primary-glow px-3 py-1 align-middle text-[0.8rem] leading-[1.2] font-medium text-primary ${NO_WRAP_BADGE}`;
 
 const STATUS_BADGE_BASE = `inline-block rounded-full border px-3 py-1 text-[0.8rem] font-semibold ${NO_WRAP_BADGE}`;

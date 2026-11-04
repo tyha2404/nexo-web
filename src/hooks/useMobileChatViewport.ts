@@ -1,8 +1,5 @@
 import { useEffect, useState, type RefObject } from 'react';
-
-// Keep in step with the mobile shell's CSS, including landscape phones.
-const MOBILE_QUERY =
-  '(max-width: 768px), (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px)';
+import { MOBILE_MEDIA_QUERY as MOBILE_QUERY } from '../commons/constants';
 
 export function useMobileChatViewport(open: boolean, ref: RefObject<HTMLDivElement | null>) {
   const [mobile, setMobile] = useState(() => window.matchMedia(MOBILE_QUERY).matches);

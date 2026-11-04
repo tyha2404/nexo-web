@@ -20,7 +20,7 @@ import {
 } from '../commons/utils';
 import { categoryService, transactionService } from '../services';
 import type { CreateTransactionDTO } from '../services';
-import { DatePickerField, ReceiptUploader } from './common';
+import { DatePickerField, ReceiptUploader, TagInput } from './common';
 import {
   BTN_FILL,
   BTN_PRIMARY,
@@ -71,6 +71,8 @@ export default function AddTransactionModal({
   const [status, setStatus] = useState<InvestmentStatus>(InvestmentStatus.HOLDING);
   const [realizedPnl, setRealizedPnl] = useState('0');
   const [receiptUrl, setReceiptUrl] = useState<string | undefined>(undefined);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const isEditing = Boolean(transaction);
@@ -96,6 +98,7 @@ export default function AddTransactionModal({
         ? `${transaction.realizedPnl < 0 ? '-' : ''}${Math.abs(Math.round(transaction.realizedPnl)).toLocaleString('vi-VN')}`
         : '0',
       receiptUrl: transaction?.receiptUrl ?? undefined,
+      tags: transaction?.tags ?? [],
     };
     const values = initial;
     setActiveType(values.activeType);
@@ -106,7 +109,21 @@ export default function AddTransactionModal({
     setStatus(values.status);
     setRealizedPnl(values.realizedPnl);
     setReceiptUrl(values.receiptUrl);
+    setTags(values.tags);
   }, [open, transaction, initialType]);
+
+  // Tags used before, offered as one-tap suggestions (optional: the field works without them)
+  useEffect(() => {
+    if (!open) return;
+    const controller = new AbortController();
+    transactionService
+      .listTags({ signal: controller.signal })
+      .then((items) => setTagSuggestions(items.map((tag) => tag.name)))
+      .catch(() => {
+        // Suggestions are a convenience; typing a tag still works.
+      });
+    return () => controller.abort();
+  }, [open]);
 
   // Load categories matching the active type
   useEffect(() => {
@@ -175,6 +192,7 @@ export default function AddTransactionModal({
       amount: rawAmount,
       categoryId,
       receiptUrl: receiptUrl || '',
+      tags,
       transactionDate: toISODateString(transactionDate),
       type: activeType,
     };
@@ -423,6 +441,19 @@ export default function AddTransactionModal({
                 value={transactionDate}
                 onChange={setTransactionDate}
                 required
+              />
+            </div>
+
+            <div className={FORM_GROUP}>
+              <label htmlFor="atxn-tags">
+                Tag <span className="text-muted">(tùy chọn)</span>
+              </label>
+              <TagInput
+                id="atxn-tags"
+                value={tags}
+                onChange={setTags}
+                suggestions={tagSuggestions}
+                disabled={submitting}
               />
             </div>
 

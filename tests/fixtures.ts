@@ -28,8 +28,11 @@ export async function setup(page: Page) {
       description: i === 25 ? 'Hóa đơn đặc biệt' : `Ăn sáng cùng gia đình tại quán gần nhà ${i}`,
       transactionDate: moment().format('YYYY-MM-DD'),
       receiptUrl: i === 0 ? '/icon-192.png' : '',
+      tags: i === 1 ? ['Đà Lạt'] : ([] as string[]),
     })),
   };
+  // Soft-deleted rows, so POST /transactions/{id}/restore can bring them back.
+  const deleted: typeof state.transactions = [];
   await page.addInitScript(
     ({ token }) => {
       if (!sessionStorage.getItem('test-initialized')) {
@@ -69,8 +72,17 @@ export async function setup(page: Page) {
       if (state.rejectSave)
         return route.fulfill({ status: 422, json: { message: 'Danh mục không hợp lệ' } });
       if (request.method() === 'DELETE') {
+        deleted.push(...state.transactions.filter((txn) => path.endsWith(txn.id)));
         state.transactions = state.transactions.filter((txn) => !path.endsWith(txn.id));
         return data({});
+      }
+      if (request.method() === 'POST' && path.endsWith('/restore')) {
+        const id = path.split('/')[2];
+        const index = deleted.findIndex((txn) => txn.id === id);
+        if (index < 0) return route.fulfill({ status: 404, json: { message: 'not found' } });
+        const [restored] = deleted.splice(index, 1);
+        state.transactions.unshift(restored);
+        return data(restored);
       }
       const payload = request.postDataJSON();
       state.writes.push(payload);
@@ -92,6 +104,7 @@ export async function setup(page: Page) {
       const items = state.transactions.filter(
         (item) =>
           item.description.toLowerCase().includes(keyword) &&
+          (!url.searchParams.get('tag') || item.tags?.includes(url.searchParams.get('tag')!)) &&
           (!url.searchParams.get('type') || item.type === url.searchParams.get('type'))
       );
       const pageNum = Number(url.searchParams.get('page') || 1),
@@ -119,6 +132,39 @@ export async function setup(page: Page) {
       });
     }
     if (path === '/reports/category-breakdown') return data({ items: [], totalExpense: 1170000 });
+    if (path === '/tags')
+      return data([
+        { name: 'Đà Lạt', count: 1, totalExpense: 45000, totalIncome: 0, lastUsed: '2026-11-01' },
+        {
+          name: 'Công tác',
+          count: 3,
+          totalExpense: 900000,
+          totalIncome: 0,
+          lastUsed: '2026-10-20',
+        },
+      ]);
+    if (path === '/reports/daily') {
+      const month = url.searchParams.get('month') || moment().format('YYYY-MM');
+      const start = moment(month, 'YYYY-MM');
+      const items = Array.from({ length: start.daysInMonth() }, (_, i) => {
+        const date = start
+          .clone()
+          .date(i + 1)
+          .format('YYYY-MM-DD');
+        const rows = state.transactions.filter((txn) => txn.transactionDate === date);
+        const sum = (type: string) =>
+          rows.filter((txn) => txn.type === type).reduce((total, txn) => total + txn.amount, 0);
+        return { date, income: sum('INCOME'), expense: sum('EXPENSE'), count: rows.length };
+      });
+      const totalExpense = items.reduce((total, item) => total + item.expense, 0);
+      return data({
+        month,
+        items,
+        totalIncome: items.reduce((total, item) => total + item.income, 0),
+        totalExpense,
+        maxExpense: Math.max(0, ...items.map((item) => item.expense)),
+      });
+    }
     if (path === '/reports/monthly-trend') return data({ items: [], averageExpense: 1170000 });
     if (path === '/targets/summary')
       return data({

@@ -38,9 +38,21 @@ export interface Transaction {
   status?: InvestmentStatus;
   realizedPnl?: number;
   receiptUrl?: string;
+  /** Free-form labels across categories (e.g. "Du lịch Đà Lạt"). */
+  tags?: string[];
   transactionDate: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/** A tag the user has used, with all-time totals (GET /tags, most recent first). */
+export interface TagSummary {
+  name: string;
+  count: number;
+  totalExpense: number;
+  totalIncome: number;
+  /** 'YYYY-MM-DD' of the latest transaction carrying the tag. */
+  lastUsed: string;
 }
 
 export interface SummaryReport {
@@ -73,6 +85,25 @@ export interface MonthlyTrendItem {
 export interface MonthlyTrendReport {
   averageExpense: number;
   items: MonthlyTrendItem[];
+}
+
+export interface DailyReportItem {
+  /** 'YYYY-MM-DD' */
+  date: string;
+  income: number;
+  expense: number;
+  /** Transactions of any type that day. */
+  count: number;
+}
+
+/** Every day of one month (days without transactions are zero). */
+export interface DailyReport {
+  /** 'YYYY-MM' */
+  month: string;
+  items: DailyReportItem[];
+  totalIncome: number;
+  totalExpense: number;
+  maxExpense: number;
 }
 
 export interface TransactionSummary {

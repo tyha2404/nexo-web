@@ -1,4 +1,9 @@
-import type { CategoryBreakdownReport, MonthlyTrendReport, SummaryReport } from '../commons/types';
+import type {
+  CategoryBreakdownReport,
+  DailyReport,
+  MonthlyTrendReport,
+  SummaryReport,
+} from '../commons/types';
 import { request } from './client';
 
 export const reportService = {
@@ -43,6 +48,14 @@ export const reportService = {
     options: RequestInit = {}
   ): Promise<MonthlyTrendReport> => {
     return request<MonthlyTrendReport>(`/reports/monthly-trend?months=${months}`, {
+      method: 'GET',
+      ...options,
+    });
+  },
+
+  /** Per-day income/expense of a month ('YYYY-MM'), for the spending calendar. */
+  daily: async (month: string, options: RequestInit = {}): Promise<DailyReport> => {
+    return request<DailyReport>(`/reports/daily?month=${encodeURIComponent(month)}`, {
       method: 'GET',
       ...options,
     });

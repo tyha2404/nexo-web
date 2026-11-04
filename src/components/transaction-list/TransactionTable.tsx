@@ -10,6 +10,7 @@ import {
   TABLE_CONTAINER,
   TITLE_CELL,
 } from './listStyles';
+import { TagChips } from './TagChips';
 import type { TransactionListProps } from './types';
 import {
   ACTION_BTN_DELETE,
@@ -36,6 +37,7 @@ export function TransactionTable({
   onEdit,
   onDelete,
   onViewReceipt,
+  onTagClick,
 }: TransactionListProps) {
   const isInvestment = activeType === TransactionType.INVESTMENT;
   return (
@@ -74,6 +76,7 @@ export function TransactionTable({
                       </button>
                     )}
                   </div>
+                  <TagChips tags={txn.tags} onTagClick={onTagClick} className="mt-0.5" />
                 </td>
                 <td className={`${TXN_AMOUNT} ${amountColor(activeType)}`}>
                   {getAmountSign(activeType)}

@@ -8,3 +8,5 @@ export { default as MonthFilter } from './MonthFilter';
 export type { MonthFilterProps } from './MonthFilter';
 export { ReceiptModal } from './ReceiptModal';
 export { ReceiptUploader } from './ReceiptUploader';
+export { TagInput } from './TagInput';
+export type { TagInputProps } from './TagInput';

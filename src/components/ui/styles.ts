@@ -62,6 +62,20 @@ export const MOBILE_ACTION_BTN = cx(MOBILE_ACTION_BASE, 'text-link!');
 export const MOBILE_ACTION_EDIT = MOBILE_ACTION_BASE;
 export const MOBILE_ACTION_DELETE = cx(MOBILE_ACTION_BASE, 'text-expense!');
 
+/**
+ * On phones, grows a small control's tappable area to ~44px tall with an invisible ::after,
+ * without changing its layout. Keep ≥ 8px between neighbours so the areas don't overlap much.
+ */
+export const TOUCH_HIT =
+  "relative mobile:after:absolute mobile:after:-inset-x-1 mobile:after:-inset-y-3 mobile:after:content-['']";
+
+/** A small pill button (filter chips, tag chips): 32px tall on phones, 44px tappable with TOUCH_HIT. */
+export const CHIP_BTN = cx(
+  'inline-flex max-w-full shrink-0 cursor-pointer items-center gap-1 rounded-sm text-[12px] leading-[1.3] select-none [-webkit-tap-highlight-color:transparent]',
+  'px-2 py-0.5 mobile:min-h-8 mobile:px-2.5 mobile:text-[13px]',
+  TOUCH_HIT
+);
+
 /* ---------- Forms ---------- */
 
 /** Field wrapper: styles its label and the input/select/textarea inside it. */
