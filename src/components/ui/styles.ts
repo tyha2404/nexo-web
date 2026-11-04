@@ -69,12 +69,20 @@ export const MOBILE_ACTION_DELETE = cx(MOBILE_ACTION_BASE, 'text-expense!');
 export const TOUCH_HIT =
   "relative mobile:after:absolute mobile:after:-inset-x-1 mobile:after:-inset-y-3 mobile:after:content-['']";
 
-/** A small pill button (filter chips, tag chips): 32px tall on phones, 44px tappable with TOUCH_HIT. */
+/**
+ * Small chip button in the VS Code badge style (same shape as WALLET_BADGE: 3px radius, panel
+ * border, toolbar-hover fill, 12px text, codicon at 12px). Used for removable filters and tags.
+ * 32px tall on phones and 44px tappable with TOUCH_HIT; 1px focusBorder ring on keyboard focus.
+ */
 export const CHIP_BTN = cx(
-  'inline-flex max-w-full shrink-0 cursor-pointer items-center gap-1 rounded-sm text-[12px] leading-[1.3] select-none [-webkit-tap-highlight-color:transparent]',
-  'px-2 py-0.5 mobile:min-h-8 mobile:px-2.5 mobile:text-[13px]',
+  'inline-flex max-w-full shrink-0 cursor-pointer items-center gap-1 rounded-xs border border-line bg-hover px-[6px] py-[2px] text-[12px] leading-4 font-normal text-main select-none [-webkit-tap-highlight-color:transparent] [&_svg]:shrink-0',
+  'transition-[background-color,color] duration-100 ease-out [&:hover]:bg-input-hover',
+  'focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-primary disabled:cursor-default disabled:opacity-50',
+  'mobile:min-h-8 mobile:px-2 mobile:text-[13px]',
   TOUCH_HIT
 );
+/** Quieter chip (an offer, not a value): no fill until hovered, description foreground. */
+export const CHIP_BTN_GHOST = 'bg-transparent text-muted [&:hover]:text-main';
 
 /* ---------- Forms ---------- */
 

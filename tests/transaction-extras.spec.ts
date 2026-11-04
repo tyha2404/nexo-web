@@ -105,7 +105,7 @@ test('tags: add by typing and from suggestions, then filter the list by a tag', 
   await tagField.fill('#da lat');
   await tagField.press('Enter');
   await expect(dialog).toBeVisible(); // return added the tag, it did not submit
-  await dialog.getByRole('button', { name: '+ Công tác' }).click();
+  await dialog.getByRole('button', { name: 'Thêm tag Công tác' }).click();
   await expect(dialog.getByRole('button', { name: 'Bỏ tag Đà Lạt' })).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Bỏ tag Công tác' })).toBeVisible();
   await dialog.getByRole('button', { name: /Thêm giao dịch/ }).click();
@@ -147,7 +147,7 @@ test('new transaction controls have 44px tap areas on phones', async ({ page, is
   const field = dialog.getByLabel('Tag (tùy chọn)');
   await field.fill('Công tác xa');
   await field.press('Enter');
-  for (const name of ['Bỏ tag Công tác xa', '+ Đà Lạt']) {
+  for (const name of ['Bỏ tag Công tác xa', 'Thêm tag Đà Lạt']) {
     expect(await tapHeight(dialog.getByRole('button', { name }))).toBeGreaterThanOrEqual(44);
   }
   // No sideways scrolling at phone width.

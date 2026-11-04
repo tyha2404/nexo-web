@@ -2,7 +2,17 @@ import moment from 'moment';
 import { useMemo, type ReactNode } from 'react';
 import { DATE_FORMAT_INPUT } from '../../commons/constants';
 import { formatCompactCurrency, formatCurrency, formatDate } from '../../commons/utils';
-import { BLOCK_GAP, CARD_PAD, CARD_SURFACE, CHIP_BTN, cx, MONEY, SPINNER_MICRO, X } from '../ui';
+import {
+  BLOCK_GAP,
+  CARD_PAD,
+  CARD_SURFACE,
+  CHIP_BTN,
+  cx,
+  MONEY,
+  PANEL_TITLE,
+  SPINNER_MICRO,
+  X,
+} from '../ui';
 
 const WEEKDAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
 
@@ -77,11 +87,11 @@ export function DayCalendar({
       aria-label={label}
     >
       <div className="flex min-h-7 items-center justify-between gap-2 mobile:min-h-8">
-        <h3 className="m-0 min-w-0 truncate text-[0.9rem] font-bold text-main">{title}</h3>
+        <h3 className={PANEL_TITLE}>{title}</h3>
         {selectedDay ? (
           <button
             type="button"
-            className={cx(CHIP_BTN, 'border border-primary bg-transparent text-main')}
+            className={CHIP_BTN}
             onClick={() => onSelectDay(null)}
             aria-label="Bỏ lọc theo ngày"
           >
@@ -91,7 +101,7 @@ export function DayCalendar({
         ) : (
           !loading &&
           !error && (
-            <span className={cx(MONEY, 'shrink-0 text-[12px] text-muted')}>
+            <span className={cx(MONEY, 'shrink-0 text-[12px] text-muted mobile:text-[13px]')}>
               {summary ?? `Tổng ${formatCurrency(total)}`}
             </span>
           )
@@ -106,9 +116,12 @@ export function DayCalendar({
             <div className={cx(SPINNER_MICRO, 'size-5')} />
           </div>
         ) : (
-          <div className="grid grid-cols-7 gap-1" role="grid">
+          <div className="grid grid-cols-7 gap-[3px] mobile:gap-1" role="grid">
             {WEEKDAYS.map((d) => (
-              <div key={d} className="pb-0.5 text-center text-[11px] font-semibold text-muted">
+              <div
+                key={d}
+                className="pb-0.5 text-center text-[11px] font-bold tracking-[0.04em] text-muted uppercase"
+              >
                 {d}
               </div>
             ))}
@@ -137,14 +150,15 @@ export function DayCalendar({
                   disabled={value === 0 && !marker && !selected}
                   onClick={() => onSelectDay(selected ? null : date)}
                   className={cx(
-                    'relative flex min-h-[3.1rem] min-w-0 flex-col justify-between rounded-sm border px-1 py-1 text-left mobile:min-h-[2.75rem] mobile:px-0.5',
-                    'cursor-pointer transition-[border-color,background-color] duration-100 enabled:[&:hover]:border-line-hover disabled:cursor-default',
+                    // VS Code list conventions: 3px radius, flat fill, 1px focusBorder ring for
+                    // the selection and keyboard focus, a quiet ring on hover (the fill is data).
+                    'relative flex min-h-[3.1rem] min-w-0 flex-col justify-between rounded-xs border-none px-1 py-1 text-left mobile:min-h-[2.75rem] mobile:px-0.5',
+                    'cursor-pointer transition-[background-color,outline-color] duration-100 ease-out disabled:cursor-default',
+                    'focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-primary',
                     selected
-                      ? 'border-primary!'
-                      : isToday
-                        ? 'border-line-hover'
-                        : 'border-transparent',
-                    shade === 0 && 'bg-input light:bg-hover'
+                      ? 'outline-1 -outline-offset-1 outline-primary'
+                      : 'enabled:[&:hover]:outline-1 enabled:[&:hover]:-outline-offset-1 enabled:[&:hover]:outline-line-hover',
+                    shade === 0 && (selected ? 'bg-list-active' : 'bg-hover light:bg-list-hover')
                   )}
                   style={
                     shade > 0
@@ -154,15 +168,16 @@ export function DayCalendar({
                 >
                   <span
                     className={cx(
-                      'text-[11px] leading-none',
-                      isToday ? 'font-bold text-main' : 'text-muted'
+                      'self-start text-[11px] leading-[14px]',
+                      // Today: a small filled badge, like VS Code's count badges.
+                      isToday ? 'rounded-xs bg-primary px-[3px] font-bold text-white' : 'text-muted'
                     )}
                   >
                     {moment(date, DATE_FORMAT_INPUT).date()}
                   </span>
                   {marker && (
                     <span
-                      className="absolute top-1 right-1 size-1.5 rounded-full bg-warning"
+                      className="absolute top-[5px] right-[5px] size-1.5 rounded-full bg-warning"
                       aria-hidden="true"
                     />
                   )}

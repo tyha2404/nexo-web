@@ -40,6 +40,9 @@ export const DASHBOARD_CARD = cx(
 export const CARD_SECTION_HEADER = 'mb-[0.65rem] flex items-center justify-between';
 export const CARD_TITLE_WRAP = 'flex items-center gap-[0.45rem]';
 /** h3 of a dashboard card (clickable link to the related page). */
+/** Heading of a panel that is not a link (VS Code pane header: 11px, bold, uppercase). */
+export const PANEL_TITLE =
+  'm-0 min-w-0 truncate text-[11px] font-bold tracking-[0.04em] text-main uppercase mobile:text-[12px]';
 export const CARD_TITLE =
   'mt-0 mb-3 cursor-pointer text-[11px] font-bold tracking-[0.04em] text-main uppercase transition-[color] duration-100 ease-out [&:hover]:text-link mobile:mb-2 mobile:text-[12px]';
 

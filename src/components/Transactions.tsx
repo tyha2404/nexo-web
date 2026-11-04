@@ -42,6 +42,7 @@ import {
   tabClass,
   TABS,
   TABS_NAV,
+  Tags,
   X,
 } from './ui';
 
@@ -487,14 +488,15 @@ export default function Transactions({
           <span>Đang lọc theo tag</span>
           <button
             type="button"
-            className={cx(CHIP_BTN, 'border border-primary bg-transparent text-main')}
+            className={CHIP_BTN}
             onClick={() => {
               setSelectedTag(null);
               setCurrentPage(1);
             }}
             aria-label={`Bỏ lọc tag ${selectedTag}`}
           >
-            #{selectedTag}
+            <Tags size={12} className="text-muted" />
+            {selectedTag}
             <X size={12} />
           </button>
         </div>

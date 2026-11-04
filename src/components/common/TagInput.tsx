@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent } from 'react';
-import { CHIP_BTN, cx, X } from '../ui';
+import { CHIP_BTN, CHIP_BTN_GHOST, cx, Plus, Tags, X } from '../ui';
 
 /** Same limits as the API (CreateTransactionRequest.tags). */
 export const MAX_TAGS = 10;
@@ -81,13 +81,15 @@ export function TagInput({ id, value, onChange, suggestions = [], disabled }: Ta
             <button
               key={tag}
               type="button"
-              className={cx(CHIP_BTN, 'border-none bg-hover text-main [&:hover]:bg-input-hover')}
+              className={CHIP_BTN}
               onClick={() => remove(tag)}
               disabled={disabled}
               aria-label={`Bỏ tag ${tag}`}
+              title={`Bỏ tag ${tag}`}
             >
-              <span className="truncate">#{tag}</span>
-              <X size={12} className="shrink-0 text-muted" />
+              <Tags size={12} className="text-muted" />
+              <span className="truncate">{tag}</span>
+              <X size={12} className="text-muted" />
             </button>
           ))}
         </div>
@@ -117,16 +119,16 @@ export function TagInput({ id, value, onChange, suggestions = [], disabled }: Ta
             <button
               key={tag}
               type="button"
-              className={cx(
-                CHIP_BTN,
-                'border border-dashed border-line-hover bg-transparent text-muted [&:hover]:text-main'
-              )}
+              className={cx(CHIP_BTN, CHIP_BTN_GHOST)}
+              aria-label={`Thêm tag ${tag}`}
+              title={`Thêm tag ${tag}`}
               // Keep focus in the field so its blur doesn't also add the half-typed text.
               onPointerDown={(e) => e.preventDefault()}
               onClick={() => add(tag)}
               disabled={disabled}
             >
-              <span className="truncate">+ {tag}</span>
+              <Plus size={12} />
+              <span className="truncate">{tag}</span>
             </button>
           ))}
         </div>

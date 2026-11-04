@@ -40,13 +40,13 @@ export const TABLE =
 export const TITLE_CELL = 'text-left font-medium';
 export const ACTIONS_CELL = 'whitespace-nowrap';
 
-/** A transaction tag ("#Đà Lạt"): quieter than the category badge. */
+/** A transaction tag: codicon `tag` + name, in the same badge shape as WALLET_BADGE. */
 export const TAG_CHIP = cx(
-  'inline-flex max-w-[12rem] items-center rounded-xs border-none bg-transparent p-0 align-middle text-[12px] leading-[1.2] text-muted',
-  'enabled:cursor-pointer enabled:[&:hover]:text-link',
-  // Tiny text link: on phones it gets a 44px-tall invisible tap area.
-  "mobile:enabled:after:absolute mobile:enabled:after:-inset-x-1 mobile:enabled:after:-inset-y-4 mobile:enabled:after:content-['']",
-  'relative',
+  'relative inline-flex max-w-[12rem] items-center gap-1 rounded-xs border border-line bg-hover px-[6px] py-[2px] align-middle text-[12px] leading-[1.2] font-normal text-main [&_svg]:shrink-0 [&_svg]:text-muted',
+  'enabled:cursor-pointer enabled:transition-[background-color] enabled:duration-100 enabled:[&:hover]:bg-input-hover',
+  'focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-primary',
+  // Small badge: on phones it gets a 44px-tall invisible tap area.
+  "mobile:enabled:after:absolute mobile:enabled:after:-inset-x-1 mobile:enabled:after:-inset-y-3 mobile:enabled:after:content-['']",
   NO_WRAP_BADGE
 );
 
