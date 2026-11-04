@@ -501,18 +501,16 @@ export default function Transactions({
       )}
 
       {/* 5. Daily calendar of the month (taps filter the list to one day) */}
-      {(activeType === TransactionType.EXPENSE || activeType === TransactionType.INCOME) && (
-        <SpendingCalendar
-          month={selectedMonth}
-          type={activeType}
-          refreshKey={refreshKey}
-          selectedDay={selectedDay}
-          onSelectDay={(day) => {
-            setSelectedDay(day);
-            setCurrentPage(1);
-          }}
-        />
-      )}
+      <SpendingCalendar
+        month={selectedMonth}
+        type={activeType}
+        refreshKey={refreshKey}
+        selectedDay={selectedDay}
+        onSelectDay={(day) => {
+          setSelectedDay(day);
+          setCurrentPage(1);
+        }}
+      />
 
       {/* 6. Transactions Table (Desktop) & Cards (Mobile) */}
       {loading ? (

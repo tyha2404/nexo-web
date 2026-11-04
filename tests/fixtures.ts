@@ -31,6 +31,60 @@ export async function setup(page: Page) {
       tags: i === 1 ? ['Đà Lạt'] : ([] as string[]),
     })),
   };
+  // One investment made today (kept after the 26 expenses so their indexes stay stable).
+  state.transactions.push({
+    id: 'inv-0',
+    userId: USER.id,
+    categoryId: INVESTMENT,
+    categoryName: 'Tiết kiệm',
+    amount: 3000000,
+    type: 'INVESTMENT',
+    description: 'Mua chứng chỉ quỹ',
+    transactionDate: moment().format('YYYY-MM-DD'),
+    receiptUrl: '',
+    tags: [],
+  });
+  // Debts of the current month: one I owe (repaid in part today, due at month end), one owed to me.
+  const monthStart = moment().startOf('month');
+  const debts = [
+    {
+      id: 'debt-payable',
+      userId: USER.id,
+      type: 'PAYABLE',
+      title: 'Vay anh Minh',
+      totalAmount: 5000000,
+      paidAmount: 1000000,
+      remaining: 4000000,
+      startDate: monthStart.format(),
+      dueDate: moment().endOf('month').startOf('day').format(),
+      status: 'PENDING',
+      repayments: [
+        {
+          id: 'rep-1',
+          debtId: 'debt-payable',
+          amount: 1000000,
+          paidAt: moment().format(),
+          createdAt: moment().format(),
+        },
+      ],
+      createdAt: monthStart.format(),
+      updatedAt: moment().format(),
+    },
+    {
+      id: 'debt-receivable',
+      userId: USER.id,
+      type: 'RECEIVABLE',
+      title: 'Cho Lan mượn',
+      totalAmount: 2000000,
+      paidAmount: 0,
+      remaining: 2000000,
+      startDate: moment().startOf('day').format(),
+      status: 'PENDING',
+      repayments: [],
+      createdAt: moment().format(),
+      updatedAt: moment().format(),
+    },
+  ];
   // Soft-deleted rows, so POST /transactions/{id}/restore can bring them back.
   const deleted: typeof state.transactions = [];
   await page.addInitScript(
@@ -154,7 +208,13 @@ export async function setup(page: Page) {
         const rows = state.transactions.filter((txn) => txn.transactionDate === date);
         const sum = (type: string) =>
           rows.filter((txn) => txn.type === type).reduce((total, txn) => total + txn.amount, 0);
-        return { date, income: sum('INCOME'), expense: sum('EXPENSE'), count: rows.length };
+        return {
+          date,
+          income: sum('INCOME'),
+          expense: sum('EXPENSE'),
+          investment: sum('INVESTMENT'),
+          count: rows.length,
+        };
       });
       const totalExpense = items.reduce((total, item) => total + item.expense, 0);
       return data({
@@ -178,6 +238,7 @@ export async function setup(page: Page) {
         investment: { targetAmount: 2000000, investedAmount: 1000000, remainingAmount: 1000000 },
         daysRemaining: 15,
       });
+    if (path === '/debts' && request.method() === 'GET') return data(debts);
     if (path === '/debts/summary')
       return data({ totalPayable: 0, totalReceivable: 0, overdueCount: 0, pendingCount: 0 });
     if (path === '/wallets') return data({ wallets: [] });

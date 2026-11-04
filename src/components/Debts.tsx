@@ -1,9 +1,10 @@
 import moment from 'moment';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 import {
+  formatCompactCurrency,
   formatCurrency,
   formatNumberInput,
   isTouchDevice,
@@ -16,7 +17,14 @@ import {
 import { useDataEvents, useModal } from '../hooks';
 import { debtService } from '../services';
 import type { Debt, DebtType } from '../types/debt';
-import { ConfirmModal, DatePickerField, EmptyState, ListSkeleton, MonthFilter } from './common';
+import {
+  ConfirmModal,
+  DatePickerField,
+  DayCalendar,
+  EmptyState,
+  ListSkeleton,
+  MonthFilter,
+} from './common';
 import {
   ACTIONS_CELL,
   CATEGORY_BADGE,
@@ -70,16 +78,75 @@ import {
   SEARCH_ICON,
   SEARCH_INPUT,
   SEARCH_WRAPPER,
+  SlidingTabs,
   statValueClass,
   SUMMARY_GRID,
   SUMMARY_STAT_CARD,
   SUMMARY_STAT_HEADER,
+  SUMMARY_STAT_SUBTITLE,
   SUMMARY_STAT_TITLE,
+  tabClass,
+  TABS,
+  TABS_NAV,
   Trash2,
+  TrendingUp,
   TXN_AMOUNT,
   TXN_DATE,
   X,
 } from './ui';
+
+const DEBT_TABS: { type: DebtType; label: string }[] = [
+  { type: 'PAYABLE', label: 'Tôi nợ' },
+  { type: 'RECEIVABLE', label: 'Người khác nợ tôi' },
+];
+
+/** Local calendar day ('YYYY-MM-DD') of an API date, or null. */
+const dayOf = (value?: string) => (value ? moment(value).format('YYYY-MM-DD') : null);
+
+/** Whether the debt was started, repaid or falls due on `day`. */
+const debtTouchesDay = (debt: Debt, day: string) =>
+  dayOf(debt.startDate || debt.createdAt) === day ||
+  dayOf(debt.dueDate) === day ||
+  (debt.repayments ?? []).some((r) => dayOf(r.paidAt) === day);
+
+/**
+ * Calendar data for one debt type and month: money moved per day (new debts on their start
+ * date + repayments on their payment date) and a dot on due dates of unfinished debts.
+ */
+function buildDebtCalendar(debts: Debt[], month: string, isPayable: boolean) {
+  const inMonth = (day: string | null): day is string => !!day && day.startsWith(month);
+  const opened: Record<string, number> = {};
+  const repaid: Record<string, number> = {};
+  const due: Record<string, string[]> = {};
+  for (const debt of debts) {
+    const start = dayOf(debt.startDate || debt.createdAt);
+    if (inMonth(start)) opened[start] = (opened[start] ?? 0) + debt.totalAmount;
+    for (const r of debt.repayments ?? []) {
+      const paid = dayOf(r.paidAt);
+      if (inMonth(paid)) repaid[paid] = (repaid[paid] ?? 0) + r.amount;
+    }
+    const dueDay = dayOf(debt.dueDate);
+    if (inMonth(dueDay) && debt.status !== 'COMPLETED') (due[dueDay] ??= []).push(debt.title);
+  }
+  const openWord = isPayable ? 'Vay' : 'Cho vay';
+  const repayWord = isPayable ? 'Trả' : 'Thu';
+  const values: Record<string, number> = {};
+  const details: Record<string, string> = {};
+  for (const day of new Set([...Object.keys(opened), ...Object.keys(repaid)])) {
+    values[day] = (opened[day] ?? 0) + (repaid[day] ?? 0);
+    details[day] = [
+      opened[day] && `${openWord} ${formatCurrency(opened[day])}`,
+      repaid[day] && `${repayWord} ${formatCurrency(repaid[day])}`,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  }
+  const markers: Record<string, string> = {};
+  for (const [day, titles] of Object.entries(due)) markers[day] = `Đến hạn: ${titles.join(', ')}`;
+  const sum = (m: Record<string, number>) => Object.values(m).reduce((a, b) => a + b, 0);
+  const summary = `${openWord} ${formatCompactCurrency(sum(opened))} · ${repayWord} ${formatCompactCurrency(sum(repaid))}`;
+  return { values, details, markers, summary };
+}
 
 export default function Debts() {
   const [debts, setDebts] = useState<Debt[]>([]);
@@ -89,7 +156,10 @@ export default function Debts() {
   // Search, Month & Filters
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<string>(() => moment().format('YYYY-MM'));
-  const [filterType, setFilterType] = useState<string>(''); // '' | 'PAYABLE' | 'RECEIVABLE'
+  // Pill tabs: which side of the ledger is listed
+  const [activeType, setActiveType] = useState<DebtType>('PAYABLE');
+  // Day picked in the calendar ('YYYY-MM-DD'); lists debts started, repaid or due that day.
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
@@ -114,16 +184,15 @@ export default function Debts() {
     try {
       setLoading(true);
       setError(null);
-      const debtList = await debtService.getDebts(
-        filterType ? (filterType as DebtType) : undefined
-      );
+      // Both types at once: switching tabs is then instant and needs no refetch.
+      const debtList = await debtService.getDebts();
       setDebts(Array.isArray(debtList) ? debtList : (debtList as { data?: Debt[] })?.data || []);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Không thể tải dữ liệu khoản vay/nợ');
     } finally {
       setLoading(false);
     }
-  }, [filterType]);
+  }, []);
 
   useEffect(() => {
     fetchDebtData();
@@ -234,29 +303,45 @@ export default function Debts() {
 
   const startOfMonth = moment(selectedMonth, 'YYYY-MM').startOf('month');
   const endOfMonth = moment(selectedMonth, 'YYYY-MM').endOf('month');
+  const isPayableTab = activeType === 'PAYABLE';
 
-  const filteredDebts = (Array.isArray(debts) ? debts : []).filter((d) => {
-    if (!d) return false;
-    const debtTitle = d.title || '';
+  const typeDebts = useMemo(
+    () => (Array.isArray(debts) ? debts : []).filter((d) => d && d.type === activeType),
+    [debts, activeType]
+  );
+
+  const calendar = useMemo(
+    () => buildDebtCalendar(typeDebts, selectedMonth, activeType === 'PAYABLE'),
+    [typeDebts, selectedMonth, activeType]
+  );
+
+  const filteredDebts = typeDebts.filter((d) => {
+    const query = searchQuery.toLowerCase();
     const matchSearch =
-      debtTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (d.notes || '').toLowerCase().includes(searchQuery.toLowerCase());
+      (d.title || '').toLowerCase().includes(query) ||
+      (d.notes || '').toLowerCase().includes(query);
+    if (!matchSearch) return false;
+    // A picked day lists every debt with activity that day, whatever month it started in.
+    if (selectedDay) return debtTouchesDay(d, selectedDay);
 
     const debtDate = d.startDate || d.createdAt;
-    if (!debtDate) return matchSearch;
-    const m = moment(debtDate);
-    const matchMonth = m.isBetween(startOfMonth, endOfMonth, undefined, '[]');
-
-    return matchSearch && matchMonth;
+    if (!debtDate) return true;
+    return moment(debtDate).isBetween(startOfMonth, endOfMonth, undefined, '[]');
   });
 
-  const displayPayable = filteredDebts
-    .filter((d) => d.type === 'PAYABLE')
-    .reduce((sum, d) => sum + (d.remaining ?? d.totalAmount ?? 0), 0);
+  const totalRemaining = filteredDebts.reduce(
+    (sum, d) => sum + Math.abs(d.remaining ?? d.totalAmount ?? 0),
+    0
+  );
+  const totalPaid = filteredDebts.reduce((sum, d) => sum + (d.paidAmount ?? 0), 0);
+  const overdueCount = filteredDebts.filter((d) => d.status === 'OVERDUE').length;
 
-  const displayReceivable = filteredDebts
-    .filter((d) => d.type === 'RECEIVABLE')
-    .reduce((sum, d) => sum + (d.remaining ?? d.totalAmount ?? 0), 0);
+  const switchTab = (type: DebtType) => {
+    if (type === activeType) return;
+    setActiveType(type);
+    setSelectedDay(null);
+    setSearchQuery('');
+  };
 
   return (
     <div className={PAGE_VIEW}>
@@ -265,11 +350,30 @@ export default function Debts() {
           <h2 className={PAGE_TITLE_H2}>Vay & Nợ</h2>
         </div>
         <div className={HEADER_ACTIONS}>
-          <button className={PAGE_HEADER_BTN} onClick={() => openCreateModal('PAYABLE')}>
+          <button className={PAGE_HEADER_BTN} onClick={() => openCreateModal(activeType)}>
             <Plus size={16} /> Tạo khoản nợ mới
           </button>
         </div>
       </header>
+
+      {/* Type tabs (same pill tabs as Chi tiêu / Thu nhập / Đầu tư) */}
+      <div className={`${TABS_NAV} animate-fade-in`}>
+        <SlidingTabs className={TABS} role="tablist" aria-label="Loại khoản nợ">
+          {DEBT_TABS.map(({ type, label }) => (
+            <button
+              key={type}
+              type="button"
+              role="tab"
+              aria-selected={activeType === type}
+              className={tabClass(activeType === type)}
+              onClick={() => switchTab(type)}
+            >
+              {type === 'PAYABLE' ? <Handshake size={16} /> : <TrendingUp size={16} />}
+              <span>{label}</span>
+            </button>
+          ))}
+        </SlidingTabs>
+      </div>
 
       {error && (
         <div className={cx(ALERT_ERROR, 'animate-fade-in')} role="alert">
@@ -277,29 +381,46 @@ export default function Debts() {
         </div>
       )}
 
-      {/* Summary Cards Grid */}
+      {/* Summary Cards Grid (follows the tab, month/day and search) */}
       <div className={cx(SUMMARY_GRID, 'animate-fade-in')}>
         <div className={SUMMARY_STAT_CARD}>
           <div className={SUMMARY_STAT_HEADER}>
-            <span className={SUMMARY_STAT_TITLE}>Tôi nợ</span>
+            <span className={SUMMARY_STAT_TITLE}>
+              {isPayableTab ? 'Còn phải trả' : 'Còn phải thu'}
+            </span>
           </div>
-          <div className={statValueClass('expense')}>
-            {formatCurrency(Math.abs(displayPayable))}
+          <div className={statValueClass(isPayableTab ? 'expense' : 'income')}>
+            {formatCurrency(totalRemaining)}
           </div>
         </div>
 
         <div className={SUMMARY_STAT_CARD}>
           <div className={SUMMARY_STAT_HEADER}>
-            <span className={SUMMARY_STAT_TITLE}>Người khác nợ tôi</span>
+            <span className={SUMMARY_STAT_TITLE}>{isPayableTab ? 'Đã trả' : 'Đã thu'}</span>
           </div>
-          <div className={statValueClass('income')}>
-            {formatCurrency(Math.abs(displayReceivable))}
+          <div className={statValueClass()}>{formatCurrency(totalPaid)}</div>
+        </div>
+
+        <div className={SUMMARY_STAT_CARD}>
+          <div className={SUMMARY_STAT_HEADER}>
+            <span className={SUMMARY_STAT_TITLE}>Số khoản</span>
           </div>
+          <div className={statValueClass()}>{filteredDebts.length} khoản</div>
+          {overdueCount > 0 && (
+            <div className={SUMMARY_STAT_SUBTITLE}>{overdueCount} khoản quá hạn</div>
+          )}
         </div>
       </div>
 
       {/* Filter and Search Bar - 100% Matching Transactions.tsx */}
-      <div className={cx(filterBarClass(), 'animate-fade-in')}>
+      {/* Search + month only (the type is the tab above), so two columns on wide screens */}
+      <div
+        className={cx(
+          filterBarClass(),
+          'min-[1024px]:grid-cols-[2fr_1fr]! mobile:[&>*:last-child]:col-span-full',
+          'animate-fade-in'
+        )}
+      >
         <div className={SEARCH_WRAPPER}>
           <Search size={16} className={SEARCH_ICON} />
           <input
@@ -312,32 +433,31 @@ export default function Debts() {
           />
         </div>
 
-        <div className="category-select-wrapper w-full">
-          <Select
-            options={[
-              { value: '', label: 'Tất cả loại nợ' },
-              { value: 'PAYABLE', label: 'Tôi Nợ (Phải Trả)' },
-              { value: 'RECEIVABLE', label: 'Người Khác Nợ (Phải Thu)' },
-            ]}
-            value={
-              [
-                { value: '', label: 'Tất cả loại nợ' },
-                { value: 'PAYABLE', label: 'Tôi Nợ (Phải Trả)' },
-                { value: 'RECEIVABLE', label: 'Người Khác Nợ (Phải Thu)' },
-              ].find((opt) => opt.value === filterType) || null
-            }
-            onChange={(option) => setFilterType(option ? option.value : '')}
-            classNamePrefix="react-select"
-            isSearchable={!isTouchDevice()}
-            placeholder="Loại nợ"
-            menuPortalTarget={document.body}
+        <div>
+          <MonthFilter
+            value={selectedMonth}
+            onChange={(month) => {
+              setSelectedMonth(month);
+              setSelectedDay(null);
+            }}
           />
         </div>
-
-        <div>
-          <MonthFilter value={selectedMonth} onChange={setSelectedMonth} />
-        </div>
       </div>
+
+      {/* Daily calendar: money moved per day, dot = due date; tap a day to filter the list */}
+      <DayCalendar
+        month={selectedMonth}
+        values={calendar.values}
+        details={calendar.details}
+        markers={calendar.markers}
+        summary={calendar.summary}
+        tone={isPayableTab ? 'var(--expense)' : 'var(--income)'}
+        label={isPayableTab ? 'Lịch khoản tôi nợ theo ngày' : 'Lịch khoản cho vay theo ngày'}
+        emptyText="không có giao dịch nợ"
+        selectedDay={selectedDay}
+        onSelectDay={setSelectedDay}
+        loading={loading && debts.length === 0}
+      />
 
       {loading ? (
         <ListSkeleton label="Đang tải danh sách khoản vay" />
@@ -345,10 +465,10 @@ export default function Debts() {
         <EmptyState
           className="animate-fade-in"
           icon={<Handshake />}
-          title="Không có khoản vay/nợ nào"
-          description="Tạo khoản nợ mới hoặc đổi bộ lọc để theo dõi các khoản cần trả và cần thu."
-          actionLabel="Tạo khoản nợ mới"
-          onAction={() => openCreateModal('PAYABLE')}
+          title={isPayableTab ? 'Không có khoản bạn đang nợ' : 'Không có khoản ai nợ bạn'}
+          description="Tạo khoản mới hoặc đổi tháng / ngày để xem các khoản khác."
+          actionLabel={isPayableTab ? 'Ghi khoản tôi nợ' : 'Ghi khoản cho vay'}
+          onAction={() => openCreateModal(activeType)}
         />
       ) : (
         <>
@@ -360,7 +480,6 @@ export default function Debts() {
               <thead>
                 <tr>
                   <th>Khoản nợ / Đối tác</th>
-                  <th>Loại</th>
                   <th className="text-right!">Tổng số tiền</th>
                   <th className="text-right!">Đã thanh toán</th>
                   <th className="text-right!">Còn lại</th>
@@ -384,11 +503,6 @@ export default function Debts() {
                         {debt.notes && (
                           <div className="mt-0.5 text-[0.78rem] text-muted">{debt.notes}</div>
                         )}
-                      </td>
-                      <td>
-                        <span className={CATEGORY_BADGE}>
-                          {debt.type === 'PAYABLE' ? 'Tôi nợ' : 'Phải thu'}
-                        </span>
                       </td>
                       <td className={TXN_AMOUNT}>{formatCurrency(debt.totalAmount)}</td>
                       <td className={cx('cell-paid', TXN_AMOUNT)}>
@@ -498,7 +612,6 @@ export default function Debts() {
 
                   <div className={MOBILE_CARD_FOOTER}>
                     <div className={MOBILE_CARD_TAGS}>
-                      <span className={CATEGORY_BADGE}>{isPayable ? 'Tôi nợ' : 'Phải thu'}</span>
                       <span className={CATEGORY_BADGE}>
                         {debt.status === 'COMPLETED'
                           ? '🎉 Đã xong'

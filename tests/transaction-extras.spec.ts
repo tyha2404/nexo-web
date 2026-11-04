@@ -29,11 +29,9 @@ test('calendar shows daily totals and filters the list to a day', async ({ page 
   const state = await setup(page);
   await page.goto('/#/transactions');
   const calendar = page.getByRole('region', { name: 'Lịch chi tiêu theo ngày' });
-  const toggle = calendar.getByRole('button', { name: 'Lịch theo ngày' });
-  // Open by default on desktop; collapsed on phones so the list stays in view.
-  const isPhone = test.info().project.name.startsWith('iphone');
-  await expect(toggle).toHaveAttribute('aria-expanded', isPhone ? 'false' : 'true');
-  if (isPhone) await toggle.click();
+  // Always shown: no collapse button, on phones and desktop alike.
+  await expect(calendar.getByRole('grid')).toBeVisible();
+  await expect(calendar.getByRole('button', { name: 'Lịch theo ngày' })).toHaveCount(0);
 
   const today = moment();
   // 26 fixture expenses of 45.000 đ, all dated today.
@@ -63,24 +61,19 @@ test('calendar shows daily totals and filters the list to a day', async ({ page 
     .toBe(true);
   const clearDay = calendar.getByRole('button', { name: 'Bỏ lọc theo ngày' });
   await expect(clearDay).toBeVisible();
-  if (isPhone) {
-    // Picking a day folds the calendar on phones so the filtered list is in view.
-    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    await toggle.click();
-  }
+  // Picking a day keeps the calendar open.
+  await expect(calendar.getByRole('grid')).toBeVisible();
   await expect(cell).toHaveAttribute('aria-selected', 'true');
 
   await clearDay.click();
   await expect(clearDay).toHaveCount(0);
   await expect(cell).toHaveAttribute('aria-selected', 'false');
 
-  // Collapsing hides the grid and is remembered.
-  await toggle.click();
-  await expect(calendar.getByRole('grid')).toHaveCount(0);
+  // Still shown after a reload.
   await page.reload();
   await expect(
     page.getByRole('region', { name: 'Lịch chi tiêu theo ngày' }).getByRole('grid')
-  ).toHaveCount(0);
+  ).toBeVisible();
 });
 
 test('tags: add by typing and from suggestions, then filter the list by a tag', async ({
@@ -137,15 +130,12 @@ test('new transaction controls have 44px tap areas on phones', async ({ page, is
   await setup(page);
   await page.goto('/#/transactions');
   const calendar = page.getByRole('region', { name: 'Lịch chi tiêu theo ngày' });
-  const toggle = calendar.getByRole('button', { name: 'Lịch theo ngày' });
   const tagChip = page
     .getByRole('button', { name: 'Lọc theo tag Đà Lạt' })
     .locator('visible=true')
     .first();
-  expect(await tapHeight(toggle)).toBeGreaterThanOrEqual(44);
   expect(await tapHeight(tagChip)).toBeGreaterThanOrEqual(44);
 
-  await toggle.click();
   const day = calendar.getByRole('gridcell', { disabled: false }).first();
   expect(await tapHeight(day)).toBeGreaterThanOrEqual(44);
   await day.click();
@@ -164,4 +154,53 @@ test('new transaction controls have 44px tap areas on phones', async ({ page, is
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
     page.viewportSize()!.width
   );
+});
+
+test('investment tab has its own daily calendar', async ({ page }) => {
+  await setup(page);
+  await page.goto('/#/transactions/investment');
+  const calendar = page.getByRole('region', { name: 'Lịch đầu tư theo ngày' });
+  await expect(calendar.getByRole('grid')).toBeVisible();
+  const today = calendar.getByRole('gridcell', {
+    name: new RegExp(`^${moment().format('DD/MM/YYYY')}: 3\\.000\\.000`),
+  });
+  await expect(today).toContainText('3 tr');
+});
+
+test('debts page: type tabs, daily calendar with due dates, day filter', async ({ page }) => {
+  await setup(page);
+  await page.goto('/#/debts');
+  const view = page.locator('.content-view:visible');
+  const visible = (text: string) => view.getByText(text, { exact: true }).locator('visible=true');
+
+  // Tabs replace the old "Loại nợ" dropdown; "Tôi nợ" is first.
+  await expect(view.getByRole('tab', { name: 'Tôi nợ' })).toHaveAttribute('aria-selected', 'true');
+  await expect(visible('Vay anh Minh').first()).toBeVisible();
+  await expect(view.getByText('Cho Lan mượn')).toHaveCount(0);
+
+  const calendar = view.getByRole('region', { name: 'Lịch khoản tôi nợ theo ngày' });
+  await expect(calendar.getByRole('grid')).toBeVisible();
+  // The repayment made today, and the due date at month end marked with a dot.
+  const todayCell = calendar.getByRole('gridcell', {
+    name: new RegExp(`^${moment().format('DD/MM/YYYY')}: .*Trả 1\\.000\\.000`),
+  });
+  await expect(todayCell).toBeEnabled();
+  await expect(
+    calendar.getByRole('gridcell', {
+      name: new RegExp(`^${moment().endOf('month').format('DD/MM/YYYY')}: .*Đến hạn: Vay anh Minh`),
+    })
+  ).toBeEnabled();
+
+  // Picking the repayment day lists the debt; the calendar stays open.
+  await todayCell.click();
+  await expect(calendar.getByRole('button', { name: 'Bỏ lọc theo ngày' })).toBeVisible();
+  await expect(calendar.getByRole('grid')).toBeVisible();
+  await expect(visible('Vay anh Minh').first()).toBeVisible();
+
+  // Switching tab clears the day and shows the other side.
+  await view.getByRole('tab', { name: 'Người khác nợ tôi' }).click();
+  await expect(visible('Cho Lan mượn').first()).toBeVisible();
+  await expect(view.getByText('Vay anh Minh')).toHaveCount(0);
+  await expect(view.getByRole('region', { name: 'Lịch khoản cho vay theo ngày' })).toBeVisible();
+  await expect(view.getByRole('button', { name: 'Bỏ lọc theo ngày' })).toHaveCount(0);
 });

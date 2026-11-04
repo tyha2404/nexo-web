@@ -92,6 +92,8 @@ export interface DailyReportItem {
   date: string;
   income: number;
   expense: number;
+  /** Amount invested that day (INVESTMENT of any status). */
+  investment: number;
   /** Transactions of any type that day. */
   count: number;
 }
@@ -103,6 +105,7 @@ export interface DailyReport {
   items: DailyReportItem[];
   totalIncome: number;
   totalExpense: number;
+  totalInvestment: number;
   maxExpense: number;
 }
 
