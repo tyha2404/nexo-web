@@ -7,11 +7,10 @@
   /* Phones: 40px controls (16px text so iOS never zooms); desktop overrides below. */
   --control-height: 40px;
   --control-font-size: 16px;
-  /* VS Code workbench UI font and editor font stacks */
+  /* The app's only font (VS Code workbench UI stack), for text and numbers alike. */
   --font-sans:
     -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans',
     sans-serif;
-  --font-mono: Menlo, Monaco, Consolas, 'Droid Sans Mono', 'Courier New', monospace;
 
   /* Surfaces */
   --bg-app: #1f1f1f; /* editor.background */

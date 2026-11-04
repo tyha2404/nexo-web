@@ -74,12 +74,16 @@
   }
 
   /* Without preflight, browsers give form controls their own font (Arial in Chrome,
-     system-ui in Safari). Inherit the app font instead; utilities like font-mono still win. */
+     system-ui in Safari) and code/kbd a monospace one. Inherit the app's single font. */
   button,
   input,
   select,
   textarea,
-  optgroup {
+  optgroup,
+  code,
+  kbd,
+  samp,
+  pre {
     font-family: inherit;
     letter-spacing: inherit;
   }

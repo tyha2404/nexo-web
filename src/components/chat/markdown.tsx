@@ -18,7 +18,7 @@ export const formatInlineText = (text: string): ReactNode => {
       return (
         <code
           key={partIdx}
-          className="py-px px-[5px] rounded-xs text-[11.5px] font-mono bg-[rgba(0,0,0,0.25)] border border-line text-[var(--text-link)] light:bg-[var(--btn-secondary-bg)] light:border-[var(--border-hover)] light:text-[var(--primary)]"
+          className="py-px px-[5px] rounded-xs text-[11.5px] bg-[rgba(0,0,0,0.25)] border border-line text-[var(--text-link)] light:bg-[var(--btn-secondary-bg)] light:border-[var(--border-hover)] light:text-[var(--primary)]"
         >
           {part.slice(1, -1)}
         </code>

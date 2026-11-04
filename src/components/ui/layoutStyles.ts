@@ -28,16 +28,17 @@
  *   - Empty: a page list shows <EmptyState>; a panel shows EMPTY_BOX.
  *
  * Typography:
- *   - All text, dates included, uses the system UI font (--font-sans, set on body).
+ *   - One font for everything, text and numbers alike: the system UI font (--font-sans, set
+ *     on body). Never add a second family (no font-mono, no web fonts).
  *   - A standalone figure (an amount or % change shown as a value: stat tile, table cell,
- *     list-row amount, hero numbers, badges) uses MONEY: --font-mono, regular weight, tabular
+ *     list-row amount, hero numbers, badges) uses MONEY: same font, regular weight, tabular
  *     digits. Meaning is carried by colour (text-income / text-expense), never by weight.
  *   - An amount inside a sentence ("Đã chi: 1.170.000 đ / 5.000.000 đ") keeps the sentence font.
  */
 import { cx } from './styles';
 
 /** A standalone figure: amounts and % changes shown as values. */
-export const MONEY = 'font-mono font-normal tabular-nums tracking-normal';
+export const MONEY = 'font-normal tabular-nums tracking-normal';
 
 /** Space below every top-level block of a page (12px, 10px on phones). */
 export const BLOCK_GAP = 'mb-3 mobile:mb-2.5';
