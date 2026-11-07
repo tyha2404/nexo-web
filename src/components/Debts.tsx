@@ -114,15 +114,17 @@ const debtTouchesDay = (debt: Debt, day: string) =>
 /** Dot legend of the debt calendar, worded for the side of the ledger. */
 const debtMarkerLegend = (isPayable: boolean): Record<DayMarkerTone, string> => ({
   success: isPayable ? 'Đã trả' : 'Đã thu',
-  warning: isPayable ? 'Đến hạn, chưa trả' : 'Đến hạn, chưa thu',
+  warning: isPayable ? 'Chưa trả xong' : 'Chưa thu đủ',
   danger: isPayable ? 'Quá hạn chưa trả' : 'Quá hạn chưa thu',
 });
 
 /**
  * Calendar data for one debt type and month: money moved per day (new debts on their start
- * date + repayments on their payment date) and status dots. Green: a repayment was made that
- * day, or the debt due that day is settled. Amber: due that day (today or later), not settled.
- * Red: due that day, already past and still not settled.
+ * date + repayments on their payment date) and status icons:
+ *   - start day: the debt's current status, so a debt listed this month always shows whether
+ *     it is settled, even when it was repaid in another month or has no due date;
+ *   - repayment day: green (money paid / received that day);
+ *   - due day: green if settled, amber if still open, red if the date has passed.
  */
 function buildDebtCalendar(debts: Debt[], month: string, isPayable: boolean) {
   const inMonth = (day: string | null): day is string => !!day && day.startsWith(month);
@@ -134,9 +136,20 @@ function buildDebtCalendar(debts: Debt[], month: string, isPayable: boolean) {
     (markers[day] ??= []).push({ tone, text });
   const paidWord = isPayable ? 'Đã trả' : 'Đã thu';
   const unpaidWord = isPayable ? 'chưa trả' : 'chưa thu';
+  const settledWord = isPayable ? 'Đã trả xong' : 'Đã thu đủ';
+  const unsettledWord = isPayable ? 'Chưa trả xong' : 'Chưa thu đủ';
   for (const debt of debts) {
+    const settled = debt.status === 'COMPLETED';
+    const dueDay = dayOf(debt.dueDate);
+    const late = !settled && (debt.status === 'OVERDUE' || (!!dueDay && dueDay < today));
+    const left = formatCurrency(Math.abs(debt.remaining ?? debt.totalAmount));
     const start = dayOf(debt.startDate || debt.createdAt);
-    if (inMonth(start)) opened[start] = (opened[start] ?? 0) + debt.totalAmount;
+    if (inMonth(start)) {
+      opened[start] = (opened[start] ?? 0) + debt.totalAmount;
+      if (settled) mark(start, 'success', `${settledWord}: ${debt.title}`);
+      else if (late) mark(start, 'danger', `Quá hạn, ${unpaidWord} ${left}: ${debt.title}`);
+      else mark(start, 'warning', `${unsettledWord}, còn ${left}: ${debt.title}`);
+    }
     // This debt's repayments per day, so several payments on one day read as one line.
     const paidOn: Record<string, number> = {};
     for (const r of debt.repayments ?? []) {
@@ -148,13 +161,11 @@ function buildDebtCalendar(debts: Debt[], month: string, isPayable: boolean) {
     for (const [day, amount] of Object.entries(paidOn)) {
       mark(day, 'success', `${paidWord} ${formatCurrency(amount)}: ${debt.title}`);
     }
-    const dueDay = dayOf(debt.dueDate);
-    if (!inMonth(dueDay)) continue;
-    if (debt.status === 'COMPLETED') {
-      mark(dueDay, 'success', `${isPayable ? 'Đã trả xong' : 'Đã thu đủ'}: ${debt.title}`);
+    // Due on the start day: the start-day icon already says it.
+    if (!inMonth(dueDay) || dueDay === start) continue;
+    if (settled) {
+      mark(dueDay, 'success', `${settledWord}: ${debt.title}`);
     } else {
-      const left = formatCurrency(Math.abs(debt.remaining ?? debt.totalAmount));
-      const late = debt.status === 'OVERDUE' || dueDay < today;
       mark(
         dueDay,
         late ? 'danger' : 'warning',

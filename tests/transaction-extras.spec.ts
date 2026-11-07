@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import moment from 'moment';
-import { chooseOption, openTransactionForm, setup } from './fixtures';
+import { chooseOption, openTransactionForm, setup, USER } from './fixtures';
 
 const FIRST = 'Ăn sáng cùng gia đình tại quán gần nhà 0';
 
@@ -195,7 +195,15 @@ test('debts page: type tabs, daily calendar with due dates, day filter', async (
     })
   ).toBeEnabled();
   // Legend lists only the dot colours used this month.
-  await expect(calendar.getByRole('listitem')).toHaveText(['Đến hạn, chưa trả', 'Đã trả']);
+  await expect(calendar.getByRole('listitem')).toHaveText(['Chưa trả xong', 'Đã trả']);
+  // The borrowing day carries the debt's current status too.
+  await expect(
+    calendar.getByRole('gridcell', {
+      name: new RegExp(
+        `^${moment().startOf('month').format('DD/MM/YYYY')}: .*Chưa trả xong, còn 4\\.000\\.000.*: Vay anh Minh`
+      ),
+    })
+  ).toBeEnabled();
 
   // Picking the repayment day lists the debt; the calendar stays open.
   await todayCell.click();
@@ -209,4 +217,49 @@ test('debts page: type tabs, daily calendar with due dates, day filter', async (
   await expect(view.getByText('Vay anh Minh')).toHaveCount(0);
   await expect(view.getByRole('region', { name: 'Lịch khoản cho vay theo ngày' })).toBeVisible();
   await expect(view.getByRole('button', { name: 'Bỏ lọc theo ngày' })).toHaveCount(0);
+});
+
+test('debts calendar: a debt repaid in another month is still ticked on its borrowing day', async ({
+  page,
+}) => {
+  await setup(page);
+  const start = moment().startOf('month');
+  const paidAt = start.clone().add(1, 'month').date(2).format();
+  // Borrowed this month, no due date, settled in another month: before the fix nothing in
+  // this month's calendar said it was done, though the list showed "Đã xong".
+  await page.route('**/api/v1/debts', (route) =>
+    route.fulfill({
+      json: {
+        success: true,
+        data: [
+          {
+            id: 'debt-done',
+            userId: USER.id,
+            type: 'PAYABLE',
+            title: 'Mượn chị Hoa',
+            totalAmount: 2000000,
+            paidAmount: 2000000,
+            remaining: 0,
+            startDate: start.format(),
+            status: 'COMPLETED',
+            repayments: [
+              { id: 'r', debtId: 'debt-done', amount: 2000000, paidAt, createdAt: paidAt },
+            ],
+            createdAt: start.format(),
+            updatedAt: paidAt,
+          },
+        ],
+      },
+    })
+  );
+  await page.goto('/#/debts');
+  const calendar = page
+    .locator('.content-view:visible')
+    .getByRole('region', { name: 'Lịch khoản tôi nợ theo ngày' });
+  await expect(
+    calendar.getByRole('gridcell', {
+      name: new RegExp(`^${start.format('DD/MM/YYYY')}: .*Đã trả xong: Mượn chị Hoa`),
+    })
+  ).toBeVisible();
+  await expect(calendar.getByRole('listitem')).toHaveText(['Đã trả']);
 });
