@@ -21,6 +21,8 @@ import {
   ConfirmModal,
   DatePickerField,
   DayCalendar,
+  type DayMarker,
+  type DayMarkerTone,
   EmptyState,
   ListSkeleton,
   MonthFilter,
@@ -109,24 +111,56 @@ const debtTouchesDay = (debt: Debt, day: string) =>
   dayOf(debt.dueDate) === day ||
   (debt.repayments ?? []).some((r) => dayOf(r.paidAt) === day);
 
+/** Dot legend of the debt calendar, worded for the side of the ledger. */
+const debtMarkerLegend = (isPayable: boolean): Record<DayMarkerTone, string> => ({
+  success: isPayable ? 'Đã trả' : 'Đã thu',
+  warning: isPayable ? 'Đến hạn, chưa trả' : 'Đến hạn, chưa thu',
+  danger: isPayable ? 'Quá hạn chưa trả' : 'Quá hạn chưa thu',
+});
+
 /**
  * Calendar data for one debt type and month: money moved per day (new debts on their start
- * date + repayments on their payment date) and a dot on due dates of unfinished debts.
+ * date + repayments on their payment date) and status dots. Green: a repayment was made that
+ * day, or the debt due that day is settled. Amber: due that day (today or later), not settled.
+ * Red: due that day, already past and still not settled.
  */
 function buildDebtCalendar(debts: Debt[], month: string, isPayable: boolean) {
   const inMonth = (day: string | null): day is string => !!day && day.startsWith(month);
+  const today = moment().format('YYYY-MM-DD');
   const opened: Record<string, number> = {};
   const repaid: Record<string, number> = {};
-  const due: Record<string, string[]> = {};
+  const markers: Record<string, DayMarker[]> = {};
+  const mark = (day: string, tone: DayMarkerTone, text: string) =>
+    (markers[day] ??= []).push({ tone, text });
+  const paidWord = isPayable ? 'Đã trả' : 'Đã thu';
+  const unpaidWord = isPayable ? 'chưa trả' : 'chưa thu';
   for (const debt of debts) {
     const start = dayOf(debt.startDate || debt.createdAt);
     if (inMonth(start)) opened[start] = (opened[start] ?? 0) + debt.totalAmount;
+    // This debt's repayments per day, so several payments on one day read as one line.
+    const paidOn: Record<string, number> = {};
     for (const r of debt.repayments ?? []) {
       const paid = dayOf(r.paidAt);
-      if (inMonth(paid)) repaid[paid] = (repaid[paid] ?? 0) + r.amount;
+      if (!inMonth(paid)) continue;
+      repaid[paid] = (repaid[paid] ?? 0) + r.amount;
+      paidOn[paid] = (paidOn[paid] ?? 0) + r.amount;
+    }
+    for (const [day, amount] of Object.entries(paidOn)) {
+      mark(day, 'success', `${paidWord} ${formatCurrency(amount)}: ${debt.title}`);
     }
     const dueDay = dayOf(debt.dueDate);
-    if (inMonth(dueDay) && debt.status !== 'COMPLETED') (due[dueDay] ??= []).push(debt.title);
+    if (!inMonth(dueDay)) continue;
+    if (debt.status === 'COMPLETED') {
+      mark(dueDay, 'success', `${isPayable ? 'Đã trả xong' : 'Đã thu đủ'}: ${debt.title}`);
+    } else {
+      const left = formatCurrency(Math.abs(debt.remaining ?? debt.totalAmount));
+      const late = debt.status === 'OVERDUE' || dueDay < today;
+      mark(
+        dueDay,
+        late ? 'danger' : 'warning',
+        `${late ? 'Quá hạn' : 'Đến hạn'}, ${unpaidWord} ${left}: ${debt.title}`
+      );
+    }
   }
   const openWord = isPayable ? 'Vay' : 'Cho vay';
   const repayWord = isPayable ? 'Trả' : 'Thu';
@@ -141,11 +175,9 @@ function buildDebtCalendar(debts: Debt[], month: string, isPayable: boolean) {
       .filter(Boolean)
       .join(' · ');
   }
-  const markers: Record<string, string> = {};
-  for (const [day, titles] of Object.entries(due)) markers[day] = `Đến hạn: ${titles.join(', ')}`;
   const sum = (m: Record<string, number>) => Object.values(m).reduce((a, b) => a + b, 0);
   const summary = `${openWord} ${formatCompactCurrency(sum(opened))} · ${repayWord} ${formatCompactCurrency(sum(repaid))}`;
-  return { values, details, markers, summary };
+  return { values, details, markers, summary, legend: debtMarkerLegend(isPayable) };
 }
 
 export default function Debts() {
@@ -444,12 +476,13 @@ export default function Debts() {
         </div>
       </div>
 
-      {/* Daily calendar: money moved per day, dot = due date; tap a day to filter the list */}
+      {/* Daily calendar: money moved per day, dots = paid / due / overdue; tap a day to filter */}
       <DayCalendar
         month={selectedMonth}
         values={calendar.values}
         details={calendar.details}
         markers={calendar.markers}
+        markerLegend={calendar.legend}
         summary={calendar.summary}
         tone={isPayableTab ? 'var(--expense)' : 'var(--income)'}
         label={isPayableTab ? 'Lịch khoản tôi nợ theo ngày' : 'Lịch khoản cho vay theo ngày'}

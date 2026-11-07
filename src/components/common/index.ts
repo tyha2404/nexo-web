@@ -11,4 +11,4 @@ export { ReceiptUploader } from './ReceiptUploader';
 export { TagInput } from './TagInput';
 export type { TagInputProps } from './TagInput';
 export { DayCalendar } from './DayCalendar';
-export type { DayCalendarProps } from './DayCalendar';
+export type { DayCalendarProps, DayMarker, DayMarkerTone } from './DayCalendar';

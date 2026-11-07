@@ -301,6 +301,7 @@ export const ArrowUpRight = icon('arrow-up');
 export const Calendar = icon('calendar');
 export const CalendarDays = icon('calendar');
 export const Check = icon('check');
+export const Clock = icon('clockface');
 export const ChevronDown = icon('chevron-down');
 export const ChevronLeft = icon('chevron-left');
 export const ChevronRight = icon('chevron-right');

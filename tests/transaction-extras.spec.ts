@@ -180,16 +180,22 @@ test('debts page: type tabs, daily calendar with due dates, day filter', async (
 
   const calendar = view.getByRole('region', { name: 'Lịch khoản tôi nợ theo ngày' });
   await expect(calendar.getByRole('grid')).toBeVisible();
-  // The repayment made today, and the due date at month end marked with a dot.
+  // The repayment made today (green dot: paid), and the unpaid due date at month end (amber).
   const todayCell = calendar.getByRole('gridcell', {
-    name: new RegExp(`^${moment().format('DD/MM/YYYY')}: .*Trả 1\\.000\\.000`),
+    name: new RegExp(
+      `^${moment().format('DD/MM/YYYY')}: .*Trả 1\\.000\\.000.*Đã trả 1\\.000\\.000.*: Vay anh Minh`
+    ),
   });
   await expect(todayCell).toBeEnabled();
   await expect(
     calendar.getByRole('gridcell', {
-      name: new RegExp(`^${moment().endOf('month').format('DD/MM/YYYY')}: .*Đến hạn: Vay anh Minh`),
+      name: new RegExp(
+        `^${moment().endOf('month').format('DD/MM/YYYY')}: .*Đến hạn, chưa trả 4\\.000\\.000.*: Vay anh Minh`
+      ),
     })
   ).toBeEnabled();
+  // Legend lists only the dot colours used this month.
+  await expect(calendar.getByRole('listitem')).toHaveText(['Đến hạn, chưa trả', 'Đã trả']);
 
   // Picking the repayment day lists the debt; the calendar stays open.
   await todayCell.click();
