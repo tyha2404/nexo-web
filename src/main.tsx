@@ -5,6 +5,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App.tsx';
+import { StatusBarBacking } from './components/common';
 import './tailwind.css';
 import './styles/vendor.css';
 
@@ -16,6 +17,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <HashRouter>
       <App />
+      <StatusBarBacking />
     </HashRouter>
   </StrictMode>
 );
