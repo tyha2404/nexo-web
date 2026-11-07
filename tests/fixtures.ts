@@ -17,6 +17,8 @@ export async function setup(page: Page) {
     failSave: false,
     rejectSave: false,
     requests: [] as string[],
+    /** Quick-fill presets (GET/POST/DELETE /presets); empty unless a test adds some. */
+    presets: [] as Record<string, unknown>[],
     writes: [] as Record<string, unknown>[],
     transactions: Array.from({ length: 26 }, (_, i) => ({
       id: `txn-${i}`,
@@ -242,6 +244,20 @@ export async function setup(page: Page) {
     if (path === '/debts/summary')
       return data({ totalPayable: 0, totalReceivable: 0, overdueCount: 0, pendingCount: 0 });
     if (path === '/wallets') return data({ wallets: [] });
+    if (path === '/presets' && request.method() === 'POST') {
+      const preset = {
+        id: `preset-${state.presets.length + 1}`,
+        userId: USER.id,
+        ...(request.postDataJSON() as Record<string, unknown>),
+      };
+      state.presets.push(preset);
+      return data(preset);
+    }
+    if (path === '/presets') return data(state.presets);
+    if (path.startsWith('/presets/') && request.method() === 'DELETE') {
+      state.presets = state.presets.filter((p) => !path.endsWith(String(p.id)));
+      return data({});
+    }
     if (path.startsWith('/chat')) return data([]);
     return data([]);
   });

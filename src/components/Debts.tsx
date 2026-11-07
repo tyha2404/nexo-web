@@ -15,7 +15,8 @@ import {
   TEXT_NEXT_INPUT_PROPS,
 } from '../commons/utils';
 import { useDataEvents, useModal } from '../hooks';
-import { debtService } from '../services';
+import type { Wallet } from '../commons/types';
+import { debtService, walletService } from '../services';
 import type { Debt, DebtType } from '../types/debt';
 import {
   ConfirmModal,
@@ -61,7 +62,9 @@ import {
   BTN_PRIMARY,
   BTN_SECONDARY,
   btnClass,
+  CHIP_BTN,
   cx,
+  FILTER_FULL_ROW,
   filterBarClass,
   FORM_GROUP,
   FORM_ROW_2COL,
@@ -104,6 +107,39 @@ const DEBT_TABS: { type: DebtType; label: string }[] = [
 
 /** Local calendar day ('YYYY-MM-DD') of an API date, or null. */
 const dayOf = (value?: string) => (value ? moment(value).format('YYYY-MM-DD') : null);
+
+/** Unsettled and past its due date (the API only flags OVERDUE on read, so check the date too). */
+const isDebtLate = (debt: Debt, today: string) =>
+  debt.status !== 'COMPLETED' &&
+  (debt.status === 'OVERDUE' || (dayOf(debt.dueDate) ?? '9999-12-31') < today);
+
+/**
+ * Which debts the list shows. MONTH and DONE follow the month filter (by start date); OPEN and
+ * OVERDUE ignore it, so "what do I still owe?" has one answer whatever month is picked.
+ */
+type DebtScope = 'MONTH' | 'OPEN' | 'OVERDUE' | 'DONE';
+
+const debtScopeOptions = (isPayable: boolean): { value: DebtScope; label: string }[] => [
+  { value: 'MONTH', label: 'Tất cả trạng thái' },
+  { value: 'OPEN', label: isPayable ? 'Đang nợ · mọi tháng' : 'Chưa thu · mọi tháng' },
+  { value: 'OVERDUE', label: 'Quá hạn · mọi tháng' },
+  { value: 'DONE', label: 'Đã xong' },
+];
+
+/** Wallet picker options; empty value = leave wallet balances alone. */
+const walletOptions = (wallets: Wallet[]) => [
+  { value: '', label: 'Không ghi vào ví' },
+  ...wallets.map((w) => ({
+    value: w.id,
+    label: `${w.name} · ${formatCompactCurrency(w.balance)}`,
+  })),
+];
+
+/** Sends a picked day as local midnight (like startDate); today is left to the server's clock. */
+const toPaidAt = (day: string) =>
+  day === moment().format('YYYY-MM-DD')
+    ? undefined
+    : moment(day, 'YYYY-MM-DD').startOf('day').format();
 
 /** Whether the debt was started, repaid or falls due on `day`. */
 const debtTouchesDay = (debt: Debt, day: string) =>
@@ -203,6 +239,9 @@ export default function Debts() {
   const [activeType, setActiveType] = useState<DebtType>('PAYABLE');
   // Day picked in the calendar ('YYYY-MM-DD'); lists debts started, repaid or due that day.
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [scope, setScope] = useState<DebtScope>('MONTH');
+  // Wallets for the optional "which wallet moved" pickers; the page works without them.
+  const [wallets, setWallets] = useState<Wallet[]>([]);
 
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
@@ -218,10 +257,13 @@ export default function Debts() {
   const [formStartDate, setFormStartDate] = useState<Date | null>(moment().toDate());
   const [formDueDate, setFormDueDate] = useState<Date | null>(null);
   const [formNotes, setFormNotes] = useState<string>('');
+  const [formWalletId, setFormWalletId] = useState<string>('');
 
   // Repay Form State
   const [repayAmount, setRepayAmount] = useState<string>('');
   const [repayNotes, setRepayNotes] = useState<string>('');
+  const [repayDate, setRepayDate] = useState<string>('');
+  const [repayWalletId, setRepayWalletId] = useState<string>('');
 
   const fetchDebtData = useCallback(async () => {
     try {
@@ -244,6 +286,17 @@ export default function Debts() {
   // Repayments from the AI assistant or another device arrive via realtime
   useDataEvents(['debts-changed'], fetchDebtData);
 
+  const fetchWallets = useCallback(() => {
+    walletService
+      .getWallets()
+      .then((res) => setWallets(res.wallets || []))
+      .catch(() => {
+        // Optional: without wallets the pickers are simply hidden.
+      });
+  }, []);
+  useEffect(fetchWallets, [fetchWallets]);
+  useDataEvents(['wallets-changed'], fetchWallets);
+
   const handleAmountChange = (val: string, setter: (v: string) => void) => {
     setter(formatNumberInput(val));
   };
@@ -255,6 +308,7 @@ export default function Debts() {
     setFormStartDate(moment().toDate());
     setFormDueDate(null);
     setFormNotes('');
+    setFormWalletId('');
     setIsCreateModalOpen(true);
   };
 
@@ -280,15 +334,29 @@ export default function Debts() {
         startDate: formStartDate ? moment(formStartDate).startOf('day').format() : undefined,
         dueDate: formDueDate ? moment(formDueDate).startOf('day').format() : undefined,
         notes: formNotes,
+        walletId: formWalletId || undefined,
       });
 
       toast.success('Đã tạo khoản vay/nợ thành công!');
       window.dispatchEvent(new Event('debts-changed'));
+      if (formWalletId) window.dispatchEvent(new Event('wallets-changed'));
       setIsCreateModalOpen(false);
       fetchDebtData();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Lỗi khi tạo khoản vay/nợ');
     }
+  };
+
+  const openRepayModal = (debt: Debt) => {
+    setSelectedDebt(debt);
+    setRepayAmount('');
+    setRepayNotes('');
+    setRepayDate(moment().format('YYYY-MM-DD'));
+    // Default to the wallet the debt came from/went to, when it still exists.
+    setRepayWalletId(
+      debt.walletId && wallets.some((w) => w.id === debt.walletId) ? debt.walletId : ''
+    );
+    setIsRepayModalOpen(true);
   };
 
   const handleRepaySubmit = async (e: React.FormEvent) => {
@@ -301,15 +369,34 @@ export default function Debts() {
       toast.error('Vui lòng nhập số tiền hợp lệ');
       return;
     }
+    if (parsedAmount > Math.round(Math.abs(selectedDebt.remaining))) {
+      toast.error(
+        `Số tiền vượt quá số còn lại (${formatCurrency(Math.abs(selectedDebt.remaining))})`
+      );
+      return;
+    }
+    const today = moment().format('YYYY-MM-DD');
+    const startDay = dayOf(selectedDebt.startDate || selectedDebt.createdAt);
+    if (!repayDate || repayDate > today) {
+      toast.error('Ngày thanh toán không được ở tương lai');
+      return;
+    }
+    if (startDay && repayDate < startDay) {
+      toast.error(`Ngày thanh toán phải từ ngày vay (${moment(startDay).format('DD/MM/YYYY')})`);
+      return;
+    }
 
     try {
       await debtService.addRepayment(selectedDebt.id, {
         amount: parsedAmount,
         notes: repayNotes,
+        paidAt: toPaidAt(repayDate),
+        walletId: repayWalletId || undefined,
       });
 
       toast.success('Đã ghi nhận thanh toán thành công!');
       window.dispatchEvent(new Event('debts-changed'));
+      if (repayWalletId) window.dispatchEvent(new Event('wallets-changed'));
       setIsRepayModalOpen(false);
       setSelectedDebt(null);
       setRepayAmount('');
@@ -358,19 +445,31 @@ export default function Debts() {
     [typeDebts, selectedMonth, activeType]
   );
 
+  const todayKey = moment().format('YYYY-MM-DD');
+  const scopeIgnoresMonth = scope === 'OPEN' || scope === 'OVERDUE';
   const filteredDebts = typeDebts.filter((d) => {
     const query = searchQuery.toLowerCase();
     const matchSearch =
       (d.title || '').toLowerCase().includes(query) ||
       (d.notes || '').toLowerCase().includes(query);
     if (!matchSearch) return false;
+    if (scope === 'OPEN' && d.status === 'COMPLETED') return false;
+    if (scope === 'OVERDUE' && !isDebtLate(d, todayKey)) return false;
+    if (scope === 'DONE' && d.status !== 'COMPLETED') return false;
     // A picked day lists every debt with activity that day, whatever month it started in.
     if (selectedDay) return debtTouchesDay(d, selectedDay);
+    if (scopeIgnoresMonth) return true;
 
     const debtDate = d.startDate || d.createdAt;
     if (!debtDate) return true;
     return moment(debtDate).isBetween(startOfMonth, endOfMonth, undefined, '[]');
   });
+  // Unsettled debts across months: the soonest due first, those without a due date last.
+  if (scopeIgnoresMonth) {
+    filteredDebts.sort((a, b) =>
+      (dayOf(a.dueDate) ?? '9999-12-31').localeCompare(dayOf(b.dueDate) ?? '9999-12-31')
+    );
+  }
 
   const totalRemaining = filteredDebts.reduce(
     (sum, d) => sum + Math.abs(d.remaining ?? d.totalAmount ?? 0),
@@ -457,13 +556,7 @@ export default function Debts() {
 
       {/* Filter and Search Bar - 100% Matching Transactions.tsx */}
       {/* Search + month only (the type is the tab above), so two columns on wide screens */}
-      <div
-        className={cx(
-          filterBarClass(),
-          'min-[1024px]:grid-cols-[2fr_1fr]! mobile:[&>*:last-child]:col-span-full',
-          'animate-fade-in'
-        )}
-      >
+      <div className={cx(filterBarClass(), 'animate-fade-in')}>
         <div className={SEARCH_WRAPPER}>
           <Search size={16} className={SEARCH_ICON} />
           <input
@@ -476,7 +569,22 @@ export default function Debts() {
           />
         </div>
 
-        <div>
+        <div className={cx('w-full', FILTER_FULL_ROW)}>
+          <Select
+            aria-label="Lọc theo trạng thái"
+            options={debtScopeOptions(isPayableTab)}
+            value={debtScopeOptions(isPayableTab).find((o) => o.value === scope) || null}
+            onChange={(option) => {
+              setScope(option?.value ?? 'MONTH');
+              setSelectedDay(null);
+            }}
+            classNamePrefix="react-select"
+            isSearchable={false}
+            menuPortalTarget={document.body}
+          />
+        </div>
+
+        <div className={FILTER_FULL_ROW}>
           <MonthFilter
             value={selectedMonth}
             onChange={(month) => {
@@ -510,7 +618,11 @@ export default function Debts() {
           className="animate-fade-in"
           icon={<Handshake />}
           title={isPayableTab ? 'Không có khoản bạn đang nợ' : 'Không có khoản ai nợ bạn'}
-          description="Tạo khoản mới hoặc đổi tháng / ngày để xem các khoản khác."
+          description={
+            scopeIgnoresMonth
+              ? 'Không còn khoản nào ở trạng thái này.'
+              : 'Tạo khoản mới hoặc đổi tháng / ngày / trạng thái để xem các khoản khác.'
+          }
           actionLabel={isPayableTab ? 'Ghi khoản tôi nợ' : 'Ghi khoản cho vay'}
           onAction={() => openCreateModal(activeType)}
         />
@@ -580,9 +692,7 @@ export default function Debts() {
                           {debt.status !== 'COMPLETED' && (
                             <button
                               onClick={() => {
-                                setSelectedDebt(debt);
-                                setRepayAmount('');
-                                setIsRepayModalOpen(true);
+                                openRepayModal(debt);
                               }}
                               className={cx(
                                 btnClass('secondary', 'px-[0.85rem] py-[0.45rem] text-[0.85rem]'),
@@ -670,9 +780,7 @@ export default function Debts() {
                         <button
                           type="button"
                           onClick={() => {
-                            setSelectedDebt(debt);
-                            setRepayAmount('');
-                            setIsRepayModalOpen(true);
+                            openRepayModal(debt);
                           }}
                           className={MOBILE_ACTION_EDIT}
                           title="Ghi nhận trả/thu tiền"
@@ -799,6 +907,25 @@ export default function Debts() {
                   </div>
                 </div>
 
+                {wallets.length > 0 && (
+                  <div className={FORM_GROUP}>
+                    <label htmlFor="debt-wallet">
+                      {formType === 'PAYABLE' ? 'Nhận tiền vào ví' : 'Chi tiền từ ví'}{' '}
+                      <span className="text-muted">(tùy chọn)</span>
+                    </label>
+                    <Select
+                      inputId="debt-wallet"
+                      options={walletOptions(wallets)}
+                      value={walletOptions(wallets).find((o) => o.value === formWalletId) || null}
+                      onChange={(option) => setFormWalletId(option?.value ?? '')}
+                      classNamePrefix="react-select"
+                      isSearchable={!isTouchDevice()}
+                      menuPortalTarget={document.body}
+                      menuPosition="fixed"
+                    />
+                  </div>
+                )}
+
                 <div className={FORM_GROUP}>
                   <label htmlFor="debt-notes">Ghi chú</label>
                   <textarea
@@ -867,7 +994,21 @@ export default function Debts() {
                 </div>
 
                 <div className={FORM_GROUP}>
-                  <label htmlFor="repay-amount">Số tiền trả đợt này (đ)</label>
+                  <div className="flex items-center justify-between gap-2">
+                    <label htmlFor="repay-amount">Số tiền trả đợt này (đ)</label>
+                    <button
+                      type="button"
+                      className={CHIP_BTN}
+                      onClick={() =>
+                        setRepayAmount(
+                          formatNumberInput(String(Math.round(Math.abs(selectedDebt.remaining))))
+                        )
+                      }
+                    >
+                      {selectedDebt.type === 'PAYABLE' ? 'Trả hết' : 'Thu đủ'}{' '}
+                      {formatCompactCurrency(Math.abs(selectedDebt.remaining))}
+                    </button>
+                  </div>
                   <input
                     id="repay-amount"
                     {...MONEY_INPUT_PROPS}
@@ -876,6 +1017,38 @@ export default function Debts() {
                     onChange={(e) => handleAmountChange(e.target.value, setRepayAmount)}
                     required
                   />
+                </div>
+
+                <div className={FORM_ROW_2COL}>
+                  <div className={FORM_GROUP}>
+                    <label htmlFor="repay-date">Ngày thanh toán</label>
+                    <DatePickerField
+                      id="repay-date"
+                      label="Ngày thanh toán"
+                      value={repayDate}
+                      onChange={setRepayDate}
+                      required
+                    />
+                  </div>
+                  {wallets.length > 0 && (
+                    <div className={FORM_GROUP}>
+                      <label htmlFor="repay-wallet">
+                        {selectedDebt.type === 'PAYABLE' ? 'Trả từ ví' : 'Nhận vào ví'}
+                      </label>
+                      <Select
+                        inputId="repay-wallet"
+                        options={walletOptions(wallets)}
+                        value={
+                          walletOptions(wallets).find((o) => o.value === repayWalletId) || null
+                        }
+                        onChange={(option) => setRepayWalletId(option?.value ?? '')}
+                        classNamePrefix="react-select"
+                        isSearchable={!isTouchDevice()}
+                        menuPortalTarget={document.body}
+                        menuPosition="fixed"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className={FORM_GROUP}>

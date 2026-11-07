@@ -1,6 +1,6 @@
 import moment from 'moment';
 import type { SummaryReport, TargetSummaryResponse } from '../../commons/types';
-import { formatCurrency } from '../../commons/utils';
+import { formatCurrency, projectMonthEnd } from '../../commons/utils';
 import type { DebtSummary } from '../../types/debt';
 import { BLOCK_GAP, cx, GLASS_CARD, MONEY, MOTION_ENTER, SUB_TILE } from '../ui';
 
@@ -74,6 +74,10 @@ export function HeroCashflowCard({
   const budgetPercent =
     budgetLimit > 0 ? Math.min(100, Math.round((budgetSpent / budgetLimit) * 100)) : 0;
   const isOverBudget = targetSummary?.expense?.isOverBudget ?? false;
+  // Where spending lands at month end if this month's pace holds (current month only).
+  const projectedExpense = projectMonthEnd(budgetSpent, selectedMonth);
+  const projectedGap =
+    budgetLimit > 0 && projectedExpense !== null ? projectedExpense - budgetLimit : null;
 
   // Investment target calculations
   const investmentTarget = targetSummary?.investment?.targetAmount ?? 0;
@@ -264,6 +268,23 @@ export function HeroCashflowCard({
               >
                 Thiết lập
               </button>
+            </div>
+          )}
+
+          {projectedExpense !== null && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 border-t border-line pt-1.5 text-[0.8125rem] text-muted">
+              <span>
+                Dự kiến cả tháng:{' '}
+                <strong className={MONEY}>~{formatCurrency(projectedExpense)}</strong>
+              </span>
+              {projectedGap !== null &&
+                (projectedGap > 0 ? (
+                  <span className="font-semibold text-expense">
+                    · sẽ vượt ~{formatCurrency(projectedGap)}
+                  </span>
+                ) : (
+                  <span className="text-income">· trong hạn mức</span>
+                ))}
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 import { SlidingTabs } from './ui';
-import { Gem, ShoppingBag, TrendingUp, X } from './ui';
+import { Gem, Plus, ShoppingBag, TrendingUp, X } from './ui';
 import moment from 'moment';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -7,10 +7,12 @@ import { useModal } from '../hooks';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 import { DATE_FORMAT_INPUT, InvestmentStatus, TransactionType } from '../commons/constants';
-import type { Category, Transaction } from '../commons/types';
+import type { Category, Preset, Transaction } from '../commons/types';
 import {
   MONEY_INPUT_PROPS,
   TEXT_DONE_INPUT_PROPS,
+  formatCompactCurrency,
+  formatCurrency,
   formatDate,
   formatNumberInput,
   getErrorMessage,
@@ -18,14 +20,17 @@ import {
   parseNumberInput,
   toISODateString,
 } from '../commons/utils';
-import { categoryService, transactionService } from '../services';
+import { categoryService, presetService, transactionService } from '../services';
 import type { CreateTransactionDTO } from '../services';
 import { DatePickerField, ReceiptUploader, TagInput } from './common';
 import {
   BTN_FILL,
   BTN_PRIMARY,
   BTN_SECONDARY,
+  CHIP_BTN,
+  CHIP_BTN_GHOST,
   FORM_GROUP,
+  MONEY,
   TABS,
   cx,
   tabClass,
@@ -74,6 +79,10 @@ export default function AddTransactionModal({
   const [tags, setTags] = useState<string[]>([]);
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  // Saved quick-fill templates ("Cà phê 35k"); tapping one fills amount, category and note.
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [managingPresets, setManagingPresets] = useState(false);
+  const [savingPreset, setSavingPreset] = useState(false);
 
   const isEditing = Boolean(transaction);
   const [uploading, setUploading] = useState(false);
@@ -125,6 +134,20 @@ export default function AddTransactionModal({
     return () => controller.abort();
   }, [open]);
 
+  // Presets are only offered when adding (an edit keeps its own values).
+  useEffect(() => {
+    if (!open || transaction) return;
+    setManagingPresets(false);
+    const controller = new AbortController();
+    presetService
+      .list(undefined, { signal: controller.signal })
+      .then((res) => setPresets(res.items || []))
+      .catch(() => {
+        // Optional: the form works without presets.
+      });
+    return () => controller.abort();
+  }, [open, transaction]);
+
   // Load categories matching the active type
   useEffect(() => {
     if (!open) return;
@@ -147,6 +170,61 @@ export default function AddTransactionModal({
   }, [open, activeType]);
 
   if (!open) return null;
+
+  const visiblePresets = presets.filter((p) => p.type === activeType);
+
+  const applyPreset = (preset: Preset) => {
+    setAmount(Math.round(preset.amount).toLocaleString('vi-VN'));
+    setCategoryId(preset.categoryId);
+    setTitle(preset.description || preset.name);
+  };
+
+  const saveAsPreset = async () => {
+    const rawAmount = parseNumberInput(amount);
+    const category = categories.find((item) => item.id === categoryId);
+    if (!(rawAmount > 0) || !category) {
+      toast.info('Nhập số tiền và chọn danh mục trước, rồi bấm Lưu làm mẫu.');
+      return;
+    }
+    const note = title.trim();
+    const name = (note || category.name).slice(0, 100);
+    if (
+      visiblePresets.some(
+        (p) => p.name === name && p.categoryId === categoryId && p.amount === rawAmount
+      )
+    ) {
+      toast.info(`Đã có mẫu "${name}"`);
+      return;
+    }
+    try {
+      setSavingPreset(true);
+      const created = await presetService.create({
+        categoryId,
+        name,
+        amount: rawAmount,
+        type: activeType,
+        description: note.slice(0, 255),
+      });
+      setPresets((list) => [...list, created]);
+      toast.success(`Đã lưu mẫu "${name}"`);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Không lưu được mẫu'));
+    } finally {
+      setSavingPreset(false);
+    }
+  };
+
+  const deletePreset = async (preset: Preset) => {
+    try {
+      await presetService.delete(preset.id);
+      const next = presets.filter((p) => p.id !== preset.id);
+      setPresets(next);
+      if (!next.some((p) => p.type === activeType)) setManagingPresets(false);
+      toast.success(`Đã xóa mẫu "${preset.name}"`);
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Không xóa được mẫu'));
+    }
+  };
 
   const handleAmountChange = (val: string) => {
     setAmount(formatNumberInput(val));
@@ -326,6 +404,72 @@ export default function AddTransactionModal({
                 </button>
               </SlidingTabs>
             </div>
+
+            {!isEditing && (
+              <div className="mb-4" role="group" aria-labelledby="atxn-presets-title">
+                <div className="mb-1.5 flex min-h-8 items-center justify-between gap-2">
+                  <span id="atxn-presets-title" className="text-[13px] font-semibold text-muted">
+                    Mẫu nhanh
+                  </span>
+                  {visiblePresets.length > 0 && (
+                    <button
+                      type="button"
+                      className={cx(CHIP_BTN, CHIP_BTN_GHOST)}
+                      aria-pressed={managingPresets}
+                      onClick={() => setManagingPresets((v) => !v)}
+                    >
+                      {managingPresets ? 'Xong' : 'Sửa mẫu'}
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {visiblePresets.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      // Full 44px height on phones instead of the chip's invisible hit area,
+                      // which would overlap the next wrapped row.
+                      className={cx(
+                        CHIP_BTN,
+                        'mobile:min-h-11 mobile:after:hidden',
+                        managingPresets && 'border-expense text-expense'
+                      )}
+                      aria-label={
+                        managingPresets
+                          ? `Xóa mẫu ${preset.name}`
+                          : `Dùng mẫu ${preset.name}, ${formatCurrency(preset.amount)}`
+                      }
+                      onClick={() => (managingPresets ? deletePreset(preset) : applyPreset(preset))}
+                    >
+                      <span className="max-w-[10rem] truncate">{preset.name}</span>
+                      <span className={cx(MONEY, managingPresets ? '' : 'text-muted')}>
+                        {formatCompactCurrency(preset.amount)}
+                      </span>
+                      {managingPresets && <X size={12} />}
+                    </button>
+                  ))}
+                  {!managingPresets && (
+                    <button
+                      type="button"
+                      className={cx(
+                        CHIP_BTN,
+                        CHIP_BTN_GHOST,
+                        'border-dashed mobile:min-h-11 mobile:after:hidden'
+                      )}
+                      onClick={saveAsPreset}
+                      disabled={savingPreset}
+                    >
+                      <Plus size={12} /> Lưu làm mẫu
+                    </button>
+                  )}
+                </div>
+                {visiblePresets.length === 0 && (
+                  <small className="mt-1.5 block text-[0.8rem] text-muted">
+                    Điền số tiền, danh mục rồi bấm "Lưu làm mẫu" để lần sau chỉ cần một chạm.
+                  </small>
+                )}
+              </div>
+            )}
 
             <div className={FORM_GROUP}>
               <label htmlFor="atxn-amount">Số tiền (đ)</label>
