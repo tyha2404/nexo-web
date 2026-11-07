@@ -137,3 +137,79 @@ test('date inputs remain inside a vertically scrolling transaction modal', async
   expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(modal!.x + modal!.width);
   await page.screenshot({ path: 'test-results/iphone-date-modal.png' });
 });
+
+test('opening a form keeps the page scrollable-height: scroll lock via overflow, not a fixed body', async ({
+  page,
+}) => {
+  // A fixed body leaves the page without scrollable height, which made iOS home-screen apps
+  // end the viewport 59px above the screen bottom under the sheet.
+  await page.goto('/');
+  await expect(page.getByText('Tiền khả dụng thực tế', { exact: true })).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 200));
+  const scrolled = await page.evaluate(() => window.scrollY);
+  expect(scrolled).toBeGreaterThan(0);
+
+  const dialog = await openTransactionForm(page);
+  // The lock is applied in an effect, just after the sheet paints.
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.style.overflow))
+    .toBe('hidden');
+  const locked = await page.evaluate(() => ({
+    html: document.documentElement.style.overflow,
+    position: getComputedStyle(document.body).position,
+    pageHeight: document.documentElement.scrollHeight,
+    scrollY: window.scrollY,
+  }));
+  expect(locked.html).toBe('hidden');
+  expect(locked.position).not.toBe('fixed');
+  expect(locked.pageHeight).toBeGreaterThan(page.viewportSize()!.height);
+  expect(locked.scrollY).toBe(scrolled);
+  // The sheet still fills the viewport, actions at the bottom.
+  const footer = (await dialog.locator('.button-group').boundingBox())!;
+  expect(Math.round(footer.y + footer.height)).toBe(page.viewportSize()!.height);
+
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  const after = await page.evaluate(() => ({
+    html: document.documentElement.style.overflow,
+    body: document.body.style.overflow,
+    scrollY: window.scrollY,
+  }));
+  expect(after).toEqual({ html: '', body: '', scrollY: scrolled });
+});
+
+const themeColor = (page: import('@playwright/test').Page) =>
+  page.evaluate(() => document.querySelector('meta[name="theme-color"]')!.getAttribute('content'));
+
+for (const theme of ['dark', 'light'] as const) {
+  test(`${theme} theme: a full-screen sheet paints the status bar in its own top colour`, async ({
+    page,
+  }) => {
+    await page.addInitScript((t) => localStorage.setItem('theme', t), theme);
+    await page.goto('/');
+    await expect(page.getByText('Tiền khả dụng thực tế', { exact: true })).toBeVisible();
+    const titlebar = theme === 'light' ? '#f8f8f8' : '#181818';
+    await expect.poll(() => themeColor(page)).toBe(titlebar);
+
+    const dialog = await openTransactionForm(page);
+    const header = await dialog
+      .locator('.modal-header')
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
+    await expect.poll(() => themeColor(page)).toBe(header);
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    expect(await themeColor(page)).toBe(titlebar);
+  });
+}
+
+test('a saved light theme reaches the status bar before the app bundle runs', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('theme', 'light'));
+  // Without the app bundle, only public/theme-init.js can have set these.
+  await page.route('**/assets/*.js', (route) => route.abort());
+  await page.goto('/');
+  expect(await themeColor(page)).toBe('#f8f8f8');
+  expect(
+    await page.evaluate(() => document.documentElement.classList.contains('light-theme'))
+  ).toBe(true);
+});

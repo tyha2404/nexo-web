@@ -137,8 +137,8 @@ test('category menu in the quick-add modal stays under its control after the pag
   await setup(page);
   await page.goto('/');
   await expect(page.getByText('Tiền khả dụng thực tế', { exact: true })).toBeVisible();
-  // The modal locks the body with `position: fixed; top: -scrollY`, which used to shift
-  // a body-portalled absolute menu up by scrollY, off screen.
+  // An earlier scroll lock (`body { position: fixed; top: -scrollY }`) shifted a
+  // body-portalled absolute menu up by scrollY, off screen.
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(100);
   await page.getByRole('button', { name: 'Ghi giao dịch mới' }).click();

@@ -19,14 +19,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <!-- "black-translucent": the web view runs edge to edge under the status bar (layouts pad
-         with env(safe-area-inset-top)). "default" made iOS 26 place a web view one status-bar
-         height (59px) short of the screen bottom, leaving a blank strip under full-screen
-         sheets and the bottom nav. The status text is always white, so StatusBarBacking paints
-         a dark strip behind it in the light theme. -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- "default": iOS paints the status bar with theme-color (updated by App.tsx when the
+         app theme changes) and picks dark/light status text for contrast. "black-translucent"
+         would force white text, unreadable over the light theme. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Nexo" />
     <meta name="theme-color" content="#181818" />
+    <!-- Must follow the theme-color meta: sets it for a saved light theme before first paint. -->
+    <script src="/theme-init.js"></script>
     <title>Nexo Portal - Quản lý Tài chính Cá nhân</title>
   </head>
   <body>
