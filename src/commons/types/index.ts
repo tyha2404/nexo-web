@@ -87,6 +87,33 @@ export interface MonthlyTrendReport {
   items: MonthlyTrendItem[];
 }
 
+/** Net worth at the end of one month (GET /reports/net-worth). */
+export interface NetWorthPoint {
+  /** 'YYYY-MM' */
+  month: string;
+  /** e.g. 'T11/26' */
+  label: string;
+  income: number;
+  expense: number;
+  realizedPnL: number;
+  /** income − expense + realizedPnL of the month. */
+  change: number;
+  netWorth: number;
+}
+
+/**
+ * Month-end net worth, oldest first, ending with the current month. Net worth = cumulative
+ * income − expense + realized PnL: the dashboard's "Tổng tài sản".
+ */
+export interface NetWorthReport {
+  items: NetWorthPoint[];
+  /** Net worth just before the first month shown. */
+  opening: number;
+  current: number;
+  /** current − opening */
+  periodChange: number;
+}
+
 export interface DailyReportItem {
   /** 'YYYY-MM-DD' */
   date: string;

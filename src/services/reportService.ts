@@ -2,6 +2,7 @@ import type {
   CategoryBreakdownReport,
   DailyReport,
   MonthlyTrendReport,
+  NetWorthReport,
   SummaryReport,
 } from '../commons/types';
 import { request } from './client';
@@ -48,6 +49,14 @@ export const reportService = {
     options: RequestInit = {}
   ): Promise<MonthlyTrendReport> => {
     return request<MonthlyTrendReport>(`/reports/monthly-trend?months=${months}`, {
+      method: 'GET',
+      ...options,
+    });
+  },
+
+  /** Month-end net worth for the last `months` months (max 36), ending this month. */
+  netWorth: async (months: number = 12, options: RequestInit = {}): Promise<NetWorthReport> => {
+    return request<NetWorthReport>(`/reports/net-worth?months=${months}`, {
       method: 'GET',
       ...options,
     });

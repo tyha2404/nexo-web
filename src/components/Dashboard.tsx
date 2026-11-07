@@ -5,6 +5,7 @@ import type {
   Category,
   CategoryBreakdownItem,
   MonthlyTrendReport,
+  NetWorthReport,
   SummaryReport,
   TargetSummaryResponse,
   Transaction,
@@ -22,6 +23,9 @@ import {
 import type { DebtSummary } from '../types/debt';
 const MonthlyTrendChart = lazy(() =>
   import('./MonthlyTrendChart').then((module) => ({ default: module.MonthlyTrendChart }))
+);
+const NetWorthChart = lazy(() =>
+  import('./NetWorthChart').then((module) => ({ default: module.NetWorthChart }))
 );
 import { MonthFilter } from './common';
 import {
@@ -52,6 +56,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [wallets, setWallets] = useState<WalletModel[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [monthlyTrend, setMonthlyTrend] = useState<MonthlyTrendReport | null>(null);
+  const [netWorth, setNetWorth] = useState<NetWorthReport | null>(null);
   const [prevSummary, setPrevSummary] = useState<SummaryReport | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,6 +96,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         walletsData,
         txnsData,
         monthlyTrendData,
+        netWorthData,
       ] = await Promise.all([
         reportService.summary(dateFilters, options),
         reportService.summary({ allTime: true }, options),
@@ -117,6 +123,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           )
           .catch(() => ({ items: [] })),
         reportService.monthlyTrend(12, options).catch(() => null),
+        // Optional: the dashboard works without the net worth chart.
+        reportService.netWorth(12, options).catch(() => null),
       ]);
 
       if (signal.aborted || requestId !== requestNumber.current) return;
@@ -132,6 +140,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       setWallets(walletsData.wallets || []);
       setRecentTransactions(txnsData.items || []);
       setMonthlyTrend(monthlyTrendData);
+      setNetWorth(netWorthData);
     } catch (err: unknown) {
       if (!signal.aborted && requestId === requestNumber.current)
         setError(err instanceof Error ? err.message : 'Không thể tải dữ liệu bảng điều khiển');
@@ -212,6 +221,13 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
             debtSummary={debtSummary}
             onNavigate={onNavigate}
           />
+
+          {/* 2.4 Net worth over the last 12 months (hidden until there is any data) */}
+          {netWorth?.items?.some((p) => p.netWorth !== 0 || p.change !== 0) && (
+            <Suspense fallback={<p role="status">Đang tải biểu đồ...</p>}>
+              <NetWorthChart report={netWorth} />
+            </Suspense>
+          )}
 
           {/* 2.5 Monthly Trend Chart (12 Months) */}
           {(loading || (monthlyTrend?.items?.length ?? 0) > 0) && (
