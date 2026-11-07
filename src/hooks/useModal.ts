@@ -41,6 +41,34 @@ function revealField(field: HTMLElement, dialog: HTMLElement) {
   if (Math.abs(delta) > 1) scroller.scrollBy({ top: delta, behavior: 'smooth' });
 }
 
+/** Running as an installed app (home-screen PWA), where the screen-gap fix applies. */
+function isStandalone() {
+  return (
+    window.matchMedia?.('(display-mode: standalone)').matches ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true
+  );
+}
+
+// Largest gap we trust as the PWA bug below (the iPhone status-bar inset is 47–62px).
+const MAX_SCREEN_GAP = 120;
+
+/**
+ * iOS home-screen apps (seen on iOS 26) draw the page down to the bottom of the screen but end
+ * the box that `position: fixed; inset: 0` fills one status-bar height short, so a full-screen
+ * sheet stops ~59px above the bottom edge over a strip of bare page. Returns how far the
+ * backdrop's natural bottom (without the current extension) falls short of the screen, so it
+ * can be stretched down. 0 in a browser tab, where browser UI takes that space on purpose.
+ */
+function measureScreenGap(backdrop: HTMLElement | null, applied: number) {
+  if (!backdrop || !isStandalone()) return 0;
+  const portrait = window.innerHeight >= window.innerWidth;
+  const screenHeight = portrait
+    ? Math.max(window.screen.width, window.screen.height)
+    : Math.min(window.screen.width, window.screen.height);
+  const gap = screenHeight - (backdrop.getBoundingClientRect().bottom - applied);
+  return gap > 0.5 && gap <= MAX_SCREEN_GAP ? Math.round(gap) : 0;
+}
+
 // Use the visual viewport for the iOS keyboard; dvh alone tracks browser chrome.
 export function useModal(open: boolean, onClose: () => void) {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -65,11 +93,24 @@ export function useModal(open: boolean, onClose: () => void) {
     const previousViewportHeight = rootStyle.getPropertyValue('--modal-viewport-height');
     const previousViewportTop = rootStyle.getPropertyValue('--modal-viewport-top');
     const previousViewportBottom = rootStyle.getPropertyValue('--modal-viewport-bottom');
+    const previousScreenGap = rootStyle.getPropertyValue('--modal-screen-gap');
     const viewport = window.visualViewport;
+    let screenGap = 0;
     const resize = () => {
+      // Part of the layout viewport the keyboard covers (0 when it is down).
+      const covered = Math.max(
+        0,
+        window.innerHeight - (viewport?.height ?? window.innerHeight) - (viewport?.offsetTop ?? 0)
+      );
+      // Measure the PWA screen gap only with the keyboard down, then keep it while typing.
+      if (covered === 0) {
+        screenGap = measureScreenGap(dialog?.parentElement ?? null, screenGap);
+        rootStyle.setProperty('--modal-screen-gap', `${screenGap}px`);
+      }
+      // The backdrop now reaches the real screen bottom, so the keyboard inset grows by the gap.
       rootStyle.setProperty(
         '--modal-viewport-bottom',
-        `${Math.max(0, window.innerHeight - (viewport?.height ?? window.innerHeight) - (viewport?.offsetTop ?? 0))}px`
+        `${covered > 0 ? covered + screenGap : 0}px`
       );
       document.documentElement.style.setProperty(
         '--modal-viewport-height',
@@ -193,6 +234,8 @@ export function useModal(open: boolean, onClose: () => void) {
       else rootStyle.removeProperty('--modal-viewport-height');
       if (previousViewportTop) rootStyle.setProperty('--modal-viewport-top', previousViewportTop);
       else rootStyle.removeProperty('--modal-viewport-top');
+      if (previousScreenGap) rootStyle.setProperty('--modal-screen-gap', previousScreenGap);
+      else rootStyle.removeProperty('--modal-screen-gap');
       if (previousStyle === null) document.body.removeAttribute('style');
       else document.body.setAttribute('style', previousStyle);
       window.scrollTo(0, scrollY);

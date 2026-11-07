@@ -3,7 +3,9 @@
  *
  * Every modal is portalled to <body> and laid out from the CSS variables that
  * hooks/useModal.ts keeps in sync with the visual viewport (iOS keyboard):
- * --modal-viewport-top / --modal-viewport-bottom / --modal-viewport-height.
+ * --modal-viewport-top / --modal-viewport-bottom / --modal-viewport-height, plus
+ * --modal-screen-gap: how far an iOS home-screen app's fixed layer stops short of the screen
+ * bottom (see useModal), which the phone backdrop is stretched by.
  *
  * Three shapes:
  * - MODAL_FORM_SHELL_PANEL: header + scrolling MODAL_FORM_BODY + fixed MODAL_SHELL_FOOTER.
@@ -34,10 +36,14 @@ const BACKDROP_BASE = cx(
   "[&_input:is([type='date'],[type='month'],[type='datetime-local'])]:w-full [&_input:is([type='date'],[type='month'],[type='datetime-local'])]:min-h-10! [&_input:is([type='date'],[type='month'],[type='datetime-local'])]:text-[16px]!"
 );
 
-/** Backdrop of a form modal: on phones the panel fills the visual viewport edge to edge. */
+/**
+ * Backdrop of a form modal: on phones the panel fills the visual viewport edge to edge, down
+ * to the real screen bottom (stretched past the short fixed layer of an iOS home-screen app).
+ */
 export const MODAL_BACKDROP = cx(
   BACKDROP_BASE,
-  'mobile:items-stretch mobile:pt-[var(--modal-viewport-top,0px)] mobile:pr-0 mobile:pb-[var(--modal-viewport-bottom,0px)] mobile:pl-0'
+  'mobile:items-stretch mobile:pt-[var(--modal-viewport-top,0px)] mobile:pr-0 mobile:pb-[var(--modal-viewport-bottom,0px)] mobile:pl-0',
+  'mobile:bottom-[calc(-1*var(--modal-screen-gap,0px))]'
 );
 
 /** Backdrop of the confirm dialog: stays a centered card on phones. */

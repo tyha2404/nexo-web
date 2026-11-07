@@ -137,3 +137,39 @@ test('date inputs remain inside a vertically scrolling transaction modal', async
   expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(modal!.x + modal!.width);
   await page.screenshot({ path: 'test-results/iphone-date-modal.png' });
 });
+
+test('home-screen app: the form sheet reaches the screen bottom past the short fixed layer', async ({
+  page,
+}) => {
+  // iOS home-screen apps end the fixed layer one status-bar height (59px) above the screen
+  // bottom. Fake it: standalone, with a screen 59px taller than the viewport.
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'standalone', { get: () => true });
+    Object.defineProperty(window.screen, 'height', { get: () => window.innerHeight + 59 });
+    Object.defineProperty(window.screen, 'width', { get: () => window.innerWidth });
+  });
+  await page.goto('/');
+  const dialog = await openTransactionForm(page);
+  const viewportHeight = page.viewportSize()!.height;
+  const footer = dialog.locator('.button-group');
+  await expect
+    .poll(async () => {
+      const box = await footer.boundingBox();
+      return Math.round(box!.y + box!.height);
+    })
+    .toBe(viewportHeight + 59);
+  const panel = await dialog.boundingBox();
+  expect(Math.round(panel!.y + panel!.height)).toBe(viewportHeight + 59);
+});
+
+test('browser tab: the form sheet keeps to the viewport (no screen-gap stretch)', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window.screen, 'height', { get: () => window.innerHeight + 120 });
+  });
+  await page.goto('/');
+  const dialog = await openTransactionForm(page);
+  const box = await dialog.locator('.button-group').boundingBox();
+  expect(Math.round(box!.y + box!.height)).toBe(page.viewportSize()!.height);
+});
