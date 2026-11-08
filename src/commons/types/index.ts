@@ -11,6 +11,10 @@ export interface User {
 export interface AuthResponse {
   user: User;
   token: string;
+  /** Only for Go API logins; Supabase sessions refresh through supabase-js. */
+  refreshToken?: string;
+  /** Access token lifetime in seconds. */
+  expiresIn?: number;
 }
 
 export interface Category {

@@ -1,6 +1,6 @@
 import { SlidingTabs } from './ui';
 import React, { useState } from 'react';
-import { authService } from '../services';
+import { authService, saveSession } from '../services';
 import { toast } from 'react-toastify';
 import { getErrorMessage } from '../commons/utils';
 import { SPINNER_BUTTON } from './ui';
@@ -57,7 +57,7 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
       if (isLogin) {
         // Handle Login (accepts Username or Email)
         const response = await authService.login(identifier, password);
-        localStorage.setItem('token', response.token);
+        saveSession(response);
 
         toast.success('Đăng nhập thành công!');
         window.dispatchEvent(new Event('auth-changed'));
@@ -72,7 +72,7 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
         // Auto-login with the email: the account lives in Supabase Auth, which the
         // username-based Go login can't see until the sync trigger has run.
         const loginResponse = await authService.login(email, password);
-        localStorage.setItem('token', loginResponse.token);
+        saveSession(loginResponse);
 
         toast.success('Tạo tài khoản và đăng nhập thành công!');
         window.dispatchEvent(new Event('auth-changed'));

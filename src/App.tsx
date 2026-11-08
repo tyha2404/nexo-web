@@ -49,7 +49,7 @@ const AddTransactionModal = lazy(() => import('./components/AddTransactionModal'
 const AIChatWidget = lazy(() =>
   import('./components/chat').then((module) => ({ default: module.AIChatWidget }))
 );
-import { ApiError, authService } from './services';
+import { ApiError, authService, clearSession } from './services';
 import { useRealtimeSync, useVirtualKeyboard } from './hooks';
 import { BTN_SECONDARY, PWA_TOAST, SPINNER_PAGE, MOTION_MENU, cx } from './components/ui';
 
@@ -193,14 +193,16 @@ function App() {
     }
     try {
       const userData = await authService.whoami();
-      if (attempt !== authAttempt.current || token !== localStorage.getItem('token')) return;
+      // The token itself may have been renewed during the call; only a logout
+      // or a new login (both bump authAttempt) makes this answer stale.
+      if (attempt !== authAttempt.current || !localStorage.getItem('token')) return;
       localStorage.setItem('nexo-user-id', userData.id);
       setUser(userData);
     } catch (err) {
       console.error('Failed to verify token', err);
-      if (attempt !== authAttempt.current || token !== localStorage.getItem('token')) return;
+      if (attempt !== authAttempt.current || !localStorage.getItem('token')) return;
       if (err instanceof ApiError && err.status === 401) {
-        localStorage.removeItem('token');
+        clearSession();
         setUser(null);
       } else {
         setAuthError('Không kết nối được máy chủ Nexo. Kiểm tra API đang chạy rồi bấm Thử lại.');
@@ -244,7 +246,8 @@ function App() {
   const handleLogoutRef = useRef<() => void>(() => undefined);
   const handleLogout = () => {
     authAttempt.current++;
-    localStorage.removeItem('token');
+    // Revokes the refresh token and clears the stored session.
+    void authService.logout().catch(() => undefined);
     localStorage.removeItem('nexo-user-id');
     for (const key of Object.keys(localStorage))
       if (key.startsWith('nexo-draft:')) localStorage.removeItem(key);
@@ -252,7 +255,6 @@ function App() {
     setAuthError(null);
     setAIRequested(false);
     setChangePasswordOpen(false);
-    void authService.logout().catch(() => undefined);
   };
   useEffect(() => {
     handleLogoutRef.current = handleLogout;

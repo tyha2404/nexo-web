@@ -1,4 +1,4 @@
-import { request, BASE_URL } from './client';
+import { authFetch, request } from './client';
 
 export interface ActionCard {
   actionType: string;
@@ -63,24 +63,16 @@ export const chatService = {
     onComplete: () => void,
     onError: (err: Error) => void
   ): Promise<void> {
-    const token = localStorage.getItem('token');
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      Accept: 'text/event-stream',
-    };
-    if (token && token !== 'undefined') {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
     }, 180000); // 180 seconds client timeout (3 minutes)
 
     try {
-      const response = await fetch(`${BASE_URL}/chat/stream`, {
+      // authFetch renews an expired access token (and retries once on 401).
+      const response = await authFetch('/chat/stream', {
         method: 'POST',
-        headers,
+        headers: { Accept: 'text/event-stream' },
         body: JSON.stringify(req),
         signal: controller.signal,
       });

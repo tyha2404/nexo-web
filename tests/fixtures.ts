@@ -14,6 +14,15 @@ export async function setup(page: Page) {
   const state = {
     offline: false,
     unauthorized: false,
+    /** Access tokens the API rejects with 401 (expired). */
+    expiredTokens: [] as string[],
+    /** The live refresh token; POST /auth/refresh rotates it. */
+    refreshToken: '',
+    /** Refresh tokens sent to POST /auth/refresh and /auth/logout, in order. */
+    refreshCalls: [] as string[],
+    logoutCalls: [] as string[],
+    /** Bearer token of every other API request. */
+    bearers: [] as string[],
     failSave: false,
     rejectSave: false,
     requests: [] as string[],
@@ -106,6 +115,29 @@ export async function setup(page: Page) {
     state.requests.push(path + url.search);
     if (state.offline) return route.abort('internetdisconnected');
     const data = (value: unknown) => route.fulfill({ json: { success: true, data: value } });
+    if (path === '/auth/refresh') {
+      const { refreshToken } = request.postDataJSON() as { refreshToken: string };
+      state.refreshCalls.push(refreshToken);
+      if (!state.refreshToken || refreshToken !== state.refreshToken)
+        return route.fulfill({
+          status: 401,
+          json: { message: 'Invalid or expired refresh token' },
+        });
+      state.refreshToken = `refresh-${state.refreshCalls.length}`;
+      return data({
+        token: `fresh-token-${state.refreshCalls.length}`,
+        refreshToken: state.refreshToken,
+        expiresIn: 900,
+      });
+    }
+    if (path === '/auth/logout') {
+      state.logoutCalls.push((request.postDataJSON() as { refreshToken: string }).refreshToken);
+      return data({ message: 'Logged out' });
+    }
+    const bearer = (request.headers()['authorization'] || '').replace(/^Bearer /, '');
+    state.bearers.push(bearer);
+    if (state.expiredTokens.includes(bearer))
+      return route.fulfill({ status: 401, json: { error: 'Invalid or expired token' } });
     if (path === '/auth/whoami')
       return state.unauthorized
         ? route.fulfill({ status: 401, json: { message: 'expired' } })

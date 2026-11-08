@@ -1,5 +1,5 @@
 import type { AuthResponse, User } from '../commons/types';
-import { ApiError, request } from './client';
+import { ApiError, endSession, request, saveSession, type SessionTokens } from './client';
 import { supabase } from './supabase';
 
 export const authService = {
@@ -95,10 +95,15 @@ export const authService = {
     }
 
     try {
-      await request<unknown>('/auth/change-password', {
+      // The API signs out every session on a password change and returns a new
+      // one for this device.
+      const session = await request<Partial<SessionTokens>>('/auth/change-password', {
         method: 'POST',
         body: JSON.stringify({ currentPassword, newPassword }),
       });
+      if (session.token && session.refreshToken) {
+        saveSession({ token: session.token, refreshToken: session.refreshToken });
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 400) {
         throw new Error('Mật khẩu hiện tại không đúng.', { cause: err });
@@ -108,7 +113,8 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
-    localStorage.removeItem('token');
+    // Synchronous, before any await: callers may clear localStorage right after.
+    endSession();
     await supabase.auth.signOut();
   },
 };
