@@ -1,94 +1,58 @@
 import { TransactionType } from '../constants';
 
 /**
- * Automatically determine the most fitting emoji icon for a category based on its name and type
+ * Icon rules, checked in order. A keyword matches whole words of the category name (a
+ * multi-word keyword matches those words in sequence), never a substring: "ăn" must not
+ * match "xăng", "căn hộ" or "khăn".
  */
-export function getCategoryIcon(name?: string, type?: string): string {
-  if (!name) {
-    if (type === TransactionType.INCOME) return '💰';
-    if (type === TransactionType.INVESTMENT) return '📈';
-    return '💸';
+const ICON_RULES: [keywords: string[], icon: string][] = [
+  [['ăn', 'uống', 'cà phê', 'cafe', 'trưa', 'tối', 'sáng', 'food', 'nhà hàng'], '🍔'],
+  [['mua', 'sắm', 'quần', 'áo', 'shopping', 'đồ'], '🛍️'],
+  [['xăng', 'xe', 'di chuyển', 'grab', 'taxi', 'vé'], '🚗'],
+  [['nhà', 'điện', 'nước', 'internet', 'phòng', 'thuê'], '🏠'],
+  [['giải trí', 'phim', 'du lịch', 'game', 'chơi'], '🎬'],
+  [['sức khỏe', 'thuốc', 'khám', 'bệnh', 'gym', 'thể thao'], '💊'],
+  [['học', 'sách', 'khóa', 'trường'], '📚'],
+  [['lương', 'thưởng', 'thu nhập', 'tiền về', 'bonus'], '💵'],
+  [['đầu tư', 'cổ phiếu', 'vàng', 'quỹ', 'chứng'], '📈'],
+  [['nợ', 'vay', 'mượn', 'trả'], '🤝'],
+  [['quà', 'biếu', 'tặng', 'mừng'], '🎁'],
+  [['hóa đơn', 'phí', 'dịch vụ'], '📄'],
+];
+
+/** Lowercase words of `text`, with Vietnamese diacritics in one (NFC) form. */
+const toWords = (text: string) =>
+  text
+    .normalize('NFC')
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
+
+const RULE_WORDS = ICON_RULES.map(
+  ([keywords, icon]) => [keywords.map(toWords), icon] as [string[][], string]
+);
+
+function containsPhrase(words: string[], phrase: string[]): boolean {
+  for (let i = 0; i + phrase.length <= words.length; i++) {
+    if (phrase.every((word, j) => words[i + j] === word)) return true;
   }
-  const n = name.toLowerCase();
-  if (
-    n.includes('ăn') ||
-    n.includes('uống') ||
-    n.includes('cà phê') ||
-    n.includes('cafe') ||
-    n.includes('trưa') ||
-    n.includes('tối') ||
-    n.includes('sáng') ||
-    n.includes('food') ||
-    n.includes('nhà hàng')
-  )
-    return '🍔';
-  if (
-    n.includes('mua') ||
-    n.includes('sắm') ||
-    n.includes('quần') ||
-    n.includes('áo') ||
-    n.includes('shopping') ||
-    n.includes('đồ')
-  )
-    return '🛍️';
-  if (
-    n.includes('xăng') ||
-    n.includes('xe') ||
-    n.includes('di chuyển') ||
-    n.includes('grab') ||
-    n.includes('taxi') ||
-    n.includes('vé')
-  )
-    return '🚗';
-  if (
-    n.includes('nhà') ||
-    n.includes('điện') ||
-    n.includes('nước') ||
-    n.includes('internet') ||
-    n.includes('phòng') ||
-    n.includes('thuê')
-  )
-    return '🏠';
-  if (
-    n.includes('giải trí') ||
-    n.includes('phim') ||
-    n.includes('du lịch') ||
-    n.includes('game') ||
-    n.includes('chơi')
-  )
-    return '🎬';
-  if (
-    n.includes('sức khỏe') ||
-    n.includes('thuốc') ||
-    n.includes('khám') ||
-    n.includes('bệnh') ||
-    n.includes('gym') ||
-    n.includes('thể thao')
-  )
-    return '💊';
-  if (n.includes('học') || n.includes('sách') || n.includes('khóa') || n.includes('trường'))
-    return '📚';
-  if (
-    n.includes('lương') ||
-    n.includes('thưởng') ||
-    n.includes('thu nhập') ||
-    n.includes('tiền về') ||
-    n.includes('bonus')
-  )
-    return '💵';
-  if (
-    n.includes('đầu tư') ||
-    n.includes('cổ phiếu') ||
-    n.includes('vàng') ||
-    n.includes('quỹ') ||
-    n.includes('chứng')
-  )
-    return '📈';
-  if (n.includes('nợ') || n.includes('vay') || n.includes('mượn') || n.includes('trả')) return '🤝';
-  if (n.includes('quà') || n.includes('biếu') || n.includes('tặng') || n.includes('mừng'))
-    return '🎁';
-  if (n.includes('hóa đơn') || n.includes('phí') || n.includes('dịch vụ')) return '📄';
+  return false;
+}
+
+function typeIcon(type?: string): string {
   if (type === TransactionType.INCOME) return '💰';
   if (type === TransactionType.INVESTMENT) return '📈';
   return '💸';
+}
+
+/**
+ * Automatically determine the most fitting emoji icon for a category based on its name and type
+ */
+export function getCategoryIcon(name?: string, type?: string): string {
+  if (!name) return typeIcon(type);
+  const words = toWords(name);
+  for (const [phrases, icon] of RULE_WORDS) {
+    if (phrases.some((phrase) => containsPhrase(words, phrase))) return icon;
+  }
+  return typeIcon(type);
 }

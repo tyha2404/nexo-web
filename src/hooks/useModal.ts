@@ -58,6 +58,78 @@ function topEdgeColor(dialog: HTMLElement): string | null {
   return null;
 }
 
+/**
+ * Page state shared by every open dialog. Dialogs can stack (a date picker sheet inside a
+ * form) and close in any order (closing the form unmounts both, outer cleanup first), so the
+ * page state is saved when the first dialog opens and restored when the last one closes,
+ * never per dialog.
+ */
+interface ModalLayer {
+  /** The dialog's colour under the status bar, once measured (null: doesn't reach it). */
+  sheetColor: string | null;
+}
+const VIEWPORT_VARS = [
+  '--modal-viewport-height',
+  '--modal-viewport-top',
+  '--modal-viewport-bottom',
+] as const;
+const openLayers: ModalLayer[] = [];
+let savedPage: {
+  htmlOverflow: string;
+  bodyOverflow: string;
+  themeColor: string | null;
+  vars: Record<string, string>;
+} | null = null;
+
+const themeMeta = () => document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+
+/** Status bar colour: the topmost full-screen sheet's, else the page's own. */
+function applyThemeColor() {
+  const meta = themeMeta();
+  if (!meta || !savedPage) return;
+  const top = [...openLayers].reverse().find((layer) => layer.sheetColor);
+  const color = top?.sheetColor ?? savedPage.themeColor;
+  if (color !== null && meta.content !== color) meta.content = color;
+}
+
+function pushLayer(layer: ModalLayer) {
+  if (openLayers.length === 0) {
+    const html = document.documentElement;
+    savedPage = {
+      htmlOverflow: html.style.overflow,
+      bodyOverflow: document.body.style.overflow,
+      themeColor: themeMeta()?.content ?? null,
+      vars: Object.fromEntries(VIEWPORT_VARS.map((v) => [v, html.style.getPropertyValue(v)])),
+    };
+    // Scroll lock: overflow hidden on <html> and <body> (honoured for touch since iOS 16).
+    // Not `body { position: fixed }`: that leaves the page with no scrollable height, and an
+    // iOS home-screen app then ends the viewport one status-bar height (59px) short of the
+    // screen, so full-screen sheets stopped above a blank strip.
+    html.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+  }
+  openLayers.push(layer);
+}
+
+function popLayer(layer: ModalLayer) {
+  const index = openLayers.indexOf(layer);
+  if (index >= 0) openLayers.splice(index, 1);
+  if (openLayers.length > 0 || !savedPage) {
+    applyThemeColor();
+    return;
+  }
+  const html = document.documentElement;
+  html.style.overflow = savedPage.htmlOverflow;
+  document.body.style.overflow = savedPage.bodyOverflow;
+  for (const v of VIEWPORT_VARS) {
+    if (savedPage.vars[v]) html.style.setProperty(v, savedPage.vars[v]);
+    else html.style.removeProperty(v);
+  }
+  const meta = themeMeta();
+  if (meta && savedPage.themeColor !== null) meta.content = savedPage.themeColor;
+  savedPage = null;
+}
+
 // Use the visual viewport for the iOS keyboard; dvh alone tracks browser chrome.
 export function useModal(open: boolean, onClose: () => void) {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -70,19 +142,9 @@ export function useModal(open: boolean, onClose: () => void) {
     const dialog = dialogRef.current;
     if (dialog) dialog.dataset.modalLayer = 'true';
     const previousFocus = document.activeElement as HTMLElement | null;
-    // Scroll lock: overflow hidden on <html> and <body> (honoured for touch since iOS 16).
-    // Not `body { position: fixed }`: that leaves the page with no scrollable height, and an
-    // iOS home-screen app then ends the viewport one status-bar height (59px) short of the
-    // screen, so full-screen sheets stopped above a blank strip.
-    const html = document.documentElement;
-    const previousHtmlOverflow = html.style.overflow;
-    const previousBodyOverflow = document.body.style.overflow;
-    html.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
+    const layer: ModalLayer = { sheetColor: null };
+    pushLayer(layer);
     const rootStyle = document.documentElement.style;
-    const previousViewportHeight = rootStyle.getPropertyValue('--modal-viewport-height');
-    const previousViewportTop = rootStyle.getPropertyValue('--modal-viewport-top');
-    const previousViewportBottom = rootStyle.getPropertyValue('--modal-viewport-bottom');
     const viewport = window.visualViewport;
     const resize = () => {
       rootStyle.setProperty(
@@ -135,16 +197,11 @@ export function useModal(open: boolean, onClose: () => void) {
     // (autoFocus): stealing it would close the keyboard the user just opened.
     // A full-screen sheet paints the status bar (theme-color) in its own top colour, so the
     // two read as one surface; the page's title-bar colour comes back on close.
-    const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    let previousThemeColor: string | null = null;
     const frame = requestAnimationFrame(() => {
       if (!dialogRef.current?.contains(document.activeElement))
         dialogRef.current?.focus({ preventScroll: true });
-      const sheetColor = dialog ? topEdgeColor(dialog) : null;
-      if (themeMeta && sheetColor) {
-        previousThemeColor = themeMeta.content;
-        themeMeta.content = sheetColor;
-      }
+      layer.sheetColor = dialog ? topEdgeColor(dialog) : null;
+      applyThemeColor();
     });
     const keydown = (event: KeyboardEvent) => {
       const layers = document.querySelectorAll('[data-modal-layer="true"]');
@@ -205,7 +262,6 @@ export function useModal(open: boolean, onClose: () => void) {
     return () => {
       if (dialog) delete dialog.dataset.modalLayer;
       cancelAnimationFrame(frame);
-      if (themeMeta && previousThemeColor !== null) themeMeta.content = previousThemeColor;
       window.clearTimeout(revealTimer);
       dialog?.removeEventListener('focusin', focusin);
       dialog?.removeEventListener('pointerdown', pointerdown);
@@ -213,16 +269,7 @@ export function useModal(open: boolean, onClose: () => void) {
       viewport?.removeEventListener('resize', resize);
       viewport?.removeEventListener('scroll', resize);
       document.removeEventListener('keydown', keydown);
-      if (previousViewportBottom)
-        rootStyle.setProperty('--modal-viewport-bottom', previousViewportBottom);
-      else rootStyle.removeProperty('--modal-viewport-bottom');
-      if (previousViewportHeight)
-        rootStyle.setProperty('--modal-viewport-height', previousViewportHeight);
-      else rootStyle.removeProperty('--modal-viewport-height');
-      if (previousViewportTop) rootStyle.setProperty('--modal-viewport-top', previousViewportTop);
-      else rootStyle.removeProperty('--modal-viewport-top');
-      html.style.overflow = previousHtmlOverflow;
-      document.body.style.overflow = previousBodyOverflow;
+      popLayer(layer);
       previousFocus?.focus({ preventScroll: true });
     };
   }, [open]);
