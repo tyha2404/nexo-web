@@ -5,6 +5,7 @@ import type {
   DebtStatus,
   DebtSummary,
   DebtType,
+  UpdateDebtPayload,
 } from '../types/debt';
 import { request } from './client';
 
@@ -29,6 +30,13 @@ export const debtService = {
   createDebt: async (data: CreateDebtPayload): Promise<Debt> => {
     return request<Debt>('/debts', {
       method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateDebt: async (debtId: string, data: UpdateDebtPayload): Promise<Debt> => {
+    return request<Debt>(`/debts/${debtId}`, {
+      method: 'PUT',
       body: JSON.stringify(data),
     });
   },

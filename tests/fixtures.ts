@@ -66,8 +66,8 @@ export async function setup(page: Page) {
       totalAmount: 5000000,
       paidAmount: 1000000,
       remaining: 4000000,
-      startDate: monthStart.format(),
-      dueDate: moment().endOf('month').startOf('day').format(),
+      startDate: monthStart.format('YYYY-MM-DD'),
+      dueDate: moment().endOf('month').format('YYYY-MM-DD'),
       status: 'PENDING',
       repayments: [
         {
@@ -89,7 +89,7 @@ export async function setup(page: Page) {
       totalAmount: 2000000,
       paidAmount: 0,
       remaining: 2000000,
-      startDate: moment().startOf('day').format(),
+      startDate: moment().format('YYYY-MM-DD'),
       status: 'PENDING',
       repayments: [],
       createdAt: moment().format(),

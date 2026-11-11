@@ -46,6 +46,16 @@ export interface CreateDebtPayload {
   walletId?: string;
 }
 
+/** Full replacement of a debt's editable fields (type cannot change; null clears). */
+export interface UpdateDebtPayload {
+  title: string;
+  totalAmount: number;
+  startDate?: string;
+  dueDate?: string | null;
+  notes?: string;
+  walletId?: string | null;
+}
+
 export interface AddRepaymentPayload {
   amount: number;
   paidAt?: string;

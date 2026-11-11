@@ -3,9 +3,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
+import { DATE_FORMAT_INPUT } from '../commons/constants';
 import {
   formatCompactCurrency,
   formatCurrency,
+  formatDate,
   formatNumberInput,
   isTouchDevice,
   MONEY_INPUT_PROPS,
@@ -56,6 +58,7 @@ import {
 import {
   ALERT_ERROR,
   ACTION_BTN_DELETE,
+  ACTION_BTN_EDIT,
   AlertTriangle,
   ArrowRightLeft,
   BTN_FILL,
@@ -78,6 +81,7 @@ import {
   MODAL_HEADER,
   MODAL_PANEL,
   PAGE_HEADER_BTN,
+  Pencil,
   Plus,
   Search,
   SEARCH_ICON,
@@ -105,8 +109,17 @@ const DEBT_TABS: { type: DebtType; label: string }[] = [
   { type: 'RECEIVABLE', label: 'Người khác nợ tôi' },
 ];
 
-/** Local calendar day ('YYYY-MM-DD') of an API date, or null. */
-const dayOf = (value?: string) => (value ? moment(value).format('YYYY-MM-DD') : null);
+/**
+ * Local calendar day ('YYYY-MM-DD') of an API date, or null. startDate/dueDate already come as
+ * 'YYYY-MM-DD' (like transaction dates); paidAt/createdAt are timestamps.
+ */
+const dayOf = (value?: string | null) => (value ? moment(value).format(DATE_FORMAT_INPUT) : null);
+
+/** Day the debt started: its start date, or the day it was recorded. */
+const startDayOf = (debt: Debt) => dayOf(debt.startDate || debt.createdAt);
+
+/** 'DD/MM/YYYY' of an API date, or '—'. */
+const formatDayOrDash = (value?: string | null) => (value ? formatDate(value) : '—');
 
 /** Unsettled and past its due date (the API only flags OVERDUE on read, so check the date too). */
 const isDebtLate = (debt: Debt, today: string) =>
@@ -143,7 +156,7 @@ const toPaidAt = (day: string) =>
 
 /** Whether the debt was started, repaid or falls due on `day`. */
 const debtTouchesDay = (debt: Debt, day: string) =>
-  dayOf(debt.startDate || debt.createdAt) === day ||
+  startDayOf(debt) === day ||
   dayOf(debt.dueDate) === day ||
   (debt.repayments ?? []).some((r) => dayOf(r.paidAt) === day);
 
@@ -179,7 +192,7 @@ function buildDebtCalendar(debts: Debt[], month: string, isPayable: boolean) {
     const dueDay = dayOf(debt.dueDate);
     const late = !settled && (debt.status === 'OVERDUE' || (!!dueDay && dueDay < today));
     const left = formatCurrency(Math.abs(debt.remaining ?? debt.totalAmount));
-    const start = dayOf(debt.startDate || debt.createdAt);
+    const start = startDayOf(debt);
     if (inMonth(start)) {
       opened[start] = (opened[start] ?? 0) + debt.totalAmount;
       if (settled) mark(start, 'success', `${settledWord}: ${debt.title}`);
@@ -250,12 +263,13 @@ export default function Debts() {
   const repayDialogRef = useModal(isRepayModalOpen, () => setIsRepayModalOpen(false));
   const [selectedDebt, setSelectedDebt] = useState<Debt | null>(null);
 
-  // Create / Edit Form State
+  // Create / Edit Form State (dates are picked days, 'YYYY-MM-DD' or '')
+  const [editingDebt, setEditingDebt] = useState<Debt | null>(null);
   const [formType, setFormType] = useState<DebtType>('PAYABLE');
   const [formTitle, setFormTitle] = useState<string>('');
   const [formAmount, setFormAmount] = useState<string>('');
-  const [formStartDate, setFormStartDate] = useState<Date | null>(moment().toDate());
-  const [formDueDate, setFormDueDate] = useState<Date | null>(null);
+  const [formStartDate, setFormStartDate] = useState<string>(() => moment().format('YYYY-MM-DD'));
+  const [formDueDate, setFormDueDate] = useState<string>('');
   const [formNotes, setFormNotes] = useState<string>('');
   const [formWalletId, setFormWalletId] = useState<string>('');
 
@@ -302,13 +316,27 @@ export default function Debts() {
   };
 
   const openCreateModal = (defaultType: DebtType = 'PAYABLE') => {
+    setEditingDebt(null);
     setFormType(defaultType);
     setFormTitle('');
     setFormAmount('');
-    setFormStartDate(moment().toDate());
-    setFormDueDate(null);
+    setFormStartDate(moment().format('YYYY-MM-DD'));
+    setFormDueDate('');
     setFormNotes('');
     setFormWalletId('');
+    setIsCreateModalOpen(true);
+  };
+
+  const openEditModal = (debt: Debt) => {
+    setEditingDebt(debt);
+    setFormType(debt.type);
+    setFormTitle(debt.title);
+    setFormAmount(formatNumberInput(String(Math.round(debt.totalAmount))));
+    setFormStartDate(startDayOf(debt) ?? '');
+    setFormDueDate(dayOf(debt.dueDate) ?? '');
+    setFormNotes(debt.notes ?? '');
+    // Keep the linked wallet even if it was deleted, so saving does not silently unlink it.
+    setFormWalletId(debt.walletId ?? '');
     setIsCreateModalOpen(true);
   };
 
@@ -324,26 +352,54 @@ export default function Debts() {
       toast.error('Vui lòng nhập số tiền hợp lệ');
       return;
     }
+    if (editingDebt && parsedAmount < Math.round(editingDebt.paidAmount)) {
+      toast.error(
+        `Số tiền gốc không được nhỏ hơn số đã thanh toán (${formatCurrency(editingDebt.paidAmount)})`
+      );
+      return;
+    }
+    if (formStartDate && formDueDate && formDueDate < formStartDate) {
+      toast.error('Hạn thanh toán phải từ ngày bắt đầu trở đi');
+      return;
+    }
 
+    // Days go out as 'YYYY-MM-DD', like transaction dates.
+    const startDate = formStartDate || undefined;
+    const dueDate = formDueDate || undefined;
     try {
-      await debtService.createDebt({
-        type: formType,
-        title: formTitle,
-        totalAmount: parsedAmount,
-        // Keep the local calendar day (UTC+7) instead of shifting to the previous UTC day
-        startDate: formStartDate ? moment(formStartDate).startOf('day').format() : undefined,
-        dueDate: formDueDate ? moment(formDueDate).startOf('day').format() : undefined,
-        notes: formNotes,
-        walletId: formWalletId || undefined,
-      });
+      if (editingDebt) {
+        await debtService.updateDebt(editingDebt.id, {
+          title: formTitle,
+          totalAmount: parsedAmount,
+          startDate,
+          dueDate: dueDate ?? null,
+          notes: formNotes,
+          walletId: formWalletId || null,
+        });
+        toast.success('Đã cập nhật khoản vay/nợ');
+      } else {
+        await debtService.createDebt({
+          type: formType,
+          title: formTitle,
+          totalAmount: parsedAmount,
+          startDate,
+          dueDate,
+          notes: formNotes,
+          walletId: formWalletId || undefined,
+        });
+        toast.success('Đã tạo khoản vay/nợ thành công!');
+      }
 
-      toast.success('Đã tạo khoản vay/nợ thành công!');
       window.dispatchEvent(new Event('debts-changed'));
-      if (formWalletId) window.dispatchEvent(new Event('wallets-changed'));
+      if (formWalletId || editingDebt?.walletId) {
+        window.dispatchEvent(new Event('wallets-changed'));
+      }
       setIsCreateModalOpen(false);
+      setEditingDebt(null);
       fetchDebtData();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Lỗi khi tạo khoản vay/nợ');
+      const fallback = editingDebt ? 'Lỗi khi cập nhật khoản vay/nợ' : 'Lỗi khi tạo khoản vay/nợ';
+      toast.error(err instanceof Error ? err.message : fallback);
     }
   };
 
@@ -376,7 +432,7 @@ export default function Debts() {
       return;
     }
     const today = moment().format('YYYY-MM-DD');
-    const startDay = dayOf(selectedDebt.startDate || selectedDebt.createdAt);
+    const startDay = startDayOf(selectedDebt);
     if (!repayDate || repayDate > today) {
       toast.error('Ngày thanh toán không được ở tương lai');
       return;
@@ -460,9 +516,9 @@ export default function Debts() {
     if (selectedDay) return debtTouchesDay(d, selectedDay);
     if (scopeIgnoresMonth) return true;
 
-    const debtDate = d.startDate || d.createdAt;
-    if (!debtDate) return true;
-    return moment(debtDate).isBetween(startOfMonth, endOfMonth, undefined, '[]');
+    const startDay = startDayOf(d);
+    if (!startDay) return true;
+    return moment(startDay, 'YYYY-MM-DD').isBetween(startOfMonth, endOfMonth, 'day', '[]');
   });
   // Unsettled debts across months: the soonest due first, those without a due date last.
   if (scopeIgnoresMonth) {
@@ -477,6 +533,12 @@ export default function Debts() {
   );
   const totalPaid = filteredDebts.reduce((sum, d) => sum + (d.paidAmount ?? 0), 0);
   const overdueCount = filteredDebts.filter((d) => d.status === 'OVERDUE').length;
+
+  // Create/edit wallet picker; a deleted wallet still linked to the edited debt stays listed.
+  const editWalletOptions =
+    editingDebt?.walletId && !wallets.some((w) => w.id === editingDebt.walletId)
+      ? [...walletOptions(wallets), { value: editingDebt.walletId, label: 'Ví đã xóa' }]
+      : walletOptions(wallets);
 
   const switchTab = (type: DebtType) => {
     if (type === activeType) return;
@@ -672,12 +734,8 @@ export default function Debts() {
                       >
                         {formatCurrency(Math.abs(debt.remaining))}
                       </td>
-                      <td className={TXN_DATE}>
-                        {debt.startDate ? moment(debt.startDate).format('DD/MM/YYYY') : '—'}
-                      </td>
-                      <td className={TXN_DATE}>
-                        {debt.dueDate ? moment(debt.dueDate).format('DD/MM/YYYY') : '—'}
-                      </td>
+                      <td className={TXN_DATE}>{formatDayOrDash(debt.startDate)}</td>
+                      <td className={TXN_DATE}>{formatDayOrDash(debt.dueDate)}</td>
                       <td>
                         <span className={CATEGORY_BADGE}>
                           {debt.status === 'COMPLETED'
@@ -703,6 +761,14 @@ export default function Debts() {
                               <ArrowRightLeft size={16} /> Trả tiền
                             </button>
                           )}
+                          <button
+                            onClick={() => openEditModal(debt)}
+                            className={ACTION_BTN_EDIT}
+                            aria-label={`Sửa khoản ${debt.title}`}
+                            title="Sửa"
+                          >
+                            <Pencil size={16} />
+                          </button>
                           <button
                             onClick={() => handleDelete(debt.id)}
                             className={ACTION_BTN_DELETE}
@@ -742,10 +808,8 @@ export default function Debts() {
                         )}
                         <div className={MOBILE_CARD_DATE}>
                           <span>
-                            {debt.startDate ? moment(debt.startDate).format('DD/MM/YYYY') : '—'}
-                            {debt.dueDate
-                              ? ` → Hạn: ${moment(debt.dueDate).format('DD/MM/YYYY')}`
-                              : ''}
+                            {formatDayOrDash(debt.startDate)}
+                            {debt.dueDate ? ` → Hạn: ${formatDayOrDash(debt.dueDate)}` : ''}
                           </span>
                         </div>
                       </div>
@@ -790,6 +854,14 @@ export default function Debts() {
                       )}
                       <button
                         type="button"
+                        onClick={() => openEditModal(debt)}
+                        className={MOBILE_ACTION_EDIT}
+                        aria-label={`Sửa khoản ${debt.title}`}
+                      >
+                        <Pencil size={16} /> Sửa
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleDelete(debt.id)}
                         className={MOBILE_ACTION_DELETE}
                         title="Xóa khoản nợ"
@@ -813,13 +885,13 @@ export default function Debts() {
               ref={createDialogRef}
               role="dialog"
               aria-modal="true"
-              aria-label="Tạo khoản nợ mới"
+              aria-label={editingDebt ? 'Sửa khoản nợ' : 'Tạo khoản nợ mới'}
               tabIndex={-1}
               className={MODAL_PANEL}
               onClick={(e) => e.stopPropagation()}
             >
               <div className={MODAL_HEADER}>
-                <h3>Tạo khoản nợ mới</h3>
+                <h3>{editingDebt ? 'Sửa khoản nợ' : 'Tạo khoản nợ mới'}</h3>
                 <button
                   className={MODAL_CLOSE_BTN}
                   onClick={() => setIsCreateModalOpen(false)}
@@ -859,6 +931,8 @@ export default function Debts() {
                       onChange={(option) => {
                         if (option) setFormType(option.value as DebtType);
                       }}
+                      // The type sets the direction of every repayment, so it is fixed once created.
+                      isDisabled={!!editingDebt}
                       classNamePrefix="react-select"
                       isSearchable={!isTouchDevice()}
                       menuPortalTarget={document.body}
@@ -885,11 +959,8 @@ export default function Debts() {
                     <DatePickerField
                       id="debt-startdate"
                       label="Ngày bắt đầu"
-                      value={formStartDate ? moment(formStartDate).format('YYYY-MM-DD') : ''}
-                      onChange={(value) => {
-                        const date = moment(value, 'YYYY-MM-DD', true);
-                        setFormStartDate(date.isValid() ? date.toDate() : null);
-                      }}
+                      value={formStartDate}
+                      onChange={setFormStartDate}
                     />
                   </div>
 
@@ -898,16 +969,13 @@ export default function Debts() {
                     <DatePickerField
                       id="debt-duedate"
                       label="Hạn thanh toán"
-                      value={formDueDate ? moment(formDueDate).format('YYYY-MM-DD') : ''}
-                      onChange={(value) => {
-                        const date = moment(value, 'YYYY-MM-DD', true);
-                        setFormDueDate(date.isValid() ? date.toDate() : null);
-                      }}
+                      value={formDueDate}
+                      onChange={setFormDueDate}
                     />
                   </div>
                 </div>
 
-                {wallets.length > 0 && (
+                {(wallets.length > 0 || !!editingDebt?.walletId) && (
                   <div className={FORM_GROUP}>
                     <label htmlFor="debt-wallet">
                       {formType === 'PAYABLE' ? 'Nhận tiền vào ví' : 'Chi tiền từ ví'}{' '}
@@ -915,14 +983,19 @@ export default function Debts() {
                     </label>
                     <Select
                       inputId="debt-wallet"
-                      options={walletOptions(wallets)}
-                      value={walletOptions(wallets).find((o) => o.value === formWalletId) || null}
+                      options={editWalletOptions}
+                      value={editWalletOptions.find((o) => o.value === formWalletId) || null}
                       onChange={(option) => setFormWalletId(option?.value ?? '')}
                       classNamePrefix="react-select"
                       isSearchable={!isTouchDevice()}
                       menuPortalTarget={document.body}
                       menuPosition="fixed"
                     />
+                    {editingDebt?.walletId && (
+                      <div className="mt-1 text-[0.8rem] text-muted">
+                        Đổi ví hoặc số tiền gốc sẽ điều chỉnh lại số dư ví tương ứng.
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -946,7 +1019,7 @@ export default function Debts() {
                     Hủy
                   </button>
                   <button type="submit" className={cx(BTN_PRIMARY, BTN_FILL)}>
-                    Tạo khoản nợ
+                    {editingDebt ? 'Lưu thay đổi' : 'Tạo khoản nợ'}
                   </button>
                 </div>
               </form>
