@@ -3,7 +3,7 @@ import moment from 'moment';
 import { useMemo } from 'react';
 import { DATE_FORMAT_MONTH, TransactionType } from '../../commons/constants';
 import type { Category, CategoryBreakdownItem, SummaryReport } from '../../commons/types';
-import { formatCurrency, getCategoryIcon } from '../../commons/utils';
+import { formatCurrency, getCategoryIcon, openAddTransaction } from '../../commons/utils';
 import {
   BTN_PRIMARY,
   CARD_SECTION_HEADER,
@@ -16,6 +16,7 @@ import {
   EMPTY_SUB,
   EMPTY_TITLE,
   MONEY,
+  SUB_TILE,
 } from '../ui';
 
 const changeTagCls = cx(
@@ -97,7 +98,12 @@ export function CategoryMomCard({
         {categoryBreakdown.length > 0 ? (
           <>
             {/* MoM Quick Summary Banner */}
-            <div className="mb-[0.85rem] flex items-center justify-between gap-3 rounded-md border border-line bg-hover px-4 py-[0.85rem] mobile:gap-[0.4rem] mobile:px-[0.65rem] mobile:py-[0.55rem]">
+            <div
+              className={cx(
+                SUB_TILE,
+                'mb-[0.85rem] flex items-center justify-between gap-3 mobile:gap-[0.4rem]'
+              )}
+            >
               <div className="flex flex-col gap-1 text-left">
                 <span className="inline-flex items-center gap-[0.35rem] text-[0.75rem] font-semibold text-muted">
                   Tổng chi tiêu thay đổi
@@ -133,7 +139,7 @@ export function CategoryMomCard({
                 </div>
               </div>
 
-              <div className="flex shrink-0 flex-col items-end rounded-sm border border-line bg-card px-3 py-[0.45rem] text-right shadow-app-sm transition-all duration-200 hover:border-line-hover mobile:px-[0.45rem] mobile:py-[0.3rem]">
+              <div className="flex shrink-0 flex-col items-end text-right">
                 <span className="mb-[0.15rem] text-[0.7rem] font-semibold text-muted mobile:text-[0.8125rem]">
                   Tháng{' '}
                   {moment(selectedMonth, DATE_FORMAT_MONTH).subtract(1, 'month').format('MM/YYYY')}
@@ -236,7 +242,11 @@ export function CategoryMomCard({
               Chưa ghi nhận khoản chi nào trong tháng{' '}
               {moment(selectedMonth, DATE_FORMAT_MONTH).format('MM/YYYY')}.
             </p>
-            <button type="button" className={BTN_PRIMARY} onClick={() => onNavigate?.('expenses')}>
+            <button
+              type="button"
+              className={BTN_PRIMARY}
+              onClick={() => openAddTransaction(TransactionType.EXPENSE)}
+            >
               <Plus size={16} /> Ghi chi tiêu mới
             </button>
           </div>

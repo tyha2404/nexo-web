@@ -79,3 +79,28 @@ test('modal scrim covers the screen when the visual viewport shrinks', async ({ 
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(await page.evaluate(() => document.body.style.position)).not.toBe('fixed');
 });
+
+test('dashboard "Ghi chi tiêu mới" opens the quick-add form instead of leaving the page', async ({
+  page,
+}) => {
+  await setup(page); // the fixture's category breakdown is empty, so the card shows its CTA
+  await page.goto('/');
+  await page
+    .getByRole('button', { name: 'Ghi chi tiêu mới' })
+    .locator('visible=true')
+    .first()
+    .click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page).not.toHaveURL(/transactions/);
+});
+
+test('the modal close button is a 44px touch target on phones', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'phone-only size rule');
+  await setup(page);
+  await page.goto('/');
+  const dialog = await openTransactionForm(page);
+  const close = dialog.getByRole('button', { name: 'Đóng', exact: true }).first();
+  const box = await close.boundingBox();
+  expect(box!.width).toBeGreaterThanOrEqual(44);
+  expect(box!.height).toBeGreaterThanOrEqual(44);
+});

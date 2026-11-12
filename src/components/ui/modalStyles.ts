@@ -103,7 +103,7 @@ export const MODAL_SHELL_HEADER = cx(
 );
 
 export const MODAL_CLOSE_BTN =
-  'close-btn inline-flex size-[22px] min-h-[22px] min-w-[22px] cursor-pointer items-center justify-center rounded-[5px] border-none bg-transparent p-0 leading-none text-main transition-colors duration-100 ease-out hover:bg-hover [&_svg]:size-4 mobile:size-9 mobile:min-h-9 mobile:min-w-9';
+  'close-btn inline-flex size-[22px] min-h-[22px] min-w-[22px] cursor-pointer items-center justify-center rounded-[5px] border-none bg-transparent p-0 leading-none text-main transition-colors duration-100 ease-out hover:bg-hover [&_svg]:size-4 mobile:size-11 mobile:min-h-11 mobile:min-w-11';
 
 /* ---------- Body & footer ---------- */
 

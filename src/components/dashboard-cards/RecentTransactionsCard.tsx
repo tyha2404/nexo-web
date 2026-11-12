@@ -2,7 +2,7 @@ import { CreditCard, Plus, ReceiptText } from '../ui';
 import moment from 'moment';
 import { DATE_FORMAT_MONTH, TransactionType } from '../../commons/constants';
 import type { Transaction, Wallet as WalletModel } from '../../commons/types';
-import { formatCurrency, formatDate } from '../../commons/utils';
+import { formatCurrency, formatDate, openAddTransaction } from '../../commons/utils';
 import { getAmountSign } from '../transaction-list';
 import {
   BTN_PRIMARY,
@@ -119,7 +119,7 @@ export function RecentTransactionsCard({
               <button
                 type="button"
                 className={BTN_PRIMARY}
-                onClick={() => onNavigate?.('expenses')}
+                onClick={() => openAddTransaction(TransactionType.EXPENSE)}
               >
                 <Plus size={16} /> Ghi giao dịch
               </button>
