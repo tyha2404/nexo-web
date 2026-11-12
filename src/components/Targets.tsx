@@ -1,9 +1,9 @@
 import moment from 'moment';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+
 import Select from 'react-select';
 import { toast } from 'react-toastify';
-import { TransactionType } from '../commons/constants';
+import { APP_EVENTS, DATA_EVENTS, DATE_FORMAT_MONTH, TransactionType } from '../commons/constants';
 import type { TargetSummaryResponse, TargetType } from '../commons/types';
 import {
   formatCurrency,
@@ -13,12 +13,22 @@ import {
   MONEY_INPUT_PROPS,
   parseNumberInput,
 } from '../commons/utils';
-import { useModal } from '../hooks';
+import { useDataEvents } from '../hooks';
 import { targetService } from '../services';
-import { DatePickerField, EmptyState, ListSkeleton, MonthFilter } from './common';
+import { DatePickerField, FormModal, ListSkeleton, MonthFilter, StatCard } from './common';
 import {
+  ACTION_BTN_EDIT,
   ACTIONS_CELL,
+  ALERT_ERROR,
+  AlertTriangle,
+  BTN_FILL,
+  BTN_PRIMARY,
+  BTN_SECONDARY,
   CATEGORY_BADGE,
+  cx,
+  filterBarClass,
+  FORM_GROUP,
+  MOBILE_ACTION_EDIT,
   MOBILE_CARD,
   MOBILE_CARD_ACTIONS,
   MOBILE_CARD_AMOUNT,
@@ -33,37 +43,17 @@ import {
   MOBILE_CARD_TOP,
   MOBILE_CARDS,
   mobileIconBadgeClass,
+  MODAL_FORM_BODY,
+  MODAL_SHELL_FOOTER,
+  Pencil,
+  SUMMARY_GRID,
   TABLE,
   TABLE_CONTAINER,
-  TITLE_CELL,
-} from './transaction-list/listStyles';
-import {
-  ALERT_ERROR,
-  ACTION_BTN_EDIT,
-  AlertTriangle,
-  BTN_FILL,
-  BTN_PRIMARY,
-  BTN_SECONDARY,
-  cx,
-  filterBarClass,
-  FORM_GROUP,
-  MOBILE_ACTION_EDIT,
-  MODAL_BACKDROP,
-  MODAL_CLOSE_BTN,
-  MODAL_FORM_BODY,
-  MODAL_FORM_SHELL_PANEL,
-  MODAL_SHELL_FOOTER,
-  MODAL_SHELL_HEADER,
-  Pencil,
-  statValueClass,
-  SUMMARY_GRID,
-  SUMMARY_STAT_CARD,
-  SUMMARY_STAT_HEADER,
-  SUMMARY_STAT_SUBTITLE,
-  SUMMARY_STAT_TITLE,
   Target as TargetIcon,
+  TITLE_CELL,
   TXN_AMOUNT,
-  X,
+  toneBadgeClass,
+  type BadgeTone,
 } from './ui';
 
 const TARGET_TYPE_OPTIONS: { value: TargetType; label: string }[] = [
@@ -71,9 +61,62 @@ const TARGET_TYPE_OPTIONS: { value: TargetType; label: string }[] = [
   { value: TransactionType.INVESTMENT, label: 'Mục tiêu Đầu tư' },
 ];
 
+type TargetStatus = 'OVER_BUDGET' | 'COMPLETED' | 'NORMAL' | 'NOT_SET';
+
+interface TargetProgress {
+  targetAmount: number;
+  currentAmount: number;
+  remainingAmount: number;
+  status: TargetStatus;
+}
+
+interface TargetRow extends TargetProgress {
+  id: TargetType;
+  type: TargetType;
+  title: string;
+}
+
+const TARGET_ROW_TITLE: Record<TargetType, string> = {
+  [TransactionType.EXPENSE]: 'Hạn mức Chi tiêu Tháng',
+  [TransactionType.INVESTMENT]: 'Mục tiêu Đầu tư Tháng',
+};
+
+const NOT_SET: TargetProgress = {
+  targetAmount: 0,
+  currentAmount: 0,
+  remainingAmount: 0,
+  status: 'NOT_SET',
+};
+
+const toTargetRow = (type: TargetType, progress?: TargetProgress): TargetRow => ({
+  id: type,
+  type,
+  title: TARGET_ROW_TITLE[type],
+  ...(progress ?? NOT_SET),
+});
+
+const STATUS_TONE: Record<TargetStatus, BadgeTone> = {
+  OVER_BUDGET: 'expense',
+  COMPLETED: 'income',
+  NORMAL: 'primary',
+  NOT_SET: 'primary',
+};
+
+/** Status badge text of a row; `percent` is its progress. */
+const statusBadgeText = (row: TargetRow, percent: number) =>
+  row.targetAmount === 0
+    ? 'Chưa thiết lập'
+    : row.status === 'OVER_BUDGET'
+      ? '🚨 Vượt hạn mức'
+      : row.status === 'COMPLETED'
+        ? '🎉 Đã hoàn thành'
+        : `${percent}% hoàn thành`;
+
 export default function Targets() {
   // Month in 'YYYY-MM' format
-  const [selectedMonth, setSelectedMonth] = useState<string>(() => moment().format('YYYY-MM'));
+  const [selectedMonth, setSelectedMonth] = useState<string>(() =>
+    moment().format(DATE_FORMAT_MONTH)
+  );
   const [targetSummary, setTargetSummary] = useState<TargetSummaryResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,15 +126,15 @@ export default function Targets() {
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const targetDialogRef = useModal(isModalOpen, () => setIsModalOpen(false));
   const [targetTypeForm, setTargetTypeForm] = useState<TargetType>(TransactionType.EXPENSE);
   const [amount, setAmount] = useState<string>('');
 
-  const fetchTargetData = async (month: string) => {
+  /** `quiet`: refresh in place (after a save), without the loading skeleton. */
+  const fetchTargetData = async (month: string, quiet = false) => {
     try {
-      setLoading(true);
+      if (!quiet) setLoading(true);
       setError(null);
-      const m = moment(month, 'YYYY-MM');
+      const m = moment(month, DATE_FORMAT_MONTH);
       const targetParams = { month: m.month() + 1, year: m.year() };
       const data = await targetService.getSummary(targetParams);
       setTargetSummary(data);
@@ -106,9 +149,8 @@ export default function Targets() {
     fetchTargetData(selectedMonth);
   }, [selectedMonth]);
 
-  const handleAmountChange = (val: string) => {
-    setAmount(formatNumberInput(val));
-  };
+  // Saved here or confirmed in the AI chat; the Dashboard listens for the same event.
+  useDataEvents([DATA_EVENTS.TARGETS_CHANGED], () => fetchTargetData(selectedMonth, true));
 
   const openAddModal = useCallback(
     (defaultType: TargetType = TransactionType.EXPENSE) => {
@@ -134,7 +176,7 @@ export default function Targets() {
     }
 
     try {
-      const m = moment(selectedMonth, 'YYYY-MM');
+      const m = moment(selectedMonth, DATE_FORMAT_MONTH);
       await targetService.upsertTarget({
         targetType: targetTypeForm,
         targetAmount: parsedAmount,
@@ -146,65 +188,42 @@ export default function Targets() {
         `Đã thiết lập ${targetTypeForm === TransactionType.EXPENSE ? 'hạn mức chi tiêu' : 'mục tiêu đầu tư'} thành công!`
       );
       setIsModalOpen(false);
-      fetchTargetData(selectedMonth);
+      window.dispatchEvent(new Event(DATA_EVENTS.TARGETS_CHANGED));
     } catch (err) {
       toast.error(getErrorMessage(err, 'Lỗi khi lưu mục tiêu tài chính'));
     }
   };
 
-  // Prepare table rows from targetSummary
-  const targetRows: {
-    id: TargetType;
-    type: TargetType;
-    title: string;
-    targetAmount: number;
-    currentAmount: number;
-    remainingAmount: number;
-    status: 'OVER_BUDGET' | 'COMPLETED' | 'NORMAL' | 'NOT_SET';
-  }[] = [];
-  if (targetSummary?.expense) {
-    targetRows.push({
-      id: TransactionType.EXPENSE,
-      type: TransactionType.EXPENSE,
-      title: 'Hạn mức Chi tiêu Tháng',
-      targetAmount: targetSummary.expense.targetAmount,
-      currentAmount: targetSummary.expense.spentAmount,
-      remainingAmount: targetSummary.expense.remainingAmount,
-      status: targetSummary.expense.isOverBudget ? 'OVER_BUDGET' : 'NORMAL',
-    });
-  } else {
-    targetRows.push({
-      id: TransactionType.EXPENSE,
-      type: TransactionType.EXPENSE,
-      title: 'Hạn mức Chi tiêu Tháng',
-      targetAmount: 0,
-      currentAmount: 0,
-      remainingAmount: 0,
-      status: 'NOT_SET',
-    });
-  }
+  // One row per target type; a type without a target this month is NOT_SET.
+  const expense = targetSummary?.expense;
+  const investment = targetSummary?.investment;
+  const targetRows: TargetRow[] = [
+    toTargetRow(
+      TransactionType.EXPENSE,
+      expense && {
+        targetAmount: expense.targetAmount,
+        currentAmount: expense.spentAmount,
+        remainingAmount: expense.remainingAmount,
+        status: expense.isOverBudget ? 'OVER_BUDGET' : 'NORMAL',
+      }
+    ),
+    toTargetRow(
+      TransactionType.INVESTMENT,
+      investment && {
+        targetAmount: investment.targetAmount,
+        currentAmount: investment.investedAmount,
+        remainingAmount: investment.remainingAmount,
+        status: investment.isTargetReached ? 'COMPLETED' : 'NORMAL',
+      }
+    ),
+  ];
 
-  if (targetSummary?.investment) {
-    targetRows.push({
-      id: TransactionType.INVESTMENT,
-      type: TransactionType.INVESTMENT,
-      title: 'Mục tiêu Đầu tư Tháng',
-      targetAmount: targetSummary.investment.targetAmount,
-      currentAmount: targetSummary.investment.investedAmount,
-      remainingAmount: targetSummary.investment.remainingAmount,
-      status: targetSummary.investment.isTargetReached ? 'COMPLETED' : 'NORMAL',
-    });
-  } else {
-    targetRows.push({
-      id: TransactionType.INVESTMENT,
-      type: TransactionType.INVESTMENT,
-      title: 'Mục tiêu Đầu tư Tháng',
-      targetAmount: 0,
-      currentAmount: 0,
-      remainingAmount: 0,
-      status: 'NOT_SET',
-    });
-  }
+  // The form edits the month's existing target of the picked type when there is one.
+  const isEditingTarget = Boolean(
+    targetTypeForm === TransactionType.EXPENSE
+      ? targetSummary?.expense?.targetAmount
+      : targetSummary?.investment?.targetAmount
+  );
 
   const openAddModalRef = useRef(openAddModal);
   useEffect(() => {
@@ -212,9 +231,9 @@ export default function Targets() {
   }, [openAddModal]);
   useEffect(() => {
     const handleOpenModal = () => openAddModalRef.current(TransactionType.EXPENSE);
-    window.addEventListener('open-add-target-modal', handleOpenModal);
+    window.addEventListener(APP_EVENTS.OPEN_ADD_TARGET_MODAL, handleOpenModal);
     return () => {
-      window.removeEventListener('open-add-target-modal', handleOpenModal);
+      window.removeEventListener(APP_EVENTS.OPEN_ADD_TARGET_MODAL, handleOpenModal);
     };
   }, []);
 
@@ -233,57 +252,49 @@ export default function Targets() {
 
       {/* Summary Cards Grid */}
       <div className={cx(SUMMARY_GRID, 'animate-fade-in')}>
-        <div className={SUMMARY_STAT_CARD}>
-          <div className={SUMMARY_STAT_HEADER}>
-            <span className={SUMMARY_STAT_TITLE}>Hạn mức chi</span>
-          </div>
-          <div className={statValueClass('expense')}>
-            {targetSummary?.expense
-              ? formatCurrency(targetSummary.expense.targetAmount)
-              : 'Chưa đặt'}
-          </div>
-          <div className={SUMMARY_STAT_SUBTITLE}>
-            {targetSummary?.expense
+        <StatCard
+          title="Hạn mức chi"
+          tone="expense"
+          value={
+            targetSummary?.expense ? formatCurrency(targetSummary.expense.targetAmount) : 'Chưa đặt'
+          }
+          subtitle={
+            targetSummary?.expense
               ? `Đã chi: ${formatCurrency(Math.abs(targetSummary.expense.spentAmount))} (Còn lại: ${formatCurrency(Math.abs(targetSummary.expense.remainingAmount))})`
-              : 'Chưa có hạn mức'}
-          </div>
-        </div>
+              : 'Chưa có hạn mức'
+          }
+        />
 
-        <div className={SUMMARY_STAT_CARD}>
-          <div className={SUMMARY_STAT_HEADER}>
-            <span className={SUMMARY_STAT_TITLE}>Mục tiêu đầu tư</span>
-          </div>
-          <div className={statValueClass()}>
-            {targetSummary?.investment
+        <StatCard
+          title="Mục tiêu đầu tư"
+          value={
+            targetSummary?.investment
               ? formatCurrency(targetSummary.investment.targetAmount)
-              : 'Chưa đặt'}
-          </div>
-          <div className={SUMMARY_STAT_SUBTITLE}>
-            {targetSummary?.investment
+              : 'Chưa đặt'
+          }
+          subtitle={
+            targetSummary?.investment
               ? `Đã đầu tư: ${formatCurrency(targetSummary.investment.investedAmount)}`
-              : 'Chưa có mục tiêu'}
-          </div>
-        </div>
+              : 'Chưa có mục tiêu'
+          }
+        />
 
-        <div className={SUMMARY_STAT_CARD}>
-          <div className={SUMMARY_STAT_HEADER}>
-            <span className={SUMMARY_STAT_TITLE}>Có thể chi / ngày</span>
-          </div>
-          <div
-            className={statValueClass(targetSummary?.expense?.isOverBudget ? 'expense' : 'default')}
-          >
-            {targetSummary?.expense && targetSummary.expense.dailyAllowance > 0
+        <StatCard
+          title="Có thể chi / ngày"
+          tone={targetSummary?.expense?.isOverBudget ? 'expense' : 'default'}
+          value={
+            targetSummary?.expense && targetSummary.expense.dailyAllowance > 0
               ? formatCurrency(Math.round(targetSummary.expense.dailyAllowance))
               : targetSummary?.expense?.isOverBudget
                 ? `🚨 ${formatCurrency(Math.abs(targetSummary.expense.overspentAmount))} (Vượt)`
-                : '—'}
-          </div>
-          <div className={SUMMARY_STAT_SUBTITLE}>
-            {targetSummary?.daysRemaining
+                : '—'
+          }
+          subtitle={
+            targetSummary?.daysRemaining
               ? `Còn ${targetSummary.daysRemaining} ngày`
-              : 'Chưa có hạn mức'}
-          </div>
-        </div>
+              : 'Chưa có hạn mức'
+          }
+        />
       </div>
 
       {/* Filter bar aligned with system design */}
@@ -310,15 +321,6 @@ export default function Targets() {
 
       {loading ? (
         <ListSkeleton rows={2} label="Đang tải mục tiêu tài chính" />
-      ) : filteredRows.length === 0 ? (
-        <EmptyState
-          className="animate-fade-in"
-          icon={<TargetIcon />}
-          title="Chưa có mục tiêu cho tháng này"
-          description="Đặt hạn mức chi tiêu hoặc mục tiêu tích lũy để quản lý ngân sách tháng."
-          actionLabel="Thêm mục tiêu"
-          onAction={() => openAddModal(TransactionType.EXPENSE)}
-        />
       ) : (
         <>
           {/* Desktop Table View */}
@@ -351,42 +353,15 @@ export default function Targets() {
                       <td className={TXN_AMOUNT}>{formatCurrency(row.currentAmount)}</td>
                       <td>
                         {row.targetAmount > 0 ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                          <div className="flex flex-col gap-1">
                             <span
-                              className={CATEGORY_BADGE}
-                              style={{
-                                alignSelf: 'flex-start',
-                                background:
-                                  row.status === 'OVER_BUDGET'
-                                    ? 'color-mix(in srgb,var(--expense) 15%,transparent)'
-                                    : row.status === 'COMPLETED'
-                                      ? 'color-mix(in srgb,var(--income) 15%,transparent)'
-                                      : 'var(--primary-glow)',
-                                color:
-                                  row.status === 'OVER_BUDGET'
-                                    ? 'var(--expense)'
-                                    : row.status === 'COMPLETED'
-                                      ? 'var(--income)'
-                                      : 'var(--primary)',
-                                border:
-                                  row.status === 'OVER_BUDGET'
-                                    ? '1px solid color-mix(in srgb,var(--expense) 30%,transparent)'
-                                    : row.status === 'COMPLETED'
-                                      ? '1px solid color-mix(in srgb,var(--income) 30%,transparent)'
-                                      : '1px solid color-mix(in srgb,var(--primary) 30%,transparent)',
-                              }}
+                              className={cx(toneBadgeClass(STATUS_TONE[row.status]), 'self-start')}
                             >
-                              {row.status === 'OVER_BUDGET'
-                                ? '🚨 Vượt hạn mức'
-                                : row.status === 'COMPLETED'
-                                  ? '🎉 Đã hoàn thành'
-                                  : `${percent}% hoàn thành`}
+                              {statusBadgeText(row, percent)}
                             </span>
                           </div>
                         ) : (
-                          <span className={CATEGORY_BADGE} style={{ color: 'var(--text-muted)' }}>
-                            Chưa thiết lập
-                          </span>
+                          <span className={cx(CATEGORY_BADGE, 'text-muted!')}>Chưa thiết lập</span>
                         )}
                       </td>
                       <td className={ACTIONS_CELL}>
@@ -433,10 +408,7 @@ export default function Targets() {
                     </div>
 
                     <div className={MOBILE_CARD_AMOUNT_GROUP}>
-                      <div
-                        className={`${MOBILE_CARD_AMOUNT} text-main`}
-                        style={{ color: 'var(--text-main)' }}
-                      >
+                      <div className={`${MOBILE_CARD_AMOUNT} text-main`}>
                         {row.targetAmount > 0 ? formatCurrency(row.targetAmount) : 'Chưa đặt'}
                       </div>
                       <div className={MOBILE_CARD_SUB_AMOUNT}>
@@ -447,36 +419,8 @@ export default function Targets() {
 
                   <div className={MOBILE_CARD_FOOTER}>
                     <div className={MOBILE_CARD_TAGS}>
-                      <span
-                        className={CATEGORY_BADGE}
-                        style={{
-                          background:
-                            row.status === 'OVER_BUDGET'
-                              ? 'color-mix(in srgb,var(--expense) 15%,transparent)'
-                              : row.status === 'COMPLETED'
-                                ? 'color-mix(in srgb,var(--income) 15%,transparent)'
-                                : 'var(--primary-glow)',
-                          color:
-                            row.status === 'OVER_BUDGET'
-                              ? 'var(--expense)'
-                              : row.status === 'COMPLETED'
-                                ? 'var(--income)'
-                                : 'var(--primary)',
-                          border:
-                            row.status === 'OVER_BUDGET'
-                              ? '1px solid color-mix(in srgb,var(--expense) 30%,transparent)'
-                              : row.status === 'COMPLETED'
-                                ? '1px solid color-mix(in srgb,var(--income) 30%,transparent)'
-                                : '1px solid color-mix(in srgb,var(--primary) 30%,transparent)',
-                        }}
-                      >
-                        {row.targetAmount === 0
-                          ? 'Chưa thiết lập'
-                          : row.status === 'OVER_BUDGET'
-                            ? '🚨 Vượt hạn mức'
-                            : row.status === 'COMPLETED'
-                              ? '🎉 Đã hoàn thành'
-                              : `${percent}% hoàn thành`}
+                      <span className={toneBadgeClass(STATUS_TONE[row.status])}>
+                        {statusBadgeText(row, percent)}
                       </span>
                     </div>
 
@@ -498,102 +442,79 @@ export default function Targets() {
         </>
       )}
 
-      {/* Form Modal overlay (100% cloned from Transactions modal) */}
-      {isModalOpen &&
-        // Portal: the tab container is animated (transform), which would trap position: fixed
-        createPortal(
-          <div className={MODAL_BACKDROP} onClick={() => setIsModalOpen(false)}>
-            <div
-              ref={targetDialogRef}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="target-modal-title"
-              tabIndex={-1}
-              className={MODAL_FORM_SHELL_PANEL}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className={MODAL_SHELL_HEADER}>
-                <h3 id="target-modal-title">Thêm mục tiêu</h3>
-                <button
-                  type="button"
-                  className={MODAL_CLOSE_BTN}
-                  onClick={() => setIsModalOpen(false)}
-                  aria-label="Đóng"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <form onSubmit={handleSubmit}>
-                <div className={MODAL_FORM_BODY}>
-                  <div className={FORM_GROUP}>
-                    <label htmlFor="target-type-select">Loại mục tiêu</label>
-                    <Select
-                      id="target-type-select"
-                      options={TARGET_TYPE_OPTIONS}
-                      value={
-                        TARGET_TYPE_OPTIONS.find((opt) => opt.value === targetTypeForm) || null
-                      }
-                      onChange={(option) => {
-                        if (option) {
-                          const newType = option.value;
-                          setTargetTypeForm(newType);
-                          const existing =
-                            newType === TransactionType.EXPENSE
-                              ? targetSummary?.expense?.targetAmount
-                              : targetSummary?.investment?.targetAmount;
-                          setAmount(existing ? existing.toLocaleString('vi-VN') : '');
-                        }
-                      }}
-                      classNamePrefix="react-select"
-                      isSearchable={!isTouchDevice()}
-                      menuPortalTarget={document.body}
-                      menuPosition="fixed"
-                    />
-                  </div>
-
-                  <div className={FORM_GROUP}>
-                    <label htmlFor="target-amount-input">Số tiền (đ)</label>
-                    <input
-                      id="target-amount-input"
-                      {...MONEY_INPUT_PROPS}
-                      placeholder="Ví dụ: 10.000.000"
-                      value={amount}
-                      onChange={(e) => handleAmountChange(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className={FORM_GROUP}>
-                    <label htmlFor="target-month">Tháng áp dụng</label>
-                    <div className="target-datepicker-wrapper">
-                      <DatePickerField
-                        id="target-month"
-                        label="Tháng áp dụng"
-                        mode="month"
-                        value={selectedMonth}
-                        onChange={setSelectedMonth}
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className={MODAL_SHELL_FOOTER}>
-                  <button
-                    type="button"
-                    className={cx(BTN_SECONDARY, BTN_FILL)}
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Hủy
-                  </button>
-                  <button type="submit" className={cx(BTN_PRIMARY, BTN_FILL)}>
-                    Lưu mục tiêu
-                  </button>
-                </div>
-              </form>
+      {/* Form modal: same shell as the transaction modal */}
+      <FormModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={isEditingTarget ? 'Sửa mục tiêu' : 'Thêm mục tiêu'}
+        titleId="target-modal-title"
+      >
+        <form onSubmit={handleSubmit}>
+          <div className={MODAL_FORM_BODY}>
+            <div className={FORM_GROUP}>
+              <label htmlFor="target-type-select">Loại mục tiêu</label>
+              <Select
+                id="target-type-select"
+                options={TARGET_TYPE_OPTIONS}
+                value={TARGET_TYPE_OPTIONS.find((opt) => opt.value === targetTypeForm) || null}
+                onChange={(option) => {
+                  if (option) {
+                    const newType = option.value;
+                    setTargetTypeForm(newType);
+                    const existing =
+                      newType === TransactionType.EXPENSE
+                        ? targetSummary?.expense?.targetAmount
+                        : targetSummary?.investment?.targetAmount;
+                    setAmount(existing ? formatNumberInput(existing) : '');
+                  }
+                }}
+                classNamePrefix="react-select"
+                isSearchable={!isTouchDevice()}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+              />
             </div>
-          </div>,
-          document.body
-        )}
+
+            <div className={FORM_GROUP}>
+              <label htmlFor="target-amount-input">Số tiền (đ)</label>
+              <input
+                id="target-amount-input"
+                {...MONEY_INPUT_PROPS}
+                placeholder="Ví dụ: 10.000.000"
+                value={amount}
+                onChange={(e) => setAmount(formatNumberInput(e.target.value))}
+                required
+              />
+            </div>
+
+            <div className={FORM_GROUP}>
+              <label htmlFor="target-month">Tháng áp dụng</label>
+              <div className="target-datepicker-wrapper">
+                <DatePickerField
+                  id="target-month"
+                  label="Tháng áp dụng"
+                  mode="month"
+                  value={selectedMonth}
+                  onChange={setSelectedMonth}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+          <div className={MODAL_SHELL_FOOTER}>
+            <button
+              type="button"
+              className={cx(BTN_SECONDARY, BTN_FILL)}
+              onClick={() => setIsModalOpen(false)}
+            >
+              Hủy
+            </button>
+            <button type="submit" className={cx(BTN_PRIMARY, BTN_FILL)}>
+              Lưu mục tiêu
+            </button>
+          </div>
+        </form>
+      </FormModal>
     </div>
   );
 }

@@ -6,7 +6,7 @@ import type {
   DebtSummary,
   DebtType,
   UpdateDebtPayload,
-} from '../types/debt';
+} from '../commons/types';
 import { request } from './client';
 
 export const debtService = {

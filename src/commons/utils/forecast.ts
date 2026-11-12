@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { DATE_FORMAT_MONTH } from '../constants';
 
 /** Days of the month that must have passed before a projection means anything. */
 export const MIN_FORECAST_DAYS = 3;
@@ -13,7 +14,7 @@ export function projectMonthEnd(
   month: string,
   now: moment.Moment = moment()
 ): number | null {
-  const start = moment(month, 'YYYY-MM', true);
+  const start = moment(month, DATE_FORMAT_MONTH, true);
   if (!start.isValid() || !now.isSame(start, 'month')) return null;
   const elapsed = now.date();
   if (elapsed < MIN_FORECAST_DAYS || !(spent > 0)) return null;

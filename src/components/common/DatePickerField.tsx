@@ -3,7 +3,7 @@ import moment from 'moment';
 import { useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import DatePicker from 'react-datepicker';
-import { DATE_FORMAT_DISPLAY, DATE_FORMAT_INPUT } from '../../commons/constants';
+import { DATE_FORMAT_DISPLAY, DATE_FORMAT_INPUT, DATE_FORMAT_MONTH } from '../../commons/constants';
 import { useModal } from '../../hooks';
 import { CONTROL_FRAME } from '../ui';
 
@@ -46,7 +46,7 @@ function PickerPanel({
 }: PickerPanelProps) {
   const ref = useModal(true, onClose);
   const titleId = useId();
-  const inputFormat = mode === 'month' ? 'YYYY-MM' : DATE_FORMAT_INPUT;
+  const inputFormat = mode === 'month' ? DATE_FORMAT_MONTH : DATE_FORMAT_INPUT;
   const parsed = moment(value, inputFormat, true);
   const selected = parsed.isValid() ? parsed.toDate() : null;
   const select = (date: Date | null) => {
@@ -88,6 +88,8 @@ function PickerPanel({
             inline
             selected={selected}
             onChange={select}
+            // react-datepicker skips onChange when the already-selected day/month is picked
+            // again; onSelect still fires then, so that tap closes the picker too.
             onSelect={onClose}
             showMonthYearPicker={mode === 'month'}
             dateFormat={mode === 'month' ? 'MM/yyyy' : 'dd/MM/yyyy'}
@@ -199,12 +201,12 @@ export function DatePickerField(props: DatePickerFieldProps) {
     setOpen(false);
     requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true }));
   };
-  const date = moment(value, mode === 'month' ? 'YYYY-MM' : DATE_FORMAT_INPUT, true);
+  const date = moment(value, mode === 'month' ? DATE_FORMAT_MONTH : DATE_FORMAT_INPUT, true);
   const text = date.isValid()
     ? date.format(mode === 'month' ? 'MM/YYYY' : DATE_FORMAT_DISPLAY)
     : mode === 'month'
       ? 'MM/YYYY'
-      : 'DD/MM/YYYY';
+      : DATE_FORMAT_DISPLAY;
 
   return (
     <div className="w-full min-w-0">

@@ -2,29 +2,42 @@ import moment from 'moment';
 import { useEffect, useState } from 'react';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
-import { InvestmentStatus, TransactionType } from '../commons/constants';
-import type { Category, Transaction, TransactionSummary, Wallet } from '../commons/types';
+import {
+  DATA_EVENTS,
+  DATE_FORMAT_MONTH,
+  InvestmentStatus,
+  TransactionType,
+} from '../commons/constants';
+import type { Category, Transaction, TransactionSummary } from '../commons/types';
 import {
   getErrorMessage,
   isTouchDevice,
   SEARCH_INPUT_PROPS,
   toISODateString,
 } from '../commons/utils';
-import { categoryService, transactionService, walletService } from '../services';
+import { useDataEvents, useWallets } from '../hooks';
+import { categoryService, transactionService } from '../services';
 import AddTransactionModal from './AddTransactionModal';
-import { ConfirmModal, EmptyState, ListSkeleton, MonthFilter, ReceiptModal } from './common';
+import {
+  ConfirmModal,
+  EmptyState,
+  ListSkeleton,
+  MonthFilter,
+  PageHeader,
+  ReceiptModal,
+} from './common';
 import Pagination from './Pagination';
 import {
   getTypeLabel,
   INVESTMENT_STATUS_FILTER_OPTIONS,
+  SpendingCalendar,
+  TRANSACTION_TYPE_LABEL,
   TransactionMobileCards,
   TransactionSummaryCards,
-  SpendingCalendar,
   TransactionTable,
-  TransactionTypeIcon,
   type TransactionListProps,
+  TypeTabs,
 } from './transaction-list';
-import { PAGE_HEADER, PAGE_TITLE, PAGE_TITLE_H2, PAGE_VIEW } from './transaction-list/listStyles';
 import {
   ALERT_ERROR,
   AlertTriangle,
@@ -33,34 +46,29 @@ import {
   cx,
   FILTER_FULL_ROW,
   filterBarClass,
+  PAGE_VIEW,
   Receipt,
   Search,
   SEARCH_ICON,
   SEARCH_INPUT,
   SEARCH_WRAPPER,
-  SlidingTabs,
-  tabClass,
-  TABS,
   TABS_NAV,
   Tags,
   X,
 } from './ui';
 
 export interface TransactionsProps {
-  type?: TransactionType;
-  initialType?: TransactionType;
+  /** Type from the URL (/#/transactions/income); the type tabs switch it locally. */
+  type: TransactionType;
 }
 
-export default function Transactions({
-  type,
-  initialType = TransactionType.EXPENSE,
-}: TransactionsProps) {
-  // Internal active transaction type state (defaults to `type` prop or `initialType`)
-  const [activeType, setActiveType] = useState<TransactionType>(type || initialType);
+export default function Transactions({ type }: TransactionsProps) {
+  const [activeType, setActiveType] = useState<TransactionType>(type);
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [wallets, setWallets] = useState<Wallet[]>([]);
+  // Wallet badges; refreshed on 'wallets-changed' (a save moves balances, a wallet is renamed).
+  const wallets = useWallets();
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,7 +77,9 @@ export default function Transactions({
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<InvestmentStatus | ''>('');
-  const [selectedMonth, setSelectedMonth] = useState<string>(() => moment().format('YYYY-MM'));
+  const [selectedMonth, setSelectedMonth] = useState<string>(() =>
+    moment().format(DATE_FORMAT_MONTH)
+  );
   // Day picked in the calendar ('YYYY-MM-DD'); narrows the list to that day.
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   // Tag picked by tapping a "#tag" chip in the list.
@@ -100,27 +110,12 @@ export default function Transactions({
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [selectedReceiptUrl, setSelectedReceiptUrl] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [modalType, setModalType] = useState<TransactionType>(initialType);
+  const [modalType, setModalType] = useState<TransactionType>(type);
 
-  // Sync internal activeType if parent passes or updates the `type` prop
+  // Follow the URL when the parent navigates to another type
   useEffect(() => {
-    if (type) {
-      setActiveType(type);
-    }
+    setActiveType(type);
   }, [type]);
-
-  // Load wallets list for wallet badges and selector
-  useEffect(() => {
-    const fetchWalletsData = async () => {
-      try {
-        const res = await walletService.getWallets();
-        setWallets(res.wallets || []);
-      } catch (err) {
-        console.error('Failed to load wallets', err);
-      }
-    };
-    fetchWalletsData();
-  }, []);
 
   // Reload categories whenever the active transaction type changes
   useEffect(() => {
@@ -144,10 +139,10 @@ export default function Transactions({
         setError(null);
         const startOfMonth = selectedDay
           ? moment(selectedDay)
-          : moment(selectedMonth, 'YYYY-MM').startOf('month');
+          : moment(selectedMonth, DATE_FORMAT_MONTH).startOf('month');
         const endOfMonth = selectedDay
           ? moment(selectedDay)
-          : moment(selectedMonth, 'YYYY-MM').endOf('month');
+          : moment(selectedMonth, DATE_FORMAT_MONTH).endOf('month');
 
         const res = await transactionService.list(
           {
@@ -197,28 +192,9 @@ export default function Transactions({
     refreshKey,
   ]);
 
-  useEffect(() => {
-    // Debounced: a save fires both a local event and a realtime echo, resume fires several
-    let timer: ReturnType<typeof setTimeout>;
-    const refresh = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        setRefreshKey((key) => key + 1);
-      }, 150);
-    };
-    window.addEventListener('transactions-changed', refresh);
-    window.addEventListener('online', refresh);
-    const resume = () => {
-      if (document.visibilityState === 'visible') refresh();
-    };
-    document.addEventListener('visibilitychange', resume);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('transactions-changed', refresh);
-      window.removeEventListener('online', refresh);
-      document.removeEventListener('visibilitychange', resume);
-    };
-  }, []);
+  // Saves here, in the quick-add modal, by the AI assistant or on another device (realtime
+  // echo; useRealtimeSync also re-fires it when the app comes back online or resumes).
+  useDataEvents([DATA_EVENTS.TRANSACTIONS_CHANGED], () => setRefreshKey((key) => key + 1));
 
   // Handle switching transaction type tabs
   const handleTabSwitch = (newType: TransactionType) => {
@@ -244,28 +220,16 @@ export default function Transactions({
     setIsModalOpen(true);
   };
 
-  const handleSaved = () => {
-    setRefreshKey((prev) => prev + 1);
-  };
-
-  // Confirm Modal state for deletion
-  const [deleteConfirm, setDeleteConfirm] = useState<{
-    isOpen: boolean;
-    id: string;
-    description: string;
-  } | null>(null);
-
-  const handleDelete = (txn: Transaction) => {
-    setDeleteConfirm({ isOpen: true, id: txn.id, description: txn.description || '' });
-  };
+  // Transaction waiting for the delete confirmation.
+  const [pendingDelete, setPendingDelete] = useState<Transaction | null>(null);
 
   // Undo a delete: the API clears the soft delete and re-applies the wallet effect,
   // so the transaction keeps its id, timestamps and receipt.
   const restoreTransaction = async (id: string) => {
     try {
       await transactionService.restore(id);
-      setRefreshKey((prev) => prev + 1);
-      window.dispatchEvent(new Event('transactions-changed'));
+      // The list (and the always-mounted Dashboard) refresh on this event.
+      window.dispatchEvent(new Event(DATA_EVENTS.TRANSACTIONS_CHANGED));
       toast.success('Đã hoàn tác xóa giao dịch!');
     } catch (err) {
       console.error('Failed to restore transaction', err);
@@ -274,14 +238,14 @@ export default function Transactions({
   };
 
   const executeDelete = async () => {
-    if (!deleteConfirm) return;
-    const { id, description } = deleteConfirm;
-    setDeleteConfirm(null);
+    if (!pendingDelete) return;
+    const { id } = pendingDelete;
+    const description = pendingDelete.description || '';
+    setPendingDelete(null);
 
     try {
       await transactionService.delete(id);
-      setRefreshKey((prev) => prev + 1);
-      window.dispatchEvent(new Event('transactions-changed'));
+      window.dispatchEvent(new Event(DATA_EVENTS.TRANSACTIONS_CHANGED));
       toast.success(
         ({ closeToast }) => (
           <span>
@@ -315,14 +279,13 @@ export default function Transactions({
     return wallets.find((w) => w.id === wId) || null;
   };
 
-  const filteredTransactions = transactions;
   const listProps: TransactionListProps = {
-    transactions: filteredTransactions,
+    transactions,
     activeType,
     getCategoryName,
     getWallet: getWalletInfo,
     onEdit: openEditModal,
-    onDelete: handleDelete,
+    onDelete: setPendingDelete,
     onViewReceipt: setSelectedReceiptUrl,
     onTagClick: (tag) => {
       setSelectedTag(tag);
@@ -332,10 +295,6 @@ export default function Transactions({
 
   // Calculate total pages from totalItems from server
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
 
   const handleItemsPerPageChange = (size: number) => {
     setItemsPerPage(size);
@@ -347,58 +306,15 @@ export default function Transactions({
   return (
     <div className={PAGE_VIEW}>
       {/* 1. Standard Header with Action */}
-      <header className={`${PAGE_HEADER} animate-fade-in`}>
-        <div className={PAGE_TITLE}>
-          <h2 className={PAGE_TITLE_H2}>
-            {activeType === TransactionType.INCOME
-              ? 'Thu nhập'
-              : activeType === TransactionType.INVESTMENT
-                ? 'Đầu tư'
-                : 'Chi tiêu'}
-          </h2>
-        </div>
-      </header>
+      <PageHeader title={TRANSACTION_TYPE_LABEL[activeType]} />
 
       {/* 2. Transaction Type Segmented Tabs Switcher (Below Page Title) */}
       <div className={`${TABS_NAV} animate-fade-in`}>
-        <SlidingTabs
-          className={TABS}
-          role="tablist"
-          aria-label="Phân loại giao dịch (Chi tiêu, Thu nhập, Đầu tư)"
-        >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeType === TransactionType.EXPENSE}
-            className={tabClass(activeType === TransactionType.EXPENSE)}
-            onClick={() => handleTabSwitch(TransactionType.EXPENSE)}
-          >
-            <TransactionTypeIcon type={TransactionType.EXPENSE} size={16} />
-            <span>Chi tiêu</span>
-          </button>
-
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeType === TransactionType.INCOME}
-            className={tabClass(activeType === TransactionType.INCOME)}
-            onClick={() => handleTabSwitch(TransactionType.INCOME)}
-          >
-            <TransactionTypeIcon type={TransactionType.INCOME} size={16} />
-            <span>Thu nhập</span>
-          </button>
-
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeType === TransactionType.INVESTMENT}
-            className={tabClass(activeType === TransactionType.INVESTMENT)}
-            onClick={() => handleTabSwitch(TransactionType.INVESTMENT)}
-          >
-            <TransactionTypeIcon type={TransactionType.INVESTMENT} size={16} />
-            <span>Đầu tư</span>
-          </button>
-        </SlidingTabs>
+        <TypeTabs
+          value={activeType}
+          onChange={handleTabSwitch}
+          ariaLabel="Phân loại giao dịch (Chi tiêu, Thu nhập, Đầu tư)"
+        />
       </div>
 
       {error && (
@@ -517,7 +433,7 @@ export default function Transactions({
       {/* 6. Transactions Table (Desktop) & Cards (Mobile) */}
       {loading ? (
         <ListSkeleton label="Đang tải giao dịch" />
-      ) : filteredTransactions.length === 0 ? (
+      ) : transactions.length === 0 ? (
         <EmptyState
           className="animate-fade-in"
           icon={<Receipt />}
@@ -534,7 +450,7 @@ export default function Transactions({
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={handlePageChange}
+            onPageChange={setCurrentPage}
             itemsPerPage={itemsPerPage}
             onItemsPerPageChange={handleItemsPerPageChange}
             totalItems={totalItems}
@@ -547,19 +463,18 @@ export default function Transactions({
         open={isModalOpen}
         initialType={modalType}
         transaction={editingTransaction}
-        onSaved={handleSaved}
         onClose={() => setIsModalOpen(false)}
       />
 
       {/* 7. Delete Confirmation Dialog */}
       <ConfirmModal
-        isOpen={Boolean(deleteConfirm?.isOpen)}
+        isOpen={!!pendingDelete}
         title="Xóa giao dịch"
-        message={`Bạn có chắc chắn muốn xóa giao dịch "${deleteConfirm?.description || ''}"? Thao tác này có thể hoàn tác trong vài giây.`}
+        message={`Bạn có chắc chắn muốn xóa giao dịch "${pendingDelete?.description || ''}"? Thao tác này có thể hoàn tác trong vài giây.`}
         confirmText="Xác nhận xóa"
         variant="danger"
         onConfirm={executeDelete}
-        onCancel={() => setDeleteConfirm(null)}
+        onCancel={() => setPendingDelete(null)}
       />
 
       {/* 8. Receipt Image Lightbox Modal */}

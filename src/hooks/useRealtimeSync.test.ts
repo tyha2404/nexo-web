@@ -97,16 +97,14 @@ describe('useRealtimeSync with a Supabase session', () => {
     );
   });
 
-  it('a change dispatches the table event and calls its callback', async () => {
-    const onWalletChange = vi.fn();
-    renderHook(() => useRealtimeSync({ userId: USER, onWalletChange }));
+  it("a change dispatches only that table's window event", async () => {
+    renderHook(() => useRealtimeSync({ userId: USER }));
     await flush();
 
     const wallets = state.channels[0].listeners.find((l) => l.filter.table === 'wallets')!;
     wallets.cb({});
 
     expect(events).toEqual(['wallets-changed']);
-    expect(onWalletChange).toHaveBeenCalledOnce();
   });
 
   it('removes the channel on unmount', async () => {

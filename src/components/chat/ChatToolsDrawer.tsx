@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { CloseIcon, WrenchIcon } from './ChatIcons';
+import { X } from '../ui';
+import { WrenchIcon } from './ChatIcons';
 import {
   BTN_TRANSITION,
   SIDEBAR_CLOSE_BTN,
@@ -45,7 +46,7 @@ export function ChatToolsDrawer({
           <span>Công cụ AI ({AI_TOOLS_CATALOG.length})</span>
         </div>
         <button className={SIDEBAR_CLOSE_BTN} onClick={onClose} title="Đóng danh sách công cụ">
-          <CloseIcon size={16} />
+          <X size={16} />
         </button>
       </div>
 

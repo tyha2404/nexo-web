@@ -1,7 +1,5 @@
 /* Overrides for third-party markup (react-select, react-datepicker, react-toastify,
    recharts). Unlayered on purpose so they beat the libraries' own unlayered CSS. */
-/*  from handoff-dashboard.css  */
-/*  from handoff-pages.css  */
 .react-select__control {
   background: var(--bg-input) !important;
   border-color: var(--border-hover) !important;
@@ -199,14 +197,12 @@ input[class*='dummyInput'] {
 .react-datepicker__triangle {
   display: none !important;
 }
-/*  from mobile-compact.css  */
 @media (max-width: 768px),
   (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   body .Toastify__toast-container {
     bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
-/*  from handoff-common.css  */
 .date-picker-panel .react-datepicker {
   display: block;
   border: none !important;
@@ -259,7 +255,6 @@ input[class*='dummyInput'] {
 .date-picker-panel .react-datepicker__month-text--selected {
   color: #fff !important;
 }
-/*  from index.css  */
 input:not([type='checkbox']):not([type='radio']):not([class*='dummyInput']):not(
     .react-select__input
   ),
@@ -579,14 +574,12 @@ input[class*='dummyInput'] {
     border-radius: var(--radius-md) !important;
   }
 }
-/*  from motion.css  */
 @media (max-width: 768px),
   (pointer: coarse) and (orientation: landscape) and (max-width: 1024px) and (max-height: 500px) {
   body .Toastify__toast-container {
     bottom: calc(88px + env(safe-area-inset-bottom)) !important;
   }
 }
-/*  from handoff-chat.css  */
 
 /* On-screen keyboard up: bottom toasts would sit behind it, so show them at the top of the
    visible area instead (hooks/useVirtualKeyboard keeps --keyboard-viewport-top in sync). */

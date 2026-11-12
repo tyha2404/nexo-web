@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 
 /* Minimal Markdown renderer for AI replies: tables, headings, lists, blockquotes, bold and code. */
 
-// Helper to format inline bold, code, highlights
-export const formatInlineText = (text: string): ReactNode => {
+// Inline **bold** and `code`.
+const formatInlineText = (text: string): ReactNode => {
   if (!text) return '';
   const parts = text.split(/(\*\*.*?\*\*|`.*?`)/g);
   return parts.map((part, partIdx) => {
@@ -28,7 +28,7 @@ export const formatInlineText = (text: string): ReactNode => {
   });
 };
 
-// Helper function to render text with Markdown styling (Tables, Headings, Lists, Blockquotes)
+// Block-level Markdown: tables, headings, bullet lists, blockquotes, paragraphs.
 export const renderFormattedText = (text: string): ReactNode => {
   if (!text) return null;
 
@@ -52,8 +52,8 @@ export const renderFormattedText = (text: string): ReactNode => {
     const line = rawLines[i];
     const trimmed = line.trim();
 
-    // Check if this line is part of a markdown table (starts and contains '|')
-    if (trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.includes('|')) {
+    // A markdown table row starts and ends with '|'
+    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
       const tableLines: string[] = [];
       while (
         i < rawLines.length &&

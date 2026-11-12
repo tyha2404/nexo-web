@@ -1,5 +1,6 @@
-import { authFetch, request } from './client';
+import { authFetch, hasStoredToken, readApiError, request } from './client';
 
+/** A card the AI attaches to a reply; `data` depends on `actionType` (see components/chat/types). */
 export interface ActionCard {
   actionType: string;
   title: string;
@@ -7,7 +8,7 @@ export interface ActionCard {
   data?: unknown;
 }
 
-export type MessageStatus = 'PENDING' | 'STREAMING' | 'SUCCESS' | 'ERROR';
+type MessageStatus = 'PENDING' | 'STREAMING' | 'SUCCESS' | 'ERROR';
 
 export interface ChatStreamEvent {
   type:
@@ -15,22 +16,39 @@ export interface ChatStreamEvent {
   sessionId?: string;
   messageId?: string;
   status?: MessageStatus;
+  toolName?: string;
   toolTitle?: string;
   actionCard?: ActionCard;
   delta?: string;
   errorMessage?: string;
 }
 
+/** Stored roles (model.ChatRole in the API). */
+export type ChatRole = 'user' | 'model' | 'system';
+
 export interface ChatMessage {
   id?: string;
-  role: 'user' | 'model' | 'assistant';
+  role: ChatRole;
   content: string;
   status?: MessageStatus;
-  actionCard?: ActionCard;
+  /** Cards of this reply, in the order the tools ran. */
+  actionCards?: ActionCard[];
   createdAt: string;
 }
 
-export interface ChatSessionResponse {
+/** A message as GET /chat/sessions/{id} returns it: the cards are a JSON string. */
+interface ChatMessageDto {
+  id: string;
+  sessionId?: string;
+  role: ChatRole;
+  content: string;
+  status?: MessageStatus;
+  toolCalls?: string;
+  toolResults?: string;
+  createdAt: string;
+}
+
+export interface ChatSession {
   id: string;
   title: string;
   createdAt: string;
@@ -38,15 +56,55 @@ export interface ChatSessionResponse {
   messages?: ChatMessage[];
 }
 
-export type ChatSession = ChatSessionResponse;
+/** Result of POST /chat/actions/{id}/confirm and /cancel. */
+export interface ChatActionResult {
+  actionId: string;
+  status: 'CONFIRMED' | 'CANCELLED';
+  toolName: string;
+  /** Card of the executed action (e.g. TRANSACTION_CREATED), only on confirm. */
+  actionCard?: ActionCard;
+  /** The created/updated entity, only on confirm. */
+  result?: unknown;
+}
+
+/** The action cards stored with a message (`toolResults`, a JSON array), or []. */
+export function parseToolResults(raw?: string | null): ActionCard[] {
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter(
+          (card): card is ActionCard =>
+            !!card && typeof (card as ActionCard).actionType === 'string'
+        )
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+const toChatMessage = ({ toolResults, ...msg }: ChatMessageDto): ChatMessage => {
+  const actionCards = parseToolResults(toolResults);
+  return {
+    id: msg.id,
+    role: msg.role,
+    content: msg.content,
+    status: msg.status,
+    createdAt: msg.createdAt,
+    ...(actionCards.length ? { actionCards } : {}),
+  };
+};
 
 export const chatService = {
-  async listSessions(): Promise<ChatSessionResponse[]> {
-    return request<ChatSessionResponse[]>('/chat/sessions');
+  async listSessions(): Promise<ChatSession[]> {
+    return request<ChatSession[]>('/chat/sessions');
   },
 
-  async getSessionMessages(sessionId: string): Promise<ChatSessionResponse> {
-    return request<ChatSessionResponse>(`/chat/sessions/${sessionId}`);
+  async getSessionMessages(sessionId: string): Promise<ChatSession> {
+    const session = await request<Omit<ChatSession, 'messages'> & { messages?: ChatMessageDto[] }>(
+      `/chat/sessions/${sessionId}`
+    );
+    return { ...session, messages: session.messages?.map(toChatMessage) };
   },
 
   async deleteSession(sessionId: string): Promise<void> {
@@ -55,6 +113,16 @@ export const chatService = {
 
   async clearSessions(): Promise<void> {
     await request('/chat/clear', { method: 'POST' });
+  },
+
+  /** Executes an AI write proposal (PENDING_CONFIRMATION card, data.actionId). */
+  async confirmAction(actionId: string): Promise<ChatActionResult> {
+    return request<ChatActionResult>(`/chat/actions/${actionId}/confirm`, { method: 'POST' });
+  },
+
+  /** Discards an AI write proposal; nothing is written. */
+  async cancelAction(actionId: string): Promise<ChatActionResult> {
+    return request<ChatActionResult>(`/chat/actions/${actionId}/cancel`, { method: 'POST' });
   },
 
   async sendStreamMessage(
@@ -68,19 +136,19 @@ export const chatService = {
       controller.abort();
     }, 180000); // 180 seconds client timeout (3 minutes)
 
+    const path = '/chat/stream';
+    const hadToken = hasStoredToken();
     try {
       // authFetch renews an expired access token (and retries once on 401).
-      const response = await authFetch('/chat/stream', {
+      const response = await authFetch(path, {
         method: 'POST',
         headers: { Accept: 'text/event-stream' },
         body: JSON.stringify(req),
         signal: controller.signal,
       });
 
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(errText || `Server error (${response.status})`);
-      }
+      // Same message (and 401 → auth-expired) as request().
+      if (!response.ok) throw await readApiError(response, { path, hadToken });
 
       if (!response.body) {
         throw new Error('ReadableStream not supported by browser/environment');

@@ -1,52 +1,27 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import Select from 'react-select';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
 import { toast } from 'react-toastify';
-import { TransactionType } from '../commons/constants';
+import { APP_EVENTS, DATA_EVENTS, TransactionType } from '../commons/constants';
 import type { Category } from '../commons/types';
-import {
-  formatCurrency,
-  formatNumberInput,
-  getErrorMessage,
-  isTouchDevice,
-  MONEY_INPUT_PROPS,
-  parseNumberInput,
-  TEXT_NEXT_INPUT_PROPS,
-} from '../commons/utils';
-import { useDataEvents, useModal } from '../hooks';
+import { formatCurrency, getErrorMessage, parseNumberInput } from '../commons/utils';
+import { useDataEvents } from '../hooks';
 import { categoryService } from '../services';
+import { CategoryFormModal, type CategoryFormValues } from './CategoryFormModal';
 import Pagination from './Pagination';
 import { ConfirmModal, EmptyState, ListSkeleton } from './common';
-import { TransactionTypeIcon } from './transaction-list';
-import { LIST_ITEM_CARD } from './transaction-list/listStyles';
+import { getTypeLabel, TypeTabs } from './transaction-list';
 import {
   ACTION_BTN_DELETE,
   ACTION_BTN_EDIT,
   ALERT_ERROR,
   AlertTriangle,
-  BTN_FILL,
-  BTN_PRIMARY,
-  BTN_SECONDARY,
   CATEGORIES_LIST,
   cx,
   FolderPlus,
-  FORM_CHECK,
-  FORM_CHECK_INPUT,
-  FORM_CHECK_LABEL,
-  FORM_GROUP,
-  MODAL_BACKDROP,
-  MODAL_CLOSE_BTN,
-  MODAL_FORM_BODY,
-  MODAL_FORM_SHELL_PANEL,
-  MODAL_SHELL_FOOTER,
-  MODAL_SHELL_HEADER,
+  LIST_ITEM_CARD,
   Pencil,
-  SlidingTabs,
-  tabClass,
-  TABS,
   TABS_NAV,
   Trash2,
-  X,
 } from './ui';
 
 export default function Categories() {
@@ -54,39 +29,15 @@ export default function Categories() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TransactionType>(TransactionType.EXPENSE);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Category form: null = closed; category null = create.
+  const [categoryForm, setCategoryForm] = useState<{ category: Category | null } | null>(null);
+  // Category waiting for the delete confirmation.
+  const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
-
-  // Form states
-  const [name, setName] = useState('');
-  const [type, setType] = useState<TransactionType>(TransactionType.EXPENSE);
-  const [description, setDescription] = useState('');
-  const [budgetLimit, setBudgetLimit] = useState('');
-  const [excludeFromAverageDaily, setExcludeFromAverageDaily] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [editName, setEditName] = useState('');
-  const [editType, setEditType] = useState<TransactionType>(TransactionType.EXPENSE);
-  const [editDescription, setEditDescription] = useState('');
-  const [editBudgetLimit, setEditBudgetLimit] = useState('');
-  const [editExcludeFromAverageDaily, setEditExcludeFromAverageDaily] = useState(false);
-
-  const typeOptions = [
-    { value: TransactionType.EXPENSE, label: 'Chi tiêu' },
-    { value: TransactionType.INCOME, label: 'Thu nhập' },
-    { value: TransactionType.INVESTMENT, label: 'Đầu tư' },
-  ];
-
-  const showFeedback = (message: string, type: 'success' | 'error') => {
-    if (type === 'success') {
-      toast.success(message);
-    } else {
-      toast.error(message);
-    }
-  };
 
   const fetchCategories = useCallback(
     async (selectedType: TransactionType, page: number, limit: number) => {
@@ -110,146 +61,73 @@ export default function Categories() {
   }, [fetchCategories, activeTab, currentPage, itemsPerPage]);
 
   // Categories created by the AI assistant or another device; budgets affect usage bars
-  useDataEvents(['categories-changed', 'budgets-changed'], () =>
+  useDataEvents([DATA_EVENTS.CATEGORIES_CHANGED, DATA_EVENTS.BUDGETS_CHANGED], () =>
     fetchCategories(activeTab, currentPage, itemsPerPage)
   );
 
-  const handleBudgetChange = (val: string) => {
-    setBudgetLimit(formatNumberInput(val));
-  };
+  const closeModal = () => setCategoryForm(null);
 
-  const handleEditBudgetChange = (val: string) => {
-    setEditBudgetLimit(formatNumberInput(val));
-  };
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-
-    const parsedBudget = budgetLimit.trim() ? parseNumberInput(budgetLimit) : undefined;
-
-    try {
-      setError(null);
-      const newCat = await categoryService.create({
-        name: name.trim(),
-        type,
-        description: description.trim() || undefined,
-        budgetLimit: type === TransactionType.EXPENSE ? parsedBudget : undefined,
-        excludeFromAverageDaily:
-          type === TransactionType.EXPENSE ? excludeFromAverageDaily : undefined,
-      });
-      if (type === activeTab) {
-        setCategories((prev) => [...prev, newCat]);
-      }
-      setName('');
-      setType(TransactionType.EXPENSE);
-      setDescription('');
-      setBudgetLimit('');
-      setExcludeFromAverageDaily(false);
-      setIsModalOpen(false);
-      showFeedback('Tạo danh mục thành công!', 'success');
-    } catch (err) {
-      showFeedback(getErrorMessage(err, 'Tạo danh mục thất bại'), 'error');
-    }
-  };
-
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingCategory || !editName.trim()) return;
-
-    const parsedEditBudget = editBudgetLimit.trim() ? parseNumberInput(editBudgetLimit) : undefined;
+  const handleSave = async (values: CategoryFormValues) => {
+    if (!values.name.trim()) return;
+    const editingCategory = categoryForm?.category ?? null;
+    const isExpense = values.type === TransactionType.EXPENSE;
+    const parsedBudget = values.budgetLimit.trim()
+      ? parseNumberInput(values.budgetLimit)
+      : undefined;
+    const payload = {
+      name: values.name.trim(),
+      type: values.type,
+      description: values.description.trim() || undefined,
+      budgetLimit: isExpense ? parsedBudget : undefined,
+      excludeFromAverageDaily: isExpense ? values.excludeFromAverageDaily : undefined,
+    };
 
     try {
       setError(null);
-      const updatedCat = await categoryService.update(editingCategory.id, {
-        name: editName.trim(),
-        type: editType,
-        description: editDescription.trim() || undefined,
-        budgetLimit: editType === TransactionType.EXPENSE ? parsedEditBudget : undefined,
-        excludeFromAverageDaily:
-          editType === TransactionType.EXPENSE ? editExcludeFromAverageDaily : undefined,
-      });
-      if (editType === activeTab) {
-        setCategories((prev) =>
-          prev.map((cat) => (cat.id === editingCategory.id ? updatedCat : cat))
-        );
+      if (editingCategory) {
+        const updatedCat = await categoryService.update(editingCategory.id, payload);
+        if (values.type === activeTab) {
+          setCategories((prev) =>
+            prev.map((cat) => (cat.id === editingCategory.id ? updatedCat : cat))
+          );
+        } else {
+          setCategories((prev) => prev.filter((cat) => cat.id !== editingCategory.id));
+        }
       } else {
-        setCategories((prev) => prev.filter((cat) => cat.id !== editingCategory.id));
+        const newCat = await categoryService.create(payload);
+        if (values.type === activeTab) {
+          setCategories((prev) => [...prev, newCat]);
+        }
       }
-      setEditingCategory(null);
-      setEditName('');
-      setEditType(TransactionType.EXPENSE);
-      setEditDescription('');
-      setEditBudgetLimit('');
-      setEditExcludeFromAverageDaily(false);
-      setIsModalOpen(false);
-      showFeedback('Cập nhật danh mục thành công!', 'success');
+      closeModal();
+      toast.success(editingCategory ? 'Cập nhật danh mục thành công!' : 'Tạo danh mục thành công!');
     } catch (err) {
-      showFeedback(getErrorMessage(err, 'Cập nhật danh mục thất bại'), 'error');
+      toast.error(
+        getErrorMessage(
+          err,
+          editingCategory ? 'Cập nhật danh mục thất bại' : 'Tạo danh mục thất bại'
+        )
+      );
     }
-  };
-
-  // Confirm Modal state
-  const [deleteCatConfirm, setDeleteCatConfirm] = useState<{
-    isOpen: boolean;
-    id: string;
-    name: string;
-  } | null>(null);
-
-  const handleDelete = (id: string, name: string) => {
-    setDeleteCatConfirm({ isOpen: true, id, name });
   };
 
   const executeDelete = async () => {
-    if (!deleteCatConfirm) return;
-    const { id, name } = deleteCatConfirm;
-    setDeleteCatConfirm(null);
+    if (!pendingDelete) return;
+    const { id, name } = pendingDelete;
+    setPendingDelete(null);
 
     try {
       setError(null);
       await categoryService.delete(id);
       setCategories((prev) => prev.filter((cat) => cat.id !== id));
-      showFeedback(`Đã xóa danh mục "${name}"!`, 'success');
+      toast.success(`Đã xóa danh mục "${name}"!`);
     } catch (err) {
-      showFeedback(getErrorMessage(err, 'Xóa danh mục thất bại'), 'error');
+      toast.error(getErrorMessage(err, 'Xóa danh mục thất bại'));
     }
   };
 
-  const startEdit = (category: Category) => {
-    setEditingCategory(category);
-    setEditName(category.name);
-    setEditType(category.type as TransactionType);
-    setEditDescription(category.description || '');
-    setEditExcludeFromAverageDaily(category.excludeFromAverageDaily ?? false);
-    setEditBudgetLimit(
-      category.budgetLimit !== undefined
-        ? Math.round(category.budgetLimit).toLocaleString('vi-VN')
-        : ''
-    );
-    setIsModalOpen(true);
-  };
-
-  const openCreateModal = () => {
-    setEditingCategory(null);
-    setName('');
-    setType(activeTab);
-    setDescription('');
-    setBudgetLimit('');
-    setExcludeFromAverageDaily(false);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingCategory(null);
-  };
-  const categoryDialogRef = useModal(isModalOpen, closeModal);
-
-  const getTabTypeName = (tab: TransactionType) => {
-    if (tab === TransactionType.INCOME) return 'thu nhập';
-    if (tab === TransactionType.INVESTMENT) return 'đầu tư';
-    return 'chi tiêu';
-  };
+  const startEdit = (category: Category) => setCategoryForm({ category });
+  const openCreateModal = () => setCategoryForm({ category: null });
 
   const openCreateModalRef = useRef(openCreateModal);
   useEffect(() => {
@@ -257,9 +135,9 @@ export default function Categories() {
   });
   useEffect(() => {
     const handleOpenModal = () => openCreateModalRef.current();
-    window.addEventListener('open-add-category-modal', handleOpenModal);
+    window.addEventListener(APP_EVENTS.OPEN_ADD_CATEGORY_MODAL, handleOpenModal);
     return () => {
-      window.removeEventListener('open-add-category-modal', handleOpenModal);
+      window.removeEventListener(APP_EVENTS.OPEN_ADD_CATEGORY_MODAL, handleOpenModal);
     };
   }, []);
 
@@ -267,38 +145,7 @@ export default function Categories() {
     <div className="categories-subview w-full">
       {/* Category Type Tabs Switcher (Below Page Title) */}
       <div className={`${TABS_NAV} animate-fade-in`}>
-        <SlidingTabs className={TABS} role="tablist" aria-label="Loại danh mục">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === TransactionType.EXPENSE}
-            className={tabClass(activeTab === TransactionType.EXPENSE)}
-            onClick={() => setActiveTab(TransactionType.EXPENSE)}
-          >
-            <TransactionTypeIcon type={TransactionType.EXPENSE} size={16} />
-            <span>Chi tiêu</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === TransactionType.INCOME}
-            className={tabClass(activeTab === TransactionType.INCOME)}
-            onClick={() => setActiveTab(TransactionType.INCOME)}
-          >
-            <TransactionTypeIcon type={TransactionType.INCOME} size={16} />
-            <span>Thu nhập</span>
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activeTab === TransactionType.INVESTMENT}
-            className={tabClass(activeTab === TransactionType.INVESTMENT)}
-            onClick={() => setActiveTab(TransactionType.INVESTMENT)}
-          >
-            <TransactionTypeIcon type={TransactionType.INVESTMENT} size={16} />
-            <span>Đầu tư</span>
-          </button>
-        </SlidingTabs>
+        <TypeTabs value={activeTab} onChange={setActiveTab} ariaLabel="Loại danh mục" />
       </div>
 
       {error && (
@@ -314,9 +161,9 @@ export default function Categories() {
         ) : categories.length === 0 ? (
           <EmptyState
             icon={<FolderPlus />}
-            title={`Chưa có danh mục ${getTabTypeName(activeTab)}`}
+            title={`Chưa có danh mục ${getTypeLabel(activeTab)}`}
             description="Tạo danh mục đầu tiên để phân loại và theo dõi ngân sách."
-            actionLabel={`Tạo danh mục ${getTabTypeName(activeTab)}`}
+            actionLabel={`Tạo danh mục ${getTypeLabel(activeTab)}`}
             onAction={openCreateModal}
           />
         ) : (
@@ -369,7 +216,7 @@ export default function Categories() {
                       <Pencil size={13} />
                     </button>
                     <button
-                      onClick={() => handleDelete(cat.id, cat.name)}
+                      onClick={() => setPendingDelete(cat)}
                       className={ACTION_BTN_DELETE}
                       aria-label={`Xóa danh mục ${cat.name}`}
                       title={`Xóa danh mục ${cat.name}`}
@@ -396,211 +243,23 @@ export default function Categories() {
       </div>
 
       {/* Modal Popup for Create / Edit Category */}
-      {isModalOpen &&
-        // Portal: the tab container is animated (transform), which would trap position: fixed
-        createPortal(
-          <div className={MODAL_BACKDROP} onClick={closeModal}>
-            <div
-              ref={categoryDialogRef}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="category-modal-title"
-              tabIndex={-1}
-              className={MODAL_FORM_SHELL_PANEL}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className={MODAL_SHELL_HEADER}>
-                <h3 id="category-modal-title">
-                  {editingCategory ? 'Sửa danh mục' : 'Thêm danh mục'}
-                </h3>
-                <button
-                  type="button"
-                  className={MODAL_CLOSE_BTN}
-                  onClick={closeModal}
-                  aria-label="Đóng"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              {editingCategory ? (
-                <form onSubmit={handleUpdate}>
-                  <div className={MODAL_FORM_BODY}>
-                    <div className={FORM_GROUP}>
-                      <label htmlFor="edit-name">Tên danh mục</label>
-                      <input
-                        id="edit-name"
-                        {...TEXT_NEXT_INPUT_PROPS}
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
-                        required
-                      />
-                    </div>
-                    <div className={FORM_GROUP}>
-                      <label htmlFor="edit-type">Loại danh mục</label>
-                      <Select
-                        id="edit-type"
-                        options={typeOptions}
-                        value={typeOptions.find((opt) => opt.value === editType) || null}
-                        onChange={(option) =>
-                          setEditType(
-                            (option ? option.value : TransactionType.EXPENSE) as TransactionType
-                          )
-                        }
-                        classNamePrefix="react-select"
-                        isSearchable={!isTouchDevice()}
-                        placeholder="Chọn Loại danh mục"
-                        menuPortalTarget={document.body}
-                        menuPosition="fixed"
-                      />
-                    </div>
-                    {editType === TransactionType.EXPENSE && (
-                      <>
-                        <div className={FORM_GROUP}>
-                          <label htmlFor="edit-budget">Hạn mức tháng (đ)</label>
-                          <input
-                            id="edit-budget"
-                            {...MONEY_INPUT_PROPS}
-                            value={editBudgetLimit}
-                            onChange={(e) => handleEditBudgetChange(e.target.value)}
-                            placeholder="Ví dụ: 5.000.000"
-                          />
-                        </div>
-                        <div className={FORM_CHECK}>
-                          <label className={FORM_CHECK_LABEL}>
-                            <input
-                              id="edit-exclude-avg"
-                              type="checkbox"
-                              className={FORM_CHECK_INPUT}
-                              checked={editExcludeFromAverageDaily}
-                              onChange={(e) => setEditExcludeFromAverageDaily(e.target.checked)}
-                            />
-                            Không tính vào chi tiêu trung bình ngày
-                          </label>
-                        </div>
-                      </>
-                    )}
-                    <div className={FORM_GROUP}>
-                      <label htmlFor="edit-desc">Mô tả</label>
-                      <textarea
-                        id="edit-desc"
-                        value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
-                        placeholder="Mô tả..."
-                        rows={3}
-                      />
-                    </div>
-                  </div>
-                  <div className={MODAL_SHELL_FOOTER}>
-                    <button
-                      type="button"
-                      className={cx(BTN_SECONDARY, BTN_FILL)}
-                      onClick={closeModal}
-                    >
-                      Hủy
-                    </button>
-                    <button type="submit" className={cx(BTN_PRIMARY, BTN_FILL)}>
-                      Lưu danh mục
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <form onSubmit={handleCreate}>
-                  <div className={MODAL_FORM_BODY}>
-                    <div className={FORM_GROUP}>
-                      <label htmlFor="new-name">Tên danh mục</label>
-                      <input
-                        id="new-name"
-                        {...TEXT_NEXT_INPUT_PROPS}
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Ví dụ: Ăn uống, Tiền nhà, Giải trí"
-                        required
-                      />
-                    </div>
-                    <div className={FORM_GROUP}>
-                      <label htmlFor="new-type">Loại danh mục</label>
-                      <Select
-                        id="new-type"
-                        options={typeOptions}
-                        value={typeOptions.find((opt) => opt.value === type) || null}
-                        onChange={(option) =>
-                          setType(
-                            (option ? option.value : TransactionType.EXPENSE) as TransactionType
-                          )
-                        }
-                        classNamePrefix="react-select"
-                        isSearchable={!isTouchDevice()}
-                        placeholder="Chọn Loại danh mục"
-                        menuPortalTarget={document.body}
-                        menuPosition="fixed"
-                      />
-                    </div>
-                    {type === TransactionType.EXPENSE && (
-                      <>
-                        <div className={FORM_GROUP}>
-                          <label htmlFor="new-budget">Hạn mức tháng (đ)</label>
-                          <input
-                            id="new-budget"
-                            {...MONEY_INPUT_PROPS}
-                            value={budgetLimit}
-                            onChange={(e) => handleBudgetChange(e.target.value)}
-                            placeholder="Ví dụ: 5.000.000"
-                          />
-                        </div>
-                        <div className={FORM_CHECK}>
-                          <label className={FORM_CHECK_LABEL}>
-                            <input
-                              id="new-exclude-avg"
-                              type="checkbox"
-                              className={FORM_CHECK_INPUT}
-                              checked={excludeFromAverageDaily}
-                              onChange={(e) => setExcludeFromAverageDaily(e.target.checked)}
-                            />
-                            Không tính vào chi tiêu trung bình ngày
-                          </label>
-                        </div>
-                      </>
-                    )}
-                    <div className={FORM_GROUP}>
-                      <label htmlFor="new-desc">Mô tả</label>
-                      <textarea
-                        id="new-desc"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Mô tả..."
-                        rows={3}
-                      />
-                    </div>
-                  </div>
-                  <div className={MODAL_SHELL_FOOTER}>
-                    <button
-                      type="button"
-                      className={cx(BTN_SECONDARY, BTN_FILL)}
-                      onClick={closeModal}
-                    >
-                      Hủy
-                    </button>
-                    <button type="submit" className={cx(BTN_PRIMARY, BTN_FILL)}>
-                      Thêm danh mục
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>,
-          document.body
-        )}
+      <CategoryFormModal
+        open={!!categoryForm}
+        category={categoryForm?.category ?? null}
+        defaultType={activeTab}
+        onClose={closeModal}
+        onSubmit={handleSave}
+      />
 
       {/* Delete Category Confirm Modal */}
       <ConfirmModal
-        isOpen={Boolean(deleteCatConfirm?.isOpen)}
+        isOpen={!!pendingDelete}
         title="Xóa danh mục"
-        message={`Bạn có chắc chắn muốn xóa danh mục "${deleteCatConfirm?.name || ''}" không? Các giao dịch liên kết có thể cần được phân loại lại.`}
+        message={`Bạn có chắc chắn muốn xóa danh mục "${pendingDelete?.name || ''}" không? Các giao dịch liên kết có thể cần được phân loại lại.`}
         confirmText="Xác nhận xóa"
         variant="danger"
         onConfirm={executeDelete}
-        onCancel={() => setDeleteCatConfirm(null)}
+        onCancel={() => setPendingDelete(null)}
       />
     </div>
   );

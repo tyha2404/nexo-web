@@ -14,6 +14,7 @@ interface SpeechRecognitionInstance {
   onend: (() => void) | null;
   start: () => void;
   stop: () => void;
+  abort: () => void;
 }
 type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
 type SpeechWindow = Window & {
@@ -53,6 +54,15 @@ export function useSpeechRecognition(onTranscript: (transcript: string) => void)
     };
     recognition.onend = () => setIsListening(false);
     recognitionRef.current = recognition;
+    // Closing the chat mid-dictation must not leave the microphone on or call into an unmounted hook.
+    return () => {
+      recognition.onstart = null;
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
+      recognition.abort();
+      recognitionRef.current = null;
+    };
   }, []);
 
   const toggleVoiceInput = () => {

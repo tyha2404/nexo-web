@@ -11,7 +11,6 @@ vi.mock('./client', async (importOriginal) => ({
 
 const { reportService } = await import('./reportService');
 const { debtService } = await import('./debtService');
-const { statementService } = await import('./statementService');
 const { walletService } = await import('./walletService');
 const { targetService } = await import('./targetService');
 const { transactionService } = await import('./transactionService');
@@ -86,39 +85,7 @@ const cases: Case[] = [
   ],
   ['delete debt', () => debtService.deleteDebt('d1'), '/debts/d1', 'DELETE'],
 
-  [
-    'statements filtered',
-    () => statementService.list({ walletId: 'w1', year: 2026, month: 11 }),
-    '/credit-card-statements?walletId=w1&year=2026&month=11',
-    'GET',
-  ],
-  ['statements', () => statementService.list(), '/credit-card-statements', 'GET'],
-  ['statement', () => statementService.get('s1'), '/credit-card-statements/s1', 'GET'],
-  [
-    'create statement',
-    () => statementService.create({ walletId: 'w1' } as never),
-    '/credit-card-statements',
-    'POST',
-    { walletId: 'w1' },
-  ],
-  [
-    'update statement',
-    () => statementService.update('s1', { note: 'x' } as never),
-    '/credit-card-statements/s1',
-    'PUT',
-    { note: 'x' },
-  ],
-  [
-    'pay statement',
-    () => statementService.pay('s1', { amount: 500000, sourceWalletId: 'w2' }),
-    '/credit-card-statements/s1/pay',
-    'POST',
-    { amount: 500000, sourceWalletId: 'w2' },
-  ],
-  ['delete statement', () => statementService.delete('s1'), '/credit-card-statements/s1', 'DELETE'],
-
   ['wallets', () => walletService.getWallets(), '/wallets', 'GET'],
-  ['wallet', () => walletService.getWalletById('w1'), '/wallets/w1', 'GET'],
   [
     'create wallet',
     () => walletService.createWallet({ name: 'Ví' } as never),
@@ -134,13 +101,6 @@ const cases: Case[] = [
     { name: 'Ví 2' },
   ],
   ['delete wallet', () => walletService.deleteWallet('w1'), '/wallets/w1', 'DELETE'],
-  [
-    'transfer',
-    () => walletService.transferMoney({ fromWalletId: 'a', toWalletId: 'b', amount: 1 }),
-    '/wallets/transfer',
-    'POST',
-    { fromWalletId: 'a', toWalletId: 'b', amount: 1 },
-  ],
 
   [
     'target summary',
@@ -181,6 +141,13 @@ const cases: Case[] = [
   ['chat session', () => chatService.getSessionMessages('c1'), '/chat/sessions/c1', 'GET'],
   ['delete chat session', () => chatService.deleteSession('c1'), '/chat/sessions/c1', 'DELETE'],
   ['clear chat', () => chatService.clearSessions(), '/chat/clear', 'POST'],
+  [
+    'confirm chat action',
+    () => chatService.confirmAction('a1'),
+    '/chat/actions/a1/confirm',
+    'POST',
+  ],
+  ['cancel chat action', () => chatService.cancelAction('a1'), '/chat/actions/a1/cancel', 'POST'],
 ];
 
 describe('API endpoints', () => {
@@ -192,6 +159,35 @@ describe('API endpoints', () => {
     expect(init?.method ?? 'GET').toBe(method);
     if (body === undefined) expect(init?.body).toBeUndefined();
     else expect(JSON.parse(String(init?.body))).toEqual(body);
+  });
+
+  it('turns the stored toolResults of session messages into action cards', async () => {
+    const card = {
+      actionType: 'PENDING_CONFIRMATION',
+      title: 'Xác nhận',
+      description: '',
+      data: {},
+    };
+    requestMock.mockResolvedValue({
+      id: 's1',
+      title: 'Chat',
+      messages: [
+        { id: 'm1', role: 'user', content: 'Chi 45k cafe', createdAt: '2026-11-11T10:00:00Z' },
+        {
+          id: 'm2',
+          sessionId: 's1',
+          role: 'model',
+          content: 'Bạn xác nhận nhé',
+          status: 'SUCCESS',
+          toolResults: JSON.stringify([card, { not: 'a card' }]),
+          createdAt: '2026-11-11T10:00:01Z',
+        },
+        { id: 'm3', role: 'model', content: 'x', toolResults: '{broken', createdAt: '' },
+      ],
+    });
+    const session = await chatService.getSessionMessages('s1');
+    expect(session.messages?.map((m) => m.actionCards)).toEqual([undefined, [card], undefined]);
+    expect(session.messages?.[1]).not.toHaveProperty('toolResults');
   });
 
   it('encodes the month of the daily report', async () => {

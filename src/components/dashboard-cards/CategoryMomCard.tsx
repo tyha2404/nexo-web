@@ -1,6 +1,7 @@
 import { ArrowDownRight, ArrowUpRight, Plus, ShoppingBag, Sparkles } from '../ui';
 import moment from 'moment';
 import { useMemo } from 'react';
+import { DATE_FORMAT_MONTH, TransactionType } from '../../commons/constants';
 import type { Category, CategoryBreakdownItem, SummaryReport } from '../../commons/types';
 import { formatCurrency, getCategoryIcon } from '../../commons/utils';
 import {
@@ -134,7 +135,8 @@ export function CategoryMomCard({
 
               <div className="flex shrink-0 flex-col items-end rounded-sm border border-line bg-card px-3 py-[0.45rem] text-right shadow-app-sm transition-all duration-200 hover:border-line-hover mobile:px-[0.45rem] mobile:py-[0.3rem]">
                 <span className="mb-[0.15rem] text-[0.7rem] font-semibold text-muted mobile:text-[0.8125rem]">
-                  Tháng {moment(selectedMonth, 'YYYY-MM').subtract(1, 'month').format('MM/YYYY')}
+                  Tháng{' '}
+                  {moment(selectedMonth, DATE_FORMAT_MONTH).subtract(1, 'month').format('MM/YYYY')}
                 </span>
                 <span className={cx(MONEY, 'text-[0.9rem] text-main mobile:text-[0.875rem]')}>
                   {formatCurrency(prevTotalExpense)}
@@ -145,7 +147,7 @@ export function CategoryMomCard({
             {/* Category List with MoM tags */}
             <div className="flex flex-1 flex-col gap-2">
               {momCategoryList.map((item) => {
-                const icon = getCategoryIcon(item.categoryName, 'EXPENSE');
+                const icon = getCategoryIcon(item.categoryName, TransactionType.EXPENSE);
 
                 return (
                   <div key={item.categoryId} className="flex flex-col gap-[0.3rem] text-left">
@@ -194,12 +196,11 @@ export function CategoryMomCard({
 
                     <div className="h-[6px] overflow-hidden rounded-full bg-hover">
                       <div
-                        className="h-full rounded-full bg-primary transition-[width] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
-                        style={{
-                          width: `${Math.min(100, item.percentage)}%`,
-                          background:
-                            item.hasBudget && item.budgetUtil > 100 ? 'var(--expense)' : undefined,
-                        }}
+                        className={cx(
+                          'h-full rounded-full transition-[width] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
+                          item.hasBudget && item.budgetUtil > 100 ? 'bg-expense' : 'bg-primary'
+                        )}
+                        style={{ width: `${Math.min(100, item.percentage)}%` }}
                       />
                     </div>
 
@@ -233,7 +234,7 @@ export function CategoryMomCard({
             <p className={EMPTY_TITLE}>Chưa có dữ liệu chi tiêu</p>
             <p className={EMPTY_SUB}>
               Chưa ghi nhận khoản chi nào trong tháng{' '}
-              {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}.
+              {moment(selectedMonth, DATE_FORMAT_MONTH).format('MM/YYYY')}.
             </p>
             <button type="button" className={BTN_PRIMARY} onClick={() => onNavigate?.('expenses')}>
               <Plus size={16} /> Ghi chi tiêu mới

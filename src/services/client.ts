@@ -1,3 +1,5 @@
+import moment from 'moment';
+import { APP_EVENTS, REFRESH_TOKEN_STORAGE_KEY, TOKEN_STORAGE_KEY } from '../commons/constants';
 import { syncSupabaseToken } from './supabase';
 
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1';
@@ -5,6 +7,7 @@ export class ApiError extends Error {
   readonly status: number;
   constructor(message: string, status: number) {
     super(message);
+    this.name = 'ApiError';
     this.status = status;
   }
 }
@@ -27,8 +30,6 @@ function unwrap<T>(parsed: Record<string, unknown>): T {
 // `token` is the API bearer token. Accounts that sign in through the Go API also
 // get a `refreshToken` (rotated on every use) to renew the short-lived access
 // token. Supabase accounts have none: supabase-js refreshes their token itself.
-const TOKEN_KEY = 'token';
-const REFRESH_TOKEN_KEY = 'refreshToken';
 // Renew this long before the access token expires (clock skew, slow networks).
 const REFRESH_LEEWAY_MS = 60_000;
 // Paths that must never carry or renew a session.
@@ -40,19 +41,19 @@ export interface SessionTokens {
 }
 
 export function saveSession({ token, refreshToken }: SessionTokens): void {
-  localStorage.setItem(TOKEN_KEY, token);
-  if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-  else localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  if (refreshToken) localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken);
+  else localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
 }
 
 export function clearSession(): void {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
 }
 
 /** Clears the stored session and revokes its refresh token on the server (best effort). */
 export function endSession(): void {
-  const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+  const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
   clearSession();
   if (refreshToken) revokeRefreshToken(refreshToken);
 }
@@ -80,7 +81,7 @@ function tokenExpiresAt(token: string | null): number | null {
 }
 
 /** refreshed: a new access token is stored. invalid: the session is over. failed: try later (offline, 5xx). */
-export type RefreshResult = 'refreshed' | 'invalid' | 'failed';
+type RefreshResult = 'refreshed' | 'invalid' | 'failed';
 let refreshInFlight: Promise<RefreshResult> | null = null;
 
 /** Renews the access token with the refresh token. Concurrent callers share one request. */
@@ -92,11 +93,11 @@ export function refreshSession(): Promise<RefreshResult> {
 }
 
 async function runRefresh(): Promise<RefreshResult> {
-  const attempted = localStorage.getItem(REFRESH_TOKEN_KEY);
+  const attempted = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
   if (!attempted) return 'invalid';
 
   const exchange = async (): Promise<RefreshResult> => {
-    const current = localStorage.getItem(REFRESH_TOKEN_KEY);
+    const current = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
     if (!current) return 'invalid';
     // Another tab rotated the token while we waited for the lock; its new
     // access token is already in localStorage.
@@ -113,8 +114,8 @@ async function runRefresh(): Promise<RefreshResult> {
       return 'failed';
     }
     if (response.status === 401) {
-      if (localStorage.getItem(REFRESH_TOKEN_KEY) === current)
-        localStorage.removeItem(REFRESH_TOKEN_KEY);
+      if (localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY) === current)
+        localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
       return 'invalid';
     }
     if (!response.ok) return 'failed';
@@ -128,7 +129,7 @@ async function runRefresh(): Promise<RefreshResult> {
     if (!pair.token || !pair.refreshToken) return 'failed';
     // Signed out (or into another account) while the call was in flight:
     // don't bring the old session back.
-    if (localStorage.getItem(REFRESH_TOKEN_KEY) !== current) {
+    if (localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY) !== current) {
       revokeRefreshToken(pair.refreshToken);
       return 'invalid';
     }
@@ -147,9 +148,10 @@ async function runRefresh(): Promise<RefreshResult> {
 /** Keeps the bearer token valid: syncs Supabase's, renews an API token that is about to expire. */
 async function ensureFreshToken(): Promise<void> {
   await syncSupabaseToken();
-  if (!localStorage.getItem(REFRESH_TOKEN_KEY)) return;
-  const expiresAt = tokenExpiresAt(localStorage.getItem(TOKEN_KEY));
-  if (expiresAt !== null && expiresAt - Date.now() < REFRESH_LEEWAY_MS) await refreshSession();
+  if (!localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY)) return;
+  const expiresAt = tokenExpiresAt(localStorage.getItem(TOKEN_STORAGE_KEY));
+  if (expiresAt !== null && expiresAt - moment().valueOf() < REFRESH_LEEWAY_MS)
+    await refreshSession();
 }
 
 /**
@@ -163,7 +165,7 @@ export async function authFetch(path: string, options: RequestInit = {}): Promis
   if (!isPublic) await ensureFreshToken();
 
   const send = () => {
-    const token = localStorage.getItem(TOKEN_KEY) || '';
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
     const headers = new Headers(options.headers);
     if (!isPublic && token && token !== 'undefined')
       headers.set('Authorization', `Bearer ${token}`);
@@ -173,7 +175,7 @@ export async function authFetch(path: string, options: RequestInit = {}): Promis
   };
 
   const response = await send();
-  if (response.status !== 401 || isPublic || !localStorage.getItem(REFRESH_TOKEN_KEY)) {
+  if (response.status !== 401 || isPublic || !localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY)) {
     return response;
   }
   const result = await refreshSession();
@@ -184,23 +186,51 @@ export async function authFetch(path: string, options: RequestInit = {}): Promis
   return response;
 }
 
-export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const hadToken = Boolean(localStorage.getItem(TOKEN_KEY));
-  const response = await authFetch(path, options);
-  if (!response.ok) {
-    const errorText = await response.text();
-    let message = `HTTP error! status: ${response.status}`;
-    try {
-      const parsed = JSON.parse(errorText);
-      message = [parsed.message, parsed.error].filter(Boolean).join(': ') || message;
-    } catch {
-      if (errorText) message = errorText;
-    }
-    if (response.status === 401 && hadToken && !path.startsWith('/auth/')) {
-      window.dispatchEvent(new Event('auth-expired'));
-    }
-    throw new ApiError(message, response.status);
+/** Message of a JSON error envelope ({message, error}), without repeating a detail it already contains. */
+function errorMessage(text: string, status: number): string {
+  const fallback = `HTTP error! status: ${status}`;
+  try {
+    const parsed = JSON.parse(text) as { message?: unknown; error?: unknown };
+    const message = typeof parsed.message === 'string' ? parsed.message : '';
+    const detail = typeof parsed.error === 'string' ? parsed.error : '';
+    if (message && detail.includes(message)) return message;
+    // "Validation failed" + "validation failed: X is required" → "Validation failed: X is required"
+    const prefix = `${message.toLowerCase()}: `;
+    const rest =
+      message && detail.toLowerCase().startsWith(prefix) ? detail.slice(prefix.length) : detail;
+    return [message, rest].filter(Boolean).join(': ') || fallback;
+  } catch {
+    return text || fallback;
   }
+}
+
+/**
+ * The ApiError of a non-2xx response. A 401 on a non-auth path of a signed-in
+ * session also dispatches `auth-expired`, so the app can sign out.
+ */
+export async function readApiError(
+  response: Response,
+  { path, hadToken }: { path: string; hadToken: boolean }
+): Promise<ApiError> {
+  let text = '';
+  try {
+    text = await response.text();
+  } catch {
+    // An unreadable body still yields the status message.
+  }
+  if (response.status === 401 && hadToken && !path.startsWith('/auth/')) {
+    window.dispatchEvent(new Event(APP_EVENTS.AUTH_EXPIRED));
+  }
+  return new ApiError(errorMessage(text, response.status), response.status);
+}
+
+/** Whether a bearer token is stored (read before a request, for readApiError). */
+export const hasStoredToken = (): boolean => Boolean(localStorage.getItem(TOKEN_STORAGE_KEY));
+
+export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const hadToken = hasStoredToken();
+  const response = await authFetch(path, options);
+  if (!response.ok) throw await readApiError(response, { path, hadToken });
   const text = await response.text();
   const value = text ? unwrap<T>(JSON.parse(text)) : ({} as T);
   return value;

@@ -24,41 +24,11 @@ export interface CreateWalletRequest {
   previousBalance?: number;
 }
 
-export interface UpdateWalletRequest {
-  name?: string;
-  type?: WalletType;
-  balance?: number;
-  currency?: string;
-  icon?: string;
-  jarCategory?: string;
-  allocationPercent?: number;
-  isIncludedInTotal?: boolean;
-  creditLimit?: number;
-  statementDay?: number;
-  dueDay?: number;
-  statementBalance?: number;
-  minimumPayment?: number;
-  previousBalance?: number;
-}
-
-export interface TransferMoneyRequest {
-  fromWalletId: string;
-  toWalletId: string;
-  amount: number;
-  fee?: number;
-  note?: string;
-  transferDate?: string;
-}
+export type UpdateWalletRequest = Partial<CreateWalletRequest>;
 
 export const walletService = {
   getWallets: async (): Promise<WalletSummaryResponse> => {
     return request<WalletSummaryResponse>('/wallets', {
-      method: 'GET',
-    });
-  },
-
-  getWalletById: async (id: string): Promise<Wallet> => {
-    return request<Wallet>(`/wallets/${id}`, {
       method: 'GET',
     });
   },
@@ -80,13 +50,6 @@ export const walletService = {
   deleteWallet: async (id: string): Promise<void> => {
     return request<void>(`/wallets/${id}`, {
       method: 'DELETE',
-    });
-  },
-
-  transferMoney: async (data: TransferMoneyRequest): Promise<unknown> => {
-    return request<unknown>('/wallets/transfer', {
-      method: 'POST',
-      body: JSON.stringify(data),
     });
   },
 };

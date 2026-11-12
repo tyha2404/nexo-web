@@ -1,6 +1,7 @@
 import type { MouseEvent } from 'react';
 import type { ChatSession } from '../../services';
-import { ChatBubbleIcon, CloseIcon, ListIcon, PlusIcon } from './ChatIcons';
+import { Plus, X } from '../ui';
+import { ChatBubbleIcon, ListIcon } from './ChatIcons';
 import {
   BTN_TRANSITION,
   SIDEBAR_CLOSE_BTN,
@@ -44,7 +45,7 @@ export function ChatSessionsSidebar({
           <span>Lịch sử chat</span>
         </div>
         <button className={SIDEBAR_CLOSE_BTN} onClick={onClose} title="Đóng danh sách lịch sử">
-          <CloseIcon size={16} />
+          <X size={16} />
         </button>
       </div>
 
@@ -53,7 +54,7 @@ export function ChatSessionsSidebar({
           className={`inline-flex items-center gap-[6px] py-[5px] px-[9px] rounded-sm cursor-pointer text-[11.5px] font-semibold bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] border border-[color-mix(in_srgb,var(--primary)_30%,transparent)] text-[var(--text-link)] ${BTN_TRANSITION} hover:bg-[color-mix(in_srgb,var(--primary)_25%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_50%,transparent)] hover:text-white light:bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] light:border-[color-mix(in_srgb,var(--primary)_25%,transparent)] light:text-[var(--primary)] light:hover:bg-[color-mix(in_srgb,var(--primary)_18%,transparent)] light:hover:border-[color-mix(in_srgb,var(--primary)_40%,transparent)] light:hover:text-[var(--primary)]`}
           onClick={onNewChat}
         >
-          <PlusIcon size={13} />
+          <Plus size={13} />
           <span>Đoạn chat mới</span>
         </button>
         {sessions.length > 0 && (
@@ -91,7 +92,7 @@ export function ChatSessionsSidebar({
                     onClick={(e) => onDelete(e, sess.id)}
                     title="Xóa đoạn chat này"
                   >
-                    <CloseIcon size={12} />
+                    <X size={12} />
                   </button>
                 </div>
               </div>

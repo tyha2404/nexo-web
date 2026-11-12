@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent, type TouchEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { APP_EVENTS } from '../../commons/constants';
 import type { User } from '../../commons/types';
 import { useMobileChatViewport } from '../../hooks';
-import { authService } from '../../services';
 import { ChatHeader } from './ChatHeader';
 import { ResizeIcon } from './ChatIcons';
 import { autoResizeTextarea, ChatInputBar, ChatQuickChipsBar } from './ChatInputBar';
@@ -15,8 +15,7 @@ import { useChatResize } from './useChatResize';
 import { useSpeechRecognition } from './useSpeechRecognition';
 
 interface AIChatWidgetProps {
-  user?: User | null;
-  initiallyOpen?: boolean;
+  user: User;
 }
 
 interface OpenAIChatDetail {
@@ -31,9 +30,9 @@ const CHAT_WINDOW =
   'fixed! bottom-[82px]! right-[24px]! min-w-[380px] max-w-[calc(100vw-32px)] min-h-[460px] max-h-[calc(100vh-100px)] flex flex-col overflow-hidden z-[99995]! bg-[var(--bg-card)] border border-line rounded-xl shadow-[0_24px_48px_-12px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)] backdrop-blur-[24px] animate-[chatSlideUp_0.3s_cubic-bezier(0.16,1,0.3,1)] light:bg-white light:shadow-[0_20px_40px_rgba(0,0,0,0.15)] ' +
   'mobile:left-0! mobile:right-0! mobile:w-full! mobile:min-w-full! mobile:max-w-full! mobile:top-[var(--chat-visible-top,15dvh)]! mobile:bottom-auto! mobile:h-[var(--chat-visible-height,85dvh)]! mobile:min-h-0! mobile:max-h-[var(--chat-visible-height,85dvh)]! mobile:pl-[env(safe-area-inset-left,0px)] mobile:pr-[env(safe-area-inset-right,0px)] mobile:pb-[env(safe-area-inset-bottom,0px)] mobile:rounded-t-xl! mobile:rounded-b-none! mobile:border-x-0! mobile:border-b-0! mobile:shadow-[0_-10px_30px_rgba(0,0,0,0.55)]! mobile:animate-[chatMobileSheetSlideUp_0.35s_cubic-bezier(0.16,1,0.3,1)_forwards]!';
 
-export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AIChatWidgetProps) {
-  const [isOpen, setIsOpen] = useState(initiallyOpen);
-  const [currentUser, setCurrentUser] = useState<User | null>(initialUser || null);
+/** Mounted (already open) the first time the user asks for the assistant. */
+export function AIChatWidget({ user }: AIChatWidgetProps) {
+  const [isOpen, setIsOpen] = useState(true);
   const [showSessionsList, setShowSessionsList] = useState(false);
   const [showToolsDrawer, setShowToolsDrawer] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL_CATEGORY);
@@ -65,20 +64,7 @@ export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AICha
 
   const dynamicQuickPrompts = useMemo(() => getDynamicQuickPrompts(), []);
 
-  useEffect(() => {
-    if (initialUser) {
-      setCurrentUser(initialUser);
-    } else {
-      authService
-        .whoami()
-        .then(setCurrentUser)
-        .catch(() => {});
-    }
-  }, [initialUser]);
-
-  const userInitial = currentUser?.username?.trim()
-    ? currentUser.username.trim()[0].toUpperCase()
-    : 'U';
+  const userInitial = user.username?.trim() ? user.username.trim()[0].toUpperCase() : 'U';
 
   const sendMessageRef = useRef(sendMessage);
   useEffect(() => {
@@ -111,42 +97,21 @@ export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AICha
       }
     };
 
-    window.addEventListener('open-ai-chat', handleOpenAIChat);
+    window.addEventListener(APP_EVENTS.OPEN_AI_CHAT, handleOpenAIChat);
     return () => {
-      window.removeEventListener('open-ai-chat', handleOpenAIChat);
+      window.removeEventListener(APP_EVENTS.OPEN_AI_CHAT, handleOpenAIChat);
     };
   }, [setInput]);
 
-  // Click outside & Escape key to close chat window on desktop
+  // Escape closes the chat; a click outside lands on the backdrop, which closes it too.
   useEffect(() => {
     if (!isOpen) return;
-
-    const handleClickOutside = (e: globalThis.MouseEvent | globalThis.TouchEvent) => {
-      const target = e.target as Node;
-      if (!isMobile && chatWindowRef.current && !chatWindowRef.current.contains(target)) {
-        const isHeaderAiBtn = (target as HTMLElement).closest?.('.header-ai-btn');
-        if (!isHeaderAiBtn) {
-          setIsOpen(false);
-        }
-      }
-    };
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setIsOpen(false);
-      }
+      if (e.key === 'Escape') setIsOpen(false);
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
     document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, isMobile]);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -283,13 +248,12 @@ export function AIChatWidget({ user: initialUser, initiallyOpen = false }: AICha
                 activeToolTitle={activeToolTitle}
                 userInitial={userInitial}
                 quickPrompts={dynamicQuickPrompts}
-                actionFeedback={chat.actionFeedback}
+                proposalUi={chat.proposalUi}
                 endRef={messagesEndRef}
                 onSend={(text) => sendMessage(text)}
                 onRetry={chat.retry}
-                onConfirmAction={chat.confirmTransaction}
+                onConfirmAction={chat.confirmAction}
                 onCancelAction={chat.cancelAction}
-                onUndoAction={chat.undoTransaction}
               />
 
               {/* Horizontal Quick Chips Bar (Above Input) */}

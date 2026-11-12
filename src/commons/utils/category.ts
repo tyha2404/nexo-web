@@ -39,7 +39,7 @@ function containsPhrase(words: string[], phrase: string[]): boolean {
   return false;
 }
 
-function typeIcon(type?: string): string {
+function typeIcon(type?: TransactionType): string {
   if (type === TransactionType.INCOME) return '💰';
   if (type === TransactionType.INVESTMENT) return '📈';
   return '💸';
@@ -48,7 +48,7 @@ function typeIcon(type?: string): string {
 /**
  * Automatically determine the most fitting emoji icon for a category based on its name and type
  */
-export function getCategoryIcon(name?: string, type?: string): string {
+export function getCategoryIcon(name?: string, type?: TransactionType): string {
   if (!name) return typeIcon(type);
   const words = toWords(name);
   for (const [phrases, icon] of RULE_WORDS) {

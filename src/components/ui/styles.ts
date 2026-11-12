@@ -13,10 +13,10 @@ export const cx = (...parts: Array<string | false | null | undefined>) =>
 
 /* ---------- Buttons ---------- */
 
-export const BTN_BASE = `inline-flex shrink-0 cursor-pointer items-center justify-center gap-[6px] rounded-sm align-middle leading-[18px] font-normal whitespace-nowrap [word-break:keep-all] select-none [-webkit-tap-highlight-color:transparent] transition-[background-color,border-color,color] duration-100 ease-out disabled:cursor-default disabled:opacity-50`;
+const BTN_BASE = `inline-flex shrink-0 cursor-pointer items-center justify-center gap-[6px] rounded-sm align-middle leading-[18px] font-normal whitespace-nowrap [word-break:keep-all] select-none [-webkit-tap-highlight-color:transparent] transition-[background-color,border-color,color] duration-100 ease-out disabled:cursor-default disabled:opacity-50`;
 
 /** Default button size (VS Code `.monaco-button`: 26px, 13px/18px text); 36px on phones. */
-export const BTN_MD =
+const BTN_MD =
   'min-h-[26px] px-3 py-[3px] text-[13px] mobile:min-h-9 mobile:px-3.5 mobile:text-[14px]';
 
 const BTN_SKIN = {
@@ -27,7 +27,7 @@ const BTN_SKIN = {
   danger: 'border border-btn-border bg-[#c72e0f] text-white shadow-none enabled:hover:bg-[#a52a10]',
 } as const;
 
-export type ButtonVariant = keyof typeof BTN_SKIN;
+type ButtonVariant = keyof typeof BTN_SKIN;
 
 export const btnClass = (variant: ButtonVariant, size: string = BTN_MD) =>
   cx(BTN_BASE, size, BTN_SKIN[variant]);
@@ -66,7 +66,7 @@ export const MOBILE_ACTION_DELETE = cx(MOBILE_ACTION_BASE, 'text-expense!');
  * On phones, grows a small control's tappable area to ~44px tall with an invisible ::after,
  * without changing its layout. Keep ≥ 8px between neighbours so the areas don't overlap much.
  */
-export const TOUCH_HIT =
+const TOUCH_HIT =
   "relative mobile:after:absolute mobile:after:-inset-x-1 mobile:after:-inset-y-3 mobile:after:content-['']";
 
 /**

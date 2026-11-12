@@ -1,4 +1,4 @@
-import type { KeyboardEvent, RefObject } from 'react';
+import { useLayoutEffect, type KeyboardEvent, type RefObject } from 'react';
 import { MicIcon, SendIcon } from './ChatIcons';
 import { BTN_TRANSITION, NO_WRAP } from './chatStyles';
 import { CORE_QUICK_CHIPS } from './toolsCatalog';
@@ -10,9 +10,13 @@ const VOICE_IDLE =
 const VOICE_LISTENING =
   'bg-[color-mix(in_srgb,var(--expense)_20%,transparent)] border-[var(--expense)] text-[var(--expense)] animate-[chatVoicePulse_1.2s_infinite] light:bg-[color-mix(in_srgb,var(--expense)_12%,transparent)] light:text-[var(--expense)]';
 
-/** Grow the textarea with its content up to a cap. */
+/** Grow the textarea with its content up to a cap; an empty one goes back to one row. */
 export const autoResizeTextarea = (el: HTMLTextAreaElement | null) => {
   if (!el) return;
+  if (!el.value) {
+    el.style.height = '';
+    return;
+  }
   el.style.height = 'auto';
   el.style.height = `${Math.min(el.scrollHeight, MAX_TEXTAREA_HEIGHT)}px`;
 };
@@ -60,7 +64,15 @@ export function ChatInputBar({
   isListening,
   onToggleVoice,
 }: ChatInputBarProps) {
+  // Fit the height to every value change, typed or not (cleared after sending, voice input).
+  useLayoutEffect(() => {
+    autoResizeTextarea(textareaRef.current);
+  }, [value, textareaRef]);
+
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // Enter that commits an IME composition (Vietnamese Telex/VNI) is not a send;
+    // Safari reports it as keyCode 229 instead of isComposing.
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       onSend();
@@ -91,10 +103,7 @@ export function ChatInputBar({
             : 'Nhập yêu cầu (ví dụ: Chi 45k cafe, Số dư các ví, Ngân sách...)'
         }
         value={value}
-        onChange={(e) => {
-          onChange(e.target.value);
-          autoResizeTextarea(e.target);
-        }}
+        onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         rows={1}
       />

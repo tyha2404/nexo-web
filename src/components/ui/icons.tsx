@@ -264,7 +264,7 @@ const CODICONS = {
   ],
 } satisfies Record<string, PathData[]>;
 
-export type CodiconName = keyof typeof CODICONS;
+type CodiconName = keyof typeof CODICONS;
 
 export function Codicon({ name, size = 16, ...props }: IconProps & { name: CodiconName }) {
   const paths: PathData[] = CODICONS[name];

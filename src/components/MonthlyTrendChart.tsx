@@ -20,6 +20,7 @@ import {
   cx,
   DASHBOARD_CARD,
   SPINNER_MICRO,
+  CHART_TOOLTIP,
 } from './ui';
 
 const dotCls = 'inline-block h-[7px] w-[7px] rounded-full';
@@ -52,7 +53,12 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label })
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div className="min-w-[190px] rounded-md border border-line bg-card px-[0.9rem] py-3 shadow-app-md [backdrop-filter:var(--glass-blur)]">
+    <div
+      className={cx(
+        CHART_TOOLTIP,
+        'min-w-[190px] px-[0.9rem] py-3 [backdrop-filter:var(--glass-blur)]'
+      )}
+    >
       <div className="mb-2 border-b border-line pb-[0.35rem] text-[0.8rem] font-semibold text-muted">
         Tháng {label}
       </div>
@@ -134,7 +140,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
             className={filterBtnCls(visibleSeries.expense)}
             title="Bật/tắt cột Chi tiêu"
           >
-            <span className={`${dotCls} rounded-xs`} style={{ background: 'var(--primary)' }} />
+            <span className="inline-block h-[7px] w-[7px] rounded-xs bg-primary" />
             Chi tiêu
           </button>
 
@@ -144,7 +150,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
             className={filterBtnCls(visibleSeries.income)}
             title="Bật/tắt đường Thu nhập"
           >
-            <span className={dotCls} style={{ background: 'var(--income)' }} />
+            <span className={`${dotCls} bg-income`} />
             Thu nhập
           </button>
 
@@ -154,7 +160,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
             className={filterBtnCls(visibleSeries.target)}
             title="Bật/tắt đường Ngân sách"
           >
-            <span className={dotCls} style={{ background: 'var(--warning)' }} />
+            <span className={`${dotCls} bg-[var(--warning)]`} />
             Ngân sách
           </button>
 
@@ -164,10 +170,7 @@ export const MonthlyTrendChart: React.FC<MonthlyTrendChartProps> = ({
             className={filterBtnCls(visibleSeries.avgExpense)}
             title="Bật/tắt đường Chi tiêu Trung bình"
           >
-            <span
-              className={dotCls}
-              style={{ background: 'var(--text-muted)', borderRadius: 0, height: 2, width: 8 }}
-            />
+            <span className="inline-block h-[2px] w-[8px] bg-muted" />
             TB Chi tiêu
           </button>
         </div>

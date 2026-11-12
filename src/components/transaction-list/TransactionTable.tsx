@@ -1,15 +1,17 @@
-import { Image as ImageIcon, Pencil, Trash2, Wallet } from '../ui';
-import { InvestmentStatus, TransactionType } from '../../commons/constants';
-import { formatCurrency, formatDate } from '../../commons/utils';
-import { getAmountSign, INVESTMENT_STATUS_LABELS } from './constants';
 import {
   ACTIONS_CELL,
   CATEGORY_BADGE,
-  statusBadgeClass,
+  Image as ImageIcon,
+  Pencil,
   TABLE,
   TABLE_CONTAINER,
   TITLE_CELL,
-} from './listStyles';
+  Trash2,
+} from '../ui';
+import { InvestmentStatus, TransactionType } from '../../commons/constants';
+import { formatCurrency, formatDate } from '../../commons/utils';
+import { getAmountSign, INVESTMENT_STATUS_LABELS } from './constants';
+import { statusBadgeClass } from './listStyles';
 import { TagChips } from './TagChips';
 import type { TransactionListProps } from './types';
 import {
@@ -18,8 +20,8 @@ import {
   ACTION_BUTTONS_WRAPPER,
   TXN_AMOUNT,
   TXN_DATE,
-  WALLET_BADGE,
 } from '../ui';
+import { WalletBadge } from './WalletBadge';
 
 const amountColor = (type: TransactionType) =>
   type === TransactionType.INCOME
@@ -69,7 +71,7 @@ export function TransactionTable({
                       <button
                         type="button"
                         onClick={() => onViewReceipt(txn.receiptUrl!)}
-                        className="p-0 text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition"
+                        className="rounded-sm p-0 text-primary transition-colors duration-100 ease-out hover:bg-hover hover:text-link"
                         title="Xem hóa đơn / chứng từ"
                       >
                         <ImageIcon size={16} />
@@ -109,17 +111,7 @@ export function TransactionTable({
                   <span className={CATEGORY_BADGE}>{getCategoryName(txn.categoryId)}</span>
                 </td>
                 <td>
-                  {wallet ? (
-                    <span className={WALLET_BADGE}>
-                      <Wallet size={12} />
-                      <span>
-                        {wallet.icon ? `${wallet.icon} ` : ''}
-                        {wallet.name}
-                      </span>
-                    </span>
-                  ) : (
-                    <span className="text-muted">—</span>
-                  )}
+                  {wallet ? <WalletBadge wallet={wallet} /> : <span className="text-muted">—</span>}
                 </td>
                 <td className={TXN_DATE}>{formatDate(txn.transactionDate)}</td>
                 <td className={ACTIONS_CELL}>

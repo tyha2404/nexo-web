@@ -1,15 +1,14 @@
 import moment from 'moment';
-import { useState } from 'react';
-import { TransactionType } from '../../commons/constants';
-import { getErrorMessage } from '../../commons/utils';
+import { useRef, useState } from 'react';
 import {
+  ApiError,
   chatService,
-  transactionService,
   type ActionCard,
   type ChatMessage,
   type ChatSession,
 } from '../../services';
-import type { ActionCardData } from './types';
+import { dataEventsAfterConfirm } from './actionEvents';
+import { ACTION_TYPES, isCardOfType, type PendingActionData } from './types';
 
 /** Replace the trailing model message (the one being streamed) with `patch(last)`. */
 const patchLastModelMessage = (
@@ -21,6 +20,37 @@ const patchLastModelMessage = (
   if (lastIdx >= 0 && updated[lastIdx].role === 'model') updated[lastIdx] = patch(updated[lastIdx]);
   return updated;
 };
+
+/** Messages with the data of the proposal `actionId` merged with `patch`. */
+const patchProposal = (
+  messages: ChatMessage[],
+  actionId: string,
+  patch: Partial<PendingActionData>
+): ChatMessage[] =>
+  messages.map((msg) =>
+    msg.actionCards?.some(
+      (card) =>
+        isCardOfType(card, ACTION_TYPES.PENDING_CONFIRMATION) && card.data.actionId === actionId
+    )
+      ? {
+          ...msg,
+          actionCards: msg.actionCards.map((card) =>
+            isCardOfType(card, ACTION_TYPES.PENDING_CONFIRMATION) && card.data.actionId === actionId
+              ? { ...card, data: { ...card.data, ...patch } }
+              : card
+          ),
+        }
+      : msg
+  );
+
+/** Client-side state of a proposal card while/after the user acts on it. */
+export interface ProposalUiState {
+  busy?: 'confirm' | 'cancel';
+  /** Why the last confirm/cancel failed; the proposal can be tried again. */
+  error?: string;
+  /** The server already confirmed or cancelled it (409), e.g. from another device. */
+  handled?: boolean;
+}
 
 export interface UseChatConversationOptions {
   /** Called after a session's messages were loaded (e.g. to close the list and scroll). */
@@ -35,16 +65,20 @@ export function useChatConversation({ onSessionLoaded }: UseChatConversationOpti
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeToolTitle, setActiveToolTitle] = useState<string | null>(null);
-  const [actionFeedback, setActionFeedback] = useState<Record<number, string>>({});
+  // Keyed by actionId (unique per proposal); cleared with the conversation anyway.
+  const [proposalUi, setProposalUi] = useState<Record<string, ProposalUiState>>({});
+  // Synchronous guard against a double tap before the busy state renders.
+  const inFlight = useRef(new Set<string>());
 
-  const setFeedback = (msgIdx: number, text: string) =>
-    setActionFeedback((prev) => ({ ...prev, [msgIdx]: text }));
+  const setUi = (actionId: string, state: ProposalUiState) =>
+    setProposalUi((prev) => ({ ...prev, [actionId]: state }));
 
   const loadSessionMessages = async (sessionId: string) => {
     try {
       const sessionData = await chatService.getSessionMessages(sessionId);
       setCurrentSessionId(sessionData.id);
       setMessages(sessionData.messages || []);
+      setProposalUi({});
       onSessionLoaded?.();
     } catch (err) {
       console.error('Failed to load session messages:', err);
@@ -66,6 +100,7 @@ export function useChatConversation({ onSessionLoaded }: UseChatConversationOpti
   const resetConversation = () => {
     setCurrentSessionId(undefined);
     setMessages([]);
+    setProposalUi({});
     setActiveToolTitle(null);
     setInput('');
   };
@@ -92,49 +127,52 @@ export function useChatConversation({ onSessionLoaded }: UseChatConversationOpti
     }
   };
 
-  // Confirm transaction proposed by Action Card
-  const confirmTransaction = async (cardData: ActionCardData | undefined, msgIdx: number) => {
+  /** Confirm or cancel an AI write proposal (a PENDING_CONFIRMATION card) on the server. */
+  const resolveProposal = async (card: ActionCard, decision: 'confirm' | 'cancel') => {
+    if (!isCardOfType(card, ACTION_TYPES.PENDING_CONFIRMATION)) return;
+    const proposal = card.data;
+    const { actionId } = proposal;
+    if (!actionId || inFlight.current.has(actionId)) return;
+    inFlight.current.add(actionId);
+    setUi(actionId, { busy: decision });
     try {
-      if (cardData) {
-        await transactionService.create({
-          amount: Number(cardData.amount) || 0,
-          type: cardData.type || TransactionType.EXPENSE,
-          categoryId: cardData.categoryId || cardData.category_id || '',
-          walletId: cardData.walletId || cardData.wallet_id,
-          transactionDate: cardData.date
-            ? moment(cardData.date).format('YYYY-MM-DD')
-            : moment().format('YYYY-MM-DD'),
-          description: cardData.note || cardData.description || '',
-        });
-        setFeedback(msgIdx, 'Đã xác nhận và ghi chép giao dịch thành công!');
-        window.dispatchEvent(new CustomEvent('transaction-created'));
-        window.dispatchEvent(new CustomEvent('transactions-changed'));
+      if (decision === 'confirm') {
+        const result = await chatService.confirmAction(actionId);
+        setMessages((prev) =>
+          patchProposal(prev, actionId, { status: 'CONFIRMED', resultCard: result.actionCard })
+        );
+        for (const name of dataEventsAfterConfirm(proposal, result.actionCard)) {
+          window.dispatchEvent(new Event(name));
+        }
+      } else {
+        await chatService.cancelAction(actionId);
+        setMessages((prev) => patchProposal(prev, actionId, { status: 'CANCELLED' }));
       }
+      setUi(actionId, {});
     } catch (err) {
-      console.error('Failed to confirm transaction:', err);
-      setFeedback(msgIdx, `Lỗi ghi chép: ${getErrorMessage(err, 'Không thể tạo giao dịch')}`);
+      const status = err instanceof ApiError ? err.status : 0;
+      if (status === 404 || status === 410) {
+        // Expired, or lost when the server restarted: it can no longer run.
+        setMessages((prev) => patchProposal(prev, actionId, { status: 'EXPIRED' }));
+        setUi(actionId, {});
+      } else if (status === 409) {
+        setUi(actionId, { handled: true });
+      } else {
+        // 422 (e.g. insufficient balance) / 5xx: the proposal stays pending, so it can be retried.
+        setUi(actionId, {
+          error:
+            err instanceof ApiError && err.message
+              ? err.message
+              : 'Không kết nối được máy chủ, vui lòng thử lại.',
+        });
+      }
+    } finally {
+      inFlight.current.delete(actionId);
     }
   };
 
-  const cancelAction = (msgIdx: number) => setFeedback(msgIdx, 'Đã hủy thao tác này.');
-
-  // Undo transaction created by Action Card
-  const undoTransaction = async (cardData: ActionCardData | undefined, msgIdx: number) => {
-    const transactionId = cardData?.id || cardData?.transactionId || cardData?.transaction_id;
-    if (!transactionId) {
-      setFeedback(msgIdx, 'Đã hoàn tác thao tác.');
-      return;
-    }
-    try {
-      await transactionService.delete(transactionId);
-      setFeedback(msgIdx, 'Đã hoàn tác và xóa giao dịch thành công.');
-      window.dispatchEvent(new CustomEvent('transaction-deleted'));
-      window.dispatchEvent(new CustomEvent('transactions-changed'));
-    } catch (err) {
-      console.error('Failed to undo transaction:', err);
-      setFeedback(msgIdx, 'Lỗi khi hoàn tác giao dịch.');
-    }
-  };
+  const confirmAction = (card: ActionCard) => resolveProposal(card, 'confirm');
+  const cancelAction = (card: ActionCard) => resolveProposal(card, 'cancel');
 
   const sendMessage = async (textToSend?: string) => {
     const messageText = (textToSend || input).trim();
@@ -167,7 +205,6 @@ export function useChatConversation({ onSessionLoaded }: UseChatConversationOpti
     });
 
     let accumulatedContent = '';
-    let latestActionCard: ActionCard | undefined = undefined;
 
     await chatService.sendStreamMessage(
       { sessionId: currentSessionId, message: messageText },
@@ -179,26 +216,24 @@ export function useChatConversation({ onSessionLoaded }: UseChatConversationOpti
         } else if (event.type === 'tool_done') {
           setActiveToolTitle(null);
         } else if (event.type === 'action_card' && event.actionCard) {
-          latestActionCard = event.actionCard;
-          if (event.actionCard.actionType === 'TRANSACTION_CREATED') {
-            window.dispatchEvent(new CustomEvent('transaction-created'));
-            window.dispatchEvent(new CustomEvent('transactions-changed'));
-            if ((event.actionCard.data as ActionCardData | undefined)?.isNewCategoryCreated) {
-              window.dispatchEvent(new CustomEvent('categories-changed'));
-            }
-          } else if (event.actionCard.actionType === 'CATEGORY_CREATED') {
-            window.dispatchEvent(new CustomEvent('categories-changed'));
-          }
+          // Writes arrive only as proposals (PENDING_CONFIRMATION): nothing changed yet, so
+          // no data event here; confirmAction dispatches them once the server ran the action.
+          const card = event.actionCard;
+          setMessages((prev) =>
+            patchLastModelMessage(prev, (last) => ({
+              ...last,
+              id: event.messageId || last.id,
+              actionCards: [...(last.actionCards ?? []), card],
+            }))
+          );
         } else if (event.type === 'text_delta' && event.delta) {
           accumulatedContent += event.delta;
-          const actionCard = latestActionCard;
           setMessages((prev) =>
             patchLastModelMessage(prev, (last) => ({
               ...last,
               id: event.messageId || last.id,
               content: accumulatedContent,
               status: 'STREAMING',
-              actionCard,
             }))
           );
         } else if (event.type === 'error') {
@@ -266,15 +301,14 @@ export function useChatConversation({ onSessionLoaded }: UseChatConversationOpti
     setInput,
     isLoading,
     activeToolTitle,
-    actionFeedback,
+    proposalUi,
     loadSessions,
     loadSessionMessages,
     resetConversation,
     deleteSession,
     clearSessions,
-    confirmTransaction,
+    confirmAction,
     cancelAction,
-    undoTransaction,
     sendMessage,
     retry,
   };

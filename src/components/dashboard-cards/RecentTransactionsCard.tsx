@@ -1,8 +1,9 @@
 import { CreditCard, Plus, ReceiptText } from '../ui';
 import moment from 'moment';
-import { TransactionType } from '../../commons/constants';
+import { DATE_FORMAT_MONTH, TransactionType } from '../../commons/constants';
 import type { Transaction, Wallet as WalletModel } from '../../commons/types';
-import { formatCurrency } from '../../commons/utils';
+import { formatCurrency, formatDate } from '../../commons/utils';
+import { getAmountSign } from '../transaction-list';
 import {
   BTN_PRIMARY,
   CARD_SECTION_HEADER,
@@ -15,6 +16,7 @@ import {
   EMPTY_ICON_CIRCLE,
   EMPTY_SUB,
   EMPTY_TITLE,
+  mobileAmountColor,
   MONEY,
   NO_WRAP_BADGE,
   pnlBadgeSoftClass,
@@ -79,28 +81,16 @@ export function RecentTransactionsCard({
                             <CreditCard size={11} /> {walletLabel}
                           </span>
                         )}
-                        <span className="text-[0.7rem]">
-                          {moment(txn.transactionDate).format('DD/MM/YYYY')}
-                        </span>
+                        <span className="text-[0.7rem]">{formatDate(txn.transactionDate)}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex shrink-0 flex-col items-end gap-[0.15rem]">
                     <span
-                      className={`${MONEY} text-[0.925rem] ${
-                        txn.type === TransactionType.INCOME
-                          ? 'text-income'
-                          : txn.type === TransactionType.INVESTMENT
-                            ? 'text-main'
-                            : 'text-expense'
-                      }`}
+                      className={`${MONEY} text-[0.925rem] ${mobileAmountColor(txn.type.toLowerCase())}`}
                     >
-                      {txn.type === TransactionType.INCOME
-                        ? `+${formatCurrency(txn.amount)}`
-                        : txn.type === TransactionType.INVESTMENT
-                          ? formatCurrency(txn.amount)
-                          : `-${formatCurrency(txn.amount)}`}
+                      {`${getAmountSign(txn.type)}${formatCurrency(txn.amount)}`}
                     </span>
                     {txn.type === TransactionType.INVESTMENT &&
                       txn.realizedPnl !== undefined &&
@@ -123,7 +113,7 @@ export function RecentTransactionsCard({
             <p className={EMPTY_TITLE}>Chưa có giao dịch nào</p>
             <p className={EMPTY_SUB}>
               Chưa có giao dịch thu chi trong tháng{' '}
-              {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}.
+              {moment(selectedMonth, DATE_FORMAT_MONTH).format('MM/YYYY')}.
             </p>
             <div className={EMPTY_ACTIONS}>
               <button

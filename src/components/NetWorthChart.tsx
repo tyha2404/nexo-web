@@ -18,6 +18,7 @@ import {
   cx,
   DASHBOARD_CARD,
   MONEY,
+  CHART_TOOLTIP,
 } from './ui';
 
 const signed = (value: number) =>
@@ -38,7 +39,7 @@ function NetWorthTooltip({ active, payload }: TooltipProps) {
   ];
   if (point.realizedPnL !== 0) rows.push(['Lãi/lỗ đầu tư', point.realizedPnL]);
   return (
-    <div className="min-w-50 rounded-md border border-line bg-card px-3 py-2.5 text-[0.8rem] shadow-app-md">
+    <div className={cx(CHART_TOOLTIP, 'min-w-50 px-3 py-2.5 text-[0.8rem]')}>
       <div className="mb-1.5 border-b border-line pb-1 font-semibold text-muted">
         Cuối tháng {point.label.replace(/^T/, '')}
       </div>
@@ -48,7 +49,7 @@ function NetWorthTooltip({ active, payload }: TooltipProps) {
       </div>
       <div className="mt-1 flex items-baseline justify-between gap-3">
         <span className="text-muted">Trong tháng</span>
-        <span className={cx(MONEY, 'font-semibold text-main')}>{signed(point.change)}</span>
+        <span className={cx(MONEY, 'text-main')}>{signed(point.change)}</span>
       </div>
       <div className="mt-1 flex flex-col gap-0.5 border-t border-line pt-1">
         {rows.map(([label, value]) => (

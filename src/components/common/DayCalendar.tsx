@@ -1,6 +1,6 @@
 import moment from 'moment';
 import { useMemo, type ReactNode } from 'react';
-import { DATE_FORMAT_INPUT } from '../../commons/constants';
+import { DATE_FORMAT_INPUT, DATE_FORMAT_MONTH } from '../../commons/constants';
 import { formatCompactCurrency, formatCurrency, formatDate } from '../../commons/utils';
 import {
   AlertCircle,
@@ -107,7 +107,7 @@ export function DayCalendar({
   title = 'Lịch theo ngày',
 }: DayCalendarProps) {
   const { cells, max, total } = useMemo(() => {
-    const start = moment(month, 'YYYY-MM').startOf('month');
+    const start = moment(month, DATE_FORMAT_MONTH).startOf('month');
     const days = Array.from({ length: start.daysInMonth() }, (_, i) =>
       start
         .clone()
@@ -287,7 +287,7 @@ export function DayCalendar({
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="text-[13px] font-semibold text-main">
                     {WEEKDAY_NAMES[moment(selected, DATE_FORMAT_INPUT).isoWeekday()]},{' '}
-                    {formatDate(selected, 'DD/MM/YYYY')}
+                    {formatDate(selected)}
                   </span>
                   {(values[selected] ?? 0) > 0 && !details[selected] && (
                     <span className={cx(MONEY, 'shrink-0 text-[13px] text-main')}>

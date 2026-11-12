@@ -1,7 +1,8 @@
 import moment from 'moment';
-import type { SummaryReport, TargetSummaryResponse } from '../../commons/types';
-import { formatCurrency, projectMonthEnd } from '../../commons/utils';
-import type { DebtSummary } from '../../types/debt';
+import type { ReactNode } from 'react';
+import { DATE_FORMAT_MONTH } from '../../commons/constants';
+import type { DebtSummary, SummaryReport, TargetSummaryResponse } from '../../commons/types';
+import { clickableProps, formatCurrency, projectMonthEnd } from '../../commons/utils';
 import { BLOCK_GAP, cx, GLASS_CARD, MONEY, MOTION_ENTER, SUB_TILE } from '../ui';
 
 // Groups inside the hero are SUB_TILEs (filled, no border): cards never nest.
@@ -26,6 +27,81 @@ const barCls =
   'origin-left motion-safe:animate-[nexo-progress-enter_480ms_var(--motion-ease)_backwards] h-full rounded-full transition-[width] duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)]';
 const linkActionCls =
   'cursor-pointer border-none bg-transparent p-0 text-[0.8rem] font-semibold text-primary underline underline-offset-2 hover:text-primary-hover';
+
+interface ProgressPanelProps {
+  title: string;
+  /** A target is set: show the badge, the bar and the details; otherwise the set-up links. */
+  hasTarget: boolean;
+  badge: string;
+  /** Tone classes of the badge (may be ''). */
+  badgeTone: string;
+  /** Link shown instead of the badge when no target is set ("+ Đặt hạn mức ↗"). */
+  setLabel: string;
+  percent: number;
+  /** Colour class of the bar. */
+  barTone: string;
+  details: ReactNode;
+  /** Sentence shown when no target is set (next to "Thiết lập"). */
+  emptyText: ReactNode;
+  /** Extra row under the panel (budget forecast). */
+  footer?: ReactNode;
+  onSetTarget: () => void;
+}
+
+/** Budget / investment target progress: header with status badge, bar, detail row. */
+function ProgressPanel({
+  title,
+  hasTarget,
+  badge,
+  badgeTone,
+  setLabel,
+  percent,
+  barTone,
+  details,
+  emptyText,
+  footer,
+  onSetTarget,
+}: ProgressPanelProps) {
+  return (
+    <div className={progressBoxCls}>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <span className="flex items-center gap-[0.4rem] text-[0.8125rem] font-semibold text-main">
+          {title}
+        </span>
+        {hasTarget ? (
+          <span className={`${statusBadgeCls} ${badgeTone}`}>{badge}</span>
+        ) : (
+          <button type="button" className={setLinkCls} onClick={onSetTarget}>
+            {setLabel}
+          </button>
+        )}
+      </div>
+
+      {hasTarget ? (
+        <>
+          <div className={trackCls}>
+            <div
+              className={`${barCls} ${barTone}`}
+              style={{ width: `${Math.min(100, percent)}%` }}
+            />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[0.875rem] text-muted">
+            {details}
+          </div>
+        </>
+      ) : (
+        <div className="flex items-center justify-between text-[0.8rem] text-muted">
+          <span>{emptyText}</span>
+          <button type="button" className={linkActionCls} onClick={onSetTarget}>
+            Thiết lập
+          </button>
+        </div>
+      )}
+
+      {footer}
+    </div>
+  );
+}
 
 interface HeroCashflowCardProps {
   selectedMonth: string;
@@ -88,6 +164,37 @@ export function HeroCashflowCard({
   const investPercent =
     investmentTarget > 0 ? Math.min(100, Math.round((investedAmount / investmentTarget) * 100)) : 0;
 
+  // Clickable month totals under the hero numbers; each opens its list.
+  const subMetrics = [
+    {
+      nav: 'income',
+      className: 'metric-income',
+      hint: 'Xem chi tiết Thu nhập',
+      label: 'Tổng Thu nhập ↗',
+      value: totalIncome,
+      sign: '+',
+      tone: 'text-income',
+    },
+    {
+      nav: 'expenses',
+      className: 'metric-expense',
+      hint: 'Xem chi tiết Chi tiêu',
+      label: 'Tổng Chi tiêu ↗',
+      value: totalExpense,
+      sign: '-',
+      tone: 'text-expense',
+    },
+    {
+      nav: 'investment',
+      className: 'metric-invest',
+      hint: 'Xem chi tiết Đầu tư',
+      label: 'Tổng Đầu tư ↗',
+      value: summary?.totalInvestment ?? 0,
+      sign: '',
+      tone: undefined,
+    },
+  ];
+
   return (
     <div
       className={cx(
@@ -100,7 +207,9 @@ export function HeroCashflowCard({
       <div className="flex flex-wrap items-start justify-between gap-3 mobile:flex-col mobile:items-start mobile:gap-[0.35rem]">
         <div className="hero-flow-info">
           <div className="mb-1 inline-flex items-center gap-[0.35rem] align-middle text-[0.75rem] leading-[1.2] font-semibold tracking-[0.05em] text-muted uppercase">
-            <span>Dòng tiền Tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}</span>
+            <span>
+              Dòng tiền Tháng {moment(selectedMonth, DATE_FORMAT_MONTH).format('MM/YYYY')}
+            </span>
           </div>
           <div className="flex flex-wrap items-baseline gap-2">
             <span
@@ -133,225 +242,144 @@ export function HeroCashflowCard({
 
       {/* Hero Sub-metrics Row */}
       <div className="mt-2 grid grid-cols-[repeat(3,1fr)] gap-2 border-t border-line pt-2 mobile:mt-[0.35rem] mobile:grid-cols-[1fr] mobile:gap-[0.35rem] mobile:pt-[0.35rem]">
-        <div
-          className={`metric-income ${submetricCls}`}
-          onClick={() => onNavigate?.('income')}
-          title="Xem chi tiết Thu nhập"
-        >
-          <div className="flex min-w-0 flex-col gap-[0.1rem] text-left">
-            <span className={submetricTitleCls}>Tổng Thu nhập ↗</span>
-            <span
-              className={`${submetricNumberCls} text-income`}
-              title={formatCurrency(totalIncome)}
-            >
-              +{formatCurrency(totalIncome)}
-            </span>
+        {subMetrics.map((m) => (
+          <div
+            key={m.nav}
+            className={`${m.className} ${submetricCls}`}
+            title={m.hint}
+            {...clickableProps(() => onNavigate?.(m.nav))}
+          >
+            <div className="flex min-w-0 flex-col gap-[0.1rem] text-left">
+              <span className={submetricTitleCls}>{m.label}</span>
+              <span className={cx(submetricNumberCls, m.tone)} title={formatCurrency(m.value)}>
+                {m.sign}
+                {formatCurrency(m.value)}
+              </span>
+            </div>
           </div>
-        </div>
-
-        <div
-          className={`metric-expense ${submetricCls}`}
-          onClick={() => onNavigate?.('expenses')}
-          title="Xem chi tiết Chi tiêu"
-        >
-          <div className="flex min-w-0 flex-col gap-[0.1rem] text-left">
-            <span className={submetricTitleCls}>Tổng Chi tiêu ↗</span>
-            <span
-              className={`${submetricNumberCls} text-expense`}
-              title={formatCurrency(totalExpense)}
-            >
-              -{formatCurrency(totalExpense)}
-            </span>
-          </div>
-        </div>
-
-        <div
-          className={`metric-invest ${submetricCls}`}
-          onClick={() => onNavigate?.('investment')}
-          title="Xem chi tiết Đầu tư"
-        >
-          <div className="flex min-w-0 flex-col gap-[0.1rem] text-left">
-            <span className={submetricTitleCls}>Tổng Đầu tư ↗</span>
-            <span
-              className={submetricNumberCls}
-              title={formatCurrency(summary?.totalInvestment ?? 0)}
-            >
-              {formatCurrency(summary?.totalInvestment ?? 0)}
-            </span>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Visual Budget & Investment Progress Section */}
       <div className="mt-2 grid grid-cols-[repeat(2,1fr)] gap-2 mobile:mt-[0.35rem] mobile:grid-cols-[1fr] mobile:gap-[0.35rem]">
         {/* 1. Expense Budget Progress */}
-        <div className={progressBoxCls}>
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <span className="flex items-center gap-[0.4rem] text-[0.8125rem] font-semibold text-main">
-              Hạn mức Ngân sách Chi tiêu
-            </span>
-            {budgetLimit > 0 ? (
-              <span
-                className={`${statusBadgeCls} ${
-                  isOverBudget
-                    ? 'bg-[color-mix(in_srgb,var(--expense)_15%,transparent)] text-expense'
-                    : budgetPercent >= 80
-                      ? 'bg-[color-mix(in_srgb,var(--warning)_15%,transparent)] text-warning'
-                      : ''
-                }`}
-              >
-                {isOverBudget
-                  ? `Vượt +${formatCurrency(targetSummary?.expense?.overspentAmount ?? 0)}`
-                  : `Đã chi ${budgetPercent}%`}
-              </span>
-            ) : (
-              <button type="button" className={setLinkCls} onClick={() => onNavigate?.('targets')}>
-                + Đặt hạn mức ↗
-              </button>
-            )}
-          </div>
-
-          {budgetLimit > 0 ? (
+        <ProgressPanel
+          title="Hạn mức Ngân sách Chi tiêu"
+          hasTarget={budgetLimit > 0}
+          badge={
+            isOverBudget
+              ? `Vượt +${formatCurrency(targetSummary?.expense?.overspentAmount ?? 0)}`
+              : `Đã chi ${budgetPercent}%`
+          }
+          badgeTone={
+            isOverBudget
+              ? 'bg-[color-mix(in_srgb,var(--expense)_15%,transparent)] text-expense'
+              : budgetPercent >= 80
+                ? 'bg-[color-mix(in_srgb,var(--warning)_15%,transparent)] text-warning'
+                : ''
+          }
+          setLabel="+ Đặt hạn mức ↗"
+          percent={budgetPercent}
+          barTone={isOverBudget ? 'bg-expense' : budgetPercent >= 80 ? 'bg-warning' : 'bg-income'}
+          onSetTarget={() => onNavigate?.('targets')}
+          emptyText={
             <>
-              <div className={trackCls}>
-                <div
-                  className={`${barCls} ${
-                    isOverBudget ? 'bg-expense' : budgetPercent >= 80 ? 'bg-warning' : 'bg-income'
-                  }`}
-                  style={{ width: `${Math.min(100, budgetPercent)}%` }}
-                />
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 text-[0.875rem] text-muted">
-                <span>
-                  Đã chi: <strong>{formatCurrency(budgetSpent)}</strong> /{' '}
-                  {formatCurrency(budgetLimit)}
-                </span>
-                {targetSummary?.expense?.dailyAllowance !== undefined &&
-                targetSummary.expense.dailyAllowance > 0 &&
-                !isOverBudget ? (
-                  <span className="text-primary">
-                    Gợi ý:{' '}
-                    <strong>
-                      {formatCurrency(Math.round(targetSummary.expense.dailyAllowance))}/ngày
-                    </strong>{' '}
-                    (còn {targetSummary.daysRemaining || 0} ngày)
-                  </span>
-                ) : isOverBudget ? (
-                  <span style={{ color: 'var(--expense)', fontWeight: 600 }}>
-                    Vượt ngân sách:{' '}
-                    <strong>
-                      {formatCurrency(
-                        Math.abs(
-                          targetSummary?.expense?.overspentAmount ?? budgetSpent - budgetLimit
-                        )
-                      )}
-                    </strong>
-                  </span>
-                ) : targetSummary?.expense?.remainingAmount !== undefined ? (
-                  <span>
-                    Còn lại:{' '}
-                    <strong>{formatCurrency(targetSummary.expense.remainingAmount)}</strong>
-                  </span>
-                ) : null}
-              </div>
+              Chưa đặt hạn mức chi tiêu tháng{' '}
+              {moment(selectedMonth, DATE_FORMAT_MONTH).format('MM/YYYY')}.
             </>
-          ) : (
-            <div className="flex items-center justify-between text-[0.8rem] text-muted">
+          }
+          details={
+            <>
               <span>
-                Chưa đặt hạn mức chi tiêu tháng {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}
-                .
+                Đã chi: <strong>{formatCurrency(budgetSpent)}</strong> /{' '}
+                {formatCurrency(budgetLimit)}
               </span>
-              <button
-                type="button"
-                className={linkActionCls}
-                onClick={() => onNavigate?.('targets')}
-              >
-                Thiết lập
-              </button>
-            </div>
-          )}
-
-          {projectedExpense !== null && (
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 border-t border-line pt-1.5 text-[0.8125rem] text-muted">
-              <span>
-                Dự kiến cả tháng:{' '}
-                <strong className={MONEY}>~{formatCurrency(projectedExpense)}</strong>
-              </span>
-              {projectedGap !== null &&
-                (projectedGap > 0 ? (
-                  <span className="font-semibold text-expense">
-                    · sẽ vượt ~{formatCurrency(projectedGap)}
-                  </span>
-                ) : (
-                  <span className="text-income">· trong hạn mức</span>
-                ))}
-            </div>
-          )}
-        </div>
+              {targetSummary?.expense?.dailyAllowance !== undefined &&
+              targetSummary.expense.dailyAllowance > 0 &&
+              !isOverBudget ? (
+                <span className="text-primary">
+                  Gợi ý:{' '}
+                  <strong>
+                    {formatCurrency(Math.round(targetSummary.expense.dailyAllowance))}/ngày
+                  </strong>{' '}
+                  (còn {targetSummary.daysRemaining || 0} ngày)
+                </span>
+              ) : isOverBudget ? (
+                <span className="font-semibold text-expense">
+                  Vượt ngân sách:{' '}
+                  <strong>
+                    {formatCurrency(
+                      Math.abs(targetSummary?.expense?.overspentAmount ?? budgetSpent - budgetLimit)
+                    )}
+                  </strong>
+                </span>
+              ) : targetSummary?.expense?.remainingAmount !== undefined ? (
+                <span>
+                  Còn lại: <strong>{formatCurrency(targetSummary.expense.remainingAmount)}</strong>
+                </span>
+              ) : null}
+            </>
+          }
+          footer={
+            projectedExpense !== null && (
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 border-t border-line pt-1.5 text-[0.8125rem] text-muted">
+                <span>
+                  Dự kiến cả tháng:{' '}
+                  <strong className={MONEY}>~{formatCurrency(projectedExpense)}</strong>
+                </span>
+                {projectedGap !== null &&
+                  (projectedGap > 0 ? (
+                    <span className="font-semibold text-expense">
+                      · sẽ vượt ~{formatCurrency(projectedGap)}
+                    </span>
+                  ) : (
+                    <span className="text-income">· trong hạn mức</span>
+                  ))}
+              </div>
+            )
+          }
+        />
 
         {/* 2. Monthly Investment Target Progress */}
-        <div className={progressBoxCls}>
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <span className="flex items-center gap-[0.4rem] text-[0.8125rem] font-semibold text-main">
-              Mục tiêu Đầu tư Tháng
-            </span>
-            {investmentTarget > 0 ? (
-              <span
-                className={`${statusBadgeCls} ${
-                  isInvestReached
-                    ? ''
-                    : investPercent >= 50
-                      ? 'bg-primary-glow text-primary'
-                      : 'bg-[color-mix(in_srgb,var(--warning)_15%,transparent)] text-warning'
-                }`}
-              >
-                {isInvestReached
-                  ? `Đạt mục tiêu 🎉 (+${formatCurrency(investSurplus)})`
-                  : `Đã đạt ${investPercent}% (Thiếu ${formatCurrency(investRemaining)})`}
-              </span>
-            ) : (
-              <button type="button" className={setLinkCls} onClick={() => onNavigate?.('targets')}>
-                + Đặt mục tiêu đầu tư ↗
-              </button>
-            )}
-          </div>
-
-          {investmentTarget > 0 ? (
+        <ProgressPanel
+          title="Mục tiêu Đầu tư Tháng"
+          hasTarget={investmentTarget > 0}
+          badge={
+            isInvestReached
+              ? `Đạt mục tiêu 🎉 (+${formatCurrency(investSurplus)})`
+              : `Đã đạt ${investPercent}% (Thiếu ${formatCurrency(investRemaining)})`
+          }
+          badgeTone={
+            isInvestReached
+              ? ''
+              : investPercent >= 50
+                ? 'bg-primary-glow text-primary'
+                : 'bg-[color-mix(in_srgb,var(--warning)_15%,transparent)] text-warning'
+          }
+          setLabel="+ Đặt mục tiêu đầu tư ↗"
+          percent={investPercent}
+          barTone="bg-primary"
+          onSetTarget={() => onNavigate?.('targets')}
+          emptyText={
             <>
-              <div className={trackCls}>
-                <div
-                  className={`${barCls} bg-primary`}
-                  style={{ width: `${Math.min(100, investPercent)}%` }}
-                />
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 text-[0.875rem] text-muted">
-                <span>
-                  Đã đầu tư: <strong>{formatCurrency(investedAmount)}</strong> /{' '}
-                  {formatCurrency(investmentTarget)}
-                </span>
-                {isInvestReached && (
-                  <span style={{ color: 'var(--income)', fontWeight: 600 }}>
-                    Vượt chỉ tiêu: <strong>+{formatCurrency(investSurplus)}</strong> 🎉
-                  </span>
-                )}
-              </div>
+              Chưa đặt mục tiêu tích lũy/đầu tư tháng{' '}
+              {moment(selectedMonth, DATE_FORMAT_MONTH).format('MM/YYYY')}.
             </>
-          ) : (
-            <div className="flex items-center justify-between text-[0.8rem] text-muted">
+          }
+          details={
+            <>
               <span>
-                Chưa đặt mục tiêu tích lũy/đầu tư tháng{' '}
-                {moment(selectedMonth, 'YYYY-MM').format('MM/YYYY')}.
+                Đã đầu tư: <strong>{formatCurrency(investedAmount)}</strong> /{' '}
+                {formatCurrency(investmentTarget)}
               </span>
-              <button
-                type="button"
-                className={linkActionCls}
-                onClick={() => onNavigate?.('targets')}
-              >
-                Thiết lập
-              </button>
-            </div>
-          )}
-        </div>
+              {isInvestReached && (
+                <span className="font-semibold text-income">
+                  Vượt chỉ tiêu: <strong>+{formatCurrency(investSurplus)}</strong> 🎉
+                </span>
+              )}
+            </>
+          }
+        />
       </div>
     </div>
   );

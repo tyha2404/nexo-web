@@ -16,19 +16,8 @@ export interface CreateTransactionDTO {
   transactionDate: string;
 }
 
-export interface UpdateTransactionDTO {
-  categoryId?: string;
-  walletId?: string;
-  amount?: number;
-  type?: TransactionType;
-  status?: InvestmentStatus;
-  realizedPnl?: number;
-  description?: string;
-  receiptUrl?: string;
-  /** Replaces the whole tag list ([] clears it); omit to keep it. */
-  tags?: string[];
-  transactionDate?: string;
-}
+/** Fields to change. `tags` replaces the whole tag list ([] clears it); omit it to keep it. */
+export type UpdateTransactionDTO = Partial<CreateTransactionDTO>;
 
 class TransactionService extends CRUDService<
   Transaction,

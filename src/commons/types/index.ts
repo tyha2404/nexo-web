@@ -166,7 +166,7 @@ export interface UpsertTargetRequest {
   year: number;
 }
 
-export interface ExpenseSummary {
+interface ExpenseSummary {
   targetAmount: number;
   spentAmount: number;
   remainingAmount: number;
@@ -175,7 +175,7 @@ export interface ExpenseSummary {
   overspentAmount: number;
 }
 
-export interface InvestmentSummary {
+interface InvestmentSummary {
   targetAmount: number;
   investedAmount: number;
   remainingAmount: number;
@@ -217,5 +217,5 @@ export interface Wallet {
   updatedAt: string;
 }
 
+export * from './debt';
 export * from './preset';
-export * from './statement';

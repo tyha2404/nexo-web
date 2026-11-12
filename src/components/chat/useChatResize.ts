@@ -1,20 +1,37 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
 
+// Same bounds as the chat window's CSS (min-w/max-w/min-h/max-h in AIChatWidget).
 const MIN_WIDTH = 380;
 const MIN_HEIGHT = 460;
+const DEFAULT_WIDTH = 460;
+const DEFAULT_HEIGHT = 640;
+const WIDTH_KEY = 'nexo_chat_width';
+const HEIGHT_KEY = 'nexo_chat_height';
+
+const clampWidth = (width: number) => Math.min(Math.max(width, MIN_WIDTH), window.innerWidth - 32);
+const clampHeight = (height: number) =>
+  Math.min(Math.max(height, MIN_HEIGHT), window.innerHeight - 100);
+
+/** A saved size, or null when storage is unavailable or holds no number. */
+const readSaved = (key: string): number | null => {
+  try {
+    const value = parseInt(localStorage.getItem(key) ?? '', 10);
+    return Number.isFinite(value) ? value : null;
+  } catch {
+    return null;
+  }
+};
 
 /** Desktop drag-to-resize of the chat window from its top-left corner, persisted in localStorage. */
 export function useChatResize() {
   const [chatDimensions, setChatDimensions] = useState<{ width: number; height: number }>(() => {
-    if (typeof window !== 'undefined') {
-      const savedW = localStorage.getItem('nexo_chat_width');
-      const savedH = localStorage.getItem('nexo_chat_height');
-      return {
-        width: savedW ? Math.min(Math.max(parseInt(savedW), 380), window.innerWidth - 32) : 460,
-        height: savedH ? Math.min(Math.max(parseInt(savedH), 480), window.innerHeight - 100) : 640,
-      };
-    }
-    return { width: 460, height: 640 };
+    if (typeof window === 'undefined') return { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT };
+    const savedW = readSaved(WIDTH_KEY);
+    const savedH = readSaved(HEIGHT_KEY);
+    return {
+      width: savedW !== null ? clampWidth(savedW) : DEFAULT_WIDTH,
+      height: savedH !== null ? clampHeight(savedH) : DEFAULT_HEIGHT,
+    };
   });
   const [isResizing, setIsResizing] = useState(false);
   const resizeStartRef = useRef<{
@@ -40,19 +57,21 @@ export function useChatResize() {
       if (!isResizing || !resizeStartRef.current) return;
       const deltaX = resizeStartRef.current.startX - e.clientX;
       const deltaY = resizeStartRef.current.startY - e.clientY;
-      const maxWidth = window.innerWidth - 48;
-      const maxHeight = window.innerHeight - 100;
       setChatDimensions({
-        width: Math.min(Math.max(resizeStartRef.current.startW + deltaX, MIN_WIDTH), maxWidth),
-        height: Math.min(Math.max(resizeStartRef.current.startH + deltaY, MIN_HEIGHT), maxHeight),
+        width: clampWidth(resizeStartRef.current.startW + deltaX),
+        height: clampHeight(resizeStartRef.current.startH + deltaY),
       });
     };
 
     const handleMouseUp = () => {
       if (isResizing) {
         setIsResizing(false);
-        localStorage.setItem('nexo_chat_width', chatDimensions.width.toString());
-        localStorage.setItem('nexo_chat_height', chatDimensions.height.toString());
+        try {
+          localStorage.setItem(WIDTH_KEY, chatDimensions.width.toString());
+          localStorage.setItem(HEIGHT_KEY, chatDimensions.height.toString());
+        } catch {
+          /* storage unavailable: the size lasts for this session only */
+        }
       }
     };
 

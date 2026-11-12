@@ -1,6 +1,6 @@
-import { CloseIcon, ListIcon, PlusIcon, SparkIcon, WrenchIcon } from './ChatIcons';
+import { ACTION_BTN_EDIT, cx, Plus, Sparkles, X } from '../ui';
+import { ListIcon, WrenchIcon } from './ChatIcons';
 import { BTN_TRANSITION, NO_WRAP } from './chatStyles';
-import { ACTION_BTN_EDIT, cx } from '../ui';
 
 /** VS Code toolbar actions: 22px, 5px radius, hover fill; a toggled action keeps the selection fill. */
 const iconBtn = (active = false) => cx(ACTION_BTN_EDIT, BTN_TRANSITION, active && 'bg-list-active');
@@ -27,7 +27,7 @@ export function ChatHeader({
       <div className="flex items-center gap-[10px] min-w-0">
         <div className="relative inline-flex shrink-0">
           <div className="w-8 h-8 rounded-sm bg-primary flex items-center justify-center text-white shadow-[0_1px_4px_var(--primary-glow)]">
-            <SparkIcon />
+            <Sparkles />
           </div>
           <span className="absolute -bottom-px -right-px w-[9px] h-[9px] rounded-full bg-[var(--income)] border-2 border-[var(--border)] shadow-[0_0_6px_var(--income)]" />
         </div>
@@ -51,7 +51,7 @@ export function ChatHeader({
 
       <div className="flex items-center gap-1 shrink-0">
         <button className={iconBtn()} onClick={onNewChat} title="Tạo hội thoại mới">
-          <PlusIcon size={16} />
+          <Plus size={16} />
         </button>
         <button
           className={iconBtn(showToolsDrawer)}
@@ -68,7 +68,7 @@ export function ChatHeader({
           <ListIcon size={16} />
         </button>
         <button className={iconBtn()} onClick={onClose} title="Đóng" aria-label="Close">
-          <CloseIcon size={16} />
+          <X size={16} />
         </button>
       </div>
     </div>

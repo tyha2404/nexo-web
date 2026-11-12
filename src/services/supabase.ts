@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { TOKEN_STORAGE_KEY } from '../commons/constants';
 
 const SUPABASE_URL =
   import.meta.env.VITE_SUPABASE_URL || 'https://uayleossvvnlzyewojap.supabase.co';
@@ -11,18 +12,19 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Supabase refreshes its access token roughly hourly; the API bearer token in
 // localStorage is a copy, so keep it in step or every call 401s after an hour.
 export async function syncSupabaseToken(): Promise<void> {
-  if (!localStorage.getItem('token')) return;
+  if (!localStorage.getItem(TOKEN_STORAGE_KEY)) return;
   try {
     const { data } = await supabase.auth.getSession();
     const fresh = data.session?.access_token;
-    if (fresh && fresh !== localStorage.getItem('token')) localStorage.setItem('token', fresh);
+    if (fresh && fresh !== localStorage.getItem(TOKEN_STORAGE_KEY))
+      localStorage.setItem(TOKEN_STORAGE_KEY, fresh);
   } catch {
     /* Offline refresh failures fall back to the stored token. */
   }
 }
 
 supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'TOKEN_REFRESHED' && session && localStorage.getItem('token')) {
-    localStorage.setItem('token', session.access_token);
+  if (event === 'TOKEN_REFRESHED' && session && localStorage.getItem(TOKEN_STORAGE_KEY)) {
+    localStorage.setItem(TOKEN_STORAGE_KEY, session.access_token);
   }
 });

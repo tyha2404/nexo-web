@@ -2,12 +2,12 @@ import { useState, type KeyboardEvent } from 'react';
 import { CHIP_BTN, CHIP_BTN_GHOST, cx, Plus, Tags, X } from '../ui';
 
 /** Same limits as the API (CreateTransactionRequest.tags). */
-export const MAX_TAGS = 10;
-export const MAX_TAG_LENGTH = 50;
+const MAX_TAGS = 10;
+const MAX_TAG_LENGTH = 50;
 const MAX_SUGGESTIONS = 6;
 
 /** Trim, collapse spaces, drop a leading '#', cap the length (mirrors the API's NormalizeTags). */
-export const normalizeTag = (raw: string) =>
+const normalizeTag = (raw: string) =>
   raw.trim().replace(/^#/, '').trim().replace(/\s+/g, ' ').slice(0, MAX_TAG_LENGTH);
 
 /** Case- and accent-insensitive key, so "Đà Lạt", "đà lạt" and "da lat" match. */

@@ -272,8 +272,41 @@ describe('chatService.sendStreamMessage', () => {
 
   it('reports HTTP errors with the server text', async () => {
     const { onError, onComplete } = await run(new Response('Quá nhiều yêu cầu', { status: 429 }));
-    expect(onError).toHaveBeenCalledWith(new Error('Quá nhiều yêu cầu'));
+    expect(onError).toHaveBeenCalledWith(new ApiError('Quá nhiều yêu cầu', 429));
+    expect(onError.mock.calls[0][0].status).toBe(429);
     expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it('reads the message of a JSON error envelope, like request()', async () => {
+    const body = JSON.stringify({
+      status: 400,
+      success: false,
+      message: 'Tin nhắn quá dài',
+      error: 'invalid input',
+    });
+    const { onError } = await run(new Response(body, { status: 400 }));
+    expect(onError.mock.calls[0][0]).toBeInstanceOf(ApiError);
+    expect(onError.mock.calls[0][0].message).toBe('Tin nhắn quá dài: invalid input');
+  });
+
+  it('dispatches auth-expired on a 401 of a signed-in session', async () => {
+    const expired = vi.fn();
+    window.addEventListener('auth-expired', expired);
+    try {
+      localStorage.setItem('token', 'tok');
+      const { onError } = await run(
+        new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 })
+      );
+      expect(expired).toHaveBeenCalledOnce();
+      expect(onError.mock.calls[0][0]).toMatchObject({ status: 401, message: 'Unauthorized' });
+
+      localStorage.removeItem('token');
+      await run(new Response('{}', { status: 401 }));
+      expect(expired).toHaveBeenCalledOnce();
+    } finally {
+      window.removeEventListener('auth-expired', expired);
+      localStorage.clear();
+    }
   });
 
   it('turns an abort into a Vietnamese timeout message', async () => {

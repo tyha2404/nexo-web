@@ -25,11 +25,8 @@ export const GLASS_CARD = cx(
 const CLICKABLE_BASE =
   'cursor-pointer transition-[background-color,border-color] duration-100 ease-out [&:hover]:border-primary!';
 
-/** Lift + primary border on hover; add to any clickable tile (for a glass card use CLICKABLE_GLASS_CARD). */
-export const CLICKABLE_CARD = cx(CLICKABLE_BASE, '[&:hover]:bg-list-hover');
-
-/** Glass card that navigates somewhere. */
-export const CLICKABLE_GLASS_CARD = cx(GLASS_CARD_BASE, CLICKABLE_BASE, '[&:hover]:bg-list-hover');
+/** Primary border + hover background on a clickable tile. */
+const CLICKABLE_CARD = cx(CLICKABLE_BASE, '[&:hover]:bg-list-hover');
 
 /** Dashboard panel: a glass card stretched to its grid row. */
 export const DASHBOARD_CARD = cx(
@@ -39,10 +36,10 @@ export const DASHBOARD_CARD = cx(
 
 export const CARD_SECTION_HEADER = 'mb-[0.65rem] flex items-center justify-between';
 export const CARD_TITLE_WRAP = 'flex items-center gap-[0.45rem]';
-/** h3 of a dashboard card (clickable link to the related page). */
 /** Heading of a panel that is not a link (VS Code pane header: 11px, bold, uppercase). */
 export const PANEL_TITLE =
   'm-0 min-w-0 truncate text-[11px] font-bold tracking-[0.04em] text-main uppercase mobile:text-[12px]';
+/** h3 of a dashboard card (clickable link to the related page). */
 export const CARD_TITLE =
   'mt-0 mb-3 cursor-pointer text-[11px] font-bold tracking-[0.04em] text-main uppercase transition-[color] duration-100 ease-out [&:hover]:text-link mobile:mb-2 mobile:text-[12px]';
 
@@ -85,6 +82,9 @@ const STAT_VALUE_TONE = {
 export type StatTone = keyof typeof STAT_VALUE_TONE;
 export const statValueClass = (tone: StatTone = 'default') =>
   cx(STAT_VALUE_BASE, STAT_VALUE_TONE[tone]);
+
+/** Surface of a chart tooltip (a floating overlay, so it keeps a shadow). */
+export const CHART_TOOLTIP = 'rounded-md border border-line bg-card shadow-app-md';
 
 /* ---------- Badges & transaction text ---------- */
 

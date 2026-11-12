@@ -1,35 +1,33 @@
-import { Calendar, Image as ImageIcon, Pencil, Trash2, Wallet } from '../ui';
-import { InvestmentStatus, TransactionType } from '../../commons/constants';
-import { formatCurrency, formatDate } from '../../commons/utils';
-import { getAmountSign, INVESTMENT_STATUS_LABELS } from './constants';
-import { TransactionTypeIcon } from './TransactionTypeIcon';
 import {
+  Calendar,
   CATEGORY_BADGE,
+  Image as ImageIcon,
   MOBILE_CARD,
   MOBILE_CARD_ACTIONS,
+  MOBILE_CARD_AMOUNT,
   MOBILE_CARD_AMOUNT_GROUP,
+  MOBILE_CARD_DATE,
   MOBILE_CARD_FOOTER,
   MOBILE_CARD_INFO,
-  MOBILE_CARD_TOP,
-  MOBILE_CARD_AMOUNT,
-  MOBILE_CARD_DATE,
   MOBILE_CARD_LEFT,
   MOBILE_CARD_TAGS,
   MOBILE_CARD_TITLE,
+  MOBILE_CARD_TOP,
+  MOBILE_CARDS,
   mobileAmountColor,
   mobileIconBadgeClass,
-  statusBadgeClass,
-  MOBILE_CARDS,
-} from './listStyles';
+  Pencil,
+  Trash2,
+} from '../ui';
+import { InvestmentStatus, TransactionType } from '../../commons/constants';
+import { formatCurrency, formatDate } from '../../commons/utils';
+import { WalletBadge } from './WalletBadge';
+import { getAmountSign, INVESTMENT_STATUS_LABELS } from './constants';
+import { TransactionTypeIcon } from './TransactionTypeIcon';
+import { statusBadgeClass } from './listStyles';
 import { TagChips } from './TagChips';
 import type { TransactionListProps } from './types';
-import {
-  MOBILE_ACTION_BTN,
-  MOBILE_ACTION_DELETE,
-  MOBILE_ACTION_EDIT,
-  pnlBadgeClass,
-  WALLET_BADGE,
-} from '../ui';
+import { MOBILE_ACTION_BTN, MOBILE_ACTION_DELETE, MOBILE_ACTION_EDIT, pnlBadgeClass } from '../ui';
 
 /** Touch-friendly card list shown below 768px instead of the table. */
 export function TransactionMobileCards({
@@ -75,15 +73,7 @@ export function TransactionMobileCards({
             <div className={MOBILE_CARD_FOOTER}>
               <div className={MOBILE_CARD_TAGS}>
                 <span className={CATEGORY_BADGE}>{getCategoryName(txn.categoryId)}</span>
-                {wallet && (
-                  <span className={WALLET_BADGE}>
-                    <Wallet size={12} />
-                    <span>
-                      {wallet.icon ? `${wallet.icon} ` : ''}
-                      {wallet.name}
-                    </span>
-                  </span>
-                )}
+                {wallet && <WalletBadge wallet={wallet} />}
                 <TagChips tags={txn.tags} onTagClick={onTagClick} />
                 {activeType === TransactionType.INVESTMENT && (
                   <span className={statusBadgeClass(status)}>

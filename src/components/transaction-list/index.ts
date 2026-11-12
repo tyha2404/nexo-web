@@ -5,4 +5,6 @@ export * from './TransactionMobileCards';
 export * from './TransactionSummaryCards';
 export * from './TransactionTable';
 export * from './TransactionTypeIcon';
+export * from './TypeTabs';
+export * from './WalletBadge';
 export type { TransactionListProps } from './types';

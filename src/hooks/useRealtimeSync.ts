@@ -1,23 +1,20 @@
 import moment from 'moment';
 import { useEffect, useState } from 'react';
+import { DATA_EVENTS } from '../commons/constants';
 import { supabase } from '../services';
 
-export interface UseRealtimeSyncProps {
+interface UseRealtimeSyncProps {
   userId?: string;
-  onTransactionChange?: () => void;
-  onWalletChange?: () => void;
-  onBudgetChange?: () => void;
-  onDebtChange?: () => void;
 }
 
 // Tables in the `supabase_realtime` publication (see the realtime migrations in
-// nexo-app-api) mapped to the request-cache resource and window event they drive.
+// nexo-app-api) mapped to the window event they drive.
 const SYNCED_TABLES = [
-  { table: 'transactions', event: 'transactions-changed' },
-  { table: 'wallets', event: 'wallets-changed' },
-  { table: 'budgets', event: 'budgets-changed' },
-  { table: 'debts', event: 'debts-changed' },
-  { table: 'categories', event: 'categories-changed' },
+  { table: 'transactions', event: DATA_EVENTS.TRANSACTIONS_CHANGED },
+  { table: 'wallets', event: DATA_EVENTS.WALLETS_CHANGED },
+  { table: 'budgets', event: DATA_EVENTS.BUDGETS_CHANGED },
+  { table: 'debts', event: DATA_EVENTS.DEBTS_CHANGED },
+  { table: 'categories', event: DATA_EVENTS.CATEGORIES_CHANGED },
 ] as const;
 
 // iOS suspends the WebSocket while the PWA is in the background; after this long
@@ -35,7 +32,7 @@ const refreshAllTables = () => {
 };
 
 export function useRealtimeSync(props?: UseRealtimeSyncProps) {
-  const { userId, onTransactionChange, onWalletChange, onBudgetChange, onDebtChange } = props || {};
+  const { userId } = props || {};
   const [connection, setConnection] = useState(0);
   // null = not yet known; realtime needs a Supabase session, otherwise poll
   const [hasSupabaseSession, setHasSupabaseSession] = useState<boolean | null>(null);
@@ -83,22 +80,12 @@ export function useRealtimeSync(props?: UseRealtimeSyncProps) {
   useEffect(() => {
     if (!userId || !hasSupabaseSession) return;
 
-    const callbacks: Record<string, (() => void) | undefined> = {
-      transactions: onTransactionChange,
-      wallets: onWalletChange,
-      budgets: onBudgetChange,
-      debts: onDebtChange,
-    };
-
     let channel = supabase.channel(`user-sync-${userId}-${connection}`);
     for (const { table, event } of SYNCED_TABLES) {
       channel = channel.on(
         'postgres_changes',
         { event: '*', schema: 'public', table, filter: `user_id=eq.${userId}` },
-        () => {
-          window.dispatchEvent(new Event(event));
-          callbacks[table]?.();
-        }
+        () => window.dispatchEvent(new Event(event))
       );
     }
     channel.subscribe();
@@ -106,15 +93,7 @@ export function useRealtimeSync(props?: UseRealtimeSyncProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [
-    userId,
-    hasSupabaseSession,
-    connection,
-    onTransactionChange,
-    onWalletChange,
-    onBudgetChange,
-    onDebtChange,
-  ]);
+  }, [userId, hasSupabaseSession, connection]);
 
   // Reconnect and refetch when the PWA comes back to the foreground or online
   useEffect(() => {

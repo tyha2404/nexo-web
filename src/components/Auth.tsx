@@ -2,12 +2,9 @@ import { SlidingTabs } from './ui';
 import React, { useState } from 'react';
 import { authService, saveSession } from '../services';
 import { toast } from 'react-toastify';
+import { APP_EVENTS } from '../commons/constants';
 import { getErrorMessage } from '../commons/utils';
 import { SPINNER_BUTTON } from './ui';
-
-interface AuthProps {
-  onSuccess?: () => void;
-}
 
 // `touch:` (see tailwind.css) is wider than `mobile:`: any coarse pointer up to 1024px.
 const INPUT_GROUP = 'flex flex-col gap-2 text-left';
@@ -19,7 +16,7 @@ const TOGGLE_BTN =
 const TOGGLE_ACTIVE = 'bg-transparent text-white';
 const TOGGLE_IDLE = 'bg-transparent text-muted';
 
-export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
+export const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -60,10 +57,7 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
         saveSession(response);
 
         toast.success('Đăng nhập thành công!');
-        window.dispatchEvent(new Event('auth-changed'));
-        if (onSuccess) {
-          onSuccess();
-        }
+        window.dispatchEvent(new Event(APP_EVENTS.AUTH_CHANGED));
       } else {
         // Handle Registration
         // Go backend requires username, email, password.
@@ -75,10 +69,7 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
         saveSession(loginResponse);
 
         toast.success('Tạo tài khoản và đăng nhập thành công!');
-        window.dispatchEvent(new Event('auth-changed'));
-        if (onSuccess) {
-          onSuccess();
-        }
+        window.dispatchEvent(new Event(APP_EVENTS.AUTH_CHANGED));
       }
     } catch (err) {
       toast.error(getErrorMessage(err, 'Đã xảy ra lỗi trong quá trình xác thực.'));
@@ -170,9 +161,7 @@ export const Auth: React.FC<AuthProps> = ({ onSuccess }) => {
                   />
                 </div>
                 {usernameError && (
-                  <span className="mt-1 block text-[0.78rem] text-[var(--expense)]">
-                    {usernameError}
-                  </span>
+                  <span className="mt-1 block text-[0.78rem] text-expense">{usernameError}</span>
                 )}
               </div>
 

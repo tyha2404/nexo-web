@@ -4,17 +4,20 @@
  * page components compose them instead of writing their own margins/paddings.
  *
  * Page anatomy, top to bottom. Each block ends with BLOCK_GAP, so every page has the same rhythm:
- *   1. PAGE_HEADER     h2 title on the left; on the right the page's own create action
- *                      (PAGE_HEADER_BTN) or a page-wide control (the Dashboard month).
+ *   1. PAGE_HEADER     <PageHeader> (common): h2 title on the left; on the right the page's
+ *                      own create action (PAGE_HEADER_BTN) or a page-wide control (the
+ *                      Dashboard month).
  *   2. Section tabs    TABS_UNDERLINE: switches between sub-pages that have their own URL
  *                      (Planning: Mục tiêu / Danh mục). Nowhere else.
  *   3. Type tabs       TABS (pill): switches the type of the same list
- *                      (Chi tiêu / Thu nhập / Đầu tư). Never used for optional filters.
+ *                      (Chi tiêu / Thu nhập / Đầu tư: <TypeTabs> in transaction-list).
+ *                      Never used for optional filters.
  *   4. ALERT_ERROR     load/save error of the page.
- *   5. SUMMARY_GRID    a row of SUMMARY_STAT_CARD tiles: any row of headline numbers.
+ *   5. SUMMARY_GRID    a row of <StatCard> tiles (common): any row of headline numbers.
  *   6. Filter bar      filterBarClass(): search, optional filters as dropdowns that start at
  *                      "Tất cả …", then the month.
- *   7. Content         list: TABLE_CONTAINER on desktop, LIST_ITEM_CARD rows on phones;
+ *   7. Content         list: TABLE_CONTAINER on desktop, LIST_ITEM_CARD rows on phones
+ *                      (class lists in ./listStyles);
  *                      or DASHBOARD_CARD panels. A list is never wrapped in another card.
  *   8. Pagination
  *
@@ -24,6 +27,7 @@
  *   - Panels and stat tiles use CARD_PAD; list rows use LIST_ITEM_PAD.
  *   - Cards never nest. Inside a card, group content with SUB_TILE (filled, no border) or a
  *     divider (border-t border-line).
+ *   - Dialogs: <FormModal> (common) gives every form modal the same shell.
  *   - Loading: a list shows <ListSkeleton>; a panel shows SPINNER_MICRO.
  *   - Empty: a page list shows <EmptyState>; a panel shows EMPTY_BOX.
  *

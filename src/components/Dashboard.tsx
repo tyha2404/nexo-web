@@ -4,6 +4,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import type {
   Category,
   CategoryBreakdownItem,
+  DebtSummary,
   MonthlyTrendReport,
   NetWorthReport,
   SummaryReport,
@@ -11,7 +12,9 @@ import type {
   Transaction,
   Wallet as WalletModel,
 } from '../commons/types';
-import { getCategoryIcon } from '../commons/utils';
+import { DATA_EVENTS, DATE_FORMAT_INPUT, DATE_FORMAT_MONTH } from '../commons/constants';
+import { getErrorMessage } from '../commons/utils';
+import { useDataEvents } from '../hooks';
 import {
   categoryService,
   debtService,
@@ -20,14 +23,13 @@ import {
   transactionService,
   walletService,
 } from '../services';
-import type { DebtSummary } from '../types/debt';
 const MonthlyTrendChart = lazy(() =>
   import('./MonthlyTrendChart').then((module) => ({ default: module.MonthlyTrendChart }))
 );
 const NetWorthChart = lazy(() =>
   import('./NetWorthChart').then((module) => ({ default: module.NetWorthChart }))
 );
-import { MonthFilter } from './common';
+import { MonthFilter, PageHeader } from './common';
 import {
   CategoryMomCard,
   DashboardSkeleton,
@@ -36,16 +38,24 @@ import {
   SecondaryStatsSection,
 } from './dashboard-cards';
 import { ALERT_ERROR, BTN_SECONDARY, cx, DASHBOARD_MAIN_GRID, PAGE_ROOT } from './ui';
-import { PAGE_HEADER, PAGE_TITLE, PAGE_TITLE_H2 } from './transaction-list/listStyles';
-
-export { getCategoryIcon };
 
 export interface DashboardProps {
   onNavigate?: (tab: string) => void;
 }
 
+const DASHBOARD_EVENTS = [
+  DATA_EVENTS.TRANSACTIONS_CHANGED,
+  DATA_EVENTS.CATEGORIES_CHANGED,
+  DATA_EVENTS.TARGETS_CHANGED,
+  DATA_EVENTS.BUDGETS_CHANGED,
+  DATA_EVENTS.DEBTS_CHANGED,
+  DATA_EVENTS.WALLETS_CHANGED,
+] as const;
+
 export default function Dashboard({ onNavigate }: DashboardProps) {
-  const [selectedMonth, setSelectedMonth] = useState<string>(() => moment().format('YYYY-MM'));
+  const [selectedMonth, setSelectedMonth] = useState<string>(() =>
+    moment().format(DATE_FORMAT_MONTH)
+  );
   const [summary, setSummary] = useState<SummaryReport | null>(null);
   const [allTimeSummary, setAllTimeSummary] = useState<SummaryReport | null>(null);
   const [targetSummary, setTargetSummary] = useState<TargetSummaryResponse | null>(null);
@@ -72,16 +82,16 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       setLoading(true);
       setError(null);
 
-      const m = moment(monthStr, 'YYYY-MM');
-      const startOfMonth = m.startOf('month').format('YYYY-MM-DD');
-      const endOfMonth = m.endOf('month').format('YYYY-MM-DD');
+      const m = moment(monthStr, DATE_FORMAT_MONTH);
+      const startOfMonth = m.startOf('month').format(DATE_FORMAT_INPUT);
+      const endOfMonth = m.endOf('month').format(DATE_FORMAT_INPUT);
       const dateFilters = { startDate: startOfMonth, endDate: endOfMonth };
       const targetParams = { month: m.month() + 1, year: m.year() };
 
       const prevM = m.clone().subtract(1, 'month');
       const prevDateFilters = {
-        startDate: prevM.startOf('month').format('YYYY-MM-DD'),
-        endDate: prevM.endOf('month').format('YYYY-MM-DD'),
+        startDate: prevM.startOf('month').format(DATE_FORMAT_INPUT),
+        endDate: prevM.endOf('month').format(DATE_FORMAT_INPUT),
       };
 
       const [
@@ -143,7 +153,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       setNetWorth(netWorthData);
     } catch (err: unknown) {
       if (!signal.aborted && requestId === requestNumber.current)
-        setError(err instanceof Error ? err.message : 'Không thể tải dữ liệu bảng điều khiển');
+        setError(getErrorMessage(err, 'Không thể tải dữ liệu bảng điều khiển'));
     } finally {
       if (!signal.aborted && requestId === requestNumber.current) setLoading(false);
     }
@@ -155,44 +165,21 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
     return () => controller.abort();
   }, [selectedMonth, refreshKey, fetchDashboardData]);
 
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    const refresh = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => setRefreshKey((key) => key + 1), 150);
-    };
-    const events = [
-      'transactions-changed',
-      'categories-changed',
-      'targets-changed',
-      'budgets-changed',
-      'debts-changed',
-      'wallets-changed',
-      'online',
-    ];
-    const resume = () => {
-      if (document.visibilityState === 'visible') refresh();
-    };
-    for (const event of events) window.addEventListener(event, refresh);
-    document.addEventListener('visibilitychange', resume);
-    return () => {
-      clearTimeout(timer);
-      for (const event of events) window.removeEventListener(event, refresh);
-      document.removeEventListener('visibilitychange', resume);
-    };
-  }, []);
+  // Any data the dashboard summarises; useRealtimeSync also re-fires the table events when the
+  // app comes back online or resumes.
+  useDataEvents(DASHBOARD_EVENTS, () => setRefreshKey((key) => key + 1));
 
   return (
     <div className={cx(PAGE_ROOT, 'animate-fade-in')}>
       {/* 1. Page header: title + the page-wide month (same slot as other pages' action) */}
-      <header className={cx(PAGE_HEADER, 'animate-fade-in')}>
-        <div className={cx(PAGE_TITLE, 'dashboard-title-group')}>
-          <h2 className={PAGE_TITLE_H2}>Tổng quan</h2>
-        </div>
-        <div className="w-[260px] mobile:w-full">
+      <PageHeader
+        title="Tổng quan"
+        titleClassName="dashboard-title-group"
+        actionsClassName="w-[260px] mobile:w-full"
+        actions={
           <MonthFilter value={selectedMonth} onChange={(newMonth) => setSelectedMonth(newMonth)} />
-        </div>
-      </header>
+        }
+      />
 
       {error && (
         <div className={cx(ALERT_ERROR, 'animate-fade-in')} role="alert">

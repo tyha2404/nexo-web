@@ -1,46 +1,15 @@
 import moment from 'moment';
-import type { ReactNode } from 'react';
-import { TransactionType } from '../../commons/constants';
+import { DATE_FORMAT_MONTH, TransactionType } from '../../commons/constants';
 import type { TransactionSummary } from '../../commons/types';
 import { formatCurrency } from '../../commons/utils';
-import {
-  cx,
-  statValueClass,
-  SUMMARY_GRID,
-  SUMMARY_STAT_CARD,
-  SUMMARY_STAT_HEADER,
-  SUMMARY_STAT_SUBTITLE,
-  SUMMARY_STAT_TITLE,
-  type StatTone,
-} from '../ui';
+import { StatCard } from '../common';
+import { cx, SUMMARY_GRID } from '../ui';
 
 export interface TransactionSummaryCardsProps {
   activeType: TransactionType;
   summary: TransactionSummary;
   /** Month in 'YYYY-MM' format. */
   selectedMonth: string;
-}
-
-function StatCard({
-  title,
-  value,
-  subtitle,
-  tone,
-}: {
-  title: string;
-  value: ReactNode;
-  subtitle?: ReactNode;
-  tone?: StatTone;
-}) {
-  return (
-    <div className={SUMMARY_STAT_CARD}>
-      <div className={SUMMARY_STAT_HEADER}>
-        <span className={SUMMARY_STAT_TITLE}>{title}</span>
-      </div>
-      <div className={statValueClass(tone)}>{value}</div>
-      {subtitle && <div className={SUMMARY_STAT_SUBTITLE}>{subtitle}</div>}
-    </div>
-  );
 }
 
 export function TransactionSummaryCards({
@@ -90,8 +59,8 @@ export function TransactionSummaryCards({
 
   // Expense: daily average over the elapsed days of the month (up to today)
   const today = moment().startOf('day');
-  const start = moment(selectedMonth, 'YYYY-MM').startOf('month');
-  const end = moment(selectedMonth, 'YYYY-MM').endOf('month');
+  const start = moment(selectedMonth, DATE_FORMAT_MONTH).startOf('month');
+  const end = moment(selectedMonth, DATE_FORMAT_MONTH).endOf('month');
   const effectiveEnd = end.isAfter(today) ? today : end;
   const daysCount = Math.max(1, effectiveEnd.diff(start, 'days') + 1);
   const dailyAvg = (summary.sumAmountForAverage ?? summary.sumAmount) / daysCount;

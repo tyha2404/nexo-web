@@ -5,6 +5,7 @@ import {
   authFetch,
   clearSession,
   endSession,
+  readApiError,
   refreshSession,
   request,
   saveSession,
@@ -121,6 +122,39 @@ describe('request: errors', () => {
     expect(err).toBeInstanceOf(ApiError);
     expect(err.status).toBe(400);
     expect(err.message).toBe('Invalid request: amount must be > 0');
+  });
+
+  it('does not repeat a message the error detail already contains', async () => {
+    // e.g. 422 of POST /chat/actions/{id}/confirm
+    route(() =>
+      json({ message: 'Số dư ví không đủ', error: 'pending action failed: Số dư ví không đủ' }, 422)
+    );
+    await expect(request('/chat/actions/a1/confirm')).rejects.toMatchObject({
+      status: 422,
+      message: 'Số dư ví không đủ',
+    });
+  });
+
+  it('drops a detail prefix that repeats the message', async () => {
+    // API validation errors: message "Validation failed", error "validation failed: …"
+    route(() =>
+      json({ message: 'Validation failed', error: 'validation failed: Title is required' }, 400)
+    );
+    await expect(request('/debts')).rejects.toMatchObject({
+      status: 400,
+      message: 'Validation failed: Title is required',
+    });
+  });
+
+  it('readApiError: 401 dispatches auth-expired only for a signed-in, non-auth request', async () => {
+    const res = () => json({ message: 'Unauthorized' }, 401);
+    const err = await readApiError(res(), { path: '/chat/stream', hadToken: true });
+    expect(err).toBeInstanceOf(ApiError);
+    expect(err).toMatchObject({ status: 401, message: 'Unauthorized' });
+    expect(authExpired).toBe(1);
+    await readApiError(res(), { path: '/chat/stream', hadToken: false });
+    await readApiError(res(), { path: '/auth/login', hadToken: true });
+    expect(authExpired).toBe(1);
   });
 
   it('falls back to a text body, then to the status', async () => {

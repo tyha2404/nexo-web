@@ -1,41 +1,4 @@
 /* Keyframes referenced by animate-[name_...] utilities and component classes. */
-/*  from handoff-dashboard.css  */
-/*  from handoff-pages.css  */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-@keyframes scaleUp {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: none;
-    opacity: 1;
-  }
-}
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-/*  from mobile-compact.css  */
-/*  from handoff-common.css  */
 @keyframes date-picker-backdrop-in {
   from {
     opacity: 0;
@@ -54,7 +17,6 @@
     transform: none;
   }
 }
-/*  from index.css  */
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -68,51 +30,11 @@
     opacity: 1;
   }
 }
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes pulseGlow {
-  0%,
-  100% {
-    opacity: 0.6;
-    box-shadow: 0 0 12px var(--primary-glow);
-  }
-  50% {
-    opacity: 1;
-    box-shadow: 0 0 20px var(--primary-glow);
-  }
-}
 @keyframes skeleton-shimmer {
   100% {
     transform: translateX(100%);
   }
 }
-@keyframes rowUpdatedHighlight {
-  0% {
-    background-color: color-mix(in srgb, var(--primary) 25%, transparent);
-  }
-  100% {
-    background-color: transparent;
-  }
-}
-/*  from motion.css  */
 @keyframes nexo-view-enter {
   from {
     opacity: 0;
@@ -143,7 +65,6 @@
     transform: none;
   }
 }
-/*  from handoff-chat.css  */
 @keyframes aiBackdropFadeIn {
   from {
     opacity: 0;

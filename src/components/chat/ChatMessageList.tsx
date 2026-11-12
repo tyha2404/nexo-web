@@ -1,11 +1,12 @@
 import moment from 'moment';
 import type { RefObject } from 'react';
-import type { ChatMessage } from '../../services';
+import type { ActionCard, ChatMessage } from '../../services';
 import { ActionCardView } from './ActionCardView';
-import { ClockIcon, RetryIcon, SpinnerIcon } from './ChatIcons';
+import { Clock, Loader2 } from '../ui';
+import { RetryIcon } from './ChatIcons';
 import { renderFormattedText } from './markdown';
 import { CORE_QUICK_CHIPS, type QuickPrompt } from './toolsCatalog';
-import type { ActionCardData } from './types';
+import type { ProposalUiState } from './useChatConversation';
 import { BTN_TRANSITION, NO_WRAP } from './chatStyles';
 
 const CHIP_CARD = `flex flex-col gap-1 py-[10px] px-3 rounded-md text-left cursor-pointer bg-[rgba(255,255,255,0.04)] border border-line transition-all! duration-[220ms]! ease-[cubic-bezier(0.16,1,0.3,1)]! hover:bg-[color-mix(in_srgb,var(--primary)_14%,transparent)] hover:border-[color-mix(in_srgb,var(--primary)_40%,transparent)] hover:-translate-y-[2px] hover:shadow-[0_6px_16px_rgba(0,0,0,0.25)] light:bg-[var(--bg-card)] light:hover:bg-[color-mix(in_srgb,var(--purple)_8%,transparent)] light:hover:border-[var(--purple)] light:hover:shadow-[0_6px_16px_color-mix(in_srgb,var(--primary)_10%,transparent)] ${NO_WRAP}`;
@@ -52,13 +53,13 @@ export interface ChatMessageListProps {
   activeToolTitle: string | null;
   userInitial: string;
   quickPrompts: QuickPrompt[];
-  actionFeedback: Record<number, string>;
+  /** Client state of write proposals, by actionId. */
+  proposalUi: Record<string, ProposalUiState>;
   endRef: RefObject<HTMLDivElement | null>;
   onSend: (text: string) => void;
   onRetry: (messageIndex: number) => void;
-  onConfirmAction: (data: ActionCardData | undefined, messageIndex: number) => void;
-  onCancelAction: (messageIndex: number) => void;
-  onUndoAction: (data: ActionCardData | undefined, messageIndex: number) => void;
+  onConfirmAction: (card: ActionCard) => void;
+  onCancelAction: (card: ActionCard) => void;
 }
 
 function ChatEmptyState({
@@ -68,7 +69,7 @@ function ChatEmptyState({
   return (
     <div className="flex flex-col items-center justify-center text-center py-5 px-2 text-muted h-full">
       <div className="w-[52px] h-[52px] rounded-full bg-[color-mix(in_srgb,var(--primary)_15%,transparent)] text-primary flex items-center justify-center mb-3 shadow-[0_4px_16px_color-mix(in_srgb,var(--primary)_25%,transparent)]">
-        <ClockIcon />
+        <Clock />
       </div>
       <h4 className="m-0 mb-[6px] text-[16px] font-bold text-[var(--text-main)] light:text-[var(--text-main)]">
         Xin chào! Tôi là Nexo AI Copilot
@@ -123,13 +124,12 @@ export function ChatMessageList({
   activeToolTitle,
   userInitial,
   quickPrompts,
-  actionFeedback,
+  proposalUi,
   endRef,
   onSend,
   onRetry,
   onConfirmAction,
   onCancelAction,
-  onUndoAction,
 }: ChatMessageListProps) {
   return (
     <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-[14px] scroll-smooth mobile:p-3 mobile:gap-3">
@@ -176,16 +176,19 @@ export function ChatMessageList({
                   </>
                 )}
 
-                {msg.actionCard && (
-                  <ActionCardView
-                    card={msg.actionCard}
-                    createdAt={msg.createdAt}
-                    feedback={actionFeedback[idx]}
-                    onConfirm={(data) => onConfirmAction(data, idx)}
-                    onCancel={() => onCancelAction(idx)}
-                    onUndo={(data) => onUndoAction(data, idx)}
-                  />
-                )}
+                {msg.actionCards?.map((card, cardIdx) => {
+                  const actionId = (card.data as { actionId?: unknown } | undefined)?.actionId;
+                  return (
+                    <ActionCardView
+                      key={typeof actionId === 'string' ? actionId : cardIdx}
+                      card={card}
+                      createdAt={msg.createdAt}
+                      ui={typeof actionId === 'string' ? proposalUi[actionId] : undefined}
+                      onConfirm={onConfirmAction}
+                      onCancel={onCancelAction}
+                    />
+                  );
+                })}
 
                 {/* Retry button for error state */}
                 {msg.role === 'model' && msg.status === 'ERROR' && !isLoading && (
@@ -215,7 +218,7 @@ export function ChatMessageList({
         <div
           className={`flex items-center gap-2 py-[6px] px-[10px] mb-2 rounded-sm text-[11px] text-primary bg-[color-mix(in_srgb,var(--primary)_12%,transparent)] border border-[color-mix(in_srgb,var(--primary)_25%,transparent)] animate-[chatPulse_1.5s_infinite] ${NO_WRAP}`}
         >
-          <SpinnerIcon />
+          <Loader2 className="animate-spin" />
           <span>{activeToolTitle}</span>
         </div>
       )}

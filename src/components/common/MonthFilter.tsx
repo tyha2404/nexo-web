@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from '../ui';
 import moment from 'moment';
+import { DATE_FORMAT_MONTH } from '../../commons/constants';
 import { DatePickerField } from './DatePickerField';
 import { CONTROL_FRAME, cx } from '../ui';
 
@@ -14,12 +15,12 @@ const NAV_ARROW =
 
 export default function MonthFilter({ value, onChange }: MonthFilterProps) {
   const handlePrevMonth = () => {
-    const prev = moment(value, 'YYYY-MM').subtract(1, 'month').format('YYYY-MM');
+    const prev = moment(value, DATE_FORMAT_MONTH).subtract(1, 'month').format(DATE_FORMAT_MONTH);
     onChange(prev);
   };
 
   const handleNextMonth = () => {
-    const next = moment(value, 'YYYY-MM').add(1, 'month').format('YYYY-MM');
+    const next = moment(value, DATE_FORMAT_MONTH).add(1, 'month').format(DATE_FORMAT_MONTH);
     onChange(next);
   };
 

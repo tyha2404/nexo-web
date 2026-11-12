@@ -3,7 +3,7 @@ import { cx } from './styles';
 
 type IndicatorBounds = { x: number; y: number; width: number; height: number };
 interface SlidingTabsProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: 'pill' | 'underline' | 'navigation' | 'icon' | 'activity';
+  variant?: 'pill' | 'underline' | 'icon' | 'activity';
   as?: 'div' | 'nav';
 }
 
@@ -87,9 +87,7 @@ export function SlidingTabs({
               ? 'rounded-xs bg-primary'
               : variant === 'activity'
                 ? 'bg-primary'
-                : variant === 'icon'
-                  ? 'rounded-[5px] bg-hover'
-                  : 'rounded-xs bg-list-active'
+                : 'rounded-[5px] bg-hover'
         )}
         style={{
           visibility: bounds ? 'visible' : 'hidden',

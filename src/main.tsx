@@ -1,3 +1,4 @@
+// date-fns is used only here: react-datepicker's registerLocale needs a date-fns locale (dates are moment elsewhere).
 import { vi } from 'date-fns/locale';
 import { StrictMode } from 'react';
 import { registerLocale, setDefaultLocale } from 'react-datepicker';

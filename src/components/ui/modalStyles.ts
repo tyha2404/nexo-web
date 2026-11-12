@@ -49,7 +49,7 @@ const PANEL_BASE = cx(
   'modal-content mx-auto my-0 box-border flex w-full flex-col',
   'max-h-[calc(var(--modal-viewport-height,100dvh)-max(12px,env(safe-area-inset-top,0px))-max(12px,env(safe-area-inset-bottom,0px)))]',
   'rounded-lg border border-line bg-widget shadow-app-lg outline-none [overflow-wrap:anywhere]',
-  'animate-scale-in motion-safe:animate-[nexo-dialog-enter_220ms_var(--motion-ease)]'
+  'motion-safe:animate-[nexo-dialog-enter_220ms_var(--motion-ease)]'
 );
 
 /**
