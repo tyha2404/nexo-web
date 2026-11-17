@@ -23,7 +23,7 @@ import {
   parseNumberInput,
   toISODateString,
 } from '../commons/utils';
-import { categoryService, presetService, transactionService } from '../services';
+import { categoryService, presetService, supabase, transactionService } from '../services';
 import type { CreateTransactionDTO } from '../services';
 import { DatePickerField, FormModal, ReceiptUploader, TagInput } from './common';
 import { getTypeLabel, INVESTMENT_STATUS_OPTIONS, TypeTabs } from './transaction-list';
@@ -76,10 +76,62 @@ export default function AddTransactionModal({
 
   const isEditing = Boolean(transaction);
   const [uploading, setUploading] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const scanInputRef = useRef<HTMLInputElement>(null);
   const submittingRef = useRef(false);
   const requestClose = () => {
-    if (submittingRef.current || uploading) return;
+    if (submittingRef.current || uploading || scanning) return;
     onClose();
+  };
+
+  const handleScanImage = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Vui lòng chọn tệp hình ảnh (JPEG, PNG, WebP)');
+      return;
+    }
+    setScanning(true);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const fileName = `receipt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+      const [parseResult, uploadResult] = await Promise.allSettled([
+        transactionService.parseImage(file),
+        supabase.storage.from('receipts').upload(fileName, file, { contentType: file.type }),
+      ]);
+
+      if (uploadResult.status === 'fulfilled' && !uploadResult.value.error) {
+        const { data: publicUrlData } = supabase.storage
+          .from('receipts')
+          .getPublicUrl(uploadResult.value.data.path);
+        if (publicUrlData?.publicUrl) {
+          setReceiptUrl(publicUrlData.publicUrl);
+        }
+      }
+
+      if (parseResult.status === 'rejected') {
+        throw parseResult.reason;
+      }
+
+      const draft = parseResult.value;
+      if (draft.type) setActiveType(draft.type);
+      if (draft.amount > 0) setAmount(String(draft.amount));
+      if (draft.description) setTitle(draft.description);
+      if (draft.transactionDate) {
+        const parsedDate = moment(draft.transactionDate);
+        if (parsedDate.isValid()) {
+          setTransactionDate(parsedDate.format('YYYY-MM-DD'));
+        }
+      }
+      if (draft.categoryId) setCategoryId(draft.categoryId);
+      if (draft.status) setStatus(draft.status);
+      if (draft.tags?.length) setTags(draft.tags);
+
+      toast.success('AI đã điền thông tin từ ảnh! Vui lòng kiểm tra lại.');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Không thể phân tích ảnh bằng AI'));
+    } finally {
+      setScanning(false);
+    }
   };
 
   // Reset + prefill whenever the modal opens
@@ -291,10 +343,53 @@ export default function AddTransactionModal({
       onClose={requestClose}
       title={isEditing ? 'Chỉnh sửa giao dịch' : `Thêm ${getTypeLabel(activeType)} mới`}
       titleId="transaction-modal-title"
-      closeDisabled={submitting || uploading}
+      closeDisabled={submitting || uploading || scanning}
     >
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={handleSubmit}
+        onPaste={(e) => {
+          if (isEditing || scanning) return;
+          const items = e.clipboardData?.items;
+          if (!items) return;
+          for (const item of items) {
+            if (item.type.startsWith('image/')) {
+              const file = item.getAsFile();
+              if (file) {
+                e.preventDefault();
+                void handleScanImage(file);
+                break;
+              }
+            }
+          }
+        }}
+      >
         <div className={MODAL_FORM_BODY}>
+          {!isEditing && (
+            <div className="mb-4">
+              <input
+                ref={scanInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleScanImage(file);
+                  e.target.value = '';
+                }}
+              />
+              <button
+                type="button"
+                disabled={scanning || submitting}
+                onClick={() => scanInputRef.current?.click()}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/40 bg-primary/5 px-4 py-2.5 text-sm font-medium text-primary transition hover:bg-primary/10 disabled:opacity-50"
+              >
+                {scanning
+                  ? 'AI đang phân tích hoá đơn / ảnh CK...'
+                  : 'Quét hoá đơn hoặc dán ảnh chuyển khoản (Ctrl+V)'}
+              </button>
+            </div>
+          )}
           <div className="mb-5 flex">
             <TypeTabs
               value={activeType}
