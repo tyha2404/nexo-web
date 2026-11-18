@@ -12,6 +12,8 @@ export { default as MonthFilter } from './MonthFilter';
 export type { MonthFilterProps } from './MonthFilter';
 export { ReceiptModal } from './ReceiptModal';
 export { ReceiptUploader } from './ReceiptUploader';
+export { ScanImagePanel } from './ScanImagePanel';
+export type { ScanResult } from './ScanImagePanel';
 export { StatCard } from './StatCard';
 export type { StatCardProps } from './StatCard';
 export { TagInput } from './TagInput';

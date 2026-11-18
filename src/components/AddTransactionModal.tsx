@@ -25,7 +25,8 @@ import {
 } from '../commons/utils';
 import { categoryService, presetService, supabase, transactionService } from '../services';
 import type { CreateTransactionDTO } from '../services';
-import { DatePickerField, FormModal, ReceiptUploader, TagInput } from './common';
+import { DatePickerField, FormModal, ReceiptUploader, ScanImagePanel, TagInput } from './common';
+import type { ScanResult } from './common';
 import { getTypeLabel, INVESTMENT_STATUS_OPTIONS, TypeTabs } from './transaction-list';
 import {
   BTN_FILL,
@@ -77,7 +78,7 @@ export default function AddTransactionModal({
   const isEditing = Boolean(transaction);
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const scanInputRef = useRef<HTMLInputElement>(null);
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const submittingRef = useRef(false);
   const requestClose = () => {
     if (submittingRef.current || uploading || scanning) return;
@@ -85,11 +86,16 @@ export default function AddTransactionModal({
   };
 
   const handleScanImage = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast.error('Vui lòng chọn tệp hình ảnh (JPEG, PNG, WebP)');
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error('Chỉ hỗ trợ ảnh JPEG, PNG hoặc WebP');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Kích thước ảnh tối đa 10MB');
       return;
     }
     setScanning(true);
+    setScanResult(null);
     try {
       const ext = file.name.split('.').pop() || 'jpg';
       const fileName = `receipt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
@@ -114,7 +120,7 @@ export default function AddTransactionModal({
 
       const draft = parseResult.value;
       if (draft.type) setActiveType(draft.type);
-      if (draft.amount > 0) setAmount(String(draft.amount));
+      if (draft.amount > 0) setAmount(formatNumberInput(Math.round(draft.amount)));
       if (draft.description) setTitle(draft.description);
       if (draft.transactionDate) {
         const parsedDate = moment(draft.transactionDate);
@@ -126,6 +132,7 @@ export default function AddTransactionModal({
       if (draft.status) setStatus(draft.status);
       if (draft.tags?.length) setTags(draft.tags);
 
+      setScanResult({ confidence: draft.confidence ?? 0, notes: draft.rawNotes });
       toast.success('AI đã điền thông tin từ ảnh! Vui lòng kiểm tra lại.');
     } catch (err: unknown) {
       toast.error(getErrorMessage(err, 'Không thể phân tích ảnh bằng AI'));
@@ -159,6 +166,7 @@ export default function AddTransactionModal({
     setRealizedPnl(values.realizedPnl);
     setReceiptUrl(values.receiptUrl);
     setTags(values.tags);
+    setScanResult(null);
   }, [open, transaction, initialType]);
 
   // Tags used before, offered as one-tap suggestions (optional: the field works without them)
@@ -365,30 +373,13 @@ export default function AddTransactionModal({
       >
         <div className={MODAL_FORM_BODY}>
           {!isEditing && (
-            <div className="mb-4">
-              <input
-                ref={scanInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                capture="environment"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void handleScanImage(file);
-                  e.target.value = '';
-                }}
-              />
-              <button
-                type="button"
-                disabled={scanning || submitting}
-                onClick={() => scanInputRef.current?.click()}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-primary/40 bg-primary/5 px-4 py-2.5 text-sm font-medium text-primary transition hover:bg-primary/10 disabled:opacity-50"
-              >
-                {scanning
-                  ? 'AI đang phân tích hoá đơn / ảnh CK...'
-                  : 'Quét hoá đơn hoặc dán ảnh chuyển khoản (Ctrl+V)'}
-              </button>
-            </div>
+            <ScanImagePanel
+              onFile={(file) => void handleScanImage(file)}
+              scanning={scanning}
+              disabled={submitting}
+              result={scanResult}
+              onClear={() => setScanResult(null)}
+            />
           )}
           <div className="mb-5 flex">
             <TypeTabs
