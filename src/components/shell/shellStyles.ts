@@ -28,5 +28,5 @@ export const bottomNavTabClass = (active: boolean) =>
   cx(
     BOTTOM_NAV_BTN,
     'transition-[color]! duration-100! ease-out!',
-    active ? 'text-activity' : 'text-activity-inactive'
+    active ? 'text-primary' : 'text-activity-inactive'
   );
