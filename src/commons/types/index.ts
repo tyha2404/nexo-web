@@ -35,6 +35,8 @@ export interface Transaction {
   categoryId: string;
   categoryName?: string;
   walletId?: string;
+  /** Stock / CD / other-asset wallet holding an INVESTMENT position. */
+  investmentWalletId?: string;
   walletName?: string;
   amount: number;
   description?: string;
@@ -116,6 +118,8 @@ export interface NetWorthReport {
   current: number;
   /** current − opening */
   periodChange: number;
+  /** True when the curve ends at the wallets' net worth (the Wallets page figure). */
+  anchoredToWallets?: boolean;
 }
 
 export interface DailyReportItem {
@@ -192,7 +196,8 @@ export interface TargetSummaryResponse {
   expense: ExpenseSummary;
   investment: InvestmentSummary;
 }
-export type WalletType = 'CASH' | 'BANK' | 'E_WALLET' | 'SAVINGS' | 'CREDIT' | 'JAR';
+export type WalletType =
+  'CASH' | 'BANK' | 'E_WALLET' | 'SAVINGS' | 'CD' | 'STOCK' | 'OTHER_ASSET' | 'CREDIT' | 'JAR';
 
 export interface Wallet {
   id: string;
@@ -203,6 +208,9 @@ export interface Wallet {
   currency: string;
   icon?: string;
   jarCategory?: string;
+  /** Term deposit / CD: 'YYYY-MM-DD' and % per year. */
+  maturityDate?: string;
+  interestRate?: number;
   allocationPercent?: number;
   isIncludedInTotal: boolean;
   creditLimit?: number;

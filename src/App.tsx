@@ -35,6 +35,7 @@ import {
 import { BTN_SECONDARY, cx, PWA_TOAST, SPINNER_PAGE } from './components/ui';
 import { useAuthSession, useRealtimeSync, useVirtualKeyboard } from './hooks';
 const Dashboard = lazy(() => import('./components/Dashboard'));
+const Wallets = lazy(() => import('./components/Wallets'));
 const Debts = lazy(() => import('./components/Debts'));
 const Planning = lazy(() => import('./components/Planning'));
 const Transactions = lazy(() => import('./components/Transactions'));
@@ -279,6 +280,13 @@ function App() {
               {visitedTabs.has('transactions') && (
                 <Suspense fallback={<p role="status">Đang tải giao dịch...</p>}>
                   <Transactions type={transactionType} />
+                </Suspense>
+              )}
+            </div>
+            <div className={cx(CONTENT_VIEW, activeTab !== 'wallets' && 'hidden')}>
+              {visitedTabs.has('wallets') && (
+                <Suspense fallback={<p role="status">Đang tải ví...</p>}>
+                  <Wallets />
                 </Suspense>
               )}
             </div>

@@ -22,6 +22,7 @@ import {
   targetService,
   transactionService,
   walletService,
+  type WalletBreakdown,
 } from '../services';
 const MonthlyTrendChart = lazy(() =>
   import('./MonthlyTrendChart').then((module) => ({ default: module.MonthlyTrendChart }))
@@ -36,6 +37,7 @@ import {
   HeroCashflowCard,
   RecentTransactionsCard,
   SecondaryStatsSection,
+  WalletBalanceCard,
 } from './dashboard-cards';
 import { ALERT_ERROR, BTN_SECONDARY, cx, DASHBOARD_MAIN_GRID, PAGE_ROOT } from './ui';
 
@@ -64,6 +66,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   const [prevCategoryBreakdown, setPrevCategoryBreakdown] = useState<CategoryBreakdownItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [wallets, setWallets] = useState<WalletModel[]>([]);
+  const [walletBreakdown, setWalletBreakdown] = useState<WalletBreakdown | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [monthlyTrend, setMonthlyTrend] = useState<MonthlyTrendReport | null>(null);
   const [netWorth, setNetWorth] = useState<NetWorthReport | null>(null);
@@ -148,6 +151,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
       setTargetSummary(targetData);
       setDebtSummary(debtData);
       setWallets(walletsData.wallets || []);
+      setWalletBreakdown(('breakdown' in walletsData && walletsData.breakdown) || null);
       setRecentTransactions(txnsData.items || []);
       setMonthlyTrend(monthlyTrendData);
       setNetWorth(netWorthData);
@@ -248,6 +252,8 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
               onNavigate={onNavigate}
             />
           </div>
+
+          <WalletBalanceCard breakdown={walletBreakdown} onNavigate={onNavigate} />
 
           {/* 6. Secondary Summary Section: Assets, Investment & Debts */}
           <SecondaryStatsSection

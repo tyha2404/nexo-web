@@ -11,6 +11,7 @@ import {
   TransactionType,
 } from '../commons/constants';
 import type { Category, Preset, Transaction } from '../commons/types';
+import { walletGroupOf } from './wallet-list/constants';
 import {
   MONEY_INPUT_PROPS,
   TEXT_DONE_INPUT_PROPS,
@@ -24,6 +25,7 @@ import {
   toISODateString,
 } from '../commons/utils';
 import { categoryService, presetService, supabase, transactionService } from '../services';
+import { useWallets } from '../hooks';
 import type { CreateTransactionDTO } from '../services';
 import { DatePickerField, FormModal, ReceiptUploader, ScanImagePanel, TagInput } from './common';
 import type { ScanResult } from './common';
@@ -42,6 +44,26 @@ import {
   MODAL_FORM_BODY,
   MODAL_SHELL_FOOTER,
 } from './ui';
+
+const LAST_WALLET_KEY = 'nexo.lastWalletId';
+
+/** Wallet used by the last saved transaction, so the next one starts on it (best effort). */
+const readLastWallet = (): string => {
+  try {
+    return localStorage.getItem(LAST_WALLET_KEY) ?? '';
+  } catch {
+    return '';
+  }
+};
+const saveLastWallet = (id: string) => {
+  try {
+    localStorage.setItem(LAST_WALLET_KEY, id);
+  } catch {
+    // Private mode / blocked storage: the default is only a convenience.
+  }
+};
+
+const NIL_UUID = '00000000-0000-0000-0000-000000000000';
 
 export interface AddTransactionModalProps {
   open: boolean;
@@ -68,6 +90,12 @@ export default function AddTransactionModal({
   const [realizedPnl, setRealizedPnl] = useState('0');
   const [receiptUrl, setReceiptUrl] = useState<string | undefined>(undefined);
   const [tags, setTags] = useState<string[]>([]);
+  // Wallet the money moves in/out of, and (investments only) the wallet holding the position.
+  const wallets = useWallets();
+  const [walletId, setWalletId] = useState('');
+  const [holdingWalletId, setHoldingWalletId] = useState('');
+  // Once the user picks a wallet (even "none"), the remembered default stops applying.
+  const walletTouched = useRef(false);
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   // Saved quick-fill templates ("Cà phê 35k"); tapping one fills amount, category and note.
@@ -156,6 +184,8 @@ export default function AddTransactionModal({
         : '0',
       receiptUrl: transaction?.receiptUrl ?? undefined,
       tags: transaction?.tags ?? [],
+      walletId: transaction?.walletId ?? '',
+      holdingWalletId: transaction?.investmentWalletId ?? '',
     };
     setActiveType(values.activeType);
     setTitle(values.title);
@@ -166,8 +196,19 @@ export default function AddTransactionModal({
     setRealizedPnl(values.realizedPnl);
     setReceiptUrl(values.receiptUrl);
     setTags(values.tags);
+    setWalletId(values.walletId);
+    setHoldingWalletId(values.holdingWalletId);
+    walletTouched.current = false;
     setScanResult(null);
   }, [open, transaction, initialType]);
+
+  // A new transaction starts on the wallet used last time: left on "none" it would never move
+  // any balance, and balances would drift from reality.
+  useEffect(() => {
+    if (!open || transaction || walletTouched.current) return;
+    const last = readLastWallet();
+    if (last && wallets.some((w) => w.id === last)) setWalletId(last);
+  }, [open, transaction, wallets]);
 
   // Tags used before, offered as one-tap suggestions (optional: the field works without them)
   useEffect(() => {
@@ -324,6 +365,19 @@ export default function AddTransactionModal({
       payload.realizedPnl = status === InvestmentStatus.HOLDING ? 0 : rawPnl;
     }
 
+    const isInvestment = activeType === TransactionType.INVESTMENT;
+    if (isInvestment && walletId && walletId === holdingWalletId) {
+      toast.error('Ví nắm giữ phải khác ví nguồn tiền');
+      return;
+    }
+    // The API keeps the wallet when walletId is omitted, so only a chosen wallet is sent.
+    if (walletId && walletId !== transaction?.walletId) payload.walletId = walletId;
+    if (isInvestment) {
+      if (holdingWalletId !== (transaction?.investmentWalletId ?? '')) {
+        payload.investmentWalletId = holdingWalletId || NIL_UUID;
+      }
+    }
+
     try {
       submittingRef.current = true;
       setSubmitting(true);
@@ -334,8 +388,13 @@ export default function AddTransactionModal({
         await transactionService.create(payload);
         toast.success('Thêm giao dịch thành công!');
       }
+      if (walletId) saveLastWallet(walletId);
       // Lists and the Dashboard refresh on this event (no per-caller callback).
       window.dispatchEvent(new Event(DATA_EVENTS.TRANSACTIONS_CHANGED));
+      // Balances moved when a wallet is involved (new, changed or already linked).
+      if (walletId || holdingWalletId || transaction?.walletId || transaction?.investmentWalletId) {
+        window.dispatchEvent(new Event(DATA_EVENTS.WALLETS_CHANGED));
+      }
       onClose();
     } catch (err: unknown) {
       toast.error(getErrorMessage(err, 'Lưu giao dịch thất bại'));
@@ -519,6 +578,81 @@ export default function AddTransactionModal({
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
+
+          {wallets.length > 0 && (
+            <div className={FORM_GROUP}>
+              <label htmlFor="atxn-wallet">
+                {activeType === TransactionType.INCOME ? 'Nhận vào ví' : 'Chi từ ví'}{' '}
+                <span className="text-muted">(tùy chọn)</span>
+              </label>
+              <Select
+                inputId="atxn-wallet"
+                // An API update cannot detach a wallet, so "none" is only offered while none is set.
+                options={[
+                  ...(transaction?.walletId ? [] : [{ value: '', label: 'Không ghi vào ví' }]),
+                  ...wallets.map((w) => ({
+                    value: w.id,
+                    label: `${w.name} · ${formatCompactCurrency(w.balance)}`,
+                  })),
+                ]}
+                value={
+                  walletId
+                    ? {
+                        value: walletId,
+                        label: wallets.find((w) => w.id === walletId)?.name ?? 'Ví đã xóa',
+                      }
+                    : { value: '', label: 'Không ghi vào ví' }
+                }
+                onChange={(option) => {
+                  walletTouched.current = true;
+                  setWalletId(option?.value ?? '');
+                }}
+                classNamePrefix="react-select"
+                isSearchable={!isTouchDevice()}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+              />
+            </div>
+          )}
+
+          {activeType === TransactionType.INVESTMENT && wallets.length > 0 && (
+            <div className={FORM_GROUP}>
+              <label htmlFor="atxn-holding-wallet">
+                Ví nắm giữ{' '}
+                <span className="text-muted">(chứng chỉ tiền gửi, cổ phiếu… · tùy chọn)</span>
+              </label>
+              <Select
+                inputId="atxn-holding-wallet"
+                options={[
+                  { value: '', label: 'Không theo dõi trong ví' },
+                  ...wallets
+                    .filter((w) => walletGroupOf(w.type) === 'INVESTMENT')
+                    .map((w) => ({
+                      value: w.id,
+                      label: `${w.name} · ${formatCompactCurrency(w.balance)}`,
+                    })),
+                ]}
+                value={
+                  holdingWalletId
+                    ? {
+                        value: holdingWalletId,
+                        label: wallets.find((w) => w.id === holdingWalletId)?.name ?? 'Ví đã xóa',
+                      }
+                    : { value: '', label: 'Không theo dõi trong ví' }
+                }
+                onChange={(option) => setHoldingWalletId(option?.value ?? '')}
+                classNamePrefix="react-select"
+                isSearchable={!isTouchDevice()}
+                menuPortalTarget={document.body}
+                menuPosition="fixed"
+              />
+              <small className="mt-1 block text-[0.8rem] text-muted">
+                {wallets.some((w) => walletGroupOf(w.type) === 'INVESTMENT')
+                  ? 'Mua vào: trừ ví nguồn và cộng vào ví nắm giữ. Khi bán/đáo hạn, ví nắm giữ trừ lại và tiền (cả lãi/lỗ) về ví nguồn.'
+                  : 'Chưa có ví đầu tư. Tạo ví loại Chứng chỉ tiền gửi hoặc Cổ phiếu ở tab Ví để theo dõi.'}
+              </small>
+            </div>
+          )}
 
           {activeType === TransactionType.INVESTMENT && (
             <div className={FORM_GROUP}>

@@ -10,12 +10,13 @@ import {
   LayoutDashboard,
   ShoppingBag,
   Tags,
+  Wallet,
   Target,
   TrendingUp,
   type IconComponent,
 } from '../ui';
 
-export type ActiveTab = 'dashboard' | 'transactions' | 'debts' | 'planning';
+export type ActiveTab = 'dashboard' | 'transactions' | 'wallets' | 'debts' | 'planning';
 
 /** Where the app is: the tab and, for the tabs that have them, the sub-page. */
 export interface NavState {
@@ -34,6 +35,7 @@ export interface NavTarget {
 export const NAV_ITEMS = [
   { tab: 'dashboard', label: 'Tổng quan', short: 'Tổng quan', Icon: LayoutDashboard },
   { tab: 'transactions', label: 'Giao dịch', short: 'Giao dịch', Icon: ArrowLeftRight },
+  { tab: 'wallets', label: 'Ví & Số dư', short: 'Ví', Icon: Wallet },
   { tab: 'debts', label: 'Sổ Vay & Nợ', short: 'Vay & Nợ', Icon: Handshake },
   { tab: 'planning', label: 'Kế hoạch & Mục tiêu', short: 'Kế hoạch', Icon: Target },
 ] as const;
@@ -87,6 +89,7 @@ export const TREE_CHILDREN: Partial<Record<ActiveTab, TreeChild[]>> = {
 export const TAB_ICON_CLASS: Record<ActiveTab, string> = {
   dashboard: 'text-link',
   transactions: 'text-income',
+  wallets: 'text-investment',
   debts: 'text-warning',
   planning: 'text-purple',
 };
@@ -100,6 +103,7 @@ export const NAV_TARGETS: Record<string, NavTarget> = {
   expenses: { tab: 'transactions', transactionType: TransactionType.EXPENSE },
   income: { tab: 'transactions', transactionType: TransactionType.INCOME },
   investment: { tab: 'transactions', transactionType: TransactionType.INVESTMENT },
+  wallets: { tab: 'wallets' },
   debts: { tab: 'debts' },
   targets: { tab: 'planning', planningSubTab: 'targets' },
   categories: { tab: 'planning', planningSubTab: 'categories' },
@@ -131,6 +135,8 @@ export const getPathForTab = (
       return opts?.transactionType
         ? `/transactions/${opts.transactionType.toLowerCase()}`
         : '/transactions';
+    case 'wallets':
+      return '/wallets';
     case 'debts':
       return '/debts';
     case 'planning':
@@ -167,6 +173,7 @@ export const parsePath = (pathname: string): NavTarget => {
       planningSubTab: sub === 'categories' || sub === 'targets' ? sub : undefined,
     };
   }
+  if (tab === 'wallets') return { tab: 'wallets' };
   return { tab: tab === 'debts' ? 'debts' : 'dashboard' };
 };
 

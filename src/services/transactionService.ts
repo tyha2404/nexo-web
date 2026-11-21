@@ -6,6 +6,8 @@ import { CRUDService } from './crudService';
 export interface CreateTransactionDTO {
   categoryId: string;
   walletId?: string;
+  /** Holding wallet of an INVESTMENT; the nil UUID clears it on update. */
+  investmentWalletId?: string;
   amount: number;
   type: TransactionType;
   status?: InvestmentStatus;

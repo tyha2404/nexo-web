@@ -24,6 +24,8 @@ export async function setup(page: Page) {
     /** Bearer token of every other API request. */
     bearers: [] as string[],
     failSave: false,
+    /** GET /wallets reports MoMo as overdrawn by 700.000. */
+    overdrawn: false,
     rejectSave: false,
     requests: [] as string[],
     /** Quick-fill presets (GET/POST/DELETE /presets); empty unless a test adds some. */
@@ -275,7 +277,65 @@ export async function setup(page: Page) {
     if (path === '/debts' && request.method() === 'GET') return data(debts);
     if (path === '/debts/summary')
       return data({ totalPayable: 0, totalReceivable: 0, overdueCount: 0, pendingCount: 0 });
-    if (path === '/wallets') return data({ wallets: [] });
+    if (path === '/wallets' && request.method() === 'GET') {
+      const wallet = (
+        id: string,
+        name: string,
+        type: string,
+        balance: number,
+        extra: Record<string, unknown> = {}
+      ) => ({
+        id,
+        userId: USER.id,
+        name,
+        type,
+        balance,
+        currency: 'VND',
+        isIncludedInTotal: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+        ...extra,
+      });
+      return data({
+        totalBalance: 9000000,
+        baseCurrency: 'VND',
+        totalsByCurrency: { VND: 9000000, USD: 120 },
+        unlinkedTransactions: 3,
+        totalWallets: 3,
+        wallets: [
+          wallet('w1', 'MoMo', 'E_WALLET', 4000000),
+          wallet('w2', 'MB chứng chỉ tiền gửi', 'CD', 6000000),
+          wallet('w3', 'Thẻ VPBank', 'CREDIT', -1000000, {
+            creditLimit: 10000000,
+            availableCredit: 9000000,
+            outstandingDebt: 1000000,
+            dueDay: 5,
+          }),
+        ],
+        breakdown: {
+          totalAssets: 10000000,
+          totalDebt: 1000000,
+          overdrawn: state.overdrawn ? 700000 : 0,
+          overdrawnWallets: state.overdrawn
+            ? [{ key: 'w1', label: 'MoMo', balance: -700000, percent: 0, count: 1 }]
+            : [],
+          netWorth: 9000000,
+          byWallet: [
+            { key: 'w2', label: 'MB chứng chỉ tiền gửi', balance: 6000000, percent: 60, count: 1 },
+            { key: 'w1', label: 'MoMo', balance: 4000000, percent: 40, count: 1 },
+          ],
+          byGroup: [
+            { key: 'INVESTMENT', label: 'Đầu tư', balance: 6000000, percent: 60, count: 1 },
+            { key: 'AVAILABLE', label: 'Khả dụng', balance: 4000000, percent: 40, count: 1 },
+          ],
+          investment: [
+            { key: 'CD', label: 'Chứng chỉ tiền gửi', balance: 4000000, percent: 40, count: 1 },
+            { key: 'STOCK', label: 'Cổ phiếu / quỹ', balance: 2000000, percent: 20, count: 1 },
+          ],
+          credit: { cards: 1, totalLimit: 10000000, totalDebt: 1000000, availableCredit: 9000000 },
+        },
+      });
+    }
     if (path === '/presets' && request.method() === 'POST') {
       const preset = {
         id: `preset-${state.presets.length + 1}`,

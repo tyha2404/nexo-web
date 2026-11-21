@@ -35,6 +35,7 @@ describe('navigation', () => {
       planningSubTab: 'targets',
     });
     expect(resolveNavTarget('debts', state)).toEqual({ tab: 'debts' });
+    expect(resolveNavTarget('wallets', state)).toEqual({ tab: 'wallets' });
     expect(resolveNavTarget('nope', state)).toEqual({ tab: 'dashboard' });
   });
 
@@ -59,6 +60,8 @@ describe('navigation', () => {
     });
     expect(getPathForTab('debts')).toBe('/debts');
     expect(parsePath('/debts')).toEqual({ tab: 'debts' });
+    expect(getPathForTab('wallets')).toBe('/wallets');
+    expect(parsePath('/wallets')).toEqual({ tab: 'wallets' });
     expect(getPathForTab('dashboard')).toBe('/');
     expect(parsePath('/')).toEqual({ tab: 'dashboard' });
     expect(parsePath('/unknown/x')).toEqual({ tab: 'dashboard' });
@@ -71,10 +74,10 @@ describe('navigation', () => {
 
   it('breadcrumbsOf names the tab and its sub-page', () => {
     expect(breadcrumbsOf(state, NAV_ITEMS[1])).toEqual(['Giao dịch', 'Thu nhập']);
-    expect(breadcrumbsOf({ ...state, activeTab: 'planning' }, NAV_ITEMS[3])).toEqual([
+    expect(breadcrumbsOf({ ...state, activeTab: 'planning' }, NAV_ITEMS[4])).toEqual([
       'Kế hoạch & Mục tiêu',
       'Danh mục thu chi',
     ]);
-    expect(breadcrumbsOf({ ...state, activeTab: 'debts' }, NAV_ITEMS[2])).toEqual(['Sổ Vay & Nợ']);
+    expect(breadcrumbsOf({ ...state, activeTab: 'debts' }, NAV_ITEMS[3])).toEqual(['Sổ Vay & Nợ']);
   });
 });

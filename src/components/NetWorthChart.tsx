@@ -74,7 +74,7 @@ export interface NetWorthChartProps {
  * line appears only when net worth crosses it.
  */
 export function NetWorthChart({ report }: NetWorthChartProps) {
-  const { items, current, opening, periodChange } = report;
+  const { items, current, opening, periodChange, anchoredToWallets } = report;
   const first = items[0];
   const pct = opening !== 0 ? (periodChange / Math.abs(opening)) * 100 : null;
   const crossesZero = items.some((p) => p.netWorth < 0) && items.some((p) => p.netWorth > 0);
@@ -112,6 +112,9 @@ export function NetWorthChart({ report }: NetWorthChartProps) {
               </span>
               <span>so với đầu {first.label.replace(/^T/, 'tháng ')}</span>
             </p>
+          )}
+          {anchoredToWallets && (
+            <p className="m-0 text-[0.75rem] text-muted">Khớp với tổng số dư các ví hiện tại.</p>
           )}
         </div>
       </div>
